@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
-import { User, MapPin, Phone, Save } from 'lucide-react';
+import { User, MapPin, Phone, Save, Bell } from 'lucide-react';
 
 import { LocationPicker } from '../components/LocationPicker';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -17,7 +17,8 @@ export const Profile = () => {
         zipCode: '',
         avatar: '',
         latitude: null as number | null,
-        longitude: null as number | null
+        longitude: null as number | null,
+        notificationPreference: 'EMAIL' as 'EMAIL' | 'WHATSAPP'
     });
     const [cities, setCities] = useState<any[]>([]);
     const [avatars, setAvatars] = useState<string[]>([]);
@@ -46,7 +47,8 @@ export const Profile = () => {
                 zipCode: user.zipCode || '',
                 avatar: user.avatar || '',
                 latitude: (user as any).latitude || null,
-                longitude: (user as any).longitude || null
+                longitude: (user as any).longitude || null,
+                notificationPreference: (user as any).notificationPreference || 'EMAIL'
             });
         }
     }, [user]);
@@ -175,6 +177,39 @@ export const Profile = () => {
                                 value={formData.phone}
                                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
                             />
+                        </div>
+
+                        {/* Notification Preference Selector */}
+                        <div className="bg-nature-50 p-4 rounded-xl border border-nature-100">
+                            <label className="flex items-center text-sm font-bold text-gray-700 mb-3 gap-2">
+                                <Bell size={16} className="text-nature-600" />
+                                Preferenza Notifiche Ordine
+                            </label>
+                            <div className="flex gap-4">
+                                <label className={`flex-1 flex items-center justify-center p-3 rounded-lg border-2 cursor-pointer transition-all ${formData.notificationPreference === 'EMAIL' ? 'border-nature-600 bg-white shadow-sm' : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>
+                                    <input
+                                        type="radio"
+                                        name="notificationPreference"
+                                        value="EMAIL"
+                                        checked={formData.notificationPreference === 'EMAIL'}
+                                        onChange={() => setFormData({ ...formData, notificationPreference: 'EMAIL' })}
+                                        className="hidden"
+                                    />
+                                    <span className="font-medium text-sm">Email</span>
+                                </label>
+                                <label className={`flex-1 flex items-center justify-center p-3 rounded-lg border-2 cursor-pointer transition-all ${formData.notificationPreference === 'WHATSAPP' ? 'border-green-500 bg-white shadow-sm' : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>
+                                    <input
+                                        type="radio"
+                                        name="notificationPreference"
+                                        value="WHATSAPP"
+                                        checked={formData.notificationPreference === 'WHATSAPP'}
+                                        onChange={() => setFormData({ ...formData, notificationPreference: 'WHATSAPP' })}
+                                        className="hidden"
+                                    />
+                                    <span className="font-medium text-sm text-green-700">WhatsApp</span>
+                                </label>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 text-center">Scegli come ricevere le conferme e gli aggiornamenti di consegna.</p>
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-gray-100">
