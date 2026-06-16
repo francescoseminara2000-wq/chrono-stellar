@@ -107,7 +107,13 @@ export class OrderService {
                         create: orderItemsData,
                     },
                 },
-                include: { items: true }
+                include: {
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
             });
 
             // Decrement stock for each item
