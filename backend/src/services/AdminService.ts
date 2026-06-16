@@ -111,7 +111,7 @@ export class AdminService {
     }
 
     async getActiveDeliveries() {
-        return prisma.order.findMany({
+        const activeOrders = await prisma.order.findMany({
             where: {
                 status: {
                     in: [
@@ -120,8 +120,7 @@ export class AdminService {
                         OrderStatus.OUT_FOR_DELIVERY
                     ]
                 },
-                latitude: { not: null },
-                longitude: { not: null }
+                deliveryMethod: 'DELIVERY'
             },
             select: {
                 id: true,
@@ -137,5 +136,41 @@ export class AdminService {
             },
             orderBy: { createdAt: 'desc' }
         });
+
+        // Loop to geocode missing coordinates
+        for (const order of activeOrders) {
+            if ((order.latitude === null || order.longitude === null) && order.shippingAddress && order.shippingAddress !== 'PICKUP') {
+                try {
+                    const queryAddress = order.shippingAddress.replace(/\s*-\s*/g, ', ');
+                    const response = await (globalThis as any).fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryAddress)}&format=json&limit=1`, {
+                        headers: { 'User-Agent': 'ChronoStellarApp/1.0 (contact@chronostellar.com)' }
+                    });
+                    if (response.ok) {
+                        const results = await response.json() as any;
+                        if (results && results.length > 0) {
+                            const lat = parseFloat(results[0].lat);
+                            const lng = parseFloat(results[0].lon);
+                            
+                            // Save to database
+                            await prisma.order.update({
+                                where: { id: order.id },
+                                data: { latitude: lat, longitude: lng }
+                            });
+                            
+                            order.latitude = lat;
+                            order.longitude = lng;
+                            console.log(`[Geocoding Map] Success for Order #${order.id} "${queryAddress}": lat=${lat}, lng=${lng}`);
+                        } else {
+                            console.warn(`[Geocoding Map] No results found for Order #${order.id} "${queryAddress}"`);
+                        }
+                    }
+                } catch (err) {
+                    console.error(`[Geocoding Map] Error geocoding order #${order.id}:`, err);
+                }
+            }
+        }
+
+        // Return only orders that have valid coordinates
+        return activeOrders.filter(order => order.latitude !== null && order.longitude !== null) as any[];
     }
 }

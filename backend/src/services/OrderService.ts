@@ -61,6 +61,31 @@ export class OrderService {
         const shippingCost = deliveryDetails.shippingCost || 0;
         estimatedTotal += shippingCost;
 
+        // Geocoding fallback if coordinates are not set
+        let finalLat = deliveryDetails.latitude;
+        let finalLng = deliveryDetails.longitude;
+
+        if (deliveryDetails.method === 'DELIVERY' && (finalLat === undefined || finalLng === undefined || finalLat === null || finalLng === null) && deliveryDetails.address && deliveryDetails.address !== 'PICKUP') {
+            try {
+                const queryAddress = deliveryDetails.address.replace(/\s*-\s*/g, ', ');
+                const response = await (globalThis as any).fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryAddress)}&format=json&limit=1`, {
+                    headers: { 'User-Agent': 'ChronoStellarApp/1.0 (contact@chronostellar.com)' }
+                });
+                if (response.ok) {
+                    const results = await response.json() as any;
+                    if (results && results.length > 0) {
+                        finalLat = parseFloat(results[0].lat);
+                        finalLng = parseFloat(results[0].lon);
+                        console.log(`[Geocoding] Auto-assigned coordinates for address "${queryAddress}": lat=${finalLat}, lng=${finalLng}`);
+                    } else {
+                        console.warn(`[Geocoding] No results found for address "${queryAddress}"`);
+                    }
+                }
+            } catch (err) {
+                console.error('[Geocoding] Error during order creation geocoding:', err);
+            }
+        }
+
         // 2. Create Order and Update Stock
         const order = await prisma.$transaction(async (tx) => {
             // Create the order
@@ -75,8 +100,8 @@ export class OrderService {
                     deliveryMethod: deliveryDetails.method as any,
                     shippingAddress: deliveryDetails.address,
                     deliveryNotes: deliveryDetails.notes,
-                    latitude: deliveryDetails.latitude,
-                    longitude: deliveryDetails.longitude,
+                    latitude: finalLat,
+                    longitude: finalLng,
                     shippingCost: shippingCost,
                     items: {
                         create: orderItemsData,
