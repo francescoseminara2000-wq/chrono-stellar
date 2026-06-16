@@ -76,6 +76,8 @@ echo -e "${GREEN}Frontend compilato con successo.${NC}"
 
 # 4. Riavvio dei Servizi PM2
 echo -e "\n${BLUE}[4/5] Riavvio del server di backend tramite PM2...${NC}"
+echo "Terminazione di eventuali processi Chrome orfani..."
+pkill -f chrome || true
 pm2 restart chrono-backend
 if [ $? -ne 0 ]; then
     echo -e "${RED}Impossibile riavviare PM2. Provo ad avviarlo per la prima volta...${NC}"

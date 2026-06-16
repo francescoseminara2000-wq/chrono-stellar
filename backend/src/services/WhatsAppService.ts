@@ -18,6 +18,28 @@ export class WhatsAppService {
         });
 
         this.initialize();
+        this.setupExitHandlers();
+    }
+
+    private setupExitHandlers() {
+        const cleanExit = async () => {
+            console.log('[WhatsApp] Clean shutdown of WhatsApp client...');
+            try {
+                await this.client.destroy();
+            } catch (err) {
+                // ignore
+            }
+        };
+
+        process.on('SIGINT', async () => {
+            await cleanExit();
+            process.exit(0);
+        });
+
+        process.on('SIGTERM', async () => {
+            await cleanExit();
+            process.exit(0);
+        });
     }
 
     public static getInstance(): WhatsAppService {
