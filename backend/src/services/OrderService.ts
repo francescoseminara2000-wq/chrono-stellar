@@ -138,8 +138,13 @@ export class OrderService {
         }
 
         // Trigger notifications based on preference
-        if (sendWhatsApp && order.customerPhone && (global as any).whatsAppService) {
-            (global as any).whatsAppService.sendOrderConfirmation(order);
+        if (sendWhatsApp && order.customerPhone) {
+            try {
+                const whatsAppService = WhatsAppService.getInstance();
+                await whatsAppService.sendOrderNotification(order, 'CREATED');
+            } catch (error) {
+                console.error('Failed to send order confirmation WhatsApp message:', error);
+            }
         } else if (sendEmail && order.customerEmail) {
             try {
                 const EmailService = require('./EmailService').EmailService;
