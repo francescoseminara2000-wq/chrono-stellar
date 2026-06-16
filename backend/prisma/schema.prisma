@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model DeliveryZone {
+  id           Int      @id @default(autoincrement())
+  city         String
+  zipCode      String
+  shippingCost Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String
+  title     String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id              Int                  @id @default(autoincrement())
+  userId          Int?
+  status          OrderStatus          @default(PENDING)
+  estimatedTotal  Int
+  finalTotal      Int?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  deliveryMethod  DeliveryMethod       @default(PICKUP)
+  deliveryNotes   String?
+  shippingAddress String?              @db.Text
+  customerEmail   String?
+  customerName    String?
+  adminNotes      String?              @db.Text
+  shippingCost    Int?                 @default(0)
+  customerPhone   String?
+  latitude        Float?
+  longitude       Float?
+  user            User?                @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
+  items           OrderItem[]
+  transaction     Transaction[]
+
+  @@index([userId], map: "Order_userId_idx")
+}
+
+model OrderItem {
+  id                Int      @id @default(autoincrement())
+  orderId           Int
+  productId         Int
+  priceAtPurchase   Int
+  quantityOrdered   Decimal  @db.Decimal(10, 2)
+  quantityFulfilled Decimal? @db.Decimal(10, 2)
+  order             Order    @relation(fields: [orderId], references: [id], map: "OrderItem_orderId_fkey")
+  product           Product  @relation(fields: [productId], references: [id], map: "OrderItem_productId_fkey")
+
+  @@index([orderId], map: "OrderItem_orderId_idx")
+  @@index([productId], map: "OrderItem_productId_idx")
+}
+
+model Page {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique(map: "Page_slug_key")
+  title       String
+  content     String   @db.LongText
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id                Int              @id @default(autoincrement())
+  name              String
+  description       String?          @db.Text
+  priceCents        Int
+  unitType          UnitType
+  isVariableWeight  Boolean          @default(false)
+  stepAmount        Decimal          @default(1.00) @db.Decimal(10, 2)
+  imageUrl          String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  isAvailable       Boolean          @default(true)
+  seasonalTips      String?          @db.Text
+  lowStockThreshold Decimal          @default(0.00) @db.Decimal(10, 2)
+  stockQuantity     Decimal          @default(0.00) @db.Decimal(10, 2)
+  allowBackorder    Boolean          @default(false)
+  categoryId        Int?
+  category          Category?        @relation(fields: [categoryId], references: [id], map: "Product_categoryId_fkey")
+  orderitem         OrderItem[]
+
+  @@index([categoryId], map: "Product_categoryId_idx")
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  color     String    @default("#1e3f20")
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  endpoint  String   @unique(map: "PushSubscription_endpoint_key") @db.VarChar(500)
+  p256dh    String
+  auth      String
+  userId    Int?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], map: "PushSubscription_userId_fkey")
+
+  @@index([userId], map: "PushSubscription_userId_idx")
+}
+
+model StoreSettings {
+  id                       Int      @id @default(autoincrement())
+  siteName                 String   @default("Chrono Stellar")
+  tagline                  String   @default("Freschezza quotidiana")
+  contactEmail             String?
+  contactPhone             String?
+  contactAddress           String?
+  openingHours             String?  @db.Text
+  announcementText         String?  @db.Text
+  announcementActive       Boolean  @default(false)
+  updatedAt                DateTime @updatedAt
+  waTemplateCancelled      String?  @db.Text
+  waTemplateCreated        String?  @db.Text
+  waTemplateDelivered      String?  @db.Text
+  waTemplateOutForDelivery String?  @db.Text
+  waTemplateWeighing       String?  @db.Text
+  waTemplatePickupReady    String?  @db.Text
+  latitude                 Float?
+  longitude                Float?
+  logoUrl                  String?  @db.Text
+  colorTheme               String?  @default("green")
+  primaryColor             String?  @default("#16a34a")
+  accentColor              String?  @default("#ef4444")
+}
+
+model Transaction {
+  id          Int                 @id @default(autoincrement())
+  orderId     Int
+  gateway     PaymentGateway
+  gatewayTxId String?
+  amount      Int
+  currency    String              @default("EUR")
+  status      TransactionStatus  @default(PENDING)
+  metadata    Json?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  order       Order               @relation(fields: [orderId], references: [id], map: "Transaction_orderId_fkey")
+
+  @@index([orderId], map: "Transaction_orderId_idx")
+}
+
+model User {
+  id                     Int                         @id @default(autoincrement())
+  email                  String                      @unique(map: "User_email_key")
+  name                   String?
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+  password               String?
+  role                   UserRole                    @default(CUSTOMER)
+  phone                  String?
+  city                   String?
+  civic                  String?
+  street                 String?
+  zipCode                String?
+  avatar                 String?
+  latitude               Float?
+  longitude              Float?
+  isEmailVerified        Boolean                     @default(false)
+  resetPasswordExpires   DateTime?
+  resetPasswordToken     String?                     @unique(map: "User_resetPasswordToken_key")
+  verificationToken      String?                     @unique(map: "User_verificationToken_key")
+  notificationPreference NotificationPreference      @default(EMAIL)
+  orders                 Order[]
+  pushsubscription       PushSubscription[]
+}
+
+enum OrderStatus {
+  PENDING
+  WEIGHING_COMPLETED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentGateway {
+  COD
+  STRIPE
+  PAYPAL
+}
+
+enum UnitType {
+  KG
+  PZ
+  BOX
+}
+
+enum TransactionStatus {
+  PENDING
+  CAPTURED
+  VOIDED
+  FAILED
+}
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+enum DeliveryMethod {
+  PICKUP
+  DELIVERY
+}
+
+enum NotificationPreference {
+  EMAIL
+  WHATSAPP
+}

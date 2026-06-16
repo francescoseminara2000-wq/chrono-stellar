@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;600;700&display=swap');
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply bg-gray-50 text-gray-900 overflow-x-hidden;
+}
+
+/* ReactQuill overrides to prevent Tailwind from striping default HTML styles */
+/* ReactQuill Font Picker Labels */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nunito"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nunito"]::before {
+    content: 'Nunito';
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="dancing-script"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="dancing-script"]::before {
+    content: 'Dancing Script';
+}
+
+/* Apply actual font family to dropdown items */
+.ql-picker-item[data-value="nunito"]::before {
+    font-family: 'Nunito', sans-serif !important;
+}
+
+.ql-picker-item[data-value="dancing-script"]::before {
+    font-family: 'Dancing Script', cursive !important;
+}
+
+.ql-font-nunito {
+    font-family: 'Nunito', sans-serif;
+}
+
+.ql-font-dancing-script {
+    font-family: 'Dancing Script', cursive;
+}
+
+.ql-editor h1 {
+    @apply text-4xl font-bold mb-4;
+}
+
+.ql-editor h2 {
+    @apply text-3xl font-bold mb-3;
+}
+
+.ql-editor h3 {
+    @apply text-2xl font-bold mb-2;
+}
+
+.ql-editor ul,
+.quill-content ul {
+    @apply list-disc ml-6 mb-4;
+}
+
+.ql-editor ol,
+.quill-content ol {
+    @apply list-decimal ml-6 mb-4;
+}
+
+.ql-editor p,
+.quill-content p {
+    @apply mb-4;
+}
+
+.quill-content h1,
+.quill-content h2,
+.quill-content h3 {
+    @apply font-bold mb-4 font-sans text-nature-900;
+}
+
+.quill-content h1 {
+    @apply text-4xl;
+}
+
+.quill-content h2 {
+    @apply text-3xl;
+}
+
+.quill-content h3 {
+    @apply text-2xl;
+}
+
+/* Leaflet Map Overrides */
+.leaflet-container {
+    width: 100%;
+    height: 100%;
+    z-index: 1 !important;
+    border-radius: 0.75rem;
+}
+
+.delivery-popup .leaflet-popup-content-wrapper {
+    @apply rounded-2xl p-0 overflow-hidden shadow-2xl border border-gray-100;
+}
+
+.delivery-popup .leaflet-popup-content {
+    @apply m-0 w-auto !important;
+}
+
+.delivery-popup .leaflet-popup-tip {
+    @apply shadow-none;
+}
+
+.delivery-popup .leaflet-popup-close-button {
+    width: 26px !important;
+    height: 26px !important;
+    top: 10px !important;
+    right: 10px !important;
+    background: #F3F4F6 !important;
+    border-radius: 50% !important;
+    border: 1px solid #E5E7EB !important;
+    color: #6B7280 !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    line-height: 26px !important;
+    text-align: center !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background 0.15s, color 0.15s !important;
+}
+
+.delivery-popup .leaflet-popup-close-button:hover {
+    background: #E5E7EB !important;
+    color: #111827 !important;
+}
