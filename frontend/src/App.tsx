@@ -30,6 +30,7 @@ import { AlertBanner } from './components/AlertBanner';
 import { Toaster } from './components/ui/Toaster';
 import { useAppState } from './store/useAppState';
 import { getThemeColors } from './utils/themeHelper';
+import { sanitizeImageUrl } from './utils/imageUrl';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -64,6 +65,13 @@ function App() {
         if (settings) {
             if (settings.siteName) {
                 document.title = settings.siteName;
+            }
+            if (settings.logoUrl) {
+                const faviconUrl = sanitizeImageUrl(settings.logoUrl);
+                const faviconTag = document.getElementById('dynamic-favicon') as HTMLLinkElement;
+                if (faviconTag) {
+                    faviconTag.href = faviconUrl;
+                }
             }
             const colors = getThemeColors(settings);
             const styleId = 'dynamic-theme-vars';

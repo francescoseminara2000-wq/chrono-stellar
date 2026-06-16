@@ -5,6 +5,7 @@ import { Trash2, Edit, Plus, X, Globe, EyeOff, Check, LayoutTemplate } from 'luc
 import ReactQuill, { Quill } from 'react-quill';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
+import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 
 // Register Custom Fonts
@@ -131,6 +132,7 @@ export const PageManager = () => {
 
     // Form State
     const [currentId, setCurrentId] = useState<number | null>(null);
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
     const [formData, setFormData] = useState({
         slug: '',
         title: '',
@@ -203,8 +205,16 @@ export const PageManager = () => {
         setIsModalOpen(false);
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Sei sicuro di voler eliminare questa pagina?')) return;
+    const handleDelete = async (id: number, force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Pagina',
+                message: 'Sei sicuro di voler eliminare questa pagina? Questa azione non può essere annullata.',
+                onConfirm: () => handleDelete(id, true)
+            });
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/admin/pages/${id}`, {
@@ -1022,6 +1032,19 @@ export const PageManager = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={!!confirmModal}
+                title={confirmModal?.title || ''}
+                message={confirmModal?.message || ''}
+                onConfirm={() => {
+                    if (confirmModal) {
+                        confirmModal.onConfirm();
+                        setConfirmModal(null);
+                    }
+                }}
+                onCancel={() => setConfirmModal(null)}
+            />
         </div>
     );
 };

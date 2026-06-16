@@ -99,4 +99,24 @@ export class OrderController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async delete(req: Request, res: Response) {
+        try {
+            const id = parseInt(req.params.id);
+            if (isNaN(id)) {
+                return res.status(400).json({ error: 'Invalid order ID' });
+            }
+
+            // Delete order items, transactions and then the order itself in a transaction
+            await prisma.$transaction(async (tx) => {
+                await tx.orderItem.deleteMany({ where: { orderId: id } });
+                await tx.transaction.deleteMany({ where: { orderId: id } });
+                await tx.order.delete({ where: { id } });
+            });
+
+            res.json({ message: 'Order deleted successfully' });
+        } catch (error: any) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }

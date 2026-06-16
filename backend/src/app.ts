@@ -63,6 +63,7 @@ app.put('/api/admin/categories/:id', authenticateToken, requireAdmin, (req, res)
 app.delete('/api/admin/categories/:id', authenticateToken, requireAdmin, (req, res) => categoryController.delete(req, res));
 
 app.get('/api/admin/orders', authenticateToken, requireAdmin, (req, res) => orderController.list(req, res));
+app.delete('/api/admin/orders/:id', authenticateToken, requireAdmin, (req, res) => orderController.delete(req, res));
 app.get('/api/admin/stats', authenticateToken, requireAdmin, (req, res) => statsController.getStats(req, res));
 app.patch('/api/admin/orders/:id/fulfill', authenticateToken, requireAdmin, (req, res) => adminController.fulfill(req, res));
 app.patch('/api/admin/orders/:id/status', authenticateToken, requireAdmin, (req, res) => adminController.updateStatus(req, res));

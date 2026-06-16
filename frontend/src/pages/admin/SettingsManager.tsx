@@ -9,6 +9,7 @@ import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { useAppState } from '../../store/useAppState';
+import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -85,6 +86,7 @@ export const SettingsManager = () => {
     const [categories, setCategories] = useState<any[]>([]);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [currentCategory, setCurrentCategory] = useState<any>({ name: '', color: '#1e3f20' });
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
     useEffect(() => {
         if (token) {
@@ -223,8 +225,16 @@ export const SettingsManager = () => {
         }
     };
 
-    const deleteZone = async (id: number) => {
-        if (!confirm('Eliminare zona?')) return;
+    const deleteZone = async (id: number, force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Zona',
+                message: 'Sei sicuro di voler eliminare questa zona?',
+                onConfirm: () => deleteZone(id, true)
+            });
+            return;
+        }
         await fetch(`${API_URL}/api/admin/delivery-zones/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -259,8 +269,16 @@ export const SettingsManager = () => {
         e.target.value = '';
     };
 
-    const deleteAvatar = async (path: string) => {
-        if (!confirm('Eliminare avatar?')) return;
+    const deleteAvatar = async (path: string, force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Avatar',
+                message: 'Sei sicuro di voler eliminare questo avatar?',
+                onConfirm: () => deleteAvatar(path, true)
+            });
+            return;
+        }
         const name = path.split('/').pop();
         await fetch(`${API_URL}/api/admin/avatars/${name}`, {
             method: 'DELETE',
@@ -296,8 +314,16 @@ export const SettingsManager = () => {
         }
     };
 
-    const deleteCategory = async (id: number) => {
-        if (!confirm('Eliminare categoria? I prodotti associati rimarranno senza categoria.')) return;
+    const deleteCategory = async (id: number, force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Categoria',
+                message: 'Sei sicuro di voler eliminare questa categoria? I prodotti associati rimarranno senza categoria.',
+                onConfirm: () => deleteCategory(id, true)
+            });
+            return;
+        }
         const res = await fetch(`${API_URL}/api/admin/categories/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -756,6 +782,19 @@ export const SettingsManager = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={!!confirmModal}
+                title={confirmModal?.title || ''}
+                message={confirmModal?.message || ''}
+                onConfirm={() => {
+                    if (confirmModal) {
+                        confirmModal.onConfirm();
+                        setConfirmModal(null);
+                    }
+                }}
+                onCancel={() => setConfirmModal(null)}
+            />
         </div>
     );
 };

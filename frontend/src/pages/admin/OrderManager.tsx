@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
+import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 interface Order {
     id: number;
@@ -33,6 +34,7 @@ export const OrderManager = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [adminNotes, setAdminNotes] = useState('');
     const [isWeighingOpen, setIsWeighingOpen] = useState(false);
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
     const { addToast } = useToastStore();
     const API_URL = '';
 
@@ -150,9 +152,25 @@ export const OrderManager = () => {
         }
     };
 
-    const handleUpdateStatus = async (status: string) => {
+    const handleUpdateStatus = async (status: string, force = false) => {
         if (!selectedOrder) return;
-        if (status !== selectedOrder.status && !confirm(`Cambiare lo stato in ${status}?`)) return;
+        if (status !== selectedOrder.status && !force) {
+            const labels: Record<string, string> = {
+                PENDING: 'In Attesa',
+                WEIGNING_COMPLETED: 'Pesato', // Support typo matching if any
+                WEIGHING_COMPLETED: 'Pesato',
+                OUT_FOR_DELIVERY: 'In Consegna',
+                DELIVERED: 'Concluso',
+                CANCELLED: 'Annullato'
+            };
+            setConfirmModal({
+                isOpen: true,
+                title: 'Conferma Cambio Stato',
+                message: `Sei sicuro di voler cambiare lo stato dell'ordine #${selectedOrder.id} in "${labels[status] || status}"?`,
+                onConfirm: () => handleUpdateStatus(status, true)
+            });
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}/status`, {
@@ -171,6 +189,39 @@ export const OrderManager = () => {
                 addToast('Stato ordine aggiornato!', 'success');
             } else {
                 addToast('Errore durante l\'aggiornamento dello stato.', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            addToast('Errore di connessione al server.', 'error');
+        }
+    };
+
+    const handleDeleteOrder = async (force = false) => {
+        if (!selectedOrder) return;
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Ordine Permanente',
+                message: `Sei sicuro di voler eliminare definitivamente l'ordine #${selectedOrder.id}? Questa operazione cancellerà tutti i dati associati in modo permanente.`,
+                onConfirm: () => handleDeleteOrder(true)
+            });
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (res.ok) {
+                setOrders(orders.filter(o => o.id !== selectedOrder.id));
+                setSelectedOrder(null);
+                addToast('Ordine eliminato definitivamente!', 'success');
+            } else {
+                addToast('Errore durante l\'eliminazione dell\'ordine.', 'error');
             }
         } catch (err) {
             console.error(err);
@@ -525,6 +576,9 @@ export const OrderManager = () => {
                                             Annulla
                                         </button>
                                     )}
+                                    <button onClick={() => handleDeleteOrder()} className="px-2.5 py-2.5 text-red-600 font-bold hover:bg-red-50 hover:text-red-700 text-[11px] sm:text-xs rounded-xl transition-colors shrink-0">
+                                        Elimina
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -691,6 +745,18 @@ export const OrderManager = () => {
                     </div>
                 </div>
             )}
+            <ConfirmModal
+                isOpen={!!confirmModal}
+                title={confirmModal?.title || ''}
+                message={confirmModal?.message || ''}
+                onConfirm={() => {
+                    if (confirmModal) {
+                        confirmModal.onConfirm();
+                        setConfirmModal(null);
+                    }
+                }}
+                onCancel={() => setConfirmModal(null)}
+            />
                 </div>
             </div>
         </div>

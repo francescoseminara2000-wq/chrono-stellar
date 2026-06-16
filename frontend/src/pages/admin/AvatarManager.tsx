@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Trash2, Upload } from 'lucide-react';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
+import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 export const AvatarManager = () => {
     const { token } = useAuthStore();
@@ -9,6 +10,7 @@ export const AvatarManager = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [message, setMessage] = useState('');
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
     useEffect(() => {
         fetchAvatars();
@@ -61,8 +63,16 @@ export const AvatarManager = () => {
         }
     };
 
-    const handleDelete = async (filename: string) => {
-        if (!confirm('Sei sicuro di voler eliminare questo avatar?')) return;
+    const handleDelete = async (filename: string, force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Avatar',
+                message: 'Sei sicuro di voler eliminare questo avatar? Questa azione non può essere annullata.',
+                onConfirm: () => handleDelete(filename, true)
+            });
+            return;
+        }
 
         const name = filename.split('/').pop();
 
@@ -145,6 +155,18 @@ export const AvatarManager = () => {
                     )}
                 </div>
             )}
+            <ConfirmModal
+                isOpen={!!confirmModal}
+                title={confirmModal?.title || ''}
+                message={confirmModal?.message || ''}
+                onConfirm={() => {
+                    if (confirmModal) {
+                        confirmModal.onConfirm();
+                        setConfirmModal(null);
+                    }
+                }}
+                onCancel={() => setConfirmModal(null)}
+            />
         </div>
     );
 };

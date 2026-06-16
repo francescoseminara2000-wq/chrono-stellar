@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { MapPin, Plus, Trash, X } from 'lucide-react';
+import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 interface DeliveryZone {
     id: number;
@@ -15,6 +16,7 @@ export const DeliveryZoneManager = () => {
     const [zones, setZones] = useState<DeliveryZone[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [currentZone, setCurrentZone] = useState<Partial<DeliveryZone>>({});
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
     useEffect(() => {
         fetchZones();
@@ -29,8 +31,16 @@ export const DeliveryZoneManager = () => {
             .catch(console.error);
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Sei sicuro di voler eliminare questa zona?')) return;
+    const handleDelete = async (id: number, force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Zona',
+                message: 'Sei sicuro di voler eliminare questa zona? Questa azione non può essere annullata.',
+                onConfirm: () => handleDelete(id, true)
+            });
+            return;
+        }
         try {
             await fetch(`/api/admin/delivery-zones/${id}`, {
                 method: 'DELETE',
@@ -194,6 +204,18 @@ export const DeliveryZoneManager = () => {
                     </div>
                 ))}
             </div>
+            <ConfirmModal
+                isOpen={!!confirmModal}
+                title={confirmModal?.title || ''}
+                message={confirmModal?.message || ''}
+                onConfirm={() => {
+                    if (confirmModal) {
+                        confirmModal.onConfirm();
+                        setConfirmModal(null);
+                    }
+                }}
+                onCancel={() => setConfirmModal(null)}
+            />
         </div>
     );
 };

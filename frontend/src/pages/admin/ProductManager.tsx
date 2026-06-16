@@ -4,6 +4,7 @@ import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityI
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
+import { ConfirmModal } from '../../components/admin/ConfirmModal';
 import { ProductStatsModal } from '../../components/admin/ProductStatsModal';
 import { QuickStockModal } from '../../components/admin/QuickStockModal';
 
@@ -32,6 +33,7 @@ export const ProductManager = () => {
     const [isQuickStockOpen, setIsQuickStockOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [viewingStatsProduct, setViewingStatsProduct] = useState<Product | null>(null);
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -112,8 +114,16 @@ export const ProductManager = () => {
         );
     };
 
-    const handleBulkDelete = async () => {
-        if (!window.confirm(`Sei sicuro di voler eliminare ${selectedIds.length} prodotti?`)) return;
+    const handleBulkDelete = async (force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Prodotti',
+                message: `Sei sicuro di voler eliminare ${selectedIds.length} prodotti? Questa azione non può essere annullata.`,
+                onConfirm: () => handleBulkDelete(true)
+            });
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/admin/products/bulk`, {
@@ -134,8 +144,16 @@ export const ProductManager = () => {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!window.confirm('Sei sicuro di voler eliminare questo prodotto?')) return;
+    const handleDelete = async (id: number, force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Prodotto',
+                message: 'Sei sicuro di voler eliminare questo prodotto? Questa azione non può essere annullata.',
+                onConfirm: () => handleDelete(id, true)
+            });
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/admin/products/${id}`, {
@@ -450,7 +468,7 @@ export const ProductManager = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05, backgroundColor: '#fef2f2' }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={handleBulkDelete}
+                                onClick={() => handleBulkDelete()}
                                 className="p-3 text-red-500 hover:text-red-600 rounded-2xl transition-all"
                                 title="Elimina Selezionati"
                             >
@@ -965,6 +983,19 @@ export const ProductManager = () => {
                     onUpdateComplete={() => fetchProducts()}
                 />
             )}
+
+            <ConfirmModal
+                isOpen={!!confirmModal}
+                title={confirmModal?.title || ''}
+                message={confirmModal?.message || ''}
+                onConfirm={() => {
+                    if (confirmModal) {
+                        confirmModal.onConfirm();
+                        setConfirmModal(null);
+                    }
+                }}
+                onCancel={() => setConfirmModal(null)}
+            />
         </div>
     );
 };
