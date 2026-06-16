@@ -14,6 +14,7 @@ interface User {
     latitude?: number | null;
     longitude?: number | null;
     role: 'ADMIN' | 'CUSTOMER';
+    notificationPreference?: 'EMAIL' | 'WHATSAPP';
 }
 
 interface AuthState {

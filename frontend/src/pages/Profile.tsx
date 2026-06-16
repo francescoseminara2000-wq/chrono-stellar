@@ -48,7 +48,7 @@ export const Profile = () => {
                 avatar: user.avatar || '',
                 latitude: (user as any).latitude || null,
                 longitude: (user as any).longitude || null,
-                notificationPreference: (user as any).notificationPreference || 'EMAIL'
+                notificationPreference: user.notificationPreference || 'EMAIL'
             });
         }
     }, [user]);
