@@ -135,6 +135,7 @@ app.post('/api/auth/verify-email', (req, res) => authController.verifyEmail(req,
 app.post('/api/auth/resend-verification', (req, res) => authController.resendVerification(req, res));
 app.post('/api/auth/forgot-password', (req, res) => authController.forgotPassword(req, res));
 app.post('/api/auth/reset-password', (req, res) => authController.resetPassword(req, res));
+app.post('/api/auth/verify-reset-token', (req, res) => authController.verifyResetToken(req, res));
 app.put('/api/auth/update', authenticateToken, (req, res) => authController.update(req, res));
 app.get('/api/auth/me', authenticateToken, (req, res) => authController.me(req, res));
 

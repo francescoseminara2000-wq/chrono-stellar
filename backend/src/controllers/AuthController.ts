@@ -249,6 +249,33 @@ export class AuthController {
         }
     }
 
+    async verifyResetToken(req: Request, res: Response) {
+        try {
+            const { token } = req.body;
+
+            if (!token) {
+                return res.status(400).json({ error: 'Token is required', valid: false });
+            }
+
+            const user = await prisma.user.findFirst({
+                where: {
+                    resetPasswordToken: token,
+                    resetPasswordExpires: {
+                        gt: new Date()
+                    }
+                }
+            });
+
+            if (!user) {
+                return res.status(400).json({ error: 'Il link di recupero è scaduto o non è valido', valid: false });
+            }
+
+            res.json({ valid: true });
+        } catch (error: any) {
+            res.status(500).json({ error: error.message, valid: false });
+        }
+    }
+
     async me(req: Request, res: Response) {
         try {
             // @ts-ignore - userId added by middleware
