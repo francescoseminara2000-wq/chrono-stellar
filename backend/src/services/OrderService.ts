@@ -46,7 +46,8 @@ export class OrderService {
                 throw new Error(`Quantità non disponibile per ${product.name}. Disponibili: ${product.stockQuantity} ${product.unitType}`);
             }
 
-            const lineTotal = product.priceCents * item.quantity; // Simplified for MVP
+            const multiplier = (product.isVariableWeight && product.unitType === 'PZ') ? product.stepAmount.toNumber() : 1;
+            const lineTotal = product.priceCents * item.quantity * multiplier;
 
             estimatedTotal += lineTotal;
             orderItemsData.push({

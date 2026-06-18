@@ -151,13 +151,20 @@ export const ProductDetail = () => {
 
                         <h1 className="font-script text-6xl md:text-7xl text-nature-900 mb-6 leading-tight">{product.name}</h1>
 
-                        <div className="flex items-end gap-3 mb-8">
-                            <span className="text-4xl font-bold text-nature-900">
-                                €{(product.priceCents / 100).toFixed(2)}
-                            </span>
-                            <span className="text-xl text-gray-500 font-medium mb-1">
-                                / {product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase()}
-                            </span>
+                        <div className="flex flex-col gap-2 mb-8">
+                            <div className="flex items-end gap-3">
+                                <span className="text-4xl font-bold text-nature-900">
+                                    €{(product.priceCents / 100).toFixed(2)}
+                                </span>
+                                <span className="text-xl text-gray-500 font-medium mb-1">
+                                    / {product.isVariableWeight && product.unitType === 'PZ' ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
+                                </span>
+                            </div>
+                            {product.isVariableWeight && product.unitType === 'PZ' && (
+                                <span className="text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl block w-fit">
+                                    Pezzo da circa {product.stepAmount} kg
+                                </span>
+                            )}
                         </div>
 
                         <p className="text-gray-600 text-lg leading-relaxed mb-8 border-l-4 border-nature-200 pl-6">

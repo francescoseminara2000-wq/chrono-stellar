@@ -99,6 +99,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelec
                     <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 min-h-[2.5em]">
                         {product.description || "Freschezza garantita dalla nostra selezione."}
                     </p>
+                    {product.isVariableWeight && product.unitType === 'PZ' && (
+                        <span className="text-[10px] text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-lg mt-1.5 inline-block w-fit shrink-0">
+                            Pezzo da circa {product.stepAmount} kg
+                        </span>
+                    )}
                 </div>
 
                 <div className="mt-auto flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 pt-2">
@@ -110,7 +115,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelec
                                 €{(product.priceCents / 100).toFixed(2)}
                             </span>
                             <span className="text-[10px] sm:text-sm text-gray-500 font-medium">
-                                /{product.unitType === 'BOX' ? 'box' : product.unitType.toLowerCase()}
+                                /{product.isVariableWeight && product.unitType === 'PZ' ? 'kg' : (product.unitType === 'BOX' ? 'box' : product.unitType.toLowerCase())}
                             </span>
                         </div>
                     </div>

@@ -492,13 +492,14 @@ export const Checkout = () => {
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-bold text-nature-900 line-clamp-1 text-sm">{item.name}</h4>
                                             <p className="text-xs text-gray-500 mt-0.5">
-                                                {item.quantity} {item.unitType === 'PZ' ? 'pz' : item.unitType} x € {(item.priceCents / 100).toFixed(2)}
+                                                {item.quantity} {item.unitType === 'PZ' ? 'pz' : item.unitType}
+                                                {item.isVariableWeight && item.unitType === 'PZ' ? ` (circa ${(item.quantity * item.stepAmount).toFixed(1)} kg)` : ''} x € {(item.priceCents / 100).toFixed(2)} / {item.isVariableWeight && item.unitType === 'PZ' ? 'kg' : (item.unitType === 'BOX' ? 'box' : item.unitType.toLowerCase())}
                                             </p>
                                         </div>
 
                                         {/* Total Price */}
                                         <div className="font-bold text-nature-900 text-sm whitespace-nowrap">
-                                            € {((item.priceCents * item.quantity) / 100).toFixed(2)}
+                                            € {((item.priceCents * item.quantity * ((item.isVariableWeight && item.unitType === 'PZ') ? item.stepAmount : 1)) / 100).toFixed(2)}
                                         </div>
                                     </div>
                                 ))}

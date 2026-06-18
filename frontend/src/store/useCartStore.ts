@@ -66,7 +66,10 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     getEstimatedTotal: () => {
         const { items } = get();
-        return items.reduce((total, item) => total + (item.priceCents * item.quantity), 0);
+        return items.reduce((total, item) => {
+            const multiplier = (item.isVariableWeight && item.unitType === 'PZ') ? (item.stepAmount || 1) : 1;
+            return total + (item.priceCents * item.quantity * multiplier);
+        }, 0);
     },
 
     hasVariableWeightItems: () => {

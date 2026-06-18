@@ -66,8 +66,12 @@ export const CartSummary: React.FC = () => {
                                 </div>
 
                                 <p className="text-sm text-gray-500 mb-3">
-                                    € {(item.priceCents / 100).toFixed(2)} / {item.unitType === 'BOX' ? 'conf.' : item.unitType.toLowerCase()}
-                                    {item.isVariableWeight && <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full font-bold">~Peso</span>}
+                                    € {(item.priceCents / 100).toFixed(2)} / {item.isVariableWeight && item.unitType === 'PZ' ? 'kg' : (item.unitType === 'BOX' ? 'conf.' : item.unitType.toLowerCase())}
+                                    {item.isVariableWeight && (
+                                        <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full font-bold">
+                                            {item.unitType === 'PZ' ? `circa ${(item.quantity * item.stepAmount).toFixed(1)} kg` : '~Peso'}
+                                        </span>
+                                    )}
                                 </p>
 
                                 <div className="flex items-center justify-between">
@@ -125,7 +129,7 @@ export const CartSummary: React.FC = () => {
                                     )}
 
                                     <span className="font-bold text-lg text-nature-900">
-                                        {((item.priceCents * item.quantity) / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+                                        {(((item.priceCents * item.quantity * ((item.isVariableWeight && item.unitType === 'PZ') ? item.stepAmount : 1)) / 100)).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
                                     </span>
                                 </div>
                             </div>
