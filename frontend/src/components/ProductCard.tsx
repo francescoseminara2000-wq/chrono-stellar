@@ -20,9 +20,10 @@ interface Product {
 interface ProductCardProps {
     product: Product;
     onWeightSelect: (product: Product) => void;
+    onUnitSelect?: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelect }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelect, onUnitSelect }) => {
     const { items, addItem, updateQuantity } = useCartStore();
 
     const getProductQuantity = (productId: number) => {
@@ -150,9 +151,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelec
                                     >
                                         <Minus size={12} className="sm:w-4 sm:h-4" strokeWidth={3} />
                                     </button>
-                                    <div className="w-5 sm:w-8 text-center text-[10px] sm:text-base font-bold text-nature-900">
+                                    <button
+                                        type="button"
+                                        onClick={() => onUnitSelect?.(product)}
+                                        className="w-8 text-center bg-transparent border-none focus:outline-none outline-none font-bold text-[10px] sm:text-base text-nature-900 hover:text-nature-600 transition-colors py-1 px-0.5"
+                                        title="Modifica con tastiera"
+                                    >
                                         {quantity}
-                                    </div>
+                                    </button>
                                     <button
                                         onClick={() => updateQuantity(product.id, quantity + 1)}
                                         className="w-6 sm:w-10 h-full flex items-center justify-center text-nature-600 hover:bg-nature-50 rounded-md sm:rounded-xl transition-colors"

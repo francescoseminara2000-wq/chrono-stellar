@@ -718,7 +718,7 @@ export const OrderManager = () => {
                             </div>
 
                              {/* Main content wrapper - flex layout, no scroll */}
-                             <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0 overflow-hidden">
+                             <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
                                 <div className="hidden lg:flex justify-between items-center mb-4 pb-2.5 border-b border-gray-100">
                                     <div>
                                         <h2 className="text-2xl font-black text-gray-900 leading-none">Ordine #{selectedOrder.id}</h2>
@@ -764,7 +764,7 @@ export const OrderManager = () => {
                                 )}
 
                                 {/* Customer Info & Internal Notes */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-4 shrink-0">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-4 shrink-0 relative z-30">
                                     {/* Customer Info */}
                                     <div className="bg-nature-50/60 p-3 lg:p-4 rounded-xl border border-nature-100/50 text-xs flex flex-col justify-between">
                                         <div>

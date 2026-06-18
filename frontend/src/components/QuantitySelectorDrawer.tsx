@@ -2,53 +2,55 @@ import React from 'react';
 import { X, Check } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-interface WeightSelectorDrawerProps {
+interface QuantitySelectorDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     productName: string;
-    currentWeight: number;
+    currentQty: number;
     unitPrice: number;
-    onConfirm: (weight: number) => void;
+    unitType: 'PZ' | 'BOX';
+    onConfirm: (qty: number) => void;
 }
 
-export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
+export const QuantitySelectorDrawer: React.FC<QuantitySelectorDrawerProps> = ({
     isOpen,
     onClose,
     productName,
-    currentWeight,
+    currentQty,
     unitPrice,
+    unitType,
     onConfirm
 }) => {
-    // Common weights in KG
-    const presetWeights = [0.5, 1, 1.5, 2, 2.5, 3];
+    // Common quantities for units
+    const presetQuantities = [1, 2, 3, 4, 6, 8, 10, 12, 15];
 
-    // If current weight is not in presets, add it temporarily (unless 0)
-    const displayWeights = currentWeight > 0 && !presetWeights.includes(currentWeight)
-        ? [...presetWeights, currentWeight].sort((a, b) => a - b)
-        : presetWeights;
+    // If current qty is not in presets, add it temporarily (unless 0)
+    const displayQuantities = currentQty > 0 && !presetQuantities.includes(currentQty)
+        ? [...presetQuantities, currentQty].sort((a, b) => a - b)
+        : presetQuantities;
 
-    const [selectedWeight, setSelectedWeight] = React.useState(currentWeight || 1);
+    const [selectedQty, setSelectedQty] = React.useState(currentQty || 1);
     const [showKeypad, setShowKeypad] = React.useState(false);
-    const [keypadInput, setKeypadInput] = React.useState(String(currentWeight || 1));
+    const [keypadInput, setKeypadInput] = React.useState(String(currentQty || 1));
 
     // Reset selection when opening
     React.useEffect(() => {
         if (isOpen) {
-            const w = currentWeight || 1;
-            setSelectedWeight(w);
-            setKeypadInput(String(w));
+            const q = currentQty || 1;
+            setSelectedQty(q);
+            setKeypadInput(String(q));
             setShowKeypad(false);
         }
-    }, [isOpen, currentWeight]);
+    }, [isOpen, currentQty]);
 
-    const handleSelectWeight = (w: number) => {
-        setSelectedWeight(w);
-        setKeypadInput(String(w));
+    const handleSelectQty = (q: number) => {
+        setSelectedQty(q);
+        setKeypadInput(String(q));
     };
 
-    const handleStepWeight = (step: number) => {
-        setSelectedWeight(prev => {
-            const newVal = Math.max(0.1, Number((prev + step).toFixed(1)));
+    const handleStepQty = (step: number) => {
+        setSelectedQty(prev => {
+            const newVal = Math.max(1, prev + step);
             setKeypadInput(String(newVal));
             return newVal;
         });
@@ -59,12 +61,8 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
         if (key === 'backspace') {
             newVal = newVal.slice(0, -1);
             if (newVal === '') newVal = '0';
-        } else if (key === '.') {
-            if (!newVal.includes('.')) {
-                newVal = newVal === '' ? '0.' : newVal + '.';
-            }
         } else {
-            // Number typed
+            // Number typed (no decimals allowed for PZ/BOX)
             if (newVal === '0') {
                 newVal = key;
             } else {
@@ -74,11 +72,13 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
 
         setKeypadInput(newVal);
 
-        const parsed = parseFloat(newVal);
+        const parsed = parseInt(newVal, 10);
         if (!isNaN(parsed) && parsed >= 0) {
-            setSelectedWeight(parsed);
+            setSelectedQty(parsed);
         }
     };
+
+    const labelLower = unitType === 'BOX' ? 'box' : 'pz';
 
     return (
         <AnimatePresence>
@@ -145,8 +145,8 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                                     ))}
                                     <button
                                         type="button"
-                                        onClick={() => handleKeypadPress('.')}
-                                        className="h-12 rounded-xl bg-white border border-gray-200/60 hover:bg-nature-50 hover:border-nature-300 text-lg font-black text-gray-805 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                                        disabled
+                                        className="h-12 rounded-xl bg-gray-100 border border-gray-200/30 text-lg font-bold text-gray-300 flex items-center justify-center cursor-not-allowed"
                                     >
                                         .
                                     </button>
@@ -168,17 +168,17 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                             </div>
                         ) : (
                             <div className="grid grid-cols-3 gap-3 mb-6">
-                                {displayWeights.map(weight => (
+                                {displayQuantities.map(qty => (
                                     <button
-                                        key={weight}
+                                        key={qty}
                                         type="button"
-                                        onClick={() => handleSelectWeight(weight)}
-                                        className={`py-3 rounded-xl font-bold text-lg border-2 transition-all ${selectedWeight === weight
+                                        onClick={() => handleSelectQty(qty)}
+                                        className={`py-3 rounded-xl font-bold text-lg border-2 transition-all ${selectedQty === qty
                                                 ? 'border-nature-600 bg-nature-50 text-nature-700'
                                                 : 'border-gray-100 bg-white text-gray-600 hover:border-nature-200 shadow-sm'
                                             }`}
                                     >
-                                        {weight} kg
+                                        {qty} {labelLower}
                                     </button>
                                 ))}
                             </div>
@@ -188,22 +188,22 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                         <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl mb-8 border border-gray-100">
                             <button
                                 type="button"
-                                onClick={() => handleStepWeight(-0.1)}
+                                onClick={() => handleStepQty(-1)}
                                 className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center font-bold text-xl text-nature-600 active:scale-95 transition-transform"
                             >
                                 -
                             </button>
                             <div className="text-center">
                                 <div className="text-3xl font-bold text-nature-900 leading-none">
-                                    {showKeypad ? (keypadInput || '0') : selectedWeight.toFixed(1)} <span className="text-base text-gray-500 font-normal">kg</span>
+                                    {showKeypad ? (keypadInput || '0') : selectedQty} <span className="text-base text-gray-500 font-normal">{labelLower}</span>
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1">
-                                    Circa € {((selectedWeight * unitPrice) / 100).toFixed(2)}
+                                    Prezzo: € {((selectedQty * unitPrice) / 100).toFixed(2)}
                                 </div>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => handleStepWeight(0.1)}
+                                onClick={() => handleStepQty(1)}
                                 className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center font-bold text-xl text-nature-600 active:scale-95 transition-transform"
                             >
                                 +
@@ -214,13 +214,13 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                         <button
                             type="button"
                             onClick={() => {
-                                onConfirm(selectedWeight);
+                                onConfirm(selectedQty);
                                 onClose();
                             }}
                             className="w-full bg-nature-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-nature-700 active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
                         >
                             <Check size={24} />
-                            Conferma {selectedWeight} kg
+                            Conferma {selectedQty} {labelLower}
                         </button>
                     </motion.div>
                 </>

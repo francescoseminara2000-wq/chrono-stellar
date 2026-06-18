@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { ShoppingBasket, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { sanitizeImageUrl } from '../utils/imageUrl';
+import { WeightSelectorDrawer } from './WeightSelectorDrawer';
+import { QuantitySelectorDrawer } from './QuantitySelectorDrawer';
 
 export const CartSummary: React.FC = () => {
     const { items, getEstimatedTotal, hasVariableWeightItems, removeItem, updateQuantity } = useCartStore();
+    const [selectedProductForWeight, setSelectedProductForWeight] = useState<any | null>(null);
+    const [selectedProductForUnit, setSelectedProductForUnit] = useState<any | null>(null);
 
     const totalCents = getEstimatedTotal();
     const hasVariable = hasVariableWeightItems();
@@ -68,19 +73,48 @@ export const CartSummary: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     {/* Edit Quantity */}
                                     {item.unitType === 'KG' ? (
-                                        <div className="flex items-center gap-2 text-sm font-bold text-nature-900 bg-nature-50 px-3 py-1.5 rounded-lg border border-nature-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedProductForWeight({
+                                                id: item.id,
+                                                name: item.name,
+                                                priceCents: item.priceCents,
+                                                unitType: item.unitType,
+                                                isVariableWeight: item.isVariableWeight,
+                                                stepAmount: item.stepAmount,
+                                                imageUrl: item.imageUrl,
+                                                quantity: item.quantity
+                                            })}
+                                            className="flex items-center gap-2 text-sm font-bold text-nature-900 bg-nature-50 px-3 py-1.5 rounded-lg border border-nature-100 hover:bg-nature-100 transition-colors cursor-pointer"
+                                            title="Modifica peso"
+                                        >
                                             {item.quantity} kg
-                                            {/* Note: In full implementation, this could open the drawer again */}
-                                        </div>
+                                        </button>
                                     ) : (
                                         <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
                                             <button
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
                                                 className="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-nature-600 font-bold disabled:opacity-50"
                                             >
                                                 -
                                             </button>
-                                            <span className="text-sm font-bold text-gray-900 min-w-[1.5rem] text-center">{item.quantity}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedProductForUnit({
+                                                    id: item.id,
+                                                    name: item.name,
+                                                    priceCents: item.priceCents,
+                                                    unitType: item.unitType,
+                                                    isVariableWeight: item.isVariableWeight,
+                                                    stepAmount: item.stepAmount,
+                                                    imageUrl: item.imageUrl,
+                                                    quantity: item.quantity
+                                                })}
+                                                className="w-8 text-center bg-transparent border-none focus:outline-none outline-none font-bold text-sm text-gray-900 hover:text-nature-600 transition-colors py-1"
+                                                title="Modifica con tastiera"
+                                            >
+                                                {item.quantity}
+                                            </button>
                                             <button
                                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                                 className="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-nature-600 font-bold"
@@ -116,6 +150,34 @@ export const CartSummary: React.FC = () => {
                     Procedi al Checkout <span className="ml-2">→</span>
                 </Link>
             </div>
+
+            {/* Drawers */}
+            <WeightSelectorDrawer
+                isOpen={!!selectedProductForWeight}
+                onClose={() => setSelectedProductForWeight(null)}
+                productName={selectedProductForWeight?.name || ''}
+                currentWeight={selectedProductForWeight ? selectedProductForWeight.quantity : 0}
+                unitPrice={selectedProductForWeight?.priceCents || 0}
+                onConfirm={(weight) => {
+                    if (selectedProductForWeight) {
+                        updateQuantity(selectedProductForWeight.id, weight);
+                    }
+                }}
+            />
+
+            <QuantitySelectorDrawer
+                isOpen={!!selectedProductForUnit}
+                onClose={() => setSelectedProductForUnit(null)}
+                productName={selectedProductForUnit?.name || ''}
+                currentQty={selectedProductForUnit ? selectedProductForUnit.quantity : 0}
+                unitPrice={selectedProductForUnit?.priceCents || 0}
+                unitType={selectedProductForUnit?.unitType as any}
+                onConfirm={(qty) => {
+                    if (selectedProductForUnit) {
+                        updateQuantity(selectedProductForUnit.id, qty);
+                    }
+                }}
+            />
         </div>
     );
 };

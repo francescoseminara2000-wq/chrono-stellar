@@ -7,6 +7,7 @@ import { useAppState } from '../../store/useAppState';
 import { Block } from '../../pages/admin/PageManager';
 import { ProductCard } from '../ProductCard';
 import { WeightSelectorDrawer } from '../WeightSelectorDrawer';
+import { QuantitySelectorDrawer } from '../QuantitySelectorDrawer';
 import { useCartStore } from '../../store/useCartStore';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 
@@ -34,6 +35,7 @@ const LatestProductsBlock = ({ block, overlapClasses }: { block: any, overlapCla
     const [loading, setLoading] = useState(true);
     const { items, addItem, updateQuantity } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<any | null>(null);
+    const [selectedProductForUnit, setSelectedProductForUnit] = useState<any | null>(null);
 
     const getProductQuantity = (productId: number) => {
         const item = items.find(i => i.id === productId);
@@ -77,6 +79,7 @@ const LatestProductsBlock = ({ block, overlapClasses }: { block: any, overlapCla
                             key={product.id}
                             product={product}
                             onWeightSelect={setSelectedProductForWeight}
+                            onUnitSelect={setSelectedProductForUnit}
                         />
                     ))}
                 </div>
@@ -103,6 +106,33 @@ const LatestProductsBlock = ({ block, overlapClasses }: { block: any, overlapCla
                             }, weight);
                         } else {
                             updateQuantity(product.id, weight);
+                        }
+                    }
+                }}
+            />
+
+            <QuantitySelectorDrawer
+                isOpen={!!selectedProductForUnit}
+                onClose={() => setSelectedProductForUnit(null)}
+                productName={selectedProductForUnit?.name || ''}
+                currentQty={selectedProductForUnit ? getProductQuantity(selectedProductForUnit.id) : 0}
+                unitPrice={selectedProductForUnit?.priceCents || 0}
+                unitType={selectedProductForUnit?.unitType as any}
+                onConfirm={(qty) => {
+                    if (selectedProductForUnit) {
+                        const product = selectedProductForUnit;
+                        if (getProductQuantity(product.id) === 0) {
+                            addItem({
+                                id: product.id,
+                                name: product.name,
+                                priceCents: product.priceCents,
+                                unitType: product.unitType,
+                                isVariableWeight: product.isVariableWeight,
+                                stepAmount: product.stepAmount,
+                                imageUrl: product.imageUrl
+                            }, qty);
+                        } else {
+                            updateQuantity(product.id, qty);
                         }
                     }
                 }}

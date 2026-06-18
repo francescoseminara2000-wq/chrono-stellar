@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useCartStore } from '../store/useCartStore';
 import { Search, ArrowUp, ArrowDown, ArrowUpDown, X } from 'lucide-react';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
+import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
 
 interface Category {
@@ -36,6 +37,7 @@ export const Shop = () => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const { items, addItem, updateQuantity } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
+    const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
 
     const getProductQuantity = (productId: number) => {
         const item = items.find(i => i.id === productId);
@@ -201,6 +203,7 @@ export const Shop = () => {
                                 key={product.id}
                                 product={product}
                                 onWeightSelect={setSelectedProductForWeight}
+                                onUnitSelect={setSelectedProductForUnit}
                             />
                         ))}
                     </div>
@@ -243,6 +246,34 @@ export const Shop = () => {
                             }, weight);
                         } else {
                             updateQuantity(product.id, weight);
+                        }
+                    }
+                }}
+            />
+
+            {/* Quantity Selector Drawer */}
+            <QuantitySelectorDrawer
+                isOpen={!!selectedProductForUnit}
+                onClose={() => setSelectedProductForUnit(null)}
+                productName={selectedProductForUnit?.name || ''}
+                currentQty={selectedProductForUnit ? getProductQuantity(selectedProductForUnit.id) : 0}
+                unitPrice={selectedProductForUnit?.priceCents || 0}
+                unitType={selectedProductForUnit?.unitType as any}
+                onConfirm={(qty) => {
+                    if (selectedProductForUnit) {
+                        const product = selectedProductForUnit;
+                        if (getProductQuantity(product.id) === 0) {
+                            addItem({
+                                id: product.id,
+                                name: product.name,
+                                priceCents: product.priceCents,
+                                unitType: product.unitType as any,
+                                isVariableWeight: product.isVariableWeight,
+                                stepAmount: product.stepAmount,
+                                imageUrl: product.imageUrl
+                            }, qty);
+                        } else {
+                            updateQuantity(product.id, qty);
                         }
                     }
                 }}

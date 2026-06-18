@@ -288,7 +288,10 @@ export class LogisticsController {
                 // WhatsApp
                 const whatsAppService = WhatsAppService.getInstance();
                 const waStatus = whatsAppService.getStatus();
-                const textMessage = `Ciao ${customerName}, l'orario del tuo ordine #${updatedOrder.id} è stato programmato per il ${formattedDate}${timeStr}. A presto!`;
+                const isDelivery = updatedOrder.deliveryMethod === 'DELIVERY';
+                const methodStr = isDelivery ? 'la consegna' : 'il ritiro';
+                const verbStr = isDelivery ? 'stata programmata' : 'stato programmato';
+                const textMessage = `Ciao ${customerName}, ${methodStr} del tuo ordine #${updatedOrder.id} è ${verbStr} per il ${formattedDate}${timeStr}. A presto!`;
                 
                 if (waStatus.isConnected && updatedOrder.customerPhone) {
                     try {

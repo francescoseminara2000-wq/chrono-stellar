@@ -4,6 +4,7 @@ import { useCartStore } from '../store/useCartStore';
 import { ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, Star, Truck, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
+import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
 import { sanitizeImageUrl } from '../utils/imageUrl';
 
@@ -27,6 +28,7 @@ export const ProductDetail = () => {
     const [loading, setLoading] = useState(true);
     const { items, addItem, updateQuantity } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
+    const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
 
     const getProductQuantity = (productId: number) => {
         const item = items.find(i => i.id === productId);
@@ -214,7 +216,14 @@ export const ProductDetail = () => {
                                             >
                                                 <Minus strokeWidth={3} />
                                             </button>
-                                            <div className="text-2xl font-bold text-nature-900">{quantity}</div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedProductForUnit(product)}
+                                                className="w-12 text-center bg-transparent border-none focus:outline-none outline-none font-bold text-2xl text-nature-900 hover:text-nature-600 transition-colors py-2"
+                                                title="Modifica con tastiera"
+                                            >
+                                                {quantity}
+                                            </button>
                                             <button
                                                 onClick={() => updateQuantity(product.id, quantity + 1)}
                                                 className="w-14 h-14 bg-nature-900 rounded-xl shadow-md text-white flex items-center justify-center hover:bg-nature-800 transition-colors"
@@ -250,12 +259,13 @@ export const ProductDetail = () => {
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
                         {relatedProducts.map(p => (
-                            <ProductCard
-                                key={p.id}
-                                product={p}
-                                onWeightSelect={setSelectedProductForWeight}
-                            />
-                        ))}
+                             <ProductCard
+                                 key={p.id}
+                                 product={p}
+                                 onWeightSelect={setSelectedProductForWeight}
+                                 onUnitSelect={setSelectedProductForUnit}
+                             />
+                         ))}
                     </div>
                     <div className="mt-8 text-center md:hidden">
                         <Link to="/shop" className="text-nature-600 font-bold hover:underline">Vedi tutti &rarr;</Link>
@@ -275,6 +285,25 @@ export const ProductDetail = () => {
                                 addItem({ ...selectedProductForWeight }, weight);
                             } else {
                                 updateQuantity(selectedProductForWeight.id, weight);
+                            }
+                        }
+                    }}
+                />
+
+                {/* Unit Drawer */}
+                <QuantitySelectorDrawer
+                    isOpen={!!selectedProductForUnit}
+                    onClose={() => setSelectedProductForUnit(null)}
+                    productName={selectedProductForUnit?.name || ''}
+                    currentQty={selectedProductForUnit ? getProductQuantity(selectedProductForUnit.id) : 0}
+                    unitPrice={selectedProductForUnit?.priceCents || 0}
+                    unitType={selectedProductForUnit?.unitType as any}
+                    onConfirm={(qty) => {
+                        if (selectedProductForUnit) {
+                            if (getProductQuantity(selectedProductForUnit.id) === 0) {
+                                addItem({ ...selectedProductForUnit }, qty);
+                            } else {
+                                updateQuantity(selectedProductForUnit.id, qty);
                             }
                         }
                     }}

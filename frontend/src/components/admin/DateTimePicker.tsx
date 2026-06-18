@@ -153,7 +153,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
             </button>
 
             {isOpen && (
-                <div className="absolute left-0 mt-2 p-4 bg-white border border-gray-200 rounded-2xl shadow-xl z-[100] w-[320px] sm:w-[540px] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 p-4 bg-white border border-gray-200 rounded-2xl shadow-xl z-[100] w-[320px] sm:w-[540px] animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                         {/* Calendar Column */}
                         <div className="flex-1">
