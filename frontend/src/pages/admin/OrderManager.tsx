@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
+import { DateTimePicker } from '../../components/admin/DateTimePicker';
 
 interface Order {
     id: number;
@@ -797,22 +798,14 @@ export const OrderManager = () => {
                                     <div className="bg-blue-50/60 p-3 lg:p-4 rounded-xl border border-blue-100/50 text-xs flex flex-col justify-between">
                                         <div>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-1">Pianificazione Appuntamento</span>
-                                            <div className="space-y-1 mt-1.5">
-                                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data e Ora (Selettore Nativo)</label>
-                                                <input
-                                                    type="datetime-local"
-                                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-white focus:ring-1 focus:ring-blue-450 outline-none"
-                                                    value={editDate && editTime ? `${editDate}T${editTime}` : editDate ? `${editDate}T00:00` : ''}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        if (!val) {
-                                                            setEditDate('');
-                                                            setEditTime('');
-                                                        } else {
-                                                            const [d, t] = val.split('T');
-                                                            setEditDate(d || '');
-                                                            setEditTime(t || '');
-                                                        }
+                                            <div className="space-y-1.5 mt-1.5">
+                                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data e Ora Appuntamento</label>
+                                                <DateTimePicker
+                                                    date={editDate}
+                                                    time={editTime}
+                                                    onChange={(d, t) => {
+                                                        setEditDate(d);
+                                                        setEditTime(t);
                                                     }}
                                                 />
                                             </div>
