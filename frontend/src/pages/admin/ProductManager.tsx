@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter, Sliders } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter, Sliders, Tag, Euro, FileText, ChefHat, Scale, Package, AlertTriangle, Image, Check } from 'lucide-react';
 
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,6 +38,7 @@ export const ProductManager = () => {
     const [showFilter, setShowFilter] = useState(false);
     const [showSort, setShowSort] = useState(false);
     const [mobileQuickEditId, setMobileQuickEditId] = useState<number | null>(null);
+    const [activeTab, setActiveTab] = useState<'base' | 'pricing'>('base');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -287,6 +288,7 @@ export const ProductManager = () => {
             categoryId: product.categoryId?.toString() || '',
             image: null
         });
+        setActiveTab('base');
         setIsModalOpen(true);
     };
 
@@ -306,6 +308,7 @@ export const ProductManager = () => {
             categoryId: '',
             image: null
         });
+        setActiveTab('base');
     };
 
     return (
@@ -891,108 +894,340 @@ export const ProductManager = () => {
             {/* Modal */}
             {
                 isModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-0 md:p-4 z-[60]">
-                        <div className="bg-white w-full h-full md:h-auto md:max-h-[95vh] md:max-w-2xl md:rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                                <h2 className="text-2xl font-bold text-gray-800">{editingProduct ? 'Modifica Prodotto' : 'Nuovo Prodotto'}</h2>
-                                <button onClick={() => setIsModalOpen(false)}><X className="text-gray-400 hover:text-gray-600" /></button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                                <form id="product-form" onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="col-span-2 md:col-span-1 space-y-2">
-                                            <label className="text-sm font-bold text-gray-700">Categoria</label>
-                                            <select
-                                                value={formData.categoryId}
-                                                onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white"
-                                            >
-                                                <option value="">Nessuna Categoria</option>
-                                                {categories.map(cat => (
-                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="col-span-2 md:col-span-1 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Nome Prodotto</label>
-                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                                        </div>
-
-                                        <div className="col-span-2 md:col-span-1 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Prezzo (€)</label>
-                                            <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
-                                        </div>
-
-                                        <div className="col-span-2 md:col-span-1 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Unità di Misura</label>
-                                            <select className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white" value={formData.unitType} onChange={e => setFormData({ ...formData, unitType: e.target.value })} >
-                                                <option value="KG">Al KG</option>
-                                                <option value="PZ">Al Pezzo</option>
-                                                <option value="BOX">A Cassetta/Confezione</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="col-span-2 md:col-span-1 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Giacenza Attuale ({formData.unitType})</label>
-                                            <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-nature-50/50 border-nature-200" required value={formData.stockQuantity} onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })} />
-                                        </div>
-
-                                        <div className="col-span-2 md:col-span-1 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Soglia Allerta ({formData.unitType})</label>
-                                            <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-red-50/30 border-red-200" required value={formData.lowStockThreshold} onChange={e => setFormData({ ...formData, lowStockThreshold: e.target.value })} />
-                                        </div>
-
-                                        <div className="col-span-2 flex flex-wrap items-center gap-6">
-                                            <label className="flex items-center gap-2 cursor-pointer group">
-                                                <input type="checkbox" checked={formData.isVariableWeight} onChange={e => setFormData({ ...formData, isVariableWeight: e.target.checked })} className="w-5 h-5 text-nature-600 rounded focus:ring-nature-500 transition-all border-gray-300" />
-                                                <span className="text-sm font-bold text-gray-700 group-hover:text-nature-600 transition-colors">Peso Variabile</span>
-                                            </label>
-
-                                            <label className="flex items-center gap-2 cursor-pointer group">
-                                                <input type="checkbox" checked={formData.allowBackorder} onChange={e => setFormData({ ...formData, allowBackorder: e.target.checked })} className="w-5 h-5 text-nature-600 rounded focus:ring-nature-500 transition-all border-gray-300" />
-                                                <span className="text-sm font-bold text-nature-700 group-hover:text-nature-900 transition-colors">Vendi oltre scorta (Bypass)</span>
-                                            </label>
-                                        </div>
-
-                                        {formData.isVariableWeight && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 z-[60]">
+                        <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            
+                            {/* Header */}
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <div>
+                                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-2">
+                                        {editingProduct ? (
                                             <>
-                                                <div className="col-span-2 md:col-span-1 space-y-2">
-                                                    <label className="block text-sm font-bold text-gray-700">Peso Indicativo Pezzo (kg)</label>
-                                                    <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all" value={formData.stepAmount} onChange={e => setFormData({ ...formData, stepAmount: e.target.value })} placeholder="es. 1.5 per anguria, lascia 0 se acquistabile solo a peso" />
-                                                    <p className="text-[10px] text-gray-400">Imposta un valore maggiore di 0 per consentire al cliente di ordinare questo prodotto a pezzi (calcolando il peso stimato) o a peso.</p>
-                                                </div>
-                                                <div className="col-span-2 text-sm text-yellow-600 bg-yellow-50 p-3 rounded-2xl border border-yellow-100/50">
-                                                    Il prezzo finale verrà calcolato quando peserai il prodotto per l'ordine.
-                                                </div>
+                                                <span className="w-2 h-6 bg-nature-600 rounded-full"></span>
+                                                Modifica Prodotto
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="w-2 h-6 bg-emerald-600 rounded-full"></span>
+                                                Nuovo Prodotto
                                             </>
                                         )}
+                                    </h2>
+                                    <p className="text-xs text-gray-400 mt-1">Inserisci i dettagli e le giacenze dell'articolo.</p>
+                                </div>
+                                <button 
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="p-2 bg-gray-100 rounded-full hover:bg-red-50 hover:text-red-600 transition-all active:scale-90"
+                                >
+                                    <X size={20} className="transition-transform duration-300 hover:rotate-90" />
+                                </button>
+                            </div>
 
-                                        <div className="col-span-2 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Descrizione</label>
-                                            <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all h-24 resize-none" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
-                                        </div>
+                            {/* Tab Bar Selector */}
+                            <div className="flex bg-gray-100/80 p-1.5 mx-6 mt-6 rounded-2xl border border-gray-200/50 text-sm font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('base')}
+                                    className={`flex-1 py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 ${activeTab === 'base' ? 'bg-white text-nature-950 shadow-md shadow-gray-200/50' : 'text-gray-500 hover:text-gray-800'}`}
+                                >
+                                    <Tag size={16} />
+                                    Dettagli Base
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('pricing')}
+                                    className={`flex-1 py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 ${activeTab === 'pricing' ? 'bg-white text-nature-950 shadow-md shadow-gray-200/50' : 'text-gray-500 hover:text-gray-800'}`}
+                                >
+                                    <Euro size={16} />
+                                    Prezzo & Inventario
+                                </button>
+                            </div>
 
-                                        <div className="col-span-2 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Consiglio dell'Esperto (AI Tips)</label>
-                                            <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all h-20 resize-none" placeholder="Es: Ottimo per risotti..." value={formData.seasonalTips} onChange={e => setFormData({ ...formData, seasonalTips: e.target.value })} />
-                                        </div>
+                            {/* Form Body */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                                <form id="product-form" onSubmit={handleSubmit} className="space-y-6">
+                                    
+                                    {/* TAB 1: Base Info */}
+                                    {activeTab === 'base' && (
+                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-250">
+                                            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                                                
+                                                <div className="col-span-2 sm:col-span-1 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <Tag size={12} className="text-nature-600" /> Categoria
+                                                    </label>
+                                                    <select
+                                                        value={formData.categoryId}
+                                                        onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white font-medium text-gray-800 shadow-sm"
+                                                    >
+                                                        <option value="">Nessuna Categoria</option>
+                                                        {categories.map(cat => (
+                                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
 
-                                        <div className="col-span-2 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700">Immagine</label>
-                                            <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:bg-nature-50/50 hover:border-nature-300 transition-colors cursor-pointer relative">
-                                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={e => setFormData({ ...formData, image: e.target.files?.[0] || null })} />
-                                                <Upload className="mx-auto text-gray-400 mb-2" />
-                                                <p className="text-gray-500 font-medium text-sm">{formData.image ? (formData.image as File).name : 'Clicca o trascina una foto qui'}</p>
+                                                <div className="col-span-2 sm:col-span-1 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <FileText size={12} className="text-nature-600" /> Nome Prodotto
+                                                    </label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all font-medium text-gray-800 shadow-sm" 
+                                                        required 
+                                                        value={formData.name} 
+                                                        onChange={e => setFormData({ ...formData, name: e.target.value })} 
+                                                        placeholder="es. Melone Cantalupo"
+                                                    />
+                                                </div>
+
+                                                <div className="col-span-2 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <FileText size={12} className="text-nature-600" /> Descrizione
+                                                    </label>
+                                                    <textarea 
+                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all h-24 resize-none font-medium text-gray-800 shadow-sm" 
+                                                        value={formData.description} 
+                                                        onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                                                        placeholder="Inserisci una breve descrizione del prodotto..."
+                                                    />
+                                                </div>
+
+                                                <div className="col-span-2 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <ChefHat size={12} className="text-nature-600" /> Consiglio dell'Esperto (AI Tips)
+                                                    </label>
+                                                    <textarea 
+                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all h-20 resize-none font-medium text-gray-800 shadow-sm" 
+                                                        placeholder="Es: Perfetto abbinato con il prosciutto crudo, servire fresco..." 
+                                                        value={formData.seasonalTips} 
+                                                        onChange={e => setFormData({ ...formData, seasonalTips: e.target.value })} 
+                                                    />
+                                                </div>
+
+                                                <div className="col-span-2 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <Image size={12} className="text-nature-600" /> Immagine Prodotto
+                                                    </label>
+                                                    
+                                                    {/* Custom Upload Area with Live Preview */}
+                                                    <div className="group relative border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center hover:bg-nature-50/50 hover:border-nature-300 transition-all cursor-pointer overflow-hidden min-h-[140px] flex items-center justify-center bg-gray-50/30">
+                                                        <input 
+                                                            type="file" 
+                                                            className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                                                            accept="image/*" 
+                                                            onChange={e => setFormData({ ...formData, image: e.target.files?.[0] || null })} 
+                                                        />
+                                                        
+                                                        {/* Preview container */}
+                                                        {formData.image || (editingProduct && editingProduct.imageUrl) ? (
+                                                            <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                                                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm shrink-0 bg-white relative">
+                                                                    <img 
+                                                                        src={formData.image ? URL.createObjectURL(formData.image) : (editingProduct?.imageUrl ? sanitizeImageUrl(editingProduct.imageUrl) : '')} 
+                                                                        alt="Preview" 
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                                <div className="text-left overflow-hidden pr-8">
+                                                                    <p className="text-sm font-bold text-gray-850 truncate">
+                                                                        {formData.image ? formData.image.name : 'Immagine attuale salvata'}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-400 mt-1">Trascina o clicca qui per sostituire l'immagine.</p>
+                                                                </div>
+                                                                
+                                                                {/* Reset Button */}
+                                                                {formData.image && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            setFormData({ ...formData, image: null });
+                                                                        }}
+                                                                        className="absolute right-4 top-4 p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors z-20"
+                                                                        title="Rimuovi nuova foto"
+                                                                    >
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="space-y-1">
+                                                                <Upload className="mx-auto text-gray-400 mb-2 transition-transform duration-300 group-hover:-translate-y-1" size={24} />
+                                                                <p className="text-gray-700 font-bold text-sm">Trascina o clicca qui per inserire la foto</p>
+                                                                <p className="text-[10px] text-gray-400">Supporta PNG, JPG o WEBP</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {/* TAB 2: Pricing & Inventory */}
+                                    {activeTab === 'pricing' && (
+                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-250">
+                                            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                                                
+                                                <div className="col-span-2 sm:col-span-1 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <Euro size={12} className="text-nature-600" /> Prezzo Unitario (€)
+                                                    </label>
+                                                    <div className="relative rounded-xl shadow-sm">
+                                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                            <span className="text-gray-400 font-bold text-sm">€</span>
+                                                        </div>
+                                                        <input 
+                                                            type="number" 
+                                                            step="0.01" 
+                                                            className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all font-bold text-gray-800" 
+                                                            required 
+                                                            value={formData.price} 
+                                                            onChange={e => setFormData({ ...formData, price: e.target.value })} 
+                                                            placeholder="0.00"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-span-2 sm:col-span-1 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <Scale size={12} className="text-nature-600" /> Unità di Vendita Base
+                                                    </label>
+                                                    <select 
+                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white font-medium text-gray-805" 
+                                                        value={formData.unitType} 
+                                                        onChange={e => setFormData({ ...formData, unitType: e.target.value })} 
+                                                    >
+                                                        <option value="KG">Al KG</option>
+                                                        <option value="PZ">Al Pezzo (PZ)</option>
+                                                        <option value="BOX">A Cassetta/Confezione (BOX)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div className="col-span-2 sm:col-span-1 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <Package size={12} className="text-nature-600" /> Giacenza Attuale ({formData.unitType})
+                                                    </label>
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.01" 
+                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-nature-50/30 border-nature-200/50 font-bold text-gray-800" 
+                                                        required 
+                                                        value={formData.stockQuantity} 
+                                                        onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })} 
+                                                    />
+                                                </div>
+
+                                                <div className="col-span-2 sm:col-span-1 space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                                        <AlertTriangle size={12} className="text-red-500" /> Soglia Allerta Scorte ({formData.unitType})
+                                                    </label>
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.01" 
+                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-red-50/20 border-red-200/50 font-bold text-gray-800" 
+                                                        required 
+                                                        value={formData.lowStockThreshold} 
+                                                        onChange={e => setFormData({ ...formData, lowStockThreshold: e.target.value })} 
+                                                    />
+                                                </div>
+
+                                                {/* Switches container */}
+                                                <div className="col-span-2 bg-gray-50/80 p-4 sm:p-6 rounded-2xl border border-gray-200/40 space-y-5">
+                                                    
+                                                    {/* Toggle 1: Peso Variabile */}
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <span className="block text-sm font-bold text-gray-800">Peso Variabile</span>
+                                                            <span className="block text-xs text-gray-400 mt-0.5">Il prodotto ha un peso effettivo non determinabile esattamente a priori (es. Anguria).</span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, isVariableWeight: !formData.isVariableWeight })}
+                                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shrink-0 ${formData.isVariableWeight ? 'bg-nature-600' : 'bg-gray-200'}`}
+                                                        >
+                                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isVariableWeight ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Toggle 2: Vendi oltre scorta */}
+                                                    <div className="flex items-center justify-between border-t border-gray-200/60 pt-4">
+                                                        <div>
+                                                            <span className="block text-sm font-bold text-gray-800">Consenti ordini oltre la scorta (Bypass)</span>
+                                                            <span className="block text-xs text-gray-400 mt-0.5">Permette ai clienti di ordinare l'articolo anche se la giacenza è zero.</span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, allowBackorder: !formData.allowBackorder })}
+                                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shrink-0 ${formData.allowBackorder ? 'bg-nature-600' : 'bg-gray-200'}`}
+                                                        >
+                                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.allowBackorder ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Variable Weight parameters (Conditional Reveal) */}
+                                                {formData.isVariableWeight && (
+                                                    <div className="col-span-2 space-y-4 animate-in slide-in-from-top-3 duration-300">
+                                                        <div className="space-y-2 bg-amber-50/40 p-4 sm:p-5 rounded-2xl border border-amber-200/40">
+                                                            <div className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-2">
+                                                                <Scale size={16} />
+                                                                Configurazione Peso Variabile
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div className="col-span-2 sm:col-span-1 space-y-1.5">
+                                                                    <label className="block text-xs font-bold text-gray-700">Peso Indicativo Pezzo (kg)</label>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        step="0.01" 
+                                                                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none bg-white font-bold text-gray-800 text-sm shadow-sm" 
+                                                                        value={formData.stepAmount} 
+                                                                        onChange={e => setFormData({ ...formData, stepAmount: e.target.value })} 
+                                                                        placeholder="es. 1.5 per anguria" 
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-2 sm:col-span-1 flex items-center">
+                                                                    <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+                                                                        Imposta un valore superiore a 0 per permettere l'acquisto alternativo a pezzi, calcolando un peso stimato. Lascia 0 per l'acquisto esclusivo a peso (kg).
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="text-xs text-amber-700 bg-amber-50 p-4 rounded-xl border border-amber-100/50 flex items-center gap-2">
+                                                            <AlertTriangle size={16} className="shrink-0" />
+                                                            <span>Il prezzo finale effettivo verrà ricalcolato ed applicato in fase di pesatura manuale da parte dell'amministratore.</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                            </div>
+                                        </div>
+                                    )}
 
                                 </form>
                             </div>
+
+                            {/* Footer */}
                             <div className="p-6 border-t border-gray-100 flex justify-end gap-4 bg-gray-50/50">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-colors">Annulla</button>
-                                <button type="submit" form="product-form" className="px-6 py-2.5 bg-nature-600 text-white font-bold rounded-xl hover:bg-nature-700 shadow-md transition-all active:scale-95">Salva Prodotto</button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsModalOpen(false)} 
+                                    className="px-6 py-3 text-gray-600 font-bold hover:bg-gray-200/50 rounded-xl transition-all active:scale-95"
+                                >
+                                    Annulla
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    form="product-form" 
+                                    className="px-6 py-3 bg-nature-600 text-white font-bold rounded-xl hover:bg-nature-700 shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+                                >
+                                    <Check size={18} />
+                                    Salva Prodotto
+                                </button>
                             </div>
                         </div>
                     </div>
