@@ -389,31 +389,31 @@ export const OrderManager = () => {
                             <div
                                 key={order.id}
                                 onClick={() => handleSelectOrder(order)}
-                                className={`bg-white p-2 lg:p-5 rounded-xl lg:rounded-2xl shadow-sm border cursor-pointer transition-all ${selectedOrder?.id === order.id ? 'border-nature-500 ring-2 ring-nature-500 bg-nature-50/30' : 'border-gray-100 hover:border-nature-200'
+                                className={`bg-white p-2.5 lg:p-5 rounded-xl lg:rounded-2xl shadow-sm border cursor-pointer transition-all ${selectedOrder?.id === order.id ? 'border-nature-500 ring-2 ring-nature-500 bg-nature-50/30' : 'border-gray-100 hover:border-nature-200'
                                     }`}
                             >
                                 {/* Mobile view: single line compact row */}
                                 <div className="lg:hidden flex items-center justify-between w-full gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <div className="w-7 h-7 bg-nature-100 rounded flex items-center justify-center text-nature-700 font-black text-[10px] shrink-0">
+                                        <div className="w-8 h-8 bg-nature-100 rounded flex items-center justify-center text-nature-700 font-black text-xs shrink-0">
                                             #{order.id}
                                         </div>
                                         <div className="min-w-0">
-                                            <h3 className="font-bold text-gray-900 leading-tight text-xs truncate" title={order.customerName || order.user?.name || 'Cliente'}>
+                                            <h3 className="font-bold text-gray-900 leading-tight text-sm truncate" title={order.customerName || order.user?.name || 'Cliente'}>
                                                 {order.customerName || order.user?.name || 'Cliente'}
                                             </h3>
-                                            <p className="text-[9px] text-gray-400 leading-none mt-0.5">
+                                            <p className="text-[10px] text-gray-400 leading-none mt-0.5">
                                                 {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1.5 shrink-0">
+                                    <div className="flex items-center gap-2 shrink-0">
                                         <span className="text-gray-400 shrink-0">
-                                            {order.deliveryMethod === 'DELIVERY' ? <Truck size={12} /> : <Scale size={12} />}
+                                            {order.deliveryMethod === 'DELIVERY' ? <Truck size={14} /> : <Scale size={14} />}
                                         </span>
                                         <StatusBadge status={order.status} isCompact />
                                         <div className="text-right shrink-0">
-                                            <span className="text-xs font-black text-nature-900 block">
+                                            <span className="text-sm font-black text-nature-900 block">
                                                 € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
                                             </span>
                                         </div>
@@ -845,7 +845,7 @@ const StatusBadge = ({ status, pulse, isCompact }: { status: string; pulse?: boo
     return (
         <span className={`
             rounded-xl font-black uppercase tracking-wider border transition-all relative
-            ${isCompact ? 'px-1.5 py-0.5 text-[9px]' : 'px-3 py-1 text-xs'}
+            ${isCompact ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}
             ${styles[status]}
             ${pulse ? 'animate-pulse ring-2 ring-current/20 shadow-lg shadow-current/10' : ''}
         `}>

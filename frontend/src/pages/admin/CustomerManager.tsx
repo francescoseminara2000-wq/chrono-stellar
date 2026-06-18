@@ -208,7 +208,7 @@ export const CustomerManager = () => {
                             <div
                                 key={customer.id}
                                 onClick={() => setSelectedCustomer(customer)}
-                                className={`p-2 lg:p-4 rounded-xl border cursor-pointer transition-all ${selectedCustomer?.id === customer.id
+                                className={`p-2.5 lg:p-4 rounded-xl border cursor-pointer transition-all ${selectedCustomer?.id === customer.id
                                     ? 'border-nature-500 ring-1 ring-nature-500 bg-nature-50/50'
                                     : 'border-gray-100 hover:border-nature-200 hover:bg-gray-50'
                                     }`}
@@ -216,7 +216,7 @@ export const CustomerManager = () => {
                                 {/* Mobile View: Single compact row */}
                                 <div className="lg:hidden flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <div className="w-8 h-8 rounded-full bg-nature-100 flex items-center justify-center text-nature-600 font-bold overflow-hidden shrink-0 text-xs">
+                                        <div className="w-9 h-9 rounded-full bg-nature-100 flex items-center justify-center text-nature-600 font-bold overflow-hidden shrink-0 text-sm">
                                             {customer.avatar ? (
                                                 <img src={sanitizeImageUrl(customer.avatar)} alt="avatar" className="w-full h-full object-cover" />
                                             ) : (
@@ -225,19 +225,19 @@ export const CustomerManager = () => {
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5">
-                                                <h3 className="font-bold text-gray-900 text-xs truncate">{customer.name}</h3>
+                                                <h3 className="font-bold text-gray-900 text-sm truncate">{customer.name}</h3>
                                                 {customer.role === 'ADMIN' && (
-                                                    <span className="flex items-center gap-0.5 bg-purple-100 text-purple-700 px-1 py-0.2 rounded-full text-[8px] font-bold">
-                                                        <Shield size={8} /> ADMIN
+                                                    <span className="flex items-center gap-0.5 bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded-full text-[9px] font-bold">
+                                                        <Shield size={10} /> ADMIN
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-[10px] text-gray-400 truncate -mt-0.5">{customer.email}</p>
+                                            <p className="text-xs text-gray-400 truncate -mt-0.5">{customer.email}</p>
                                         </div>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <p className="text-[10px] font-bold text-gray-700">{customer.stats.totalOrders} ordini</p>
-                                        <p className="text-[10px] font-black text-nature-600 -mt-0.5">€ {(customer.stats.totalSpent / 100).toFixed(2)}</p>
+                                        <p className="text-xs font-bold text-gray-700">{customer.stats.totalOrders} ordini</p>
+                                        <p className="text-xs font-black text-nature-600 -mt-0.5">€ {(customer.stats.totalSpent / 100).toFixed(2)}</p>
                                     </div>
                                 </div>
 

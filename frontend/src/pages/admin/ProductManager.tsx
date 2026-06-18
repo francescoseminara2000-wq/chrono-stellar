@@ -820,7 +820,7 @@ export const ProductManager = () => {
                     return (
                         <div
                             key={product.id}
-                            className={`flex flex-col gap-1.5 bg-white rounded-xl shadow-sm border p-2 transition-colors relative
+                            className={`flex flex-col gap-2 bg-white rounded-xl shadow-sm border p-2.5 transition-colors relative
                                 ${selectedIds.includes(product.id) ? 'bg-nature-50 border-nature-300 ring-1 ring-nature-200' : 'border-gray-100'}`}
                         >
                             {/* Main Compact Row */}
@@ -835,28 +835,28 @@ export const ProductManager = () => {
                                             className="w-4 h-4 text-nature-600 rounded focus:ring-nature-500 cursor-pointer"
                                         />
                                     </div>
-                                    <div className="w-8 h-8 rounded overflow-hidden shrink-0 border border-gray-100 bg-gray-50 relative">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-gray-100 bg-gray-50 relative">
                                         {product.imageUrl ? (
                                             <img src={sanitizeImageUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">
-                                                <Upload size={12} className="text-gray-300" />
+                                                <Upload size={14} className="text-gray-300" />
                                             </div>
                                         )}
                                         <div className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full border border-white shadow-sm ${product.isAvailable ? 'bg-emerald-400' : 'bg-gray-300'}`} />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <h3 className="font-bold text-gray-900 leading-tight text-xs truncate" title={product.name}>
+                                        <h3 className="font-bold text-gray-900 leading-tight text-sm truncate" title={product.name}>
                                             {product.name}
                                         </h3>
                                         <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                                            <span className="text-[8px] text-gray-500 bg-gray-100 px-1 py-0.2 rounded font-extrabold uppercase">
+                                            <span className="text-[9px] text-gray-500 bg-gray-100 px-1 py-0.2 rounded font-extrabold uppercase">
                                                 {product.unitType}
                                             </span>
                                             {product.category && (
-                                                <span className="text-[8px] bg-gray-50 px-1 py-0.2 rounded font-extrabold text-gray-600 flex items-center gap-0.5 border border-gray-200" style={{ borderColor: `${product.category.color}30` }}>
-                                                    <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: product.category.color }} />
-                                                    <span className="truncate max-w-[50px]">{product.category.name}</span>
+                                                <span className="text-[9px] bg-gray-50 px-1 py-0.2 rounded font-extrabold text-gray-600 flex items-center gap-0.5 border border-gray-200" style={{ borderColor: `${product.category.color}30` }}>
+                                                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: product.category.color }} />
+                                                    <span className="truncate max-w-[60px]">{product.category.name}</span>
                                                 </span>
                                             )}
                                         </div>
@@ -870,8 +870,8 @@ export const ProductManager = () => {
                                             onClick={() => setMobileQuickEditId(product.id)}
                                             className="text-right cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors shrink-0"
                                         >
-                                            <p className="text-[10px] font-black text-gray-800">€ {currentPrice}</p>
-                                            <p className="text-[9px] font-bold text-gray-400 -mt-0.5">
+                                            <p className="text-[11px] font-black text-gray-800">€ {currentPrice}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 -mt-0.5">
                                                 Scorta: <span style={{ color: stockColor }}>{product.allowBackorder ? '∞' : currentStock}</span>
                                             </p>
                                         </div>
@@ -886,16 +886,16 @@ export const ProductManager = () => {
                                                     className="p-1 text-nature-600 bg-nature-50 hover:bg-nature-100 rounded border border-transparent"
                                                     title="Modifica Rapida"
                                                 >
-                                                    <Sliders size={12} />
+                                                    <Sliders size={14} />
                                                 </button>
                                                 <button onClick={() => setViewingStatsProduct(product)} className="p-1 text-purple-500 bg-purple-50 hover:bg-purple-100 rounded border border-transparent">
-                                                    <BarChart2 size={12} />
+                                                    <BarChart2 size={14} />
                                                 </button>
                                                 <button onClick={() => handleEdit(product)} className="p-1 text-blue-500 bg-blue-50 hover:bg-blue-100 rounded border border-transparent">
-                                                    <Edit2 size={12} />
+                                                    <Edit2 size={14} />
                                                 </button>
                                                 <button onClick={() => handleDelete(product.id)} className="p-1 text-red-500 bg-red-50 hover:bg-red-100 rounded border border-transparent">
-                                                    <Trash2 size={12} />
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </>
                                         ) : (
