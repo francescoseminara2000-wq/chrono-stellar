@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 import { ProductStatsModal } from '../../components/admin/ProductStatsModal';
 import { QuickStockModal } from '../../components/admin/QuickStockModal';
+import { SearchableSelect } from '../../components/admin/SearchableSelect';
 
 interface Product {
     id: number;
@@ -310,6 +311,17 @@ export const ProductManager = () => {
         });
         setActiveTab('base');
     };
+
+    const categoryOptions = [
+        { value: '', label: 'Nessuna Categoria' },
+        ...categories.map(cat => ({ value: cat.id.toString(), label: cat.name }))
+    ];
+
+    const unitTypeOptions = [
+        { value: 'KG', label: 'Al KG' },
+        { value: 'PZ', label: 'Al Pezzo (PZ)' },
+        { value: 'BOX', label: 'A Cassetta/Confezione (BOX)' }
+    ];
 
     return (
         <div className="-m-5 lg:-m-8 p-5 lg:p-8">
@@ -956,16 +968,14 @@ export const ProductManager = () => {
                                                     <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
                                                         <Tag size={12} className="text-nature-600" /> Categoria
                                                     </label>
-                                                    <select
+                                                    <SearchableSelect
+                                                        options={categoryOptions}
                                                         value={formData.categoryId}
-                                                        onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white font-medium text-gray-800 shadow-sm"
-                                                    >
-                                                        <option value="">Nessuna Categoria</option>
-                                                        {categories.map(cat => (
-                                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                        ))}
-                                                    </select>
+                                                        onChange={val => setFormData({ ...formData, categoryId: val })}
+                                                        placeholder="Seleziona Categoria..."
+                                                        searchPlaceholder="Cerca categoria..."
+                                                        emptyMessage="Nessuna categoria trovata"
+                                                    />
                                                 </div>
 
                                                 <div className="col-span-2 sm:col-span-1 space-y-2">
@@ -1096,15 +1106,13 @@ export const ProductManager = () => {
                                                     <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
                                                         <Scale size={12} className="text-nature-600" /> Unità di Vendita Base
                                                     </label>
-                                                    <select 
-                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white font-medium text-gray-805" 
-                                                        value={formData.unitType} 
-                                                        onChange={e => setFormData({ ...formData, unitType: e.target.value })} 
-                                                    >
-                                                        <option value="KG">Al KG</option>
-                                                        <option value="PZ">Al Pezzo (PZ)</option>
-                                                        <option value="BOX">A Cassetta/Confezione (BOX)</option>
-                                                    </select>
+                                                    <SearchableSelect
+                                                        options={unitTypeOptions}
+                                                        value={formData.unitType}
+                                                        onChange={val => setFormData({ ...formData, unitType: val })}
+                                                        placeholder="Seleziona Unità..."
+                                                        searchPlaceholder="Cerca unità..."
+                                                    />
                                                 </div>
 
                                                 <div className="col-span-2 sm:col-span-1 space-y-2">
