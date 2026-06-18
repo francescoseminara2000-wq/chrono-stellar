@@ -22,9 +22,14 @@ export class LogisticsController {
 
             const now = new Date();
             const hourInRome = getHourInRome(now);
-            const cutoffHour = 12; // 12:00 Cutoff
             
-            // If current time in Rome is past 12:00, shift start date to tomorrow
+            // Fetch settings for configured cutoff hours
+            const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+            const pickupCutoff = settings?.pickupCutoffHour ?? 12;
+            const deliveryCutoff = settings?.deliveryCutoffHour ?? 12;
+            const cutoffHour = method === 'PICKUP' ? pickupCutoff : deliveryCutoff;
+            
+            // If current time in Rome is past cutoff, shift start date to tomorrow
             const startFrom = hourInRome >= cutoffHour ? addDaysInRome(now, 1) : now;
             
             // Fetch all global closures

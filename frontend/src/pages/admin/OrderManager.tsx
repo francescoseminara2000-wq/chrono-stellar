@@ -37,8 +37,23 @@ export const OrderManager = () => {
     const [fulfillmentData, setFulfillmentData] = useState<Record<number, number>>({});
     const [filterStatus, setFilterStatus] = useState<string>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
-    const [adminNotes, setAdminNotes] = useState('');
     const [isWeighingOpen, setIsWeighingOpen] = useState(false);
+    const [editDate, setEditDate] = useState('');
+    const [editTime, setEditTime] = useState('');
+    const [editNotes, setEditNotes] = useState('');
+    const [isSavingEdits, setIsSavingEdits] = useState(false);
+
+    useEffect(() => {
+        if (selectedOrder) {
+            setEditDate(selectedOrder.scheduledDate || '');
+            setEditTime(selectedOrder.scheduledTime || '');
+            setEditNotes(selectedOrder.adminNotes || '');
+        } else {
+            setEditDate('');
+            setEditTime('');
+            setEditNotes('');
+        }
+    }, [selectedOrder]);
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
     const [showSearch, setShowSearch] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
@@ -205,7 +220,6 @@ export const OrderManager = () => {
 
     const handleSelectOrder = (order: Order) => {
         setSelectedOrder(order);
-        setAdminNotes(order.adminNotes || '');
         const initialData: Record<number, number> = {};
         order.items.forEach(item => {
             initialData[item.id] = Number(item.quantityFulfilled || item.quantityOrdered);
@@ -276,7 +290,7 @@ export const OrderManager = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ status, adminNotes })
+                body: JSON.stringify({ status, adminNotes: editNotes })
             });
 
             if (res.ok) {
@@ -290,35 +304,6 @@ export const OrderManager = () => {
         } catch (err) {
             console.error(err);
             addToast('Errore di connessione al server.', 'error');
-        }
-    };
-
-    const handleUpdateOrderSchedule = async (orderId: number, newDate: string, newTime: string) => {
-        try {
-            const res = await fetch(`${API_URL}/api/admin/orders/${orderId}/schedule`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    scheduledDate: newDate || null,
-                    scheduledTime: newTime || null
-                })
-            });
-
-            if (res.ok) {
-                const updatedOrder = await res.json();
-                setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
-                setSelectedOrder(updatedOrder);
-                addToast('Programmazione ordine aggiornata!', 'success');
-            } else {
-                const data = await res.json();
-                addToast(data.error || 'Impossibile salvare la pianificazione.', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            addToast('Errore di rete.', 'error');
         }
     };
 
@@ -352,6 +337,71 @@ export const OrderManager = () => {
         } catch (err) {
             console.error(err);
             addToast('Errore di connessione al server.', 'error');
+        }
+    };
+
+    const handleSaveAllEdits = async () => {
+        if (!selectedOrder) return;
+        setIsSavingEdits(true);
+        try {
+            const dateChanged = editDate !== (selectedOrder.scheduledDate || '');
+            const timeChanged = editTime !== (selectedOrder.scheduledTime || '');
+            const notesChanged = editNotes !== (selectedOrder.adminNotes || '');
+
+            let updatedOrder = { ...selectedOrder };
+
+            // 1. Save schedule if date or time changed
+            if (dateChanged || timeChanged) {
+                const resSchedule = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}/schedule`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        scheduledDate: editDate || null,
+                        scheduledTime: editTime || null
+                    })
+                });
+
+                if (resSchedule.ok) {
+                    updatedOrder = await resSchedule.json();
+                } else {
+                    const data = await resSchedule.json();
+                    throw new Error(data.error || 'Impossibile salvare la pianificazione.');
+                }
+            }
+
+            // 2. Save notes if notes changed
+            if (notesChanged) {
+                const resStatus = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        status: updatedOrder.status,
+                        adminNotes: editNotes
+                    })
+                });
+
+                if (resStatus.ok) {
+                    updatedOrder = await resStatus.json();
+                } else {
+                    throw new Error('Impossibile salvare le note interne.');
+                }
+            }
+
+            // Update order list and selected order
+            setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+            setSelectedOrder(updatedOrder);
+            addToast('Modifiche salvate con successo!', 'success');
+        } catch (err: any) {
+            console.error(err);
+            addToast(err.message || 'Errore durante il salvataggio.', 'error');
+        } finally {
+            setIsSavingEdits(false);
         }
     };
 
@@ -747,41 +797,71 @@ export const OrderManager = () => {
                                     <div className="bg-blue-50/60 p-3 lg:p-4 rounded-xl border border-blue-100/50 text-xs flex flex-col justify-between">
                                         <div>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-1">Pianificazione Appuntamento</span>
-                                            <div className="grid grid-cols-1 gap-2 mt-1.5">
-                                                <div className="space-y-1">
-                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data</label>
-                                                    <input
-                                                        type="date"
-                                                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-white focus:ring-1 focus:ring-blue-450 outline-none"
-                                                        value={selectedOrder.scheduledDate || ''}
-                                                        onChange={(e) => handleUpdateOrderSchedule(selectedOrder.id, e.target.value, selectedOrder.scheduledTime || '')}
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Ora</label>
-                                                    <input
-                                                        type="time"
-                                                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-white focus:ring-1 focus:ring-blue-450 outline-none"
-                                                        value={selectedOrder.scheduledTime || ''}
-                                                        onChange={(e) => handleUpdateOrderSchedule(selectedOrder.id, selectedOrder.scheduledDate || '', e.target.value)}
-                                                    />
-                                                </div>
+                                            <div className="space-y-1 mt-1.5">
+                                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data e Ora (Selettore Nativo)</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-white focus:ring-1 focus:ring-blue-450 outline-none"
+                                                    value={editDate && editTime ? `${editDate}T${editTime}` : editDate ? `${editDate}T00:00` : ''}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (!val) {
+                                                            setEditDate('');
+                                                            setEditTime('');
+                                                        } else {
+                                                            const [d, t] = val.split('T');
+                                                            setEditDate(d || '');
+                                                            setEditTime(t || '');
+                                                        }
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Internal Notes */}
                                     <div className="bg-yellow-50/60 p-3 lg:p-4 rounded-xl border border-yellow-100/50 text-xs flex flex-col">
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-700 block mb-1">Note Interne (salvataggio automatico)</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-700 block mb-1">Note Interne</span>
                                         <textarea
                                             className="w-full flex-1 p-2 bg-white border border-yellow-200 rounded-lg text-xs lg:text-sm focus:ring-1 focus:ring-yellow-400 outline-none resize-none min-h-[50px] lg:min-h-[64px]"
                                             placeholder="Note interne..."
-                                            value={adminNotes}
-                                            onChange={(e) => setAdminNotes(e.target.value)}
-                                            onBlur={() => handleUpdateStatus(selectedOrder.status)}
+                                            value={editNotes}
+                                            onChange={(e) => setEditNotes(e.target.value)}
                                         />
                                     </div>
                                 </div>
+
+                                {/* Unsaved Changes Banner */}
+                                {selectedOrder && (editDate !== (selectedOrder.scheduledDate || '') || editTime !== (selectedOrder.scheduledTime || '') || editNotes !== (selectedOrder.adminNotes || '')) && (
+                                    <div className="bg-nature-50 border border-nature-200 rounded-xl p-3 mb-4 flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shrink-0">
+                                        <div className="flex items-center gap-2 text-nature-800 text-xs font-bold">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nature-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-nature-500"></span>
+                                            </span>
+                                            Ci sono modifiche non salvate
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setEditDate(selectedOrder.scheduledDate || '');
+                                                    setEditTime(selectedOrder.scheduledTime || '');
+                                                    setEditNotes(selectedOrder.adminNotes || '');
+                                                }}
+                                                className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-lg transition-all"
+                                            >
+                                                Annulla
+                                            </button>
+                                            <button
+                                                onClick={handleSaveAllEdits}
+                                                disabled={isSavingEdits}
+                                                className="px-3 py-1.5 bg-nature-600 hover:bg-nature-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
+                                            >
+                                                {isSavingEdits ? 'Salvataggio...' : 'Salva Modifiche'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Order Items Table (Only scrollable child) */}
                                 <div className="flex-1 min-h-0 flex flex-col mb-4 bg-white border border-gray-100 rounded-xl p-3 lg:p-4 overflow-hidden">

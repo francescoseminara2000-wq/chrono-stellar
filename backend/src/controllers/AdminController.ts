@@ -85,23 +85,31 @@ export class AdminController {
             const { status, adminNotes } = req.body;
             console.log(`[AdminController] Calling adminService.updateStatus(${id}, ${status})`);
 
-            const order = await adminService.updateStatus(Number(id), status, adminNotes);
+            const currentOrder = await prisma.order.findUnique({ where: { id: Number(id) } });
+            if (!currentOrder) {
+                return res.status(404).json({ error: 'Ordine non trovato' });
+            }
+            const isStatusChanged = status && currentOrder.status !== status;
+
+            const order = await adminService.updateStatus(Number(id), status || currentOrder.status, adminNotes);
             console.log('[AdminController] Order updated successfully:', order.id);
 
-            // Auto-send WhatsApp/Email notification
-            await notifyClientOfStatusUpdate(order, status);
+            if (isStatusChanged) {
+                // Auto-send WhatsApp/Email notification
+                await notifyClientOfStatusUpdate(order, status);
 
-            // Push Notification to customer
-            if (order.userId) {
-                try {
-                    let pushBody = `Il tuo ordine #${order.id} è ora in stato ${status}.`;
-                    if (status === 'OUT_FOR_DELIVERY') pushBody = `Il tuo ordine #${order.id} è in consegna! 🚚`;
-                    if (status === 'DELIVERED') pushBody = `Il tuo ordine #${order.id} è stato consegnato. Grazie!`;
-                    if (status === 'CANCELLED') pushBody = `Il tuo ordine #${order.id} è stato annullato.`;
+                // Push Notification to customer
+                if (order.userId) {
+                    try {
+                        let pushBody = `Il tuo ordine #${order.id} è ora in stato ${status}.`;
+                        if (status === 'OUT_FOR_DELIVERY') pushBody = `Il tuo ordine #${order.id} è in consegna! 🚚`;
+                        if (status === 'DELIVERED') pushBody = `Il tuo ordine #${order.id} è stato consegnato. Grazie!`;
+                        if (status === 'CANCELLED') pushBody = `Il tuo ordine #${order.id} è stato annullato.`;
 
-                    await pushService.sendToUser(order.userId, 'Aggiornamento Ordine', pushBody, `/orders?id=${order.id}`);
-                } catch (pushError) {
-                    console.error('[AdminController] Push notification failed:', pushError);
+                        await pushService.sendToUser(order.userId, 'Aggiornamento Ordine', pushBody, `/orders?id=${order.id}`);
+                    } catch (pushError) {
+                        console.error('[AdminController] Push notification failed:', pushError);
+                    }
                 }
             }
 

@@ -32,7 +32,9 @@ export class SettingsController {
                     logoUrl: null,
                     colorTheme: 'green',
                     primaryColor: '#16a34a',
-                    accentColor: '#ef4444'
+                    accentColor: '#ef4444',
+                    pickupCutoffHour: 12,
+                    deliveryCutoffHour: 12
                 }
             });
         }
@@ -81,7 +83,9 @@ export class SettingsController {
                 logoUrl,
                 colorTheme,
                 primaryColor,
-                accentColor
+                accentColor,
+                pickupCutoffHour,
+                deliveryCutoffHour
             } = req.body;
 
             const updatedSettings = await prisma.storeSettings.update({
@@ -112,7 +116,9 @@ export class SettingsController {
                     logoUrl,
                     colorTheme,
                     primaryColor,
-                    accentColor
+                    accentColor,
+                    pickupCutoffHour: pickupCutoffHour !== undefined ? Number(pickupCutoffHour) : undefined,
+                    deliveryCutoffHour: deliveryCutoffHour !== undefined ? Number(deliveryCutoffHour) : undefined
                 }
             });
 

@@ -147,6 +147,8 @@ model StoreSettings {
   colorTheme               String?  @default("green")
   primaryColor             String?  @default("#16a34a")
   accentColor              String?  @default("#ef4444")
+  pickupCutoffHour         Int      @default(12)
+  deliveryCutoffHour       Int      @default(12)
 }
 
 model Transaction {

@@ -294,16 +294,24 @@ export const Checkout = () => {
                                     {/* Automated Scheduling UI */}
                                     <div className="mt-4 p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-3">
                                         {deliveryMethod === 'PICKUP' ? (
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-nature-100 text-nature-600 flex items-center justify-center shrink-0">
-                                                    <Clock size={20} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">RITIRO PROGRAMMATO</p>
-                                                    <p className="font-bold text-nature-950 mt-1">
-                                                        {availableDates.find(d => d.date === selectedDate)?.label || 'Calcolo in corso...'}
-                                                    </p>
-                                                </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
+                                                    <Clock size={12} className="text-nature-600" /> Data di Ritiro Richiesta
+                                                </label>
+                                                {availableDates.length === 0 ? (
+                                                    <p className="text-sm text-red-500 font-bold">Nessun giorno di ritiro disponibile.</p>
+                                                ) : (
+                                                    <select
+                                                        required
+                                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none bg-white font-bold text-gray-800 transition-all text-sm mt-1"
+                                                        value={selectedDate}
+                                                        onChange={e => setSelectedDate(e.target.value)}
+                                                    >
+                                                        {availableDates.map(d => (
+                                                            <option key={d.date} value={d.date}>{d.label}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
                                             </div>
                                         ) : (
                                             <div>
