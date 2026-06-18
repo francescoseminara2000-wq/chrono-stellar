@@ -30,6 +30,7 @@ export const OrderManager = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isMultiSelectActive, setIsMultiSelectActive] = useState(false);
     const [searchParams] = useSearchParams();
     const [fulfillmentData, setFulfillmentData] = useState<Record<number, number>>({});
     const [filterStatus, setFilterStatus] = useState<string>('ALL');
@@ -417,20 +418,54 @@ export const OrderManager = () => {
                             <span>Stato</span>
                             {filterStatus !== 'ALL' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
                         </button>
+                        <button
+                            onClick={() => {
+                                setIsMultiSelectActive(!isMultiSelectActive);
+                                if (!isMultiSelectActive) {
+                                    setSelectedIds([]);
+                                }
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                isMultiSelectActive
+                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                            }`}
+                        >
+                            <CheckCircle size={14} />
+                            <span>Sel. Multipla</span>
+                        </button>
                     </div>
 
-                    {/* Search Input Panel */}
-                    <div className={`relative w-full lg:w-96 group ${showSearch ? 'block' : 'hidden'} lg:block`}>
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-nature-600 transition-colors">
-                            <Search size={20} />
+                    {/* Search Input Panel & Bulk Toggle on Desktop */}
+                    <div className="flex items-center gap-3 w-full lg:w-auto">
+                        <div className={`relative w-full lg:w-96 group ${showSearch ? 'block' : 'hidden'} lg:block`}>
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-nature-600 transition-colors">
+                                <Search size={20} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Cerca per ID, cliente o prodotto..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
+                            />
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Cerca per ID, cliente o prodotto..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
-                        />
+                        <button
+                            onClick={() => {
+                                setIsMultiSelectActive(!isMultiSelectActive);
+                                if (!isMultiSelectActive) {
+                                    setSelectedIds([]);
+                                }
+                            }}
+                            className={`hidden lg:flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold border transition-all ${
+                                isMultiSelectActive
+                                    ? 'bg-nature-600 text-white border-transparent shadow-md shadow-nature-200'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:border-nature-300 hover:text-nature-700'
+                            }`}
+                        >
+                            <CheckCircle size={18} />
+                            <span>Selezione Multipla</span>
+                        </button>
                     </div>
                 </div>
 
@@ -471,7 +506,7 @@ export const OrderManager = () => {
                 {/* Left column: Orders list */}
                 <div className={`flex flex-col h-full min-h-0 ${selectedOrder ? 'hidden lg:flex' : 'flex'} lg:col-span-5 xl:col-span-4`}>
                     <div className="space-y-2 lg:space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
-                        {filteredOrders.length > 0 && (
+                        {isMultiSelectActive && filteredOrders.length > 0 && (
                             <div 
                                 onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
                                 className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 mb-2 select-none cursor-pointer hover:border-nature-200 transition-all shadow-sm shrink-0 animate-in fade-in duration-200"
@@ -499,17 +534,19 @@ export const OrderManager = () => {
                                     }`}
                             >
                                 {/* Checkbox for multiple selection */}
-                                <div 
-                                    onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
-                                    className="shrink-0 flex items-center justify-center p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedIds.includes(order.id)}
-                                        readOnly
-                                        className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
-                                    />
-                                </div>
+                                {isMultiSelectActive && (
+                                    <div 
+                                        onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
+                                        className="shrink-0 flex items-center justify-center p-1.5 hover:bg-gray-100 rounded-lg transition-colors animate-in zoom-in-50 duration-200"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.includes(order.id)}
+                                            readOnly
+                                            className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="flex-1 min-w-0">
                                     {/* Mobile view: single line compact row */}
@@ -954,7 +991,7 @@ export const OrderManager = () => {
                         initial={{ opacity: 0, y: 100, x: '-50%' }}
                         animate={{ opacity: 1, y: 0, x: '-50%' }}
                         exit={{ opacity: 0, y: 100, x: '-50%' }}
-                        className="fixed bottom-20 sm:bottom-8 left-1/2 z-50 bg-white/80 backdrop-blur-xl px-1.5 py-1.5 sm:px-2 sm:py-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-1.5 sm:gap-2 border border-white/50 w-auto max-w-[95%] sm:max-w-none"
+                        className="fixed bottom-20 sm:bottom-8 left-1/2 z-[60] bg-white/80 backdrop-blur-xl px-1.5 py-1.5 sm:px-2 sm:py-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-1.5 sm:gap-2 border border-white/50 w-auto max-w-[95%] sm:max-w-none"
                     >
                         <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-nature-600 text-white rounded-[1.5rem] shadow-lg shadow-nature-200">
                             <div className="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm">

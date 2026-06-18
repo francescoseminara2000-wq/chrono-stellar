@@ -465,87 +465,6 @@ export const ProductManager = () => {
                 ))}
             </div>
 
-            {/* Bulk Action Toolbar */}
-            <AnimatePresence>
-                {selectedIds.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 100, x: '-50%' }}
-                        animate={{ opacity: 1, y: 0, x: '-50%' }}
-                        exit={{ opacity: 0, y: 100, x: '-50%' }}
-                        className="fixed bottom-24 sm:bottom-8 left-1/2 z-50 bg-white/80 backdrop-blur-xl px-1.5 py-1.5 sm:px-2 sm:py-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-1.5 sm:gap-2 border border-white/50 w-auto max-w-[95%] sm:max-w-none"
-                    >
-                        <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-nature-600 text-white rounded-[1.5rem] shadow-lg shadow-nature-200">
-                            <div className="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm">
-                                {selectedIds.length}
-                            </div>
-                            <span className="font-bold text-sm hidden sm:inline">Prodotti</span>
-                        </div>
-
-                        <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
-                            <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 border-r border-gray-200">
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleBulkUpdate({ isAvailable: true })}
-                                    className="p-2 sm:p-3 text-nature-600 hover:bg-nature-50 rounded-2xl transition-all"
-                                    title="Disponibile"
-                                >
-                                    <Eye size={22} />
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleBulkUpdate({ isAvailable: false })}
-                                    className="p-2 sm:p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
-                                    title="Non Disponibile"
-                                >
-                                    <EyeOff size={22} />
-                                </motion.button>
-                            </div>
-
-                            <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 border-r border-gray-200">
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleBulkUpdate({ allowBackorder: true })}
-                                    className="p-2 sm:p-3 text-sky-600 hover:bg-sky-50 rounded-2xl transition-all"
-                                    title="Sempre Disponibile"
-                                >
-                                    <InfinityIcon size={22} />
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleBulkUpdate({ allowBackorder: false })}
-                                    className="p-2 sm:p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
-                                    title="Solo con Scorta"
-                                >
-                                    <PackageX size={22} />
-                                </motion.button>
-                            </div>
-
-                            <motion.button
-                                whileHover={{ scale: 1.05, backgroundColor: '#fef2f2' }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleBulkDelete()}
-                                className="p-2 sm:p-3 text-red-500 hover:text-red-600 rounded-2xl transition-all"
-                                title="Elimina Selezionati"
-                            >
-                                <Trash2 size={22} />
-                            </motion.button>
-                        </div>
-
-                        <motion.button
-                            whileHover={{ backgroundColor: '#f3f4f6' }}
-                            onClick={() => setSelectedIds([])}
-                            className="p-2 sm:p-3 text-gray-400 hover:text-gray-600 rounded-full transition-all"
-                            title="Annulla selezione"
-                        >
-                            <X size={20} />
-                        </motion.button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Responsive Table (Desktop / Tablet) */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-w-0 hidden lg:block">
@@ -833,7 +752,7 @@ export const ProductManager = () => {
                                             type="checkbox"
                                             checked={selectedIds.includes(product.id)}
                                             readOnly
-                                            className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer"
+                                            className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
                                         />
                                     </div>
                                     <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-gray-100 bg-gray-50 relative shadow-sm">
@@ -1086,6 +1005,89 @@ export const ProductManager = () => {
                     onUpdateComplete={() => fetchProducts()}
                 />
             )}
+
+
+            {/* Bulk Action Toolbar */}
+            <AnimatePresence>
+                {selectedIds.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 100, x: '-50%' }}
+                        animate={{ opacity: 1, y: 0, x: '-50%' }}
+                        exit={{ opacity: 0, y: 100, x: '-50%' }}
+                        className="fixed bottom-20 sm:bottom-8 left-1/2 z-[60] bg-white/80 backdrop-blur-xl px-1.5 py-1.5 sm:px-2 sm:py-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-1.5 sm:gap-2 border border-white/50 w-auto max-w-[95%] sm:max-w-none"
+                    >
+                        <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-nature-600 text-white rounded-[1.5rem] shadow-lg shadow-nature-200">
+                            <div className="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm">
+                                {selectedIds.length}
+                            </div>
+                            <span className="font-bold text-sm hidden sm:inline">Prodotti</span>
+                        </div>
+
+                        <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
+                            <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 border-r border-gray-200">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdate({ isAvailable: true })}
+                                    className="p-2 sm:p-3 text-nature-600 hover:bg-nature-50 rounded-2xl transition-all"
+                                    title="Disponibile"
+                                >
+                                    <Eye size={22} />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdate({ isAvailable: false })}
+                                    className="p-2 sm:p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
+                                    title="Non Disponibile"
+                                >
+                                    <EyeOff size={22} />
+                                </motion.button>
+                            </div>
+
+                            <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 border-r border-gray-200">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdate({ allowBackorder: true })}
+                                    className="p-2 sm:p-3 text-sky-600 hover:bg-sky-50 rounded-2xl transition-all"
+                                    title="Sempre Disponibile"
+                                >
+                                    <InfinityIcon size={22} />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdate({ allowBackorder: false })}
+                                    className="p-2 sm:p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
+                                    title="Solo con Scorta"
+                                >
+                                    <PackageX size={22} />
+                                </motion.button>
+                            </div>
+
+                            <motion.button
+                                whileHover={{ scale: 1.05, backgroundColor: '#fef2f2' }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleBulkDelete()}
+                                className="p-2 sm:p-3 text-red-500 hover:text-red-600 rounded-2xl transition-all"
+                                title="Elimina Selezionati"
+                            >
+                                <Trash2 size={22} />
+                            </motion.button>
+                        </div>
+
+                        <motion.button
+                            whileHover={{ backgroundColor: '#f3f4f6' }}
+                            onClick={() => setSelectedIds([])}
+                            className="p-2 sm:p-3 text-gray-400 hover:text-gray-600 rounded-full transition-all"
+                            title="Annulla selezione"
+                        >
+                            <X size={20} />
+                        </motion.button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <ConfirmModal
                 isOpen={!!confirmModal}
