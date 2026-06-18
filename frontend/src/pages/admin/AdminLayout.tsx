@@ -62,6 +62,8 @@ export const AdminLayout = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <NotificationCenter />
+                    <WhatsAppStatus />
                     <button onClick={toggleFullscreen} className="p-2.5 bg-white/10 rounded-xl text-white hover:bg-white/20 active:scale-95 transition-all backdrop-blur-md border border-white/10 hidden sm:block">
                         {isFullscreen ? <Minimize size={22} /> : <Maximize size={22} />}
                     </button>

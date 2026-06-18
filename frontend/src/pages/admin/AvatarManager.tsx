@@ -98,9 +98,9 @@ export const AvatarManager = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold text-nature-900">Gestione Avatar</h1>
-                <div className="relative">
+                <div className="relative w-full sm:w-auto">
                     <input
                         type="file"
                         id="avatar-upload"
@@ -111,7 +111,7 @@ export const AvatarManager = () => {
                     />
                     <label
                         htmlFor="avatar-upload"
-                        className={`flex items-center gap-2 bg-nature-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-nature-700 transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex items-center justify-center gap-2 bg-nature-600 text-white px-5 py-3 rounded-2xl cursor-pointer hover:bg-nature-700 transition-all font-bold w-full sm:w-auto shadow-md ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <Upload size={20} />
                         {isUploading ? 'Caricamento...' : 'Carica Nuovo'}

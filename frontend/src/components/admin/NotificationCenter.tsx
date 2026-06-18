@@ -65,11 +65,11 @@ export const NotificationCenter = () => {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-nature-300 hover:text-white transition-all border border-white/10 group shadow-inner"
+                className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all border border-white/10 group shadow-inner"
             >
                 <Bell size={20} className="group-hover:scale-110 transition-transform" />
                 {unreadCount > 0 && (
-                    <span className="absolute top-2.5 right-2.5 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-nature-900">
+                    <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-nature-900">
                         {unreadCount}
                     </span>
                 )}
@@ -78,7 +78,7 @@ export const NotificationCenter = () => {
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-[110]" onClick={() => setIsOpen(false)}></div>
-                    <div className="fixed bottom-24 left-8 w-[calc(100vw-64px)] md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[111] overflow-hidden animate-in fade-in slide-in-from-bottom-2 transition-all">
+                    <div className="fixed top-20 right-4 left-4 md:bottom-24 md:left-8 md:top-auto md:right-auto md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[111] overflow-hidden animate-in fade-in slide-in-from-top-2 md:slide-in-from-bottom-2 transition-all">
                         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                 Notifiche {unreadCount > 0 && <span className="bg-nature-100 text-nature-700 text-xs px-2 py-0.5 rounded-full">{unreadCount}</span>}

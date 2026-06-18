@@ -306,18 +306,18 @@ export const ProductManager = () => {
 
     return (
         <div className="-m-5 md:-m-8 p-5 md:p-8">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <h1 className="text-3xl font-bold text-gray-800">Gestione Prodotti</h1>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     <button
                         onClick={() => setIsQuickStockOpen(true)}
-                        className="bg-white border-2 border-nature-600 text-nature-700 px-5 py-3 rounded-2xl flex items-center gap-2 hover:bg-nature-50 transition-all font-bold"
+                        className="bg-white border-2 border-nature-600 text-nature-700 px-5 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-nature-50 transition-all font-bold w-full sm:w-auto"
                     >
                         <PackagePlus size={20} /> Rifornimento Rapido
                     </button>
                     <button
                         onClick={() => { setEditingProduct(null); resetForm(); setIsModalOpen(true); }}
-                        className="bg-nature-600 text-white px-6 py-3 rounded-2xl flex items-center gap-2 hover:bg-nature-700 transition-all shadow-lg shadow-nature-200 font-bold"
+                        className="bg-nature-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-nature-700 transition-all shadow-lg shadow-nature-200 font-bold w-full sm:w-auto"
                     >
                         <Plus size={20} /> Nuovo Prodotto
                     </button>
@@ -884,7 +884,7 @@ export const ProductManager = () => {
                                             <select
                                                 value={formData.categoryId}
                                                 onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20"
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white"
                                             >
                                                 <option value="">Nessuna Categoria</option>
                                                 {categories.map(cat => (
@@ -893,32 +893,32 @@ export const ProductManager = () => {
                                             </select>
                                         </div>
                                         <div className="col-span-2 md:col-span-1 space-y-2">
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Nome Prodotto</label>
-                                            <input type="text" className="w-full p-2 border rounded-lg" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                            <label className="block text-sm font-bold text-gray-700">Nome Prodotto</label>
+                                            <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Prezzo (€)</label>
-                                            <input type="number" step="0.01" className="w-full p-2 border rounded-lg" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
+                                        <div className="col-span-2 md:col-span-1 space-y-2">
+                                            <label className="block text-sm font-bold text-gray-700">Prezzo (€)</label>
+                                            <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Unità di Misura</label>
-                                            <select className="w-full p-2 border rounded-lg" value={formData.unitType} onChange={e => setFormData({ ...formData, unitType: e.target.value })} >
+                                        <div className="col-span-2 md:col-span-1 space-y-2">
+                                            <label className="block text-sm font-bold text-gray-700">Unità di Misura</label>
+                                            <select className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-white" value={formData.unitType} onChange={e => setFormData({ ...formData, unitType: e.target.value })} >
                                                 <option value="KG">Al KG</option>
                                                 <option value="PZ">Al Pezzo</option>
                                                 <option value="BOX">A Cassetta/Confezione</option>
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Giacenza Attuale ({formData.unitType})</label>
-                                            <input type="number" step="0.01" className="w-full p-2 border rounded-lg bg-nature-50 border-nature-200" required value={formData.stockQuantity} onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })} />
+                                        <div className="col-span-2 md:col-span-1 space-y-2">
+                                            <label className="block text-sm font-bold text-gray-700">Giacenza Attuale ({formData.unitType})</label>
+                                            <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-nature-50/50 border-nature-200" required value={formData.stockQuantity} onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })} />
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Soglia Allerta ({formData.unitType})</label>
-                                            <input type="number" step="0.01" className="w-full p-2 border rounded-lg bg-red-50 border-red-200" required value={formData.lowStockThreshold} onChange={e => setFormData({ ...formData, lowStockThreshold: e.target.value })} />
+                                        <div className="col-span-2 md:col-span-1 space-y-2">
+                                            <label className="block text-sm font-bold text-gray-700">Soglia Allerta ({formData.unitType})</label>
+                                            <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all bg-red-50/30 border-red-200" required value={formData.lowStockThreshold} onChange={e => setFormData({ ...formData, lowStockThreshold: e.target.value })} />
                                         </div>
 
                                         <div className="col-span-2 flex flex-wrap items-center gap-6">
@@ -939,22 +939,22 @@ export const ProductManager = () => {
                                             </div>
                                         )}
 
-                                        <div className="col-span-2">
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Descrizione</label>
-                                            <textarea className="w-full p-2 border rounded-lg h-24" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="block text-sm font-bold text-gray-700">Descrizione</label>
+                                            <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all h-24 resize-none" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                                         </div>
 
-                                        <div className="col-span-2">
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Consiglio dell'Esperto (AI Tips)</label>
-                                            <textarea className="w-full p-2 border rounded-lg h-20" placeholder="Es: Ottimo per risotti..." value={formData.seasonalTips} onChange={e => setFormData({ ...formData, seasonalTips: e.target.value })} />
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="block text-sm font-bold text-gray-700">Consiglio dell'Esperto (AI Tips)</label>
+                                            <textarea className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all h-20 resize-none" placeholder="Es: Ottimo per risotti..." value={formData.seasonalTips} onChange={e => setFormData({ ...formData, seasonalTips: e.target.value })} />
                                         </div>
 
-                                        <div className="col-span-2">
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Immagine</label>
-                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="block text-sm font-bold text-gray-700">Immagine</label>
+                                            <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:bg-nature-50/50 hover:border-nature-300 transition-colors cursor-pointer relative">
                                                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={e => setFormData({ ...formData, image: e.target.files?.[0] || null })} />
                                                 <Upload className="mx-auto text-gray-400 mb-2" />
-                                                <p className="text-gray-500">{formData.image ? (formData.image as File).name : 'Clicca o trascina una foto qui'}</p>
+                                                <p className="text-gray-500 font-medium text-sm">{formData.image ? (formData.image as File).name : 'Clicca o trascina una foto qui'}</p>
                                             </div>
                                         </div>
                                     </div>

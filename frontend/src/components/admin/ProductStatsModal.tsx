@@ -65,16 +65,16 @@ export const ProductStatsModal: React.FC<ProductStatsModalProps> = ({ product, o
                 className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[90vh]"
             >
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <div>
+                <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50 relative">
+                    <div className="pr-10 sm:pr-0">
                         <h2 className="text-2xl font-bold text-gray-800">Statistiche Vendite</h2>
                         <p className="text-gray-500 mt-1">{product.name}</p>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                         <select
                             value={period}
                             onChange={(e) => setPeriod(e.target.value)}
-                            className="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl px-3 py-2 cursor-pointer focus:ring-2 focus:ring-nature-500 outline-none"
+                            className="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl px-3 py-2 cursor-pointer focus:ring-2 focus:ring-nature-500 outline-none w-full sm:w-auto"
                         >
                             <option value="all">Sempre</option>
                             <option value="7d">Ultimi 7 Giorni</option>
@@ -83,7 +83,7 @@ export const ProductStatsModal: React.FC<ProductStatsModalProps> = ({ product, o
                         </select>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                            className="p-2 hover:bg-gray-200 rounded-full transition-colors shrink-0 absolute top-4 right-4 sm:relative sm:top-auto sm:right-auto"
                         >
                             <X size={24} className="text-gray-500" />
                         </button>
@@ -141,46 +141,48 @@ export const ProductStatsModal: React.FC<ProductStatsModalProps> = ({ product, o
 
                                 <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                                     {stats.recentOrders.length > 0 ? (
-                                        <table className="w-full">
-                                            <thead className="bg-gray-50">
-                                                <tr className="text-left text-sm font-bold text-gray-500">
-                                                    <th className="p-4">Ordine</th>
-                                                    <th className="p-4">Cliente</th>
-                                                    <th className="p-4">Data</th>
-                                                    <th className="p-4">Quantità</th>
-                                                    <th className="p-4">Prezzo d'acquisto</th>
-                                                    <th className="p-4">Stato</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100">
-                                                {stats.recentOrders.map((order, idx) => (
-                                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="p-4 font-medium text-gray-900">#{order.orderId}</td>
-                                                        <td className="p-4 text-gray-600">{order.customerName}</td>
-                                                        <td className="p-4 text-gray-500 flex items-center gap-2 whitespace-nowrap">
-                                                            <Calendar size={14} />
-                                                            {new Date(order.date).toLocaleDateString('it-IT')}
-                                                        </td>
-                                                        <td className="p-4 font-medium text-gray-900">
-                                                            <span className="bg-gray-100 px-3 py-1 rounded-lg">
-                                                                {order.quantity} <span className="text-xs text-gray-500">{stats.unitType}</span>
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 font-bold text-gray-900">
-                                                            €{(order.priceAtPurchase / 100).toFixed(2)}
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <span className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
-                                                                order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-blue-100 text-blue-700'
-                                                                }`}>
-                                                                {order.status}
-                                                            </span>
-                                                        </td>
+                                        <div className="overflow-x-auto w-full">
+                                            <table className="w-full min-w-[600px]">
+                                                <thead className="bg-gray-50">
+                                                    <tr className="text-left text-sm font-bold text-gray-500">
+                                                        <th className="p-4">Ordine</th>
+                                                        <th className="p-4">Cliente</th>
+                                                        <th className="p-4">Data</th>
+                                                        <th className="p-4">Quantità</th>
+                                                        <th className="p-4">Prezzo d'acquisto</th>
+                                                        <th className="p-4">Stato</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100">
+                                                    {stats.recentOrders.map((order, idx) => (
+                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                            <td className="p-4 font-medium text-gray-900">#{order.orderId}</td>
+                                                            <td className="p-4 text-gray-600">{order.customerName}</td>
+                                                            <td className="p-4 text-gray-500 flex items-center gap-2 whitespace-nowrap">
+                                                                <Calendar size={14} />
+                                                                {new Date(order.date).toLocaleDateString('it-IT')}
+                                                            </td>
+                                                            <td className="p-4 font-medium text-gray-900">
+                                                                <span className="bg-gray-100 px-3 py-1 rounded-lg">
+                                                                    {order.quantity} <span className="text-xs text-gray-500">{stats.unitType}</span>
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 font-bold text-gray-900">
+                                                                €{(order.priceAtPurchase / 100).toFixed(2)}
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <span className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
+                                                                    order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                                                        'bg-blue-100 text-blue-700'
+                                                                    }`}>
+                                                                    {order.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     ) : (
                                         <div className="text-center p-8 text-gray-500">
                                             Nessun ordine trovato per questo prodotto.

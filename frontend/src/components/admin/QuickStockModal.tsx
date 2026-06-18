@@ -132,7 +132,7 @@ export const QuickStockModal: React.FC<QuickStockModalProps> = ({ onClose, onUpd
     const [isTouchDevice, setIsTouchDevice] = useState(false);
 
     useEffect(() => {
-        setIsTouchDevice(window.matchMedia('(pointer: coarse)').matches);
+        setIsTouchDevice(window.matchMedia('(pointer: coarse)').matches && window.innerWidth >= 768);
     }, []);
 
     useEffect(() => {
@@ -383,7 +383,7 @@ export const QuickStockModal: React.FC<QuickStockModalProps> = ({ onClose, onUpd
                     </div>
 
                     {/* Right Column / Bottom Row: Virtual Keyboards */}
-                    {activeInput && (
+                    {activeInput && isTouchDevice && (
                         <div className="p-4 lg:p-6 bg-gray-50 border-t flex flex-col lg:border-t-0 lg:border-l border-gray-100 shrink-0 lg:w-[450px] transition-all duration-300 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] lg:shadow-none z-10 w-full fixed lg:relative bottom-[76px] lg:bottom-0 left-0">
                             {activeInput === 'search' && <QwertyKeyboard value={searchQuery} onChange={setSearchQuery} />}
                             {activeInput === 'amount' && <NumericKeyboard value={amount} onChange={setAmount} />}

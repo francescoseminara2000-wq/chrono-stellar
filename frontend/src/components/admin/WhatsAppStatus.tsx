@@ -28,18 +28,21 @@ export const WhatsAppStatus = () => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="relative p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-nature-300 hover:text-white transition-all border border-white/10 group shadow-inner"
+                className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all border border-white/10 group shadow-inner"
                 title="Stato WhatsApp"
             >
                 <Smartphone size={20} className="group-hover:scale-110 transition-transform" />
-                {status.isConnected && <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-green-500 border-2 border-nature-900 rounded-full animate-pulse"></span>}
+                {status.isConnected && <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-green-500 border-2 border-nature-900 rounded-full animate-pulse"></span>}
             </button>
         );
     }
 
     return (
-        <div className="fixed inset-0 md:inset-auto md:bottom-24 md:left-8 md:w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="bg-green-600 p-4 flex justify-between items-center text-white">
+        <>
+            {/* Backdrop for mobile */}
+            <div className="fixed inset-0 bg-nature-950/60 backdrop-blur-sm z-[99] lg:hidden" onClick={() => setIsOpen(false)}></div>
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] sm:w-80 md:fixed md:top-auto md:left-8 md:bottom-24 md:translate-x-0 md:translate-y-0 md:w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="bg-green-600 p-4 flex justify-between items-center text-white">
                 <h3 className="font-bold flex items-center gap-2">
                     <Smartphone size={20} /> WhatsApp Server
                 </h3>
@@ -77,5 +80,6 @@ export const WhatsAppStatus = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };

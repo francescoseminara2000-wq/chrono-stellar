@@ -82,11 +82,11 @@ export const DeliveryZoneManager = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-3xl font-bold text-gray-800">Zone di Consegna</h1>
                 <button
                     onClick={() => { setCurrentZone({ isActive: true }); setIsEditing(true); }}
-                    className="bg-nature-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-nature-700 transition-colors"
+                    className="bg-nature-600 text-white px-5 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-nature-700 transition-all font-bold w-full sm:w-auto shadow-md animate-in fade-in"
                 >
                     <Plus size={20} /> Aggiungi Zona
                 </button>
@@ -103,32 +103,32 @@ export const DeliveryZoneManager = () => {
 
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <form id="zone-form" onSubmit={handleSave} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Comune</label>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-gray-700">Comune</label>
                                     <input
                                         type="text"
                                         required
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-nature-500 focus:ring-nature-500 border p-2"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all"
                                         value={currentZone.city || ''}
                                         onChange={e => setCurrentZone({ ...currentZone, city: e.target.value })}
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">CAP</label>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-gray-700">CAP</label>
                                     <input
                                         type="text"
                                         required
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-nature-500 focus:ring-nature-500 border p-2"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all"
                                         value={currentZone.zipCode || ''}
                                         onChange={e => setCurrentZone({ ...currentZone, zipCode: e.target.value })}
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Costo Spedizione (centesimi)</label>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-gray-700">Costo Spedizione (centesimi)</label>
                                     <input
                                         type="number"
                                         required
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-nature-500 focus:ring-nature-500 border p-2"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all"
                                         value={currentZone.shippingCost || ''}
                                         onChange={e => setCurrentZone({ ...currentZone, shippingCost: Number(e.target.value) })}
                                     />
