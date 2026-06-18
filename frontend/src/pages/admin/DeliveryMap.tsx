@@ -97,6 +97,42 @@ export const DeliveryMap = () => {
     const [mapCenter, setMapCenter] = useState<[number, number]>([45.8485, 9.3568]); // Valmadrera default
     const [zoom, setZoom] = useState(13);
 
+    // Suppress parent layout scroll for this page and manage exact height
+    useEffect(() => {
+        const parent = document.querySelector('main');
+        if (parent) {
+            const originalOverflow = parent.style.overflow;
+            const originalHeight = parent.style.height;
+            const originalMaxHeight = parent.style.maxHeight;
+            const originalPaddingBottom = parent.style.paddingBottom;
+
+            const handleResize = () => {
+                const isMobile = window.innerWidth < 1024;
+                parent.style.overflow = 'hidden';
+                if (isMobile) {
+                    parent.style.height = 'calc(100vh - 72px)';
+                    parent.style.maxHeight = 'calc(100vh - 72px)';
+                    parent.style.paddingBottom = '80px'; // Space for mobile floating nav
+                } else {
+                    parent.style.height = '100vh';
+                    parent.style.maxHeight = '100vh';
+                    parent.style.paddingBottom = '2rem'; // Match padding of lg:p-8
+                }
+            };
+
+            handleResize();
+            window.addEventListener('resize', handleResize);
+
+            return () => {
+                parent.style.overflow = originalOverflow;
+                parent.style.height = originalHeight;
+                parent.style.maxHeight = originalMaxHeight;
+                parent.style.paddingBottom = originalPaddingBottom;
+                window.removeEventListener('resize', handleResize);
+            };
+        }
+    }, []);
+
     useEffect(() => {
         fetchStoreSettings();
         fetchDeliveries();
@@ -191,14 +227,14 @@ export const DeliveryMap = () => {
             </div>
 
             <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
-                {/* Map Sidebar (Order List) */}
-                <div className="w-full md:w-80 h-60 md:h-full bg-white border-r border-gray-100 border-b border-gray-100 md:border-b-0 overflow-y-auto custom-scrollbar z-10 shadow-xl md:shadow-none shrink-0">
-                    <div className="p-3 border-b border-gray-50 bg-gray-50/50 sticky top-0 z-20 backdrop-blur-sm">
+                {/* Map Sidebar / Floating Cards on mobile */}
+                <div className="absolute bottom-20 left-0 right-0 z-10 flex flex-row overflow-x-auto p-4 gap-3 bg-transparent border-none md:relative md:bottom-auto md:left-auto md:right-auto md:z-10 md:flex-col md:p-0 md:gap-0 md:bg-white md:border-r md:w-80 md:h-full md:overflow-y-auto custom-scrollbar no-scrollbar border-gray-100 shrink-0">
+                    <div className="hidden md:block p-3 border-b border-gray-50 bg-gray-50/50 sticky top-0 z-20 backdrop-blur-sm">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{deliveries.length} CONSEGNE ATTIVE</p>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div className="flex flex-row md:flex-col gap-3 md:gap-0 w-full shrink-0 md:divide-y md:divide-gray-50">
                         {deliveries.length === 0 && !isLoading && (
-                            <div className="p-10 md:p-20 text-center text-gray-400 text-sm font-medium">
+                            <div className="p-10 md:p-20 text-center text-gray-400 text-sm font-medium w-full shrink-0">
                                 <Truck size={32} className="mx-auto mb-2 opacity-30" />
                                 <p>Nessuna consegna attiva al momento.</p>
                             </div>
@@ -211,18 +247,31 @@ export const DeliveryMap = () => {
                                     setMapCenter([order.latitude, order.longitude]);
                                     setZoom(15);
                                 }}
-                                className={`p-4 md:p-5 hover:bg-nature-50 cursor-pointer transition-all border-l-4 ${selectedOrder?.id === order.id ? 'bg-nature-50/50 border-nature-500 shadow-inner' : 'border-transparent'}`}
+                                className={`
+                                    cursor-pointer transition-all shrink-0
+                                    w-[260px] p-3 rounded-2xl bg-white/95 backdrop-blur-md border border-nature-100 shadow-xl
+                                    md:w-full md:p-5 md:rounded-none md:bg-white md:border-none md:shadow-none md:border-l-4
+                                    ${selectedOrder?.id === order.id 
+                                        ? 'border-nature-500 ring-2 ring-nature-500/20 bg-nature-50/70 md:bg-nature-50/50 md:border-nature-500 md:ring-0 md:shadow-inner' 
+                                        : 'border-gray-100 hover:border-nature-250 md:border-transparent'
+                                    }
+                                `}
                             >
-                                <div className="flex justify-between items-start mb-2">
+                                <div className="flex justify-between items-center mb-1.5 md:mb-2">
                                     <span className="text-[10px] font-black text-nature-600 bg-nature-100 px-2 py-0.5 rounded-md">#{order.id}</span>
-                                    <div className={`w-2 h-2 rounded-full animate-pulse`} style={{ backgroundColor: getStatusColor(order.status) }}></div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider">
+                                            {order.status === 'PENDING' ? 'In Attesa' : order.status === 'WEIGHING_COMPLETED' ? 'Pronto' : 'Spedito'}
+                                        </span>
+                                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: getStatusColor(order.status) }}></div>
+                                    </div>
                                 </div>
-                                <h3 className="font-bold text-gray-900 leading-tight text-sm md:text-base">{order.customerName}</h3>
-                                <p className="text-[11px] text-gray-500 mt-1 line-clamp-1">{order.shippingAddress}</p>
-                                <div className="flex justify-between items-center mt-3">
-                                    <span className="text-sm font-black text-gray-900">€ {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</span>
-                                    <div className="p-2 rounded-lg bg-gray-100 text-gray-400 group-hover:bg-nature-500 group-hover:text-white transition-colors">
-                                        <ChevronRight size={14} />
+                                <h3 className="font-bold text-gray-900 leading-tight text-xs md:text-base truncate">{order.customerName}</h3>
+                                <p className="text-[10px] md:text-[11px] text-gray-500 mt-0.5 line-clamp-1">{order.shippingAddress}</p>
+                                <div className="flex justify-between items-center mt-2 md:mt-3 border-t border-gray-100/50 pt-1.5 md:pt-0 md:border-none">
+                                    <span className="text-xs md:text-sm font-black text-gray-900">€ {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</span>
+                                    <div className="p-1 md:p-2 rounded-lg bg-gray-100 text-gray-400 group-hover:bg-nature-500 group-hover:text-white transition-colors">
+                                        <ChevronRight size={12} className="md:w-3.5 md:h-3.5" />
                                     </div>
                                 </div>
                             </div>

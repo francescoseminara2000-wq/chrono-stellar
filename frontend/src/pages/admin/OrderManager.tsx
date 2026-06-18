@@ -378,7 +378,7 @@ export const OrderManager = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
                 {/* Left column: Orders list */}
                 <div className={`flex flex-col h-full min-h-0 ${selectedOrder ? 'hidden lg:flex' : 'flex'} lg:col-span-5 xl:col-span-4`}>
-                    <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
+                    <div className="space-y-2 lg:space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
                         {filteredOrders.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                                 <ShoppingBag size={48} className="mb-4 opacity-50" />
@@ -389,34 +389,65 @@ export const OrderManager = () => {
                             <div
                                 key={order.id}
                                 onClick={() => handleSelectOrder(order)}
-                                className={`bg-white p-4 lg:p-5 rounded-2xl shadow-sm border cursor-pointer transition-all ${selectedOrder?.id === order.id ? 'border-nature-500 ring-2 ring-nature-500 bg-nature-50/30' : 'border-gray-100 hover:border-nature-200'
+                                className={`bg-white p-2 lg:p-5 rounded-xl lg:rounded-2xl shadow-sm border cursor-pointer transition-all ${selectedOrder?.id === order.id ? 'border-nature-500 ring-2 ring-nature-500 bg-nature-50/30' : 'border-gray-100 hover:border-nature-200'
                                     }`}
                             >
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-nature-100 rounded-xl flex items-center justify-center text-nature-700 font-black">
+                                {/* Mobile view: single line compact row */}
+                                <div className="lg:hidden flex items-center justify-between w-full gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <div className="w-7 h-7 bg-nature-100 rounded flex items-center justify-center text-nature-700 font-black text-[10px] shrink-0">
                                             #{order.id}
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-900 leading-tight">{order.customerName || order.user?.name || 'Cliente'}</h3>
-                                            <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                                        <div className="min-w-0">
+                                            <h3 className="font-bold text-gray-900 leading-tight text-xs truncate" title={order.customerName || order.user?.name || 'Cliente'}>
+                                                {order.customerName || order.user?.name || 'Cliente'}
+                                            </h3>
+                                            <p className="text-[9px] text-gray-400 leading-none mt-0.5">
+                                                {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                                            </p>
                                         </div>
                                     </div>
-                                    <StatusBadge status={order.status} />
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-gray-400 shrink-0">
+                                            {order.deliveryMethod === 'DELIVERY' ? <Truck size={12} /> : <Scale size={12} />}
+                                        </span>
+                                        <StatusBadge status={order.status} isCompact />
+                                        <div className="text-right shrink-0">
+                                            <span className="text-xs font-black text-nature-900 block">
+                                                € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="flex justify-between items-end border-t border-gray-50 pt-3">
-                                    <div className="flex gap-2">
-                                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-gray-100 px-2 py-1 rounded-md text-gray-600">
-                                            {order.deliveryMethod === 'DELIVERY' ? <Truck size={12} /> : <Scale size={12} />}
-                                            {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro'}
-                                        </span>
+                                {/* Desktop view: standard two-row layout */}
+                                <div className="hidden lg:block w-full">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-nature-100 rounded-xl flex items-center justify-center text-nature-700 font-black text-base">
+                                                #{order.id}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 leading-tight text-base">{order.customerName || order.user?.name || 'Cliente'}</h3>
+                                                <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                                            </div>
+                                        </div>
+                                        <StatusBadge status={order.status} />
                                     </div>
-                                    <div className="text-right">
-                                        <span className="text-xl font-black text-nature-900">
-                                            € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
-                                        </span>
-                                        {!order.finalTotal && <span className="text-[10px] text-gray-400 block -mt-1 uppercase tracking-wider">Stimato</span>}
+
+                                    <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-3">
+                                        <div className="flex gap-2">
+                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-gray-100 px-2 py-1 rounded-md text-gray-600">
+                                                {order.deliveryMethod === 'DELIVERY' ? <Truck size={11} /> : <Scale size={11} />}
+                                                {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro'}
+                                            </span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-xl font-black text-nature-900">
+                                                € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
+                                            </span>
+                                            {!order.finalTotal && <span className="text-[10px] text-gray-400 block -mt-1 uppercase tracking-wider">Stimato</span>}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -800,7 +831,7 @@ export const OrderManager = () => {
     );
 };
 
-const StatusBadge = ({ status, pulse }: { status: string; pulse?: boolean }) => {
+const StatusBadge = ({ status, pulse, isCompact }: { status: string; pulse?: boolean; isCompact?: boolean }) => {
     const styles: Record<string, string> = {
         PENDING: 'bg-yellow-100 text-yellow-700 border-yellow-200',
         WEIGHING_COMPLETED: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -813,7 +844,8 @@ const StatusBadge = ({ status, pulse }: { status: string; pulse?: boolean }) => 
     };
     return (
         <span className={`
-            px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider border transition-all relative
+            rounded-xl font-black uppercase tracking-wider border transition-all relative
+            ${isCompact ? 'px-1.5 py-0.5 text-[9px]' : 'px-3 py-1 text-xs'}
             ${styles[status]}
             ${pulse ? 'animate-pulse ring-2 ring-current/20 shadow-lg shadow-current/10' : ''}
         `}>

@@ -208,39 +208,70 @@ export const CustomerManager = () => {
                             <div
                                 key={customer.id}
                                 onClick={() => setSelectedCustomer(customer)}
-                                className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedCustomer?.id === customer.id
+                                className={`p-2 lg:p-4 rounded-xl border cursor-pointer transition-all ${selectedCustomer?.id === customer.id
                                     ? 'border-nature-500 ring-1 ring-nature-500 bg-nature-50/50'
                                     : 'border-gray-100 hover:border-nature-200 hover:bg-gray-50'
                                     }`}
                             >
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 rounded-full bg-nature-100 flex items-center justify-center text-nature-600 font-bold overflow-hidden shrink-0">
-                                        {customer.avatar ? (
-                                            <img src={sanitizeImageUrl(customer.avatar)} alt="avatar" className="w-full h-full object-cover" />
-                                        ) : (
-                                            customer.name.charAt(0).toUpperCase()
-                                        )}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-bold text-gray-900 truncate">{customer.name}</h3>
-                                            {customer.role === 'ADMIN' && (
-                                                <span className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                                                    <Shield size={10} /> ADMIN
-                                                </span>
+                                {/* Mobile View: Single compact row */}
+                                <div className="lg:hidden flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <div className="w-8 h-8 rounded-full bg-nature-100 flex items-center justify-center text-nature-600 font-bold overflow-hidden shrink-0 text-xs">
+                                            {customer.avatar ? (
+                                                <img src={sanitizeImageUrl(customer.avatar)} alt="avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                customer.name.charAt(0).toUpperCase()
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-500 truncate">{customer.email}</p>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <h3 className="font-bold text-gray-900 text-xs truncate">{customer.name}</h3>
+                                                {customer.role === 'ADMIN' && (
+                                                    <span className="flex items-center gap-0.5 bg-purple-100 text-purple-700 px-1 py-0.2 rounded-full text-[8px] font-bold">
+                                                        <Shield size={8} /> ADMIN
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 truncate -mt-0.5">{customer.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-[10px] font-bold text-gray-700">{customer.stats.totalOrders} ordini</p>
+                                        <p className="text-[10px] font-black text-nature-600 -mt-0.5">€ {(customer.stats.totalSpent / 100).toFixed(2)}</p>
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-end border-t border-gray-100/60 pt-2 mt-2">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-gray-400 font-medium">Ordini</span>
-                                        <span className="text-sm font-bold text-gray-700">{customer.stats.totalOrders}</span>
+
+                                {/* Desktop View: standard cards */}
+                                <div className="hidden lg:block">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-full bg-nature-100 flex items-center justify-center text-nature-600 font-bold overflow-hidden shrink-0">
+                                            {customer.avatar ? (
+                                                <img src={sanitizeImageUrl(customer.avatar)} alt="avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                customer.name.charAt(0).toUpperCase()
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-bold text-gray-900 truncate">{customer.name}</h3>
+                                                {customer.role === 'ADMIN' && (
+                                                    <span className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                                        <Shield size={10} /> ADMIN
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-500 truncate">{customer.email}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[10px] text-gray-400 font-medium">Speso</span>
-                                        <span className="text-sm font-bold text-nature-600">€ {(customer.stats.totalSpent / 100).toFixed(2)}</span>
+                                    <div className="flex justify-between items-end border-t border-gray-100/60 pt-2 mt-2">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-gray-400 font-medium">Ordini</span>
+                                            <span className="text-sm font-bold text-gray-700">{customer.stats.totalOrders}</span>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[10px] text-gray-400 font-medium">Speso</span>
+                                            <span className="text-sm font-bold text-nature-600">€ {(customer.stats.totalSpent / 100).toFixed(2)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

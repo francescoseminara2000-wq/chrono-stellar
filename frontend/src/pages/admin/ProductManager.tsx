@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter, Sliders } from 'lucide-react';
 
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,6 +37,7 @@ export const ProductManager = () => {
     const [showSearch, setShowSearch] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
     const [showSort, setShowSort] = useState(false);
+    const [mobileQuickEditId, setMobileQuickEditId] = useState<number | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -814,107 +815,148 @@ export const ProductManager = () => {
                     const isEmpty = !product.allowBackorder && stockNum <= 0;
                     const stockColor = isEmpty ? '#ef4444' : isLow ? '#f59e0b' : '#10b981';
 
+                    const isQuickEditing = mobileQuickEditId === product.id;
+
                     return (
                         <div
                             key={product.id}
-                            className={`flex flex-col gap-3 bg-white rounded-2xl shadow-sm border p-4 transition-colors relative
-                                ${selectedIds.includes(product.id) ? 'bg-nature-50 border-nature-300 ring-2 ring-nature-200' : 'border-gray-100'}`}
+                            className={`flex flex-col gap-1.5 bg-white rounded-xl shadow-sm border p-2 transition-colors relative
+                                ${selectedIds.includes(product.id) ? 'bg-nature-50 border-nature-300 ring-1 ring-nature-200' : 'border-gray-100'}`}
                         >
-                            {/* Header: Checkbox + Image + Details + Actions */}
-                            <div className="flex gap-3 items-start relative pb-3 border-b border-gray-100">
-                                <div className="mt-1 shrink-0" onClick={(e) => { e.stopPropagation(); toggleSelect(product.id); }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedIds.includes(product.id)}
-                                        readOnly
-                                        className="w-5 h-5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer"
-                                    />
+                            {/* Main Compact Row */}
+                            <div className="flex items-center gap-2 justify-between w-full min-w-0">
+                                {/* Left Side: Checkbox + Image + Details */}
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="shrink-0" onClick={(e) => { e.stopPropagation(); toggleSelect(product.id); }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.includes(product.id)}
+                                            readOnly
+                                            className="w-4 h-4 text-nature-600 rounded focus:ring-nature-500 cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="w-8 h-8 rounded overflow-hidden shrink-0 border border-gray-100 bg-gray-50 relative">
+                                        {product.imageUrl ? (
+                                            <img src={sanitizeImageUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <Upload size={12} className="text-gray-300" />
+                                            </div>
+                                        )}
+                                        <div className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full border border-white shadow-sm ${product.isAvailable ? 'bg-emerald-400' : 'bg-gray-300'}`} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="font-bold text-gray-900 leading-tight text-xs truncate" title={product.name}>
+                                            {product.name}
+                                        </h3>
+                                        <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                            <span className="text-[8px] text-gray-500 bg-gray-100 px-1 py-0.2 rounded font-extrabold uppercase">
+                                                {product.unitType}
+                                            </span>
+                                            {product.category && (
+                                                <span className="text-[8px] bg-gray-50 px-1 py-0.2 rounded font-extrabold text-gray-600 flex items-center gap-0.5 border border-gray-200" style={{ borderColor: `${product.category.color}30` }}>
+                                                    <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: product.category.color }} />
+                                                    <span className="truncate max-w-[50px]">{product.category.name}</span>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-gray-100 bg-gray-50 relative">
-                                    {product.imageUrl ? (
-                                        <img src={sanitizeImageUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <Upload size={16} className="text-gray-300" />
+
+                                {/* Right Side: Values or Action Buttons */}
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {!isQuickEditing && (
+                                        <div 
+                                            onClick={() => setMobileQuickEditId(product.id)}
+                                            className="text-right cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors shrink-0"
+                                        >
+                                            <p className="text-[10px] font-black text-gray-800">€ {currentPrice}</p>
+                                            <p className="text-[9px] font-bold text-gray-400 -mt-0.5">
+                                                Scorta: <span style={{ color: stockColor }}>{product.allowBackorder ? '∞' : currentStock}</span>
+                                            </p>
                                         </div>
                                     )}
-                                    <div className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${product.isAvailable ? 'bg-emerald-400' : 'bg-gray-300'}`} />
-                                </div>
-                                <div className="min-w-0 flex-1 flex flex-col items-start gap-1">
-                                    <h3 className="font-bold text-gray-900 leading-tight">{product.name}</h3>
-                                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                                        <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md font-bold uppercase">
-                                            {product.unitType}
-                                        </span>
-                                        {product.category && (
-                                            <span className="text-[10px] bg-gray-50 px-1.5 py-0.5 rounded-md font-bold text-gray-600 flex items-center gap-1 border border-gray-200" style={{ borderColor: `${product.category.color}30` }}>
-                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: product.category.color }} />
-                                                <span className="truncate max-w-[80px]">{product.category.name}</span>
-                                            </span>
-                                        )}
-                                        {isEmpty && !product.allowBackorder && (
-                                            <span className="text-[10px] bg-red-50 text-red-600 font-black px-1.5 py-0.5 rounded-md uppercase border border-red-100 shadow-sm animate-pulse">Esaurito</span>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-0.5 shrink-0">
+                                        {!isQuickEditing ? (
+                                            <>
+                                                <button 
+                                                    onClick={() => setMobileQuickEditId(product.id)} 
+                                                    className="p-1 text-nature-600 bg-nature-50 hover:bg-nature-100 rounded border border-transparent"
+                                                    title="Modifica Rapida"
+                                                >
+                                                    <Sliders size={12} />
+                                                </button>
+                                                <button onClick={() => setViewingStatsProduct(product)} className="p-1 text-purple-500 bg-purple-50 hover:bg-purple-100 rounded border border-transparent">
+                                                    <BarChart2 size={12} />
+                                                </button>
+                                                <button onClick={() => handleEdit(product)} className="p-1 text-blue-500 bg-blue-50 hover:bg-blue-100 rounded border border-transparent">
+                                                    <Edit2 size={12} />
+                                                </button>
+                                                <button onClick={() => handleDelete(product.id)} className="p-1 text-red-500 bg-red-50 hover:bg-red-100 rounded border border-transparent">
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button 
+                                                onClick={() => {
+                                                    setMobileQuickEditId(null);
+                                                    // Clear temporary modifications
+                                                    setQuickEditData(prev => { const n = { ...prev }; delete n[product.id]; return n; });
+                                                }} 
+                                                className="p-1 text-gray-500 bg-gray-100 hover:bg-gray-250 rounded border border-transparent"
+                                                title="Chiudi Modifica"
+                                            >
+                                                <X size={12} />
+                                            </button>
                                         )}
                                     </div>
-                                </div>
-
-                                {/* Quick Menu Toggle (Standard Flex Flow) */}
-                                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 shrink-0 -mt-1 -mr-1">
-                                    <button onClick={() => setViewingStatsProduct(product)} className="p-1.5 text-purple-500 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-transparent hover:border-purple-200">
-                                        <BarChart2 size={16} />
-                                    </button>
-                                    <button onClick={() => handleEdit(product)} className="p-1.5 text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-transparent hover:border-blue-200">
-                                        <Edit2 size={16} />
-                                    </button>
-                                    <button onClick={() => handleDelete(product.id)} className="p-1.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-transparent hover:border-red-200">
-                                        <Trash2 size={16} />
-                                    </button>
                                 </div>
                             </div>
 
-                            {/* Inputs Row */}
-                            <div className="flex gap-3 h-[72px]">
-                                <div className="flex-1 flex flex-col justify-end">
-                                    <span className="flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase mb-1.5 pl-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div> Prezzo ({product.unitType})</span>
-                                    <div className="relative mt-auto">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">€</span>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={currentPrice}
-                                            onChange={(e) => setQuickEditData(prev => ({ ...prev, [product.id]: { ...prev[product.id], price: e.target.value } }))}
-                                            className={`w-full bg-gray-50/80 border ${hasChanges?.price ? 'border-nature-400 ring-4 ring-nature-500/10' : 'border-gray-200'} rounded-xl pl-7 pr-3 py-2 text-sm font-black text-gray-800 focus:outline-none focus:bg-white focus:border-nature-400 transition-all`}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex-1 flex flex-col justify-end">
-                                    <span className="flex items-start gap-1 text-[10px] text-gray-400 font-bold uppercase mb-1 pl-1">
-                                        <div className="w-1.5 h-1.5 rounded-full mt-1" style={{ backgroundColor: stockColor }}></div>
-                                        <div className="flex flex-col">
-                                            <span>Scorta</span>
-                                            <span className="text-[9px] opacity-70 normal-case leading-none mt-0.5">Avviso a: {product.allowBackorder ? 'Mai' : threshold}</span>
+                            {/* Inputs Row (Only when editing this item) */}
+                            {isQuickEditing && (
+                                <div className="flex gap-2 border-t border-gray-100 pt-2 mt-1 animate-in slide-in-from-top-1 fade-in duration-200">
+                                    <div className="flex-1 flex flex-col">
+                                        <span className="text-[8px] text-gray-400 font-bold uppercase mb-0.5 pl-0.5">Prezzo</span>
+                                        <div className="relative">
+                                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[10px]">€</span>
+                                            <input
+                                                type="text"
+                                                value={currentPrice}
+                                                onChange={(e) => setQuickEditData(prev => ({ ...prev, [product.id]: { ...prev[product.id], price: e.target.value } }))}
+                                                className={`w-full bg-gray-50/80 border ${hasChanges?.price ? 'border-nature-400 ring-2 ring-nature-500/10' : 'border-gray-200'} rounded px-4 py-0.5 text-xs font-black text-gray-800 focus:outline-none focus:bg-white focus:border-nature-400 transition-all`}
+                                            />
                                         </div>
-                                    </span>
-                                    <div className="relative mt-auto">
-                                        <input
-                                            type="number"
-                                            value={currentStock}
-                                            onChange={(e) => setQuickEditData(prev => ({ ...prev, [product.id]: { ...prev[product.id], stockQuantity: e.target.value } }))}
-                                            className={`w-full bg-gray-50/80 border ${hasChanges?.stockQuantity ? 'border-nature-400 ring-4 ring-nature-500/10' : 'border-gray-200'} rounded-xl px-3 py-2 text-sm font-black text-gray-800 ${product.allowBackorder ? 'text-sky-600' : ''} focus:outline-none focus:bg-white focus:border-nature-400 transition-all`}
-                                        />
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Save Row (Only when changes present) */}
-                            {hasChanges && (
-                                <div className="flex gap-2 animate-in slide-in-from-top-2 fade-in duration-200 mt-1 pb-1">
-                                    <button onClick={() => setQuickEditData(prev => { const n = { ...prev }; delete n[product.id]; return n; })} className="flex-1 flex items-center justify-center gap-2 p-2 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-xs transition-colors">
-                                        <X size={14} /> Annulla
-                                    </button>
-                                    <button onClick={() => handleInlineUpdate(product.id)} className="flex-1 flex items-center justify-center gap-2 p-2 bg-nature-600 text-white rounded-xl shadow-md shadow-nature-200/50 hover:bg-nature-700 font-bold text-xs transition-all active:scale-95">
-                                        <Save size={14} /> Salva Rapido
-                                    </button>
+                                    <div className="flex-1 flex flex-col">
+                                        <span className="text-[8px] text-gray-400 font-bold uppercase mb-0.5 pl-0.5">Scorta</span>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={currentStock}
+                                                onChange={(e) => setQuickEditData(prev => ({ ...prev, [product.id]: { ...prev[product.id], stockQuantity: e.target.value } }))}
+                                                className={`w-full bg-gray-50/80 border ${hasChanges?.stockQuantity ? 'border-nature-400 ring-2 ring-nature-500/10' : 'border-gray-200'} rounded px-1.5 py-0.5 text-xs font-black text-gray-800 ${product.allowBackorder ? 'text-sky-600' : ''} focus:outline-none focus:bg-white focus:border-nature-400 transition-all`}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-end gap-1">
+                                        <button 
+                                            onClick={async () => {
+                                                await handleInlineUpdate(product.id);
+                                                setMobileQuickEditId(null);
+                                            }} 
+                                            disabled={!hasChanges}
+                                            className={`p-1 rounded shadow-md font-bold text-[10px] transition-all ${
+                                                hasChanges 
+                                                    ? 'bg-nature-600 text-white hover:bg-nature-700 active:scale-95' 
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            <Save size={12} />
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
