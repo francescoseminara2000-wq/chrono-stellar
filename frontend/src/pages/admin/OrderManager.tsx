@@ -378,7 +378,7 @@ export const OrderManager = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
                 {/* Left column: Orders list */}
                 <div className={`flex flex-col h-full min-h-0 ${selectedOrder ? 'hidden lg:flex' : 'flex'} lg:col-span-5 xl:col-span-4`}>
-                    <div className="space-y-2 lg:space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
+                    <div className="space-y-2 lg:space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
                         {filteredOrders.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                                 <ShoppingBag size={48} className="mb-4 opacity-50" />

@@ -779,8 +779,7 @@ export const ProductManager = () => {
                 </div> {/* end inner scroll div */}
             </div>
 
-            {/* Mobile Card View (Smartphone) */}
-            <div className="lg:hidden flex flex-col gap-3">
+            <div className="lg:hidden flex flex-col gap-3 pb-32">
                 {products.length === 0 && (
                     <div className="py-12 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">

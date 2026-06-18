@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 interface DeliveryOrder {
     id: number;
     customerName: string;
-    customerPhone: string;
+    customerPhone: string | null;
     shippingAddress: string;
     status: string;
     latitude: number;
@@ -24,8 +24,32 @@ interface DeliveryOrder {
 const ChangeView = ({ center, zoom }: { center: [number, number], zoom: number }) => {
     const map = useMap();
     useEffect(() => {
-        map.setView(center, zoom);
+        const size = map.getSize();
+        if (size.x > 0 && size.y > 0) {
+            map.setView(center, zoom);
+        }
     }, [center, zoom, map]);
+    return null;
+};
+
+// Force Leaflet to recalculate container size when it mounts or changes
+const MapResizeListener = () => {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 150);
+        
+        const handleResize = () => {
+            map.invalidateSize();
+        };
+        window.addEventListener('resize', handleResize);
+        
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [map]);
     return null;
 };
 
@@ -48,9 +72,23 @@ const AdaptiveZoom = ({ deliveries, storeLocation }: { deliveries: DeliveryOrder
             }
         });
 
-        if (bounds.isValid()) {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-        }
+        const fit = () => {
+            if (bounds.isValid()) {
+                const size = map.getSize();
+                if (size.x > 0 && size.y > 0) {
+                    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+                }
+            }
+        };
+
+        // Run immediately
+        fit();
+
+        // Also run on map resize
+        map.on('resize', fit);
+        return () => {
+            map.off('resize', fit);
+        };
     }, [deliveries, storeLocation, map]);
 
     return null;
@@ -280,7 +318,7 @@ export const DeliveryMap = () => {
                 </div>
 
                 {/* Map Section */}
-                <div className="flex-1 w-full h-full min-h-[250px] md:min-h-0 relative z-0">
+                <div className="flex-1 w-full min-h-[300px] md:min-h-0 relative z-0">
                     {isLoading ? (
                         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[1000]">
                             <div className="flex flex-col items-center gap-4">
@@ -292,9 +330,10 @@ export const DeliveryMap = () => {
                         <MapContainer
                             center={mapCenter}
                             zoom={zoom}
-                            className="h-full w-full"
+                            className="absolute inset-0 h-full w-full"
                             zoomControl={false}
                         >
+                            <MapResizeListener />
                             <AdaptiveZoom deliveries={deliveries} storeLocation={storeLocation} />
                             <ChangeView center={mapCenter} zoom={zoom} />
                             <TileLayer
@@ -395,24 +434,26 @@ export const DeliveryMap = () => {
                                                 <div style={{ height: '1px', backgroundColor: '#F3F4F6', margin: '0 0 12px' }} />
 
                                                 {/* Contact buttons */}
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
-                                                    <a href={`tel:${order.customerPhone}`} style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                                                        padding: '10px', backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB',
-                                                        borderRadius: '10px', textDecoration: 'none', color: '#374151',
-                                                        fontSize: '13px', fontWeight: 700, transition: 'all 0.15s'
-                                                    }}>
-                                                        <Phone size={14} /> Chiama
-                                                    </a>
-                                                    <a href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                                                        padding: '10px', backgroundColor: '#22C55E', border: 'none',
-                                                        borderRadius: '10px', textDecoration: 'none', color: 'white',
-                                                        fontSize: '13px', fontWeight: 700, transition: 'all 0.15s'
-                                                    }}>
-                                                        <MessageCircle size={13} /> WhatsApp
-                                                    </a>
-                                                </div>
+                                                {order.customerPhone && (
+                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                                                         <a href={`tel:${order.customerPhone}`} style={{
+                                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                                                             padding: '10px', backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB',
+                                                             borderRadius: '10px', textDecoration: 'none', color: '#374151',
+                                                             fontSize: '13px', fontWeight: 700, transition: 'all 0.15s'
+                                                         }}>
+                                                             <Phone size={14} /> Chiama
+                                                         </a>
+                                                         <a href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" style={{
+                                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                                                             padding: '10px', backgroundColor: '#22C55E', border: 'none',
+                                                             borderRadius: '10px', textDecoration: 'none', color: 'white',
+                                                             fontSize: '13px', fontWeight: 700, transition: 'all 0.15s'
+                                                         }}>
+                                                             <MessageCircle size={13} /> WhatsApp
+                                                         </a>
+                                                     </div>
+                                                 )}
 
                                                 {/* Manage order button */}
                                                 <Link

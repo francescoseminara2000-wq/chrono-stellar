@@ -203,7 +203,7 @@ export const CustomerManager = () => {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-4 pb-28 md:pb-4 space-y-3 custom-scrollbar">
                         {filteredCustomers.map(customer => (
                             <div
                                 key={customer.id}
@@ -293,7 +293,7 @@ export const CustomerManager = () => {
                             <h2 className="font-bold">Torna all'elenco</h2>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-4 pb-28 md:p-8 custom-scrollbar">
                             <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
                                 <div className="w-24 h-24 rounded-2xl bg-nature-100 flex items-center justify-center text-3xl font-bold text-nature-600 shadow-inner overflow-hidden shrink-0">
                                     {selectedCustomer.avatar ? (
