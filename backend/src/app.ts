@@ -14,6 +14,7 @@ import { NotificationController } from './controllers/NotificationController';
 import { PushController } from './controllers/PushController';
 import { StatsController } from './controllers/StatsController';
 import { CategoryController } from './controllers/CategoryController';
+import { LogisticsController } from './controllers/LogisticsController';
 
 const app = express();
 
@@ -38,6 +39,7 @@ const notificationController = new NotificationController();
 const pushController = new PushController();
 const statsController = new StatsController();
 const categoryController = new CategoryController();
+const logisticsController = new LogisticsController();
 
 // API Routes
 // Public
@@ -46,6 +48,7 @@ app.get('/api/delivery-zones', (req, res) => deliveryZoneController.listActive(r
 app.post('/api/orders', (req, res) => orderController.create(req, res));
 app.get('/api/orders/my-orders', authenticateToken, (req, res) => orderController.listMyOrders(req, res));
 app.post('/api/orders/:id/cancel', authenticateToken, (req, res) => orderController.cancel(req, res));
+app.get('/api/logistics/available-dates', (req, res) => logisticsController.getAvailableDates(req, res));
 
 // Admin
 app.get('/api/admin/products', authenticateToken, requireAdmin, (req, res) => productController.list(req, res));
@@ -83,6 +86,13 @@ app.get('/api/admin/delivery-zones', authenticateToken, requireAdmin, (req, res)
 app.post('/api/admin/delivery-zones', authenticateToken, requireAdmin, (req, res) => deliveryZoneController.create(req, res));
 app.put('/api/admin/delivery-zones/:id', authenticateToken, requireAdmin, (req, res) => deliveryZoneController.update(req, res));
 app.delete('/api/admin/delivery-zones/:id', authenticateToken, requireAdmin, (req, res) => deliveryZoneController.delete(req, res));
+
+// Admin - Logistics
+app.get('/api/admin/logistics/closures', authenticateToken, requireAdmin, (req, res) => logisticsController.listClosures(req, res));
+app.post('/api/admin/logistics/closures', authenticateToken, requireAdmin, (req, res) => logisticsController.createClosure(req, res));
+app.delete('/api/admin/logistics/closures/:id', authenticateToken, requireAdmin, (req, res) => logisticsController.deleteClosure(req, res));
+app.patch('/api/admin/orders/:id/schedule', authenticateToken, requireAdmin, (req, res) => logisticsController.updateOrderSchedule(req, res));
+app.get('/api/admin/logistics/dashboard', authenticateToken, requireAdmin, (req, res) => logisticsController.getLogisticsDashboard(req, res));
 
 // Admin - WhatsApp
 import { WhatsAppController } from './controllers/WhatsAppController';

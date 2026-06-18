@@ -2,10 +2,44 @@ import { Request, Response } from 'express';
 import { AdminService } from '../services/AdminService';
 import { WhatsAppService } from '../services/WhatsAppService';
 import { PushService } from '../services/PushService';
+import { prisma } from '../lib/prisma';
+import { EmailService } from '../services/EmailService';
 
 const adminService = new AdminService();
 const whatsAppService = WhatsAppService.getInstance();
 const pushService = new PushService();
+const emailService = new EmailService();
+
+async function notifyClientOfStatusUpdate(order: any, status: string) {
+    try {
+        let preference = 'EMAIL';
+        if (order.userId) {
+            const user = await prisma.user.findUnique({ where: { id: order.userId } });
+            if (user && user.notificationPreference) {
+                preference = user.notificationPreference;
+            }
+        }
+
+        const waStatus = whatsAppService.getStatus();
+
+        if (preference === 'WHATSAPP' && order.customerPhone && waStatus.isConnected) {
+            console.log(`[AdminController] Sending WhatsApp notification for status ${status} to order #${order.id}`);
+            try {
+                await whatsAppService.sendOrderNotification(order, status as any);
+            } catch (err) {
+                console.error('WhatsApp notification failed, falling back to email:', err);
+                if (order.customerEmail) {
+                    await emailService.sendOrderStatusUpdateEmail(order.customerEmail, order, status);
+                }
+            }
+        } else if (order.customerEmail) {
+            console.log(`[AdminController] Sending Email notification for status ${status} to order #${order.id}`);
+            await emailService.sendOrderStatusUpdateEmail(order.customerEmail, order, status);
+        }
+    } catch (err) {
+        console.error('Failed to notify client:', err);
+    }
+}
 
 export class AdminController {
     async fulfill(req: Request, res: Response) {
@@ -15,19 +49,8 @@ export class AdminController {
 
             const order = await adminService.fulfillOrder(Number(id), items);
 
-            // Auto-send WhatsApp if connected
-            const waStatus = whatsAppService.getStatus();
-            console.log(`[AdminController] Fulfill Order ID: ${order.id}, Phone: ${order.customerPhone}, WA Connected: ${waStatus.isConnected}`);
-
-            if (waStatus.isConnected && order.customerPhone) {
-                console.log('[AdminController] Triggering WhatsApp notification (WEIGHING_COMPLETED)...');
-                // @ts-ignore
-                try {
-                    await whatsAppService.sendOrderNotification(order, 'WEIGHING_COMPLETED');
-                } catch (waError) {
-                    console.error('[AdminController] WhatsApp notification failed (non-blocking):', waError);
-                }
-            }
+            // Auto-send WhatsApp/Email notification
+            await notifyClientOfStatusUpdate(order, 'WEIGHING_COMPLETED');
 
             // Push Notification to customer
             if (order.userId) {
@@ -65,19 +88,8 @@ export class AdminController {
             const order = await adminService.updateStatus(Number(id), status, adminNotes);
             console.log('[AdminController] Order updated successfully:', order.id);
 
-            // Auto-send WhatsApp if connected
-            const waStatus = whatsAppService.getStatus();
-            console.log(`[AdminController] WhatsApp Status - Connected: ${waStatus.isConnected}, Phone: ${order.customerPhone}`);
-
-            if (waStatus.isConnected && order.customerPhone) {
-                console.log('[AdminController] Triggering WhatsApp notification...');
-                // @ts-ignore
-                try {
-                    await whatsAppService.sendOrderNotification(order, status);
-                } catch (waError) {
-                    console.error('[AdminController] WhatsApp notification failed (non-blocking):', waError);
-                }
-            }
+            // Auto-send WhatsApp/Email notification
+            await notifyClientOfStatusUpdate(order, status);
 
             // Push Notification to customer
             if (order.userId) {
@@ -123,15 +135,8 @@ export class AdminController {
                     const order = await adminService.updateStatus(Number(id), status);
                     updatedOrders.push(order);
 
-                    // Send WhatsApp notification
-                    const waStatus = whatsAppService.getStatus();
-                    if (waStatus.isConnected && order.customerPhone) {
-                        try {
-                            await whatsAppService.sendOrderNotification(order, status);
-                        } catch (waError) {
-                            console.error(`[AdminController] Bulk WhatsApp notification failed for order #${order.id}:`, waError);
-                        }
-                    }
+                    // Send WhatsApp/Email notification
+                    await notifyClientOfStatusUpdate(order, status);
 
                     // Push Notification to customer
                     if (order.userId) {

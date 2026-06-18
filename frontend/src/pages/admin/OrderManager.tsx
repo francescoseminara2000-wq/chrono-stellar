@@ -21,6 +21,8 @@ interface Order {
     customerPhone?: string;
     customerName?: string;
     customerEmail?: string;
+    scheduledDate?: string;
+    scheduledTime?: string;
 }
 
 const ORDER_STATUSES = ['PENDING', 'WEIGHING_COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
@@ -288,6 +290,35 @@ export const OrderManager = () => {
         } catch (err) {
             console.error(err);
             addToast('Errore di connessione al server.', 'error');
+        }
+    };
+
+    const handleUpdateOrderSchedule = async (orderId: number, newDate: string, newTime: string) => {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/orders/${orderId}/schedule`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    scheduledDate: newDate || null,
+                    scheduledTime: newTime || null
+                })
+            });
+
+            if (res.ok) {
+                const updatedOrder = await res.json();
+                setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+                setSelectedOrder(updatedOrder);
+                addToast('Programmazione ordine aggiornata!', 'success');
+            } else {
+                const data = await res.json();
+                addToast(data.error || 'Impossibile salvare la pianificazione.', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            addToast('Errore di rete.', 'error');
         }
     };
 
@@ -562,6 +593,11 @@ export const OrderManager = () => {
                                                 <p className="text-[10px] text-gray-400 leading-none mt-0.5">
                                                     {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
                                                 </p>
+                                                {order.scheduledDate && (
+                                                    <p className="text-[9px] text-blue-600 font-bold mt-0.5">
+                                                        Pianificato: {order.scheduledDate.split('-').reverse().join('/')} {order.scheduledTime || ''}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
@@ -587,6 +623,11 @@ export const OrderManager = () => {
                                                 <div>
                                                     <h3 className="font-bold text-gray-900 leading-tight text-base">{order.customerName || order.user?.name || 'Cliente'}</h3>
                                                     <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                                                    {order.scheduledDate && (
+                                                        <p className="text-xs text-blue-600 font-bold mt-1">
+                                                            Pianificato: {order.scheduledDate.split('-').reverse().join('/')} {order.scheduledTime || ''}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <StatusBadge status={order.status} />
@@ -671,8 +712,8 @@ export const OrderManager = () => {
                                     </div>
                                 )}
 
-                                {/* Customer Info & Internal Notes Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 mb-4 shrink-0">
+                                {/* Customer Info & Internal Notes */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-4 shrink-0">
                                     {/* Customer Info */}
                                     <div className="bg-nature-50/60 p-3 lg:p-4 rounded-xl border border-nature-100/50 text-xs flex flex-col justify-between">
                                         <div>
@@ -700,6 +741,33 @@ export const OrderManager = () => {
                                                 <strong>Note:</strong> {selectedOrder.deliveryNotes}
                                             </div>
                                         )}
+                                    </div>
+
+                                    {/* Appointment Scheduling */}
+                                    <div className="bg-blue-50/60 p-3 lg:p-4 rounded-xl border border-blue-100/50 text-xs flex flex-col justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-1">Pianificazione Appuntamento</span>
+                                            <div className="grid grid-cols-1 gap-2 mt-1.5">
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data</label>
+                                                    <input
+                                                        type="date"
+                                                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-white focus:ring-1 focus:ring-blue-450 outline-none"
+                                                        value={selectedOrder.scheduledDate || ''}
+                                                        onChange={(e) => handleUpdateOrderSchedule(selectedOrder.id, e.target.value, selectedOrder.scheduledTime || '')}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Ora</label>
+                                                    <input
+                                                        type="time"
+                                                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-white focus:ring-1 focus:ring-blue-450 outline-none"
+                                                        value={selectedOrder.scheduledTime || ''}
+                                                        onChange={(e) => handleUpdateOrderSchedule(selectedOrder.id, selectedOrder.scheduledDate || '', e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Internal Notes */}

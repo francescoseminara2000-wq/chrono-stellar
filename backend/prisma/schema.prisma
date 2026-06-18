@@ -8,13 +8,15 @@ datasource db {
 }
 
 model DeliveryZone {
-  id           Int      @id @default(autoincrement())
+  id           Int                @id @default(autoincrement())
   city         String
   zipCode      String
   shippingCost Int
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isActive     Boolean            @default(true)
+  deliveryDays String             @default("1,2,3,4,5,6")
+  closures     LogisticsClosure[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 model Notification {
@@ -45,6 +47,8 @@ model Order {
   customerPhone   String?
   latitude        Float?
   longitude       Float?
+  scheduledDate   String?
+  scheduledTime   String?
   user            User?                @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
   items           OrderItem[]
   transaction     Transaction[]
@@ -226,4 +230,16 @@ enum DeliveryMethod {
 enum NotificationPreference {
   EMAIL
   WHATSAPP
+}
+
+model LogisticsClosure {
+  id             Int           @id @default(autoincrement())
+  date           String
+  type           String
+  deliveryZoneId Int?
+  deliveryZone   DeliveryZone? @relation(fields: [deliveryZoneId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([date, type, deliveryZoneId])
 }

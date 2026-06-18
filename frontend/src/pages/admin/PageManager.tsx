@@ -480,15 +480,22 @@ export const PageManager = () => {
                                     </div>
 
                                     {blocks.length === 0 ? (
-                                        <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center bg-white">
-                                            <p className="text-gray-500 mb-6">La pagina è vuota. Inizia aggiungendo la tua prima sezione.</p>
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setAddingAtIndex(0)} 
-                                                className="bg-nature-600 hover:bg-nature-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors inline-flex items-center gap-2"
-                                            >
-                                                <Plus size={20} /> Aggiungi Sezione
-                                            </button>
+                                        <div className="space-y-4">
+                                            <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center bg-white">
+                                                <p className="text-gray-500 mb-6">La pagina è vuota. Inizia aggiungendo la tua prima sezione.</p>
+                                                {addingAtIndex !== 0 && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setAddingAtIndex(0)} 
+                                                        className="bg-nature-600 hover:bg-nature-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors inline-flex items-center gap-2"
+                                                    >
+                                                        <Plus size={20} /> Aggiungi Sezione
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {addingAtIndex === 0 && (
+                                                <BlockInserter index={0} onCancel={() => setAddingAtIndex(null)} onAdd={addBlock} />
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="space-y-2">

@@ -18,7 +18,7 @@ export class EmailService {
         });
     }
 
-    private async sendMail(to: string, subject: string, html: string, settings?: any) {
+    public async sendMail(to: string, subject: string, html: string, settings?: any) {
         try {
             const fromName = settings?.siteName || 'Chrono Stellar';
             const fromEmail = settings?.contactEmail || 'noreply@chronostellar.com';
@@ -273,5 +273,48 @@ export class EmailService {
         `;
 
         return this.sendMail(to, subject, this.getEmailTemplate('Conferma del tuo Ordine', content, settings), settings);
+    }
+
+    async sendOrderStatusUpdateEmail(to: string, order: any, status: string) {
+        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        const siteName = settings?.siteName || 'Chrono Stellar';
+        
+        let statusLabel = status;
+        let details = '';
+        
+        if (status === 'WEIGHING_COMPLETED') {
+            statusLabel = 'Confermato & Pesato';
+            details = `Il tuo ordine è stato pesato. Il totale finale aggiornato è <strong>€${((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</strong>.`;
+        } else if (status === 'OUT_FOR_DELIVERY') {
+            if (order.deliveryMethod === 'PICKUP') {
+                statusLabel = 'Pronto per il Ritiro';
+                details = `Il tuo ordine è pronto per il ritiro in negozio! Ti aspettiamo negli orari di apertura.`;
+            } else {
+                statusLabel = 'In Consegna';
+                details = `Il tuo ordine è in consegna! Il nostro corriere sta arrivando al tuo indirizzo.`;
+            }
+        } else if (status === 'DELIVERED') {
+            statusLabel = 'Consegnato';
+            details = `Il tuo ordine è stato consegnato/ritirato con successo. Grazie per aver acquistato da noi!`;
+        } else if (status === 'CANCELLED') {
+            statusLabel = 'Annullato';
+            details = `Ci dispiace informarti che il tuo ordine è stato annullato.`;
+        }
+        
+        const subject = `Aggiornamento Ordine #${order.id} - ${statusLabel} - ${siteName}`;
+        
+        const content = `
+            <p>Ciao ${order.customerName || 'Cliente'},</p>
+            <p>Ti comunichiamo che lo stato del tuo ordine <strong>#${order.id}</strong> è stato aggiornato a: <strong style="color: ${settings?.primaryColor || '#16a34a'};">${statusLabel}</strong>.</p>
+            
+            <div style="background-color: #f8faf7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${settings?.primaryColor || '#16a34a'};">
+                ${details}
+            </div>
+            
+            <p>Puoi monitorare lo stato del tuo ordine accedendo al tuo profilo sul nostro sito.</p>
+            <p>A presto,<br>Il Team di ${siteName}</p>
+        `;
+        
+        return this.sendMail(to, subject, this.getEmailTemplate(`Aggiornamento Ordine #${order.id}`, content, settings), settings);
     }
 }

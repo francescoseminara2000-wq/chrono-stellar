@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { Truck, Store, CreditCard, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon } from 'lucide-react';
+import { Truck, Store, CreditCard, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LocationPicker } from '../components/LocationPicker';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -28,6 +28,40 @@ export const Checkout = () => {
         longitude: undefined as number | undefined
     });
     const [submitted, setSubmitted] = useState(false);
+    const [availableDates, setAvailableDates] = useState<Array<{ date: string; label: string }>>([]);
+    const [selectedDate, setSelectedDate] = useState<string>('');
+
+    // Fetch available dates based on delivery method and selected city
+    useEffect(() => {
+        if (deliveryMethod === 'DELIVERY' && !formData.city) {
+            setAvailableDates([]);
+            setSelectedDate('');
+            return;
+        }
+
+        const query = deliveryMethod === 'DELIVERY'
+            ? `?method=DELIVERY&city=${encodeURIComponent(formData.city)}`
+            : `?method=PICKUP`;
+
+        fetch(`/api/logistics/available-dates${query}`)
+            .then(res => {
+                if (!res.ok) throw new Error();
+                return res.json();
+            })
+            .then((dates: Array<{ date: string; label: string }>) => {
+                setAvailableDates(dates);
+                if (dates.length > 0) {
+                    setSelectedDate(dates[0].date);
+                } else {
+                    setSelectedDate('');
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching available dates:', err);
+                setAvailableDates([]);
+                setSelectedDate('');
+            });
+    }, [deliveryMethod, formData.city]);
 
     // Fetch Delivery Zones
     useEffect(() => {
@@ -160,7 +194,8 @@ export const Checkout = () => {
             shippingCost: shippingCost,
             customerPhone: user?.phone || formData.phone,
             latitude: formData.latitude,
-            longitude: formData.longitude
+            longitude: formData.longitude,
+            scheduledDate: selectedDate || null
         };
 
         try {
@@ -254,6 +289,49 @@ export const Checkout = () => {
                                             <Truck size={32} />
                                             <span className="font-bold">Consegna a Casa</span>
                                         </button>
+                                    </div>
+
+                                    {/* Automated Scheduling UI */}
+                                    <div className="mt-4 p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-3">
+                                        {deliveryMethod === 'PICKUP' ? (
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-nature-100 text-nature-600 flex items-center justify-center shrink-0">
+                                                    <Clock size={20} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">RITIRO PROGRAMMATO</p>
+                                                    <p className="font-bold text-nature-950 mt-1">
+                                                        {availableDates.find(d => d.date === selectedDate)?.label || 'Calcolo in corso...'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                {!formData.city ? (
+                                                    <p className="text-sm text-gray-500 font-medium">Seleziona un comune di consegna per pianificare la data.</p>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
+                                                            <Clock size={12} className="text-nature-600" /> Data di Consegna Richiesta
+                                                        </label>
+                                                        {availableDates.length === 0 ? (
+                                                            <p className="text-sm text-red-500 font-bold">Nessuna data di consegna disponibile. Contatta l'assistenza.</p>
+                                                        ) : (
+                                                            <select
+                                                                required
+                                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none bg-white font-bold text-gray-800 transition-all text-sm mt-1"
+                                                                value={selectedDate}
+                                                                onChange={e => setSelectedDate(e.target.value)}
+                                                            >
+                                                                {availableDates.map(d => (
+                                                                    <option key={d.date} value={d.date}>{d.label}</option>
+                                                                ))}
+                                                            </select>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

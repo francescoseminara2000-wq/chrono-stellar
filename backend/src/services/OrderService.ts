@@ -17,7 +17,7 @@ export class OrderService {
     async createOrder(
         items: { id: number; quantity: number }[],
         paymentMethod: string,
-        deliveryDetails: { method: string; address?: string; notes?: string; shippingCost?: number; latitude?: number; longitude?: number },
+        deliveryDetails: { method: string; address?: string; notes?: string; shippingCost?: number; latitude?: number; longitude?: number; scheduledDate?: string },
         customerDetails: { userId?: number; name?: string; email?: string; phone?: string }
     ) {
         const strategy = this.paymentStrategies.get(paymentMethod);
@@ -103,6 +103,7 @@ export class OrderService {
                     latitude: finalLat,
                     longitude: finalLng,
                     shippingCost: shippingCost,
+                    scheduledDate: deliveryDetails.scheduledDate || null,
                     items: {
                         create: orderItemsData,
                     },

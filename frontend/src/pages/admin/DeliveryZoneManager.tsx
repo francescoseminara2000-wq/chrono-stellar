@@ -9,6 +9,7 @@ interface DeliveryZone {
     zipCode: string;
     shippingCost: number;
     isActive: boolean;
+    deliveryDays?: string;
 }
 
 export const DeliveryZoneManager = () => {
@@ -85,7 +86,7 @@ export const DeliveryZoneManager = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-3xl font-bold text-gray-800">Zone di Consegna</h1>
                 <button
-                    onClick={() => { setCurrentZone({ isActive: true }); setIsEditing(true); }}
+                    onClick={() => { setCurrentZone({ isActive: true, deliveryDays: '1,2,3,4,5,6' }); setIsEditing(true); }}
                     className="bg-nature-600 text-white px-5 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-nature-700 transition-all font-bold w-full sm:w-auto shadow-md animate-in fade-in"
                 >
                     <Plus size={20} /> Aggiungi Zona
@@ -133,6 +134,51 @@ export const DeliveryZoneManager = () => {
                                         onChange={e => setCurrentZone({ ...currentZone, shippingCost: Number(e.target.value) })}
                                     />
                                     <p className="text-xs text-gray-500 mt-1">Es. 500 = 5.00€</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-gray-700">Giorni di Consegna Abilitati</label>
+                                    <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-150">
+                                        {[
+                                            { value: 1, label: 'Lunedì' },
+                                            { value: 2, label: 'Martedì' },
+                                            { value: 3, label: 'Mercoledì' },
+                                            { value: 4, label: 'Giovedì' },
+                                            { value: 5, label: 'Venerdì' },
+                                            { value: 6, label: 'Sabato' },
+                                            { value: 0, label: 'Domenica' }
+                                        ].map(day => {
+                                            const daysArr = currentZone.deliveryDays 
+                                                ? currentZone.deliveryDays.split(',') 
+                                                : ['1', '2', '3', '4', '5', '6'];
+                                            const isChecked = daysArr.includes(String(day.value));
+                                            
+                                            const handleDayToggle = () => {
+                                                let newDaysArr = [...daysArr];
+                                                if (isChecked) {
+                                                    newDaysArr = newDaysArr.filter(d => d !== String(day.value));
+                                                } else {
+                                                    newDaysArr.push(String(day.value));
+                                                }
+                                                newDaysArr.sort();
+                                                setCurrentZone({
+                                                    ...currentZone,
+                                                    deliveryDays: newDaysArr.join(',')
+                                                });
+                                            };
+
+                                            return (
+                                                <label key={day.value} className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={handleDayToggle}
+                                                        className="rounded border-gray-300 text-nature-600 focus:ring-nature-500"
+                                                    />
+                                                    <span>{day.label}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -182,6 +228,14 @@ export const DeliveryZoneManager = () => {
                             <div>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Costo Spedizione</p>
                                 <p className="font-black text-gray-900 text-lg">€ {(zone.shippingCost / 100).toFixed(2)}</p>
+                                <div className="mt-2 text-[10px] text-gray-500 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                                    <span className="font-bold text-gray-400">Giorni: </span>
+                                    {zone.deliveryDays 
+                                        ? zone.deliveryDays.split(',')
+                                            .map(d => ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'][Number(d)])
+                                            .join(', ')
+                                        : 'Lun, Mar, Mer, Gio, Ven, Sab'}
+                                </div>
                             </div>
                             <div className="flex gap-2">
                                 <button
