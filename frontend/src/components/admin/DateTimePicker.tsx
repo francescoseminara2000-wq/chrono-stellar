@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { SearchableSelect } from './SearchableSelect';
+
+const hourOptions = Array.from({ length: 24 }).map((_, idx) => {
+    const h = String(idx).padStart(2, '0');
+    return { value: h, label: h };
+});
+
+const minuteOptions = Array.from({ length: 60 }).map((_, idx) => {
+    const m = String(idx).padStart(2, '0');
+    return { value: m, label: m };
+});
 
 interface DateTimePickerProps {
     date: string; // YYYY-MM-DD
@@ -271,27 +282,19 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                     <div className="border-t border-gray-100 pt-4">
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-2">Ora personalizzata</span>
                         <div className="flex items-center gap-2">
-                            <select
+                            <SearchableSelect
+                                options={hourOptions}
                                 value={customHour}
-                                onChange={(e) => handleCustomTimeChange(e.target.value, customMinute)}
-                                className="flex-1 p-2 border border-gray-200 rounded-xl text-xs sm:text-sm font-bold bg-white text-gray-705 outline-none hover:border-blue-400 focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer"
-                            >
-                                {Array.from({ length: 24 }).map((_, idx) => {
-                                    const h = String(idx).padStart(2, '0');
-                                    return <option key={h} value={h}>{h}</option>;
-                                })}
-                            </select>
+                                onChange={(val) => handleCustomTimeChange(val, customMinute)}
+                                placeholder="Ora"
+                            />
                             <span className="text-gray-400 font-extrabold">:</span>
-                            <select
+                            <SearchableSelect
+                                options={minuteOptions}
                                 value={customMinute}
-                                onChange={(e) => handleCustomTimeChange(customHour, e.target.value)}
-                                className="flex-1 p-2 border border-gray-200 rounded-xl text-xs sm:text-sm font-bold bg-white text-gray-705 outline-none hover:border-blue-400 focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer"
-                            >
-                                {Array.from({ length: 60 }).map((_, idx) => {
-                                    const m = String(idx).padStart(2, '0');
-                                    return <option key={m} value={m}>{m}</option>;
-                                })}
-                            </select>
+                                onChange={(val) => handleCustomTimeChange(customHour, val)}
+                                placeholder="Minuto"
+                            />
                         </div>
                     </div>
                 </div>
@@ -416,27 +419,19 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                             <div className="border-t border-gray-100 pt-3 mt-auto">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block mb-1">Ora personalizzata</span>
                                 <div className="flex items-center gap-1">
-                                    <select
+                                    <SearchableSelect
+                                        options={hourOptions}
                                         value={customHour}
-                                        onChange={(e) => handleCustomTimeChange(e.target.value, customMinute)}
-                                        className="flex-1 p-1 border border-gray-205 rounded-lg text-xs font-bold bg-white text-gray-700 outline-none"
-                                    >
-                                        {Array.from({ length: 24 }).map((_, idx) => {
-                                            const h = String(idx).padStart(2, '0');
-                                            return <option key={h} value={h}>{h}</option>;
-                                        })}
-                                    </select>
+                                        onChange={(val) => handleCustomTimeChange(val, customMinute)}
+                                        placeholder="Ora"
+                                    />
                                     <span className="text-gray-400 font-bold">:</span>
-                                    <select
+                                    <SearchableSelect
+                                        options={minuteOptions}
                                         value={customMinute}
-                                        onChange={(e) => handleCustomTimeChange(customHour, e.target.value)}
-                                        className="flex-1 p-1 border border-gray-205 rounded-lg text-xs font-bold bg-white text-gray-700 outline-none"
-                                    >
-                                        {Array.from({ length: 60 }).map((_, idx) => {
-                                            const m = String(idx).padStart(2, '0');
-                                            return <option key={m} value={m}>{m}</option>;
-                                        })}
-                                    </select>
+                                        onChange={(val) => handleCustomTimeChange(customHour, val)}
+                                        placeholder="Minuto"
+                                    />
                                 </div>
                             </div>
                         </div>

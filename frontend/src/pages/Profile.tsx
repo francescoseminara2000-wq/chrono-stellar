@@ -4,6 +4,7 @@ import { User, MapPin, Phone, Save, Bell } from 'lucide-react';
 
 import { LocationPicker } from '../components/LocationPicker';
 import { sanitizeImageUrl } from '../utils/imageUrl';
+import { SearchableSelect } from '../components/admin/SearchableSelect';
 
 export const Profile = () => {
     const { user, token, login } = useAuthStore();
@@ -53,8 +54,7 @@ export const Profile = () => {
         }
     }, [user]);
 
-    const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedCity = e.target.value;
+    const handleCityChange = (selectedCity: string) => {
         const cityData = cities.find(c => c.city === selectedCity);
         setFormData(prev => ({
             ...prev,
@@ -241,16 +241,15 @@ export const Profile = () => {
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="col-span-2">
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Comune</label>
-                                    <select
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-nature-500 outline-none bg-white"
+                                    <SearchableSelect
+                                        options={[
+                                            { value: '', label: 'Seleziona Comune' },
+                                            ...cities.map(c => ({ value: c.city, label: c.city }))
+                                        ]}
                                         value={formData.city}
                                         onChange={handleCityChange}
-                                    >
-                                        <option value="">Seleziona Comune</option>
-                                        {cities.map(c => (
-                                            <option key={c.id} value={c.city}>{c.city}</option>
-                                        ))}
-                                    </select>
+                                        placeholder="Seleziona Comune"
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">CAP</label>

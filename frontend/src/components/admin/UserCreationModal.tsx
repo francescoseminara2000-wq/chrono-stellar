@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, UserPlus, Mail, Lock, Phone, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { SearchableSelect } from './SearchableSelect';
 
 interface UserCreationModalProps {
     onClose: () => void;
@@ -133,17 +134,18 @@ export const UserCreationModal: React.FC<UserCreationModalProps> = ({ onClose, o
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-1">
+                            <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-1 mb-1.5">
                                 <Shield size={14} /> Ruolo
                             </label>
-                            <select
+                            <SearchableSelect
+                                options={[
+                                    { value: 'CUSTOMER', label: 'Cliente' },
+                                    { value: 'ADMIN', label: 'Amministratore' }
+                                ]}
                                 value={formData.role}
-                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500 outline-none cursor-pointer"
-                            >
-                                <option value="CUSTOMER">Cliente</option>
-                                <option value="ADMIN">Amministratore</option>
-                            </select>
+                                onChange={(value) => setFormData({ ...formData, role: value })}
+                                placeholder="Seleziona Ruolo"
+                            />
                         </div>
                     </form>
                 </div>

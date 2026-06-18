@@ -6,6 +6,7 @@ import ReactQuill, { Quill } from 'react-quill';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
+import { SearchableSelect } from '../../components/admin/SearchableSelect';
 
 
 // Register Custom Fonts
@@ -597,14 +598,20 @@ export const PageManager = () => {
                                                                             <div className="flex-1 space-y-3 pr-6">
                                                                                 <div className="flex flex-col md:flex-row gap-2">
                                                                                     <div className="w-full md:w-2/5 space-y-2">
-                                                                                        <select className="w-full px-2 py-1.5 border rounded-lg text-xs" value={feature.iconType || 'lucide'} onChange={(e) => {
-                                                                                            const newF = [...block.data.features];
-                                                                                            newF[fIndex].iconType = e.target.value;
-                                                                                            updateBlockData(block.id, { features: newF });
-                                                                                        }}>
-                                                                                            <option value="lucide">Icona Lucide</option>
-                                                                                            <option value="image">Immagine (Upload)</option>
-                                                                                        </select>
+                                                                                    <SearchableSelect
+                                                            options={[
+                                                                { value: 'lucide', label: 'Icona Lucide' },
+                                                                { value: 'image', label: 'Immagine (Upload)' }
+                                                            ]}
+                                                            value={feature.iconType || 'lucide'}
+                                                            onChange={(value) => {
+                                                                const newF = [...block.data.features];
+                                                                newF[fIndex].iconType = value;
+                                                                updateBlockData(block.id, { features: newF });
+                                                            }}
+                                                            placeholder="Tipo Icona"
+                                                            className="w-full text-xs mb-1.5"
+                                                        />
                                                                                         {(!feature.iconType || feature.iconType === 'lucide') ? (
                                                                                             <IconSelector
                                                                                                 value={feature.icon || 'Star'}
@@ -654,10 +661,15 @@ export const PageManager = () => {
                                                                     )}
                                                                 </div>
 
-                                                                <select value={block.data.imagePosition || 'left'} onChange={e => updateBlockData(block.id, { imagePosition: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white">
-                                                                    <option value="left">Immagine a Sinistra</option>
-                                                                    <option value="right">Immagine a Destra</option>
-                                                                </select>
+                                                                <SearchableSelect
+                                                                    options={[
+                                                                        { value: 'left', label: 'Immagine a Sinistra' },
+                                                                        { value: 'right', label: 'Immagine a Destra' }
+                                                                    ]}
+                                                                    value={block.data.imagePosition || 'left'}
+                                                                    onChange={value => updateBlockData(block.id, { imagePosition: value })}
+                                                                    placeholder="Posizione Immagine"
+                                                                />
 
                                                                 <div>
                                                                     <label className="block text-sm font-bold text-gray-700 mb-2">Titolo Formattabile</label>
@@ -693,10 +705,16 @@ export const PageManager = () => {
                                                                 <input type="text" placeholder="Sottotitolo" value={block.data.text || ''} onChange={e => updateBlockData(block.id, { text: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
                                                                 <input type="text" placeholder="Testo Bottone" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
                                                                 <input type="text" placeholder="Link Destinazione" value={block.data.ctaLink || ''} onChange={e => updateBlockData(block.id, { ctaLink: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
-                                                                <select value={block.data.backgroundColor || 'fruit'} onChange={e => updateBlockData(block.id, { backgroundColor: e.target.value })} className="w-full md:col-span-2 px-3 py-2 border rounded-lg bg-white">
-                                                                    <option value="fruit">Brand (Arancione)</option>
-                                                                    <option value="nature">Natura (Verde)</option>
-                                                                </select>
+                                                                <SearchableSelect
+                                                                    options={[
+                                                                        { value: 'fruit', label: 'Brand (Arancione)' },
+                                                                        { value: 'nature', label: 'Natura (Verde)' }
+                                                                    ]}
+                                                                    value={block.data.backgroundColor || 'fruit'}
+                                                                    onChange={value => updateBlockData(block.id, { backgroundColor: value })}
+                                                                    placeholder="Colore Sfondo"
+                                                                    className="w-full md:col-span-2"
+                                                                />
                                                             </div>
                                                         )}
 
@@ -802,10 +820,16 @@ export const PageManager = () => {
                                                         {block.type === 'imageGallery' && (
                                                             <div className="space-y-4">
                                                                 <input type="text" placeholder="Titolo Galleria (es. La nostra fattoria)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <select value={block.data.layout || 'grid'} onChange={e => updateBlockData(block.id, { layout: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white mb-4">
-                                                                    <option value="grid">Griglia Classica</option>
-                                                                    <option value="masonry">Muro (Masonry)</option>
-                                                                </select>
+                                                                <SearchableSelect
+                                                                    options={[
+                                                                        { value: 'grid', label: 'Griglia Classica' },
+                                                                        { value: 'masonry', label: 'Muro (Masonry)' }
+                                                                    ]}
+                                                                    value={block.data.layout || 'grid'}
+                                                                    onChange={value => updateBlockData(block.id, { layout: value })}
+                                                                    placeholder="Layout Galleria"
+                                                                    className="mb-4"
+                                                                />
 
                                                                 <div className="p-4 border-2 border-dashed border-nature-200 rounded-xl bg-nature-50 flex items-center justify-center">
                                                                     <label className="cursor-pointer text-nature-700 font-bold flex flex-col items-center gap-2">

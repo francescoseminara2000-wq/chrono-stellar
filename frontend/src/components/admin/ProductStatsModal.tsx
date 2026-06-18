@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, TrendingUp, DollarSign, Package, Calendar } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { SearchableSelect } from './SearchableSelect';
 
 interface ProductStatsModalProps {
     product: { id: number; name: string };
@@ -71,16 +72,18 @@ export const ProductStatsModal: React.FC<ProductStatsModalProps> = ({ product, o
                         <p className="text-gray-500 mt-1">{product.name}</p>
                     </div>
                     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                        <select
+                        <SearchableSelect
+                            options={[
+                                { value: 'all', label: 'Sempre' },
+                                { value: '7d', label: 'Ultimi 7 Giorni' },
+                                { value: '30d', label: 'Ultimi 30 Giorni' },
+                                { value: '1y', label: 'Ultimo Anno' }
+                            ]}
                             value={period}
-                            onChange={(e) => setPeriod(e.target.value)}
-                            className="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl px-3 py-2 cursor-pointer focus:ring-2 focus:ring-nature-500 outline-none w-full sm:w-auto"
-                        >
-                            <option value="all">Sempre</option>
-                            <option value="7d">Ultimi 7 Giorni</option>
-                            <option value="30d">Ultimi 30 Giorni</option>
-                            <option value="1y">Ultimo Anno</option>
-                        </select>
+                            onChange={setPeriod}
+                            placeholder="Seleziona periodo"
+                            className="w-full sm:w-48"
+                        />
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-gray-200 rounded-full transition-colors shrink-0 absolute top-4 right-4 sm:relative sm:top-auto sm:right-auto"

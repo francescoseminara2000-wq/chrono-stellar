@@ -5,6 +5,7 @@ import { Truck, Store, CreditCard, LogIn, User, ShoppingBag, Scale, AlertTriangl
 import { Link } from 'react-router-dom';
 import { LocationPicker } from '../components/LocationPicker';
 import { sanitizeImageUrl } from '../utils/imageUrl';
+import { SearchableSelect } from '../components/admin/SearchableSelect';
 
 export const Checkout = () => {
     const { items, getEstimatedTotal, clearCart, updateQuantity, removeItem } = useCartStore();
@@ -99,8 +100,7 @@ export const Checkout = () => {
     }, [user, deliveryZones]);
 
     // Handle City Selection
-    const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedCity = e.target.value;
+    const handleCityChange = (selectedCity: string) => {
         const zone = deliveryZones.find(z => z.city === selectedCity);
         if (zone) {
             setFormData(prev => ({
@@ -301,16 +301,13 @@ export const Checkout = () => {
                                                 {availableDates.length === 0 ? (
                                                     <p className="text-sm text-red-500 font-bold">Nessun giorno di ritiro disponibile.</p>
                                                 ) : (
-                                                    <select
-                                                        required
-                                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none bg-white font-bold text-gray-800 transition-all text-sm mt-1"
+                                                    <SearchableSelect
+                                                        options={availableDates.map(d => ({ value: d.date, label: d.label }))}
                                                         value={selectedDate}
-                                                        onChange={e => setSelectedDate(e.target.value)}
-                                                    >
-                                                        {availableDates.map(d => (
-                                                            <option key={d.date} value={d.date}>{d.label}</option>
-                                                        ))}
-                                                    </select>
+                                                        onChange={setSelectedDate}
+                                                        placeholder="Seleziona Data"
+                                                        className="mt-1"
+                                                    />
                                                 )}
                                             </div>
                                         ) : (
@@ -325,16 +322,13 @@ export const Checkout = () => {
                                                         {availableDates.length === 0 ? (
                                                             <p className="text-sm text-red-500 font-bold">Nessuna data di consegna disponibile. Contatta l'assistenza.</p>
                                                         ) : (
-                                                            <select
-                                                                required
-                                                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none bg-white font-bold text-gray-800 transition-all text-sm mt-1"
+                                                            <SearchableSelect
+                                                                options={availableDates.map(d => ({ value: d.date, label: d.label }))}
                                                                 value={selectedDate}
-                                                                onChange={e => setSelectedDate(e.target.value)}
-                                                            >
-                                                                {availableDates.map(d => (
-                                                                    <option key={d.date} value={d.date}>{d.label}</option>
-                                                                ))}
-                                                            </select>
+                                                                onChange={setSelectedDate}
+                                                                placeholder="Seleziona Data"
+                                                                className="mt-1"
+                                                            />
                                                         )}
                                                     </div>
                                                 )}
@@ -417,19 +411,18 @@ export const Checkout = () => {
                                                     />
                                                 </div>
                                                 <div className="col-span-2">
-                                                    <select
-                                                        required
-                                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nature-500 outline-none bg-white"
-                                                        value={formData.city}
-                                                        onChange={handleCityChange}
-                                                    >
-                                                        <option value="">Seleziona Comune</option>
-                                                        {deliveryZones.map(zone => (
-                                                            <option key={zone.id} value={zone.city}>
-                                                                {zone.city} (+€{(zone.shippingCost / 100).toFixed(2)})
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <SearchableSelect
+                                                         options={[
+                                                             { value: '', label: 'Seleziona Comune' },
+                                                             ...deliveryZones.map(zone => ({
+                                                                 value: zone.city,
+                                                                 label: `${zone.city} (+€${(zone.shippingCost / 100).toFixed(2)})`
+                                                             }))
+                                                         ]}
+                                                         value={formData.city}
+                                                         onChange={handleCityChange}
+                                                         placeholder="Seleziona Comune"
+                                                     />
                                                 </div>
                                             </div>
 

@@ -24,6 +24,7 @@ import {
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
 import { Link } from 'react-router-dom';
+import { SearchableSelect } from '../../components/admin/SearchableSelect';
 
 interface DeliveryOrder {
     id: number;
@@ -1014,31 +1015,33 @@ export const DeliveryMap = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700">Tipo di Chiusura</label>
-                                <select
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all text-sm font-bold bg-white"
+                                <label className="block text-sm font-bold text-gray-700 mb-1.5">Tipo di Chiusura</label>
+                                <SearchableSelect
+                                    options={[
+                                        { value: 'GLOBAL', label: 'Chiusura Globale (Ritiro e Consegna)' },
+                                        { value: 'ZONE', label: 'Blocco Consegne per Comune specifico' }
+                                    ]}
                                     value={closureType}
-                                    onChange={(e) => setClosureType(e.target.value as any)}
-                                >
-                                    <option value="GLOBAL">Chiusura Globale (Ritiro e Consegna)</option>
-                                    <option value="ZONE">Blocco Consegne per Comune specifico</option>
-                                </select>
+                                    onChange={(val) => setClosureType(val as any)}
+                                    placeholder="Tipo di Chiusura"
+                                />
                             </div>
 
                             {closureType === 'ZONE' && (
                                 <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                                    <label className="block text-sm font-bold text-gray-700">Seleziona Comune</label>
-                                    <select
-                                        required
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all text-sm font-bold bg-white"
+                                    <label className="block text-sm font-bold text-gray-700 mb-1.5">Seleziona Comune</label>
+                                    <SearchableSelect
+                                        options={[
+                                            { value: '', label: 'Scegli Comune...' },
+                                            ...deliveryZones.map(z => ({
+                                                value: z.id.toString(),
+                                                label: `${z.city} (${z.zipCode})`
+                                            }))
+                                        ]}
                                         value={selectedZoneId}
-                                        onChange={(e) => setSelectedZoneId(e.target.value)}
-                                    >
-                                        <option value="">Scegli Comune...</option>
-                                        {deliveryZones.map(z => (
-                                            <option key={z.id} value={z.id}>{z.city} ({z.zipCode})</option>
-                                        ))}
-                                    </select>
+                                        onChange={setSelectedZoneId}
+                                        placeholder="Scegli Comune..."
+                                    />
                                 </div>
                             )}
 
