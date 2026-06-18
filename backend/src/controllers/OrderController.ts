@@ -119,4 +119,23 @@ export class OrderController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    async bulkDelete(req: Request, res: Response) {
+        try {
+            const { ids } = req.body; // Expecting { ids: number[] }
+            if (!Array.isArray(ids) || ids.length === 0) {
+                return res.status(400).json({ error: 'IDs array is required' });
+            }
+
+            await prisma.$transaction(async (tx) => {
+                await tx.orderItem.deleteMany({ where: { orderId: { in: ids.map(Number) } } });
+                await tx.transaction.deleteMany({ where: { orderId: { in: ids.map(Number) } } });
+                await tx.order.deleteMany({ where: { id: { in: ids.map(Number) } } });
+            });
+
+            res.json({ message: `Deleted ${ids.length} orders` });
+        } catch (error: any) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }

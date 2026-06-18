@@ -109,4 +109,52 @@ export class AdminController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    async bulkUpdateStatus(req: Request, res: Response) {
+        try {
+            const { ids, status } = req.body; // Expecting { ids: number[], status: string }
+            if (!Array.isArray(ids) || ids.length === 0) {
+                return res.status(400).json({ error: 'IDs array is required' });
+            }
+
+            const updatedOrders = [];
+            for (const id of ids) {
+                try {
+                    const order = await adminService.updateStatus(Number(id), status);
+                    updatedOrders.push(order);
+
+                    // Send WhatsApp notification
+                    const waStatus = whatsAppService.getStatus();
+                    if (waStatus.isConnected && order.customerPhone) {
+                        try {
+                            await whatsAppService.sendOrderNotification(order, status);
+                        } catch (waError) {
+                            console.error(`[AdminController] Bulk WhatsApp notification failed for order #${order.id}:`, waError);
+                        }
+                    }
+
+                    // Push Notification to customer
+                    if (order.userId) {
+                        try {
+                            let pushBody = `Il tuo ordine #${order.id} è ora in stato ${status}.`;
+                            if (status === 'OUT_FOR_DELIVERY') pushBody = `Il tuo ordine #${order.id} è in consegna! 🚚`;
+                            if (status === 'DELIVERED') pushBody = `Il tuo ordine #${order.id} è stato consegnato. Grazie!`;
+                            if (status === 'CANCELLED') pushBody = `Il tuo ordine #${order.id} è stato annullato.`;
+
+                            await pushService.sendToUser(order.userId, 'Aggiornamento Ordine', pushBody, `/orders?id=${order.id}`);
+                        } catch (pushError) {
+                            console.error(`[AdminController] Bulk push notification failed for order #${order.id}:`, pushError);
+                        }
+                    }
+                } catch (err) {
+                    console.error(`[AdminController] Error updating order #${id} in bulk:`, err);
+                }
+            }
+
+            res.json({ message: `Updated ${updatedOrders.length} orders`, count: updatedOrders.length });
+        } catch (error: any) {
+            console.error('[AdminController] bulkUpdateStatus error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 }

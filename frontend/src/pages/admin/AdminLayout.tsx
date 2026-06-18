@@ -235,15 +235,15 @@ export const AdminLayout = () => {
                 <Outlet />
             </main>
 
-            {/* Mobile Bottom Navigation (Floating pill) */}
-            <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[50] bg-white/95 backdrop-blur-xl border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-full px-1.5 py-1.5 flex items-center gap-1 w-fit max-w-[95%]">
+            {/* Mobile Bottom Navigation (Docked full-width bar) */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[50] bg-white/95 backdrop-blur-xl border-t border-gray-200 px-2 py-2 flex items-center justify-around h-16 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 {navLinks.slice(0, 5).map((link) => {
                     const active = isActive(link.path);
                     return (
                         <Link
                             key={link.path}
                             to={link.path}
-                            className={`relative flex items-center gap-2 py-2 px-4 rounded-full transition-all duration-300 ${active ? 'bg-nature-900 text-white shadow-lg' : 'text-gray-500 hover:text-gray-900'
+                            className={`relative flex items-center gap-2 py-2 px-3 sm:px-4 rounded-full transition-all duration-300 ${active ? 'bg-nature-900 text-white shadow-md' : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             <div className={`transition-transform duration-300 ${active ? 'scale-110' : ''}`}>

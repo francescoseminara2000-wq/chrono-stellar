@@ -129,6 +129,7 @@ export const DeliveryMap = () => {
     const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
     const [mapType, setMapType] = useState<keyof typeof MAP_LAYERS>('street');
     const [storeLocation, setStoreLocation] = useState<{ lat: number, lng: number } | null>(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const API_URL = import.meta.env.VITE_API_URL || '';
 
     // Center of map (Default to a general area, will update based on data)
@@ -142,7 +143,7 @@ export const DeliveryMap = () => {
             const originalOverflow = parent.style.overflow;
             const originalHeight = parent.style.height;
             const originalMaxHeight = parent.style.maxHeight;
-            const originalPaddingBottom = parent.style.paddingBottom;
+            const originalPadding = parent.style.padding;
 
             const handleResize = () => {
                 const isMobile = window.innerWidth < 1024;
@@ -150,10 +151,12 @@ export const DeliveryMap = () => {
                 if (isMobile) {
                     parent.style.height = 'calc(100vh - 72px)';
                     parent.style.maxHeight = 'calc(100vh - 72px)';
-                    parent.style.paddingBottom = '80px'; // Space for mobile floating nav
+                    parent.style.padding = '0px';
+                    parent.style.paddingBottom = '64px'; // Space for mobile docked nav
                 } else {
                     parent.style.height = '100vh';
                     parent.style.maxHeight = '100vh';
+                    parent.style.padding = ''; // Reset to default tailwind classes
                     parent.style.paddingBottom = '2rem'; // Match padding of lg:p-8
                 }
             };
@@ -165,7 +168,7 @@ export const DeliveryMap = () => {
                 parent.style.overflow = originalOverflow;
                 parent.style.height = originalHeight;
                 parent.style.maxHeight = originalMaxHeight;
-                parent.style.paddingBottom = originalPaddingBottom;
+                parent.style.padding = originalPadding;
                 window.removeEventListener('resize', handleResize);
             };
         }
@@ -239,9 +242,9 @@ export const DeliveryMap = () => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-[#F8F9FA] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-gray-100 shadow-sm">
+        <div className="h-full flex flex-col bg-[#F8F9FA] rounded-none md:rounded-[3rem] overflow-hidden md:border border-gray-100 md:shadow-sm">
             {/* Map Header */}
-            <div className="p-4 pb-2 md:p-8 md:pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-md">
+            <div className="hidden md:flex p-4 pb-2 md:p-8 md:pb-4 flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-md">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2 md:gap-3">
                         <MapIcon className="text-nature-600" size={28} /> Logistica Consegne
@@ -265,14 +268,14 @@ export const DeliveryMap = () => {
             </div>
 
             <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
-                {/* Map Sidebar / Floating Cards on mobile */}
-                <div className="absolute bottom-20 left-0 right-0 z-10 flex flex-row overflow-x-auto p-4 gap-3 bg-transparent border-none md:relative md:bottom-auto md:left-auto md:right-auto md:z-10 md:flex-col md:p-0 md:gap-0 md:bg-white md:border-r md:w-80 md:h-full md:overflow-y-auto custom-scrollbar no-scrollbar border-gray-100 shrink-0">
-                    <div className="hidden md:block p-3 border-b border-gray-50 bg-gray-50/50 sticky top-0 z-20 backdrop-blur-sm">
+                {/* Desktop Sidebar */}
+                <div className="hidden md:flex md:flex-col md:bg-white md:border-r md:w-80 md:h-full md:overflow-y-auto border-gray-100 shrink-0 custom-scrollbar relative z-10">
+                    <div className="p-3 border-b border-gray-50 bg-gray-50/50 sticky top-0 z-20 backdrop-blur-sm">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{deliveries.length} CONSEGNE ATTIVE</p>
                     </div>
-                    <div className="flex flex-row md:flex-col gap-3 md:gap-0 w-full shrink-0 md:divide-y md:divide-gray-50">
+                    <div className="flex flex-col w-full divide-y divide-gray-50">
                         {deliveries.length === 0 && !isLoading && (
-                            <div className="p-10 md:p-20 text-center text-gray-400 text-sm font-medium w-full shrink-0">
+                            <div className="p-10 text-center text-gray-400 text-sm font-medium w-full">
                                 <Truck size={32} className="mx-auto mb-2 opacity-30" />
                                 <p>Nessuna consegna attiva al momento.</p>
                             </div>
@@ -286,16 +289,14 @@ export const DeliveryMap = () => {
                                     setZoom(15);
                                 }}
                                 className={`
-                                    cursor-pointer transition-all shrink-0
-                                    w-[260px] p-3 rounded-2xl bg-white/95 backdrop-blur-md border border-nature-100 shadow-xl
-                                    md:w-full md:p-5 md:rounded-none md:bg-white md:border-none md:shadow-none md:border-l-4
+                                    cursor-pointer transition-all p-5 border-l-4
                                     ${selectedOrder?.id === order.id 
-                                        ? 'border-nature-500 ring-2 ring-nature-500/20 bg-nature-50/70 md:bg-nature-50/50 md:border-nature-500 md:ring-0 md:shadow-inner' 
-                                        : 'border-gray-100 hover:border-nature-250 md:border-transparent'
+                                        ? 'border-nature-500 bg-nature-50/50 shadow-inner' 
+                                        : 'border-transparent hover:border-nature-250'
                                     }
                                 `}
                             >
-                                <div className="flex justify-between items-center mb-1.5 md:mb-2">
+                                <div className="flex justify-between items-center mb-2">
                                     <span className="text-[10px] font-black text-nature-600 bg-nature-100 px-2 py-0.5 rounded-md">#{order.id}</span>
                                     <div className="flex items-center gap-1.5">
                                         <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider">
@@ -304,12 +305,12 @@ export const DeliveryMap = () => {
                                         <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: getStatusColor(order.status) }}></div>
                                     </div>
                                 </div>
-                                <h3 className="font-bold text-gray-900 leading-tight text-xs md:text-base truncate">{order.customerName}</h3>
-                                <p className="text-[10px] md:text-[11px] text-gray-500 mt-0.5 line-clamp-1">{order.shippingAddress}</p>
-                                <div className="flex justify-between items-center mt-2 md:mt-3 border-t border-gray-100/50 pt-1.5 md:pt-0 md:border-none">
-                                    <span className="text-xs md:text-sm font-black text-gray-900">€ {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</span>
-                                    <div className="p-1 md:p-2 rounded-lg bg-gray-100 text-gray-400 group-hover:bg-nature-500 group-hover:text-white transition-colors">
-                                        <ChevronRight size={12} className="md:w-3.5 md:h-3.5" />
+                                <h3 className="font-bold text-gray-900 leading-tight text-base truncate">{order.customerName}</h3>
+                                <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">{order.shippingAddress}</p>
+                                <div className="flex justify-between items-center mt-3">
+                                    <span className="text-sm font-black text-gray-900">€ {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</span>
+                                    <div className="p-2 rounded-lg bg-gray-100 text-gray-400 group-hover:bg-nature-500 group-hover:text-white transition-colors">
+                                        <ChevronRight size={12} className="w-3.5 h-3.5" />
                                     </div>
                                 </div>
                             </div>
@@ -379,7 +380,8 @@ export const DeliveryMap = () => {
                                     eventHandlers={{
                                         click: () => setSelectedOrder(order)
                                     }}
-                                >                                    <Popup className="delivery-popup" minWidth={window.innerWidth < 768 ? 280 : 420} maxWidth={window.innerWidth < 768 ? 320 : 500}>
+                                >
+                                    <Popup className="delivery-popup" minWidth={window.innerWidth < 768 ? 280 : 420} maxWidth={window.innerWidth < 768 ? 320 : 500}>
                                         <div style={{ fontFamily: "'Nunito', sans-serif", padding: 0, margin: 0 }}>
                                             {/* Top accent bar */}
                                             <div style={{
@@ -520,6 +522,97 @@ export const DeliveryMap = () => {
                                 <p className="text-xl font-black text-gray-900">{deliveries.filter(d => d.status === 'OUT_FOR_DELIVERY').length}</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Mobile Drawer (Bottom Sheet) Backdrop */}
+                {isDrawerOpen && (
+                    <div 
+                        onClick={() => setIsDrawerOpen(false)}
+                        className="md:hidden fixed inset-0 bg-black/40 z-[90] backdrop-blur-xs transition-opacity duration-300"
+                    />
+                )}
+
+                {/* Mobile Drawer (Bottom Sheet) */}
+                <div className={`
+                    md:hidden fixed left-0 right-0 z-[100] bg-white rounded-t-[2rem] shadow-[0_-10px_30px_rgba(0,0,0,0.15)] border-t border-gray-100 transition-all duration-500 ease-in-out flex flex-col
+                    ${isDrawerOpen ? 'bottom-0 h-[60vh]' : 'bottom-16 h-14 overflow-hidden'}
+                `}>
+                    <div 
+                        onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+                        className="w-full py-3 px-6 flex flex-col items-center justify-center cursor-pointer border-b border-gray-50 bg-gray-50/50 rounded-t-[2rem] shrink-0"
+                    >
+                        <div className="w-12 h-1 bg-gray-300 rounded-full mb-1.5"></div>
+                        <div className="flex items-center justify-between w-full">
+                            <span className="text-xs font-black text-gray-700 uppercase tracking-wider">
+                                {deliveries.length} Consegne Attive
+                            </span>
+                            <span className="text-[10px] font-black text-nature-600 bg-nature-100 px-2.5 py-0.5 rounded-full">
+                                {isDrawerOpen ? 'Chiudi' : 'Espandi'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {isDrawerOpen && (
+                        <div className="px-6 pb-2.5 pt-1.5 border-b border-gray-50 bg-gray-50/20 flex justify-between text-[10px] font-bold text-gray-500 shrink-0">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                                <span>{deliveries.filter(d => d.status === 'PENDING').length} Ricevuti</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                                <span>{deliveries.filter(d => d.status === 'WEIGHING_COMPLETED').length} Pronti</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                                <span>{deliveries.filter(d => d.status === 'OUT_FOR_DELIVERY').length} In Viaggio</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
+                        {deliveries.length === 0 && !isLoading && (
+                            <div className="py-12 text-center text-gray-400 text-sm font-medium">
+                                <Truck size={32} className="mx-auto mb-2 opacity-30" />
+                                <p>Nessuna consegna attiva al momento.</p>
+                            </div>
+                        )}
+                        {deliveries.map(order => (
+                            <div
+                                key={order.id}
+                                onClick={() => {
+                                    setSelectedOrder(order);
+                                    setMapCenter([order.latitude, order.longitude]);
+                                    setZoom(15);
+                                    setIsDrawerOpen(false);
+                                }}
+                                className={`
+                                    p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col justify-between cursor-pointer transition-all
+                                    ${selectedOrder?.id === order.id 
+                                        ? 'border-nature-500 ring-2 ring-nature-500/20 bg-nature-50/50' 
+                                        : 'hover:border-nature-250'
+                                    }
+                                `}
+                            >
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <span className="text-[10px] font-black text-nature-600 bg-nature-100 px-2 py-0.5 rounded-md">#{order.id}</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider">
+                                            {order.status === 'PENDING' ? 'In Attesa' : order.status === 'WEIGHING_COMPLETED' ? 'Pronto' : 'Spedito'}
+                                        </span>
+                                        <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: getStatusColor(order.status) }}></div>
+                                    </div>
+                                </div>
+                                <h3 className="font-bold text-gray-900 leading-tight text-sm truncate">{order.customerName}</h3>
+                                <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{order.shippingAddress}</p>
+                                <div className="flex justify-between items-center mt-2.5 border-t border-gray-50 pt-2">
+                                    <span className="text-xs font-black text-gray-900 font-sans">€ {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</span>
+                                    <div className="p-1 rounded-lg bg-gray-50 text-gray-400">
+                                        <ChevronRight size={14} />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

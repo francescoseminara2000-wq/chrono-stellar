@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban } from 'lucide-react';
+import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
@@ -28,6 +29,7 @@ export const OrderManager = () => {
     const { token } = useAuthStore();
     const [orders, setOrders] = useState<Order[]>([]);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [searchParams] = useSearchParams();
     const [fulfillmentData, setFulfillmentData] = useState<Record<number, number>>({});
     const [filterStatus, setFilterStatus] = useState<string>('ALL');
@@ -39,6 +41,96 @@ export const OrderManager = () => {
     const [showFilter, setShowFilter] = useState(false);
     const { addToast } = useToastStore();
     const API_URL = '';
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === filteredOrders.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredOrders.map(o => o.id));
+        }
+    };
+
+    const toggleSelect = (id: number) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkUpdateStatus = async (status: string, force = false) => {
+        if (!force) {
+            const labels: Record<string, string> = {
+                PENDING: 'In Attesa',
+                WEIGHING_COMPLETED: 'Pesato',
+                OUT_FOR_DELIVERY: 'In Consegna',
+                DELIVERED: 'Concluso',
+                CANCELLED: 'Annullato'
+            };
+            setConfirmModal({
+                isOpen: true,
+                title: 'Cambio Stato Multiplo',
+                message: `Sei sicuro di voler cambiare lo stato di ${selectedIds.length} ordini selezionati in "${labels[status] || status}"?`,
+                onConfirm: () => handleBulkUpdateStatus(status, true)
+            });
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/orders/bulk`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ ids: selectedIds, status })
+            });
+
+            if (res.ok) {
+                fetchOrders();
+                setSelectedIds([]);
+                addToast('Stati ordini aggiornati con successo!', 'success');
+            } else {
+                addToast('Errore durante l\'aggiornamento multiplo dello stato.', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            addToast('Errore di connessione al server.', 'error');
+        }
+    };
+
+    const handleBulkDelete = async (force = false) => {
+        if (!force) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Elimina Ordini Multipli',
+                message: `Sei sicuro di voler eliminare definitivamente i ${selectedIds.length} ordini selezionati? Questa operazione cancellerà tutti i dati associati in modo permanente.`,
+                onConfirm: () => handleBulkDelete(true)
+            });
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/orders/bulk`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+
+            if (res.ok) {
+                fetchOrders();
+                setSelectedIds([]);
+                setSelectedOrder(null);
+                addToast('Ordini selezionati eliminati definitivamente!', 'success');
+            } else {
+                addToast('Errore durante l\'eliminazione degli ordini.', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            addToast('Errore di connessione al server.', 'error');
+        }
+    };
 
     useEffect(() => {
         if (token) fetchOrders();
@@ -379,6 +471,20 @@ export const OrderManager = () => {
                 {/* Left column: Orders list */}
                 <div className={`flex flex-col h-full min-h-0 ${selectedOrder ? 'hidden lg:flex' : 'flex'} lg:col-span-5 xl:col-span-4`}>
                     <div className="space-y-2 lg:space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
+                        {filteredOrders.length > 0 && (
+                            <div 
+                                onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                                className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 mb-2 select-none cursor-pointer hover:border-nature-200 transition-all shadow-sm shrink-0 animate-in fade-in duration-200"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
+                                    readOnly
+                                    className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
+                                />
+                                <span className="text-xs font-black text-gray-700 uppercase tracking-wider">Seleziona Tutti ({filteredOrders.length})</span>
+                            </div>
+                        )}
                         {filteredOrders.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                                 <ShoppingBag size={48} className="mb-4 opacity-50" />
@@ -389,64 +495,79 @@ export const OrderManager = () => {
                             <div
                                 key={order.id}
                                 onClick={() => handleSelectOrder(order)}
-                                className={`bg-white p-2.5 lg:p-5 rounded-xl lg:rounded-2xl shadow-sm border cursor-pointer transition-all ${selectedOrder?.id === order.id ? 'border-nature-500 ring-2 ring-nature-500 bg-nature-50/30' : 'border-gray-100 hover:border-nature-200'
+                                className={`bg-white p-2.5 lg:p-5 rounded-xl lg:rounded-2xl shadow-sm border cursor-pointer transition-all flex items-center gap-3 ${selectedOrder?.id === order.id ? 'border-nature-500 ring-2 ring-nature-500 bg-nature-50/30' : 'border-gray-100 hover:border-nature-200'
                                     }`}
                             >
-                                {/* Mobile view: single line compact row */}
-                                <div className="lg:hidden flex items-center justify-between w-full gap-2">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <div className="w-8 h-8 bg-nature-100 rounded flex items-center justify-center text-nature-700 font-black text-xs shrink-0">
-                                            #{order.id}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h3 className="font-bold text-gray-900 leading-tight text-sm truncate" title={order.customerName || order.user?.name || 'Cliente'}>
-                                                {order.customerName || order.user?.name || 'Cliente'}
-                                            </h3>
-                                            <p className="text-[10px] text-gray-400 leading-none mt-0.5">
-                                                {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-gray-400 shrink-0">
-                                            {order.deliveryMethod === 'DELIVERY' ? <Truck size={14} /> : <Scale size={14} />}
-                                        </span>
-                                        <StatusBadge status={order.status} isCompact />
-                                        <div className="text-right shrink-0">
-                                            <span className="text-sm font-black text-nature-900 block">
-                                                € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
-                                            </span>
-                                        </div>
-                                    </div>
+                                {/* Checkbox for multiple selection */}
+                                <div 
+                                    onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
+                                    className="shrink-0 flex items-center justify-center p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.includes(order.id)}
+                                        readOnly
+                                        className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
+                                    />
                                 </div>
 
-                                {/* Desktop view: standard two-row layout */}
-                                <div className="hidden lg:block w-full">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-nature-100 rounded-xl flex items-center justify-center text-nature-700 font-black text-base">
+                                <div className="flex-1 min-w-0">
+                                    {/* Mobile view: single line compact row */}
+                                    <div className="lg:hidden flex items-center justify-between w-full gap-2">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className="w-8 h-8 bg-nature-100 rounded flex items-center justify-center text-nature-700 font-black text-xs shrink-0">
                                                 #{order.id}
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 leading-tight text-base">{order.customerName || order.user?.name || 'Cliente'}</h3>
-                                                <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                                            <div className="min-w-0">
+                                                <h3 className="font-bold text-gray-900 leading-tight text-sm truncate" title={order.customerName || order.user?.name || 'Cliente'}>
+                                                    {order.customerName || order.user?.name || 'Cliente'}
+                                                </h3>
+                                                <p className="text-[10px] text-gray-400 leading-none mt-0.5">
+                                                    {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                                                </p>
                                             </div>
                                         </div>
-                                        <StatusBadge status={order.status} />
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <span className="text-gray-400 shrink-0">
+                                                {order.deliveryMethod === 'DELIVERY' ? <Truck size={14} /> : <Scale size={14} />}
+                                            </span>
+                                            <StatusBadge status={order.status} isCompact />
+                                            <div className="text-right shrink-0">
+                                                <span className="text-sm font-black text-nature-900 block">
+                                                    € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-3">
-                                        <div className="flex gap-2">
-                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-gray-100 px-2 py-1 rounded-md text-gray-600">
-                                                {order.deliveryMethod === 'DELIVERY' ? <Truck size={11} /> : <Scale size={11} />}
-                                                {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro'}
-                                            </span>
+                                    {/* Desktop view: standard two-row layout */}
+                                    <div className="hidden lg:block w-full">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-nature-100 rounded-xl flex items-center justify-center text-nature-700 font-black text-base">
+                                                    #{order.id}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 leading-tight text-base">{order.customerName || order.user?.name || 'Cliente'}</h3>
+                                                    <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                                                </div>
+                                            </div>
+                                            <StatusBadge status={order.status} />
                                         </div>
-                                        <div className="text-right">
-                                            <span className="text-xl font-black text-nature-900">
-                                                € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
-                                            </span>
-                                            {!order.finalTotal && <span className="text-[10px] text-gray-400 block -mt-1 uppercase tracking-wider">Stimato</span>}
+
+                                        <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-3">
+                                            <div className="flex gap-2">
+                                                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-gray-100 px-2 py-1 rounded-md text-gray-600">
+                                                    {order.deliveryMethod === 'DELIVERY' ? <Truck size={11} /> : <Scale size={11} />}
+                                                    {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro'}
+                                                </span>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-xl font-black text-nature-900">
+                                                    € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
+                                                </span>
+                                                {!order.finalTotal && <span className="text-[10px] text-gray-400 block -mt-1 uppercase tracking-wider">Stimato</span>}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -825,6 +946,85 @@ export const OrderManager = () => {
                 }}
                 onCancel={() => setConfirmModal(null)}
             />
+
+            {/* Bulk Action Toolbar */}
+            <AnimatePresence>
+                {selectedIds.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 100, x: '-50%' }}
+                        animate={{ opacity: 1, y: 0, x: '-50%' }}
+                        exit={{ opacity: 0, y: 100, x: '-50%' }}
+                        className="fixed bottom-20 sm:bottom-8 left-1/2 z-50 bg-white/80 backdrop-blur-xl px-1.5 py-1.5 sm:px-2 sm:py-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-1.5 sm:gap-2 border border-white/50 w-auto max-w-[95%] sm:max-w-none"
+                    >
+                        <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-nature-600 text-white rounded-[1.5rem] shadow-lg shadow-nature-200">
+                            <div className="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm">
+                                {selectedIds.length}
+                            </div>
+                            <span className="font-bold text-sm hidden sm:inline">Ordini</span>
+                        </div>
+
+                        <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
+                            <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 border-r border-gray-200">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdateStatus('WEIGHING_COMPLETED')}
+                                    className="p-2 sm:p-3 text-blue-600 hover:bg-blue-50 rounded-2xl transition-all animate-in zoom-in-50 duration-200"
+                                    title="Segna come Pesati"
+                                >
+                                    <Scale size={20} />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdateStatus('OUT_FOR_DELIVERY')}
+                                    className="p-2 sm:p-3 text-purple-600 hover:bg-purple-50 rounded-2xl transition-all animate-in zoom-in-50 duration-200"
+                                    title="Segna come In Consegna"
+                                >
+                                    <Truck size={20} />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdateStatus('DELIVERED')}
+                                    className="p-2 sm:p-3 text-green-600 hover:bg-green-50 rounded-2xl transition-all animate-in zoom-in-50 duration-200"
+                                    title="Segna come Conclusi"
+                                >
+                                    <CheckCircle size={20} />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleBulkUpdateStatus('CANCELLED')}
+                                    className="p-2 sm:p-3 text-red-500 hover:bg-red-50 rounded-2xl transition-all animate-in zoom-in-50 duration-200"
+                                    title="Annulla Selezionati"
+                                >
+                                    <Ban size={20} />
+                                </motion.button>
+                            </div>
+
+                            <motion.button
+                                whileHover={{ scale: 1.05, backgroundColor: '#fef2f2' }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleBulkDelete()}
+                                className="p-2 sm:p-3 text-red-600 hover:text-red-700 rounded-2xl transition-all"
+                                title="Elimina Selezionati"
+                            >
+                                <Trash2 size={20} />
+                            </motion.button>
+                        </div>
+
+                        <motion.button
+                            whileHover={{ backgroundColor: '#f3f4f6' }}
+                            onClick={() => setSelectedIds([])}
+                            className="p-2 sm:p-3 text-gray-400 hover:text-gray-600 rounded-full transition-all"
+                            title="Annulla selezione"
+                        >
+                            <X size={18} />
+                        </motion.button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
                 </div>
             </div>
         </div>
