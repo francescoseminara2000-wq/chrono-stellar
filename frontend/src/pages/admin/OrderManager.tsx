@@ -35,6 +35,8 @@ export const OrderManager = () => {
     const [adminNotes, setAdminNotes] = useState('');
     const [isWeighingOpen, setIsWeighingOpen] = useState(false);
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+    const [showSearch, setShowSearch] = useState(false);
+    const [showFilter, setShowFilter] = useState(false);
     const { addToast } = useToastStore();
     const API_URL = '';
 
@@ -283,15 +285,50 @@ export const OrderManager = () => {
     };
 
     return (
-        <div className={`flex flex-col h-full bg-gray-50 ${selectedOrder ? 'p-0 lg:p-6' : 'p-3 md:p-6'} overflow-hidden`}>
-            <div className={`space-y-4 md:space-y-6 mb-4 md:mb-6 ${selectedOrder ? 'hidden lg:block' : 'block'}`}>
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className={`flex flex-col h-full bg-gray-50 -m-5 lg:-m-8 ${selectedOrder ? 'p-0 lg:p-8' : 'p-5 lg:p-8'} overflow-hidden`}>
+            <div className={`space-y-3 lg:space-y-6 mb-3 lg:mb-6 ${selectedOrder ? 'hidden lg:block' : 'block'}`}>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
                     <div>
                         <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestione Ordini</h1>
-                        <p className="text-gray-500 text-sm mt-1">Gestisci le pesature e monitora lo stato delle consegne.</p>
+                        <p className="text-gray-500 text-sm mt-1 font-medium">Gestisci le pesature e monitora lo stato delle consegne.</p>
                     </div>
 
-                    <div className="relative w-full lg:w-96 group">
+                    {/* Mobile Toolbar Toggle Buttons */}
+                    <div className="flex lg:hidden gap-2 w-full">
+                        <button
+                            onClick={() => {
+                                setShowSearch(!showSearch);
+                                setShowFilter(false);
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                showSearch || searchQuery
+                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                            }`}
+                        >
+                            <Search size={14} />
+                            <span>Cerca</span>
+                            {searchQuery && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowFilter(!showFilter);
+                                setShowSearch(false);
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                showFilter || filterStatus !== 'ALL'
+                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                            }`}
+                        >
+                            <ListFilter size={14} />
+                            <span>Stato</span>
+                            {filterStatus !== 'ALL' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                        </button>
+                    </div>
+
+                    {/* Search Input Panel */}
+                    <div className={`relative w-full lg:w-96 group ${showSearch ? 'block' : 'hidden'} lg:block`}>
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-nature-600 transition-colors">
                             <Search size={20} />
                         </div>
@@ -300,13 +337,13 @@ export const OrderManager = () => {
                             placeholder="Cerca per ID, cliente o prodotto..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
+                            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
                         />
                     </div>
                 </div>
 
                 {/* Status Tabs */}
-                <div className="flex gap-1.5 p-1.5 bg-gray-100 rounded-2xl w-full overflow-x-auto custom-scrollbar no-scrollbar">
+                <div className={`flex gap-1.5 p-1.5 bg-gray-100 rounded-2xl w-full overflow-x-auto custom-scrollbar no-scrollbar ${showFilter ? 'block' : 'hidden'} lg:flex`}>
                     {statusTabs.map(tab => {
                         const count = getStatusCount(tab.id);
                         const isActive = filterStatus === tab.id;
@@ -338,7 +375,7 @@ export const OrderManager = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 h-full overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
                 {/* Left column: Orders list */}
                 <div className={`flex flex-col h-full min-h-0 ${selectedOrder ? 'hidden lg:flex' : 'flex'} lg:col-span-5 xl:col-span-4`}>
                     <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">

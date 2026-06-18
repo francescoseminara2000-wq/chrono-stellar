@@ -135,9 +135,9 @@ export const AdminDashboard = () => {
     const maxChartValue = data ? Math.max(...data.current.chartData.map(d => d.value), 1) : 1;
 
     return (
-        <div className="flex flex-col h-full bg-gray-50 -m-4 md:-m-8 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col h-full bg-gray-50 -m-5 lg:-m-8 p-5 lg:p-8 overflow-y-auto overflow-x-hidden custom-scrollbar">
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 mb-4 lg:mb-8">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{getGreeting()}, Admin! 👋</h1>
                     <p className="text-gray-500 flex items-center gap-2 text-sm font-medium mt-1">
@@ -250,57 +250,59 @@ export const AdminDashboard = () => {
 
                     {/* Main Chart Section */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-                        className="bg-white p-8 rounded-[3.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-gray-100">
-                        <div className="flex justify-between items-center mb-10">
+                        className="bg-white p-5 lg:p-8 rounded-[2rem] lg:rounded-[3.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] border border-gray-100">
+                        <div className="flex justify-between items-center mb-6 lg:mb-10">
                             <div>
-                                <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                                <h2 className="text-xl lg:text-2xl font-black text-gray-900 flex items-center gap-3">
                                     <BarChart3 className="text-nature-600" /> Andamento Fatturato
                                 </h2>
-                                <p className="text-gray-400 text-sm font-medium mt-1">Dettaglio ricavi per il periodo {periods.find(p => p.id === selectedPeriod)?.label}</p>
+                                <p className="text-gray-400 text-xs lg:text-sm font-medium mt-1">Dettaglio ricavi per il periodo {periods.find(p => p.id === selectedPeriod)?.label}</p>
                             </div>
                         </div>
 
-                        <div className="relative h-64 flex items-end gap-1.5 sm:gap-3 md:gap-5 px-4">
-                            {/* Grid Lines */}
-                            <div className="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
-                                {[0, 1, 2, 3].map(i => (
-                                    <div key={i} className="w-full border-t border-gray-50/80" />
+                        <div className="overflow-x-auto custom-scrollbar w-full pb-2">
+                            <div className="relative h-64 flex items-end gap-1.5 sm:gap-3 md:gap-5 px-4 min-w-[500px] lg:min-w-0">
+                                {/* Grid Lines */}
+                                <div className="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
+                                    {[0, 1, 2, 3].map(i => (
+                                        <div key={i} className="w-full border-t border-gray-50/80" />
+                                    ))}
+                                </div>
+
+                                {data.current.chartData.map((d, i) => (
+                                    <div key={i} className="flex-1 flex flex-col items-center group relative z-10 h-full justify-end">
+                                        {/* Tooltip centered over the bar top */}
+                                        <div
+                                            style={{ bottom: `${(d.value / maxChartValue) * 92}%` }}
+                                            className="absolute mb-1 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap 
+                                                bg-nature-900 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-2xl z-20 
+                                                left-1/2 -translate-x-1/2 origin-bottom transform scale-95 group-hover:scale-100"
+                                        >
+                                            € {(d.value / 100).toFixed(0)}
+                                            {/* Small centered arrow */}
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-[3px] border-transparent border-t-nature-900" />
+                                        </div>
+
+                                        <motion.div
+                                            initial={{ height: 0 }}
+                                            animate={{ height: `${(d.value / maxChartValue) * 92}%` }}
+                                            transition={{ delay: 0.1 + (i * 0.01), duration: 0.8, ease: "circOut" }}
+                                            className={`w-full max-w-[42px] rounded-t-lg transition-all duration-500 ${d.value === maxChartValue
+                                                ? 'bg-nature-600 shadow-[0_3px_8px_rgba(34,197,94,0.15)]'
+                                                : 'bg-nature-100 group-hover:bg-nature-200'
+                                                }`}
+                                        />
+                                        <span className="mt-4 text-[9px] font-black text-gray-400 uppercase tracking-tighter sm:tracking-normal group-hover:text-nature-900 transition-colors truncate w-full text-center">
+                                            {d.label}
+                                        </span>
+                                    </div>
                                 ))}
                             </div>
-
-                            {data.current.chartData.map((d, i) => (
-                                <div key={i} className="flex-1 flex flex-col items-center group relative z-10 h-full justify-end">
-                                    {/* Tooltip centered over the bar top */}
-                                    <div
-                                        style={{ bottom: `${(d.value / maxChartValue) * 92}%` }}
-                                        className="absolute mb-1 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap 
-                                            bg-nature-900 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-2xl z-20 
-                                            left-1/2 -translate-x-1/2 origin-bottom transform scale-95 group-hover:scale-100"
-                                    >
-                                        € {(d.value / 100).toFixed(0)}
-                                        {/* Small centered arrow */}
-                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-[3px] border-transparent border-t-nature-900" />
-                                    </div>
-
-                                    <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${(d.value / maxChartValue) * 92}%` }}
-                                        transition={{ delay: 0.1 + (i * 0.01), duration: 0.8, ease: "circOut" }}
-                                        className={`w-full max-w-[42px] rounded-t-lg transition-all duration-500 ${d.value === maxChartValue
-                                            ? 'bg-nature-600 shadow-[0_3px_8px_rgba(34,197,94,0.15)]'
-                                            : 'bg-nature-100 group-hover:bg-nature-200'
-                                            }`}
-                                    />
-                                    <span className="mt-4 text-[9px] font-black text-gray-400 uppercase tracking-tighter sm:tracking-normal group-hover:text-nature-900 transition-colors truncate w-full text-center">
-                                        {d.label}
-                                    </span>
-                                </div>
-                            ))}
                         </div>
                     </motion.div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-1 bg-white p-8 rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                        <div className="lg:col-span-1 bg-white p-5 lg:p-8 rounded-[2rem] lg:rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
                             <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
                                 <Target size={20} className="text-nature-600" /> Top Prodotti
                             </h2>
@@ -330,12 +332,12 @@ export const AdminDashboard = () => {
                                             </p>
                                         </div>
                                     ))
-                                )}
+                                ) }
                             </div>
                         </div>
 
-                        <div className="lg:col-span-2 bg-white rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
-                            <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                        <div className="lg:col-span-2 bg-white rounded-[2rem] lg:rounded-[3rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+                            <div className="p-5 lg:p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
                                 <h2 className="text-xl font-black text-gray-900">Ultimi Ordini</h2>
                                 <Link to="/admin/orders" className="text-xs font-black text-nature-600 bg-nature-50 px-4 py-2 rounded-xl transition-all hover:bg-nature-100 flex items-center gap-2 uppercase tracking-widest">
                                     Vedi Tutti <ChevronRight size={14} />
@@ -346,7 +348,7 @@ export const AdminDashboard = () => {
                                     <div className="p-20 text-center text-gray-400 font-medium">Nessun ordine recente.</div>
                                 ) : (
                                     recentOrders.map(order => (
-                                        <div key={order.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
+                                        <div key={order.id} className="p-4 lg:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center shrink-0 border border-white shadow-sm font-black text-gray-500">
                                                     #{order.id}

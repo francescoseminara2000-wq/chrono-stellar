@@ -165,40 +165,40 @@ export const DeliveryMap = () => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-[#F8F9FA] rounded-[3rem] overflow-hidden border border-gray-100 shadow-sm">
+        <div className="h-full flex flex-col bg-[#F8F9FA] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-gray-100 shadow-sm">
             {/* Map Header */}
-            <div className="p-8 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-md">
+            <div className="p-4 pb-2 md:p-8 md:pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-md">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                        <MapIcon className="text-nature-600" size={32} /> Logistica Consegne
+                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2 md:gap-3">
+                        <MapIcon className="text-nature-600" size={28} /> Logistica Consegne
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1 font-medium">Monitoraggio in tempo reale degli ordini attivi sul territorio.</p>
+                    <p className="text-gray-500 text-xs md:text-sm mt-0.5 md:mt-1 font-medium">Monitoraggio in tempo reale degli ordini attivi sul territorio.</p>
                 </div>
-                <div className="flex gap-3">
-                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Ricevuti</span>
+                <div className="flex flex-wrap gap-2 md:gap-3">
+                    <div className="flex items-center gap-1.5 md:gap-2 bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl shadow-sm border border-gray-100">
+                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        <span className="text-[10px] md:text-[11px] font-bold text-gray-600 uppercase tracking-wider">Ricevuti</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">Pronti</span>
+                    <div className="flex items-center gap-1.5 md:gap-2 bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl shadow-sm border border-gray-100">
+                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                        <span className="text-[10px] md:text-[11px] font-bold text-gray-600 uppercase tracking-wider">Pronti</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-                        <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">In Viaggio</span>
+                    <div className="flex items-center gap-1.5 md:gap-2 bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl shadow-sm border border-gray-100">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span className="text-[10px] md:text-[11px] font-bold text-gray-600 uppercase tracking-wider">In Viaggio</span>
                     </div>
                 </div>
             </div>
 
             <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
                 {/* Map Sidebar (Order List) */}
-                <div className="w-full md:w-80 bg-white border-r border-gray-100 overflow-y-auto custom-scrollbar z-10 shadow-xl md:shadow-none">
-                    <div className="p-4 border-b border-gray-50 bg-gray-50/50 sticky top-0 z-20 backdrop-blur-sm">
+                <div className="w-full md:w-80 h-60 md:h-full bg-white border-r border-gray-100 border-b border-gray-100 md:border-b-0 overflow-y-auto custom-scrollbar z-10 shadow-xl md:shadow-none shrink-0">
+                    <div className="p-3 border-b border-gray-50 bg-gray-50/50 sticky top-0 z-20 backdrop-blur-sm">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{deliveries.length} CONSEGNE ATTIVE</p>
                     </div>
                     <div className="divide-y divide-gray-50">
                         {deliveries.length === 0 && !isLoading && (
-                            <div className="p-20 text-center text-gray-400 text-sm font-medium">
+                            <div className="p-10 md:p-20 text-center text-gray-400 text-sm font-medium">
                                 <Truck size={32} className="mx-auto mb-2 opacity-30" />
                                 <p>Nessuna consegna attiva al momento.</p>
                             </div>
@@ -211,13 +211,13 @@ export const DeliveryMap = () => {
                                     setMapCenter([order.latitude, order.longitude]);
                                     setZoom(15);
                                 }}
-                                className={`p-5 hover:bg-nature-50 cursor-pointer transition-all border-l-4 ${selectedOrder?.id === order.id ? 'bg-nature-50/50 border-nature-500 shadow-inner' : 'border-transparent'}`}
+                                className={`p-4 md:p-5 hover:bg-nature-50 cursor-pointer transition-all border-l-4 ${selectedOrder?.id === order.id ? 'bg-nature-50/50 border-nature-500 shadow-inner' : 'border-transparent'}`}
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-[10px] font-black text-nature-600 bg-nature-100 px-2 py-0.5 rounded-md">#{order.id}</span>
                                     <div className={`w-2 h-2 rounded-full animate-pulse`} style={{ backgroundColor: getStatusColor(order.status) }}></div>
                                 </div>
-                                <h3 className="font-bold text-gray-900 leading-tight">{order.customerName}</h3>
+                                <h3 className="font-bold text-gray-900 leading-tight text-sm md:text-base">{order.customerName}</h3>
                                 <p className="text-[11px] text-gray-500 mt-1 line-clamp-1">{order.shippingAddress}</p>
                                 <div className="flex justify-between items-center mt-3">
                                     <span className="text-sm font-black text-gray-900">€ {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</span>
@@ -231,7 +231,7 @@ export const DeliveryMap = () => {
                 </div>
 
                 {/* Map Section */}
-                <div className="flex-1 min-h-[400px] md:min-h-0 relative z-0">
+                <div className="flex-1 min-h-[250px] md:min-h-0 relative z-0">
                     {isLoading ? (
                         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[1000]">
                             <div className="flex flex-col items-center gap-4">
@@ -291,8 +291,7 @@ export const DeliveryMap = () => {
                                     eventHandlers={{
                                         click: () => setSelectedOrder(order)
                                     }}
-                                >
-                                    <Popup className="delivery-popup" minWidth={420} maxWidth={500}>
+                                >                                    <Popup className="delivery-popup" minWidth={window.innerWidth < 768 ? 280 : 420} maxWidth={window.innerWidth < 768 ? 320 : 500}>
                                         <div style={{ fontFamily: "'Nunito', sans-serif", padding: 0, margin: 0 }}>
                                             {/* Top accent bar */}
                                             <div style={{
@@ -302,9 +301,9 @@ export const DeliveryMap = () => {
                                                 margin: '-1px -1px 0 -1px'
                                             }} />
 
-                                            <div style={{ padding: '18px 20px 20px' }}>
+                                            <div style={{ padding: window.innerWidth < 768 ? '12px 14px' : '18px 20px 20px' }}>
                                                 {/* Header row */}
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingRight: '36px', gap: '20px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingRight: '36px', gap: window.innerWidth < 768 ? '8px' : '20px' }}>
                                                     <span style={{
                                                         fontSize: '12px', fontWeight: 900, letterSpacing: '0.08em',
                                                         color: '#4B7B5E', backgroundColor: '#EDF7F1',
@@ -328,7 +327,7 @@ export const DeliveryMap = () => {
                                                 </div>
 
                                                 {/* Customer name */}
-                                                <h4 style={{ fontSize: '22px', fontWeight: 900, color: '#111827', margin: '0 0 4px', lineHeight: 1.2 }}>
+                                                <h4 style={{ fontSize: window.innerWidth < 768 ? '16px' : '22px', fontWeight: 900, color: '#111827', margin: '0 0 4px', lineHeight: 1.2 }}>
                                                     {order.customerName}
                                                 </h4>
 
@@ -407,7 +406,7 @@ export const DeliveryMap = () => {
                     )}
 
                     {/* Quick Stats Overlay (Floating Bar) */}
-                    <div className="absolute bottom-6 right-6 z-[500] bg-white/90 backdrop-blur-xl p-4 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-white flex gap-6 px-8">
+                    <div className="hidden sm:flex absolute bottom-6 right-6 z-[500] bg-white/90 backdrop-blur-xl p-4 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-white flex gap-6 px-8">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Clock size={18} /></div>
                             <div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter } from 'lucide-react';
 
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,6 +34,9 @@ export const ProductManager = () => {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [viewingStatsProduct, setViewingStatsProduct] = useState<Product | null>(null);
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+    const [showSearch, setShowSearch] = useState(false);
+    const [showFilter, setShowFilter] = useState(false);
+    const [showSort, setShowSort] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -305,8 +308,8 @@ export const ProductManager = () => {
     };
 
     return (
-        <div className="-m-5 md:-m-8 p-5 md:p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="-m-5 lg:-m-8 p-5 lg:p-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 lg:mb-8">
                 <h1 className="text-3xl font-bold text-gray-800">Gestione Prodotti</h1>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     <button
@@ -324,10 +327,60 @@ export const ProductManager = () => {
                 </div>
             </div>
 
-            {/* Search + Sort Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                {/* Search */}
-                <div className="relative flex-1">
+            {/* Mobile Toolbar Toggle Buttons */}
+            <div className="flex lg:hidden gap-2 mb-4">
+                <button
+                    onClick={() => {
+                        setShowSearch(!showSearch);
+                        setShowFilter(false);
+                        setShowSort(false);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                        showSearch || search
+                            ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                            : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                    }`}
+                >
+                    <Search size={14} />
+                    <span>Cerca</span>
+                    {search && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                </button>
+                <button
+                    onClick={() => {
+                        setShowFilter(!showFilter);
+                        setShowSearch(false);
+                        setShowSort(false);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                        showFilter || filterCategory
+                            ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                            : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                    }`}
+                >
+                    <ListFilter size={14} />
+                    <span>Filtra</span>
+                    {filterCategory && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                </button>
+                <button
+                    onClick={() => {
+                        setShowSort(!showSort);
+                        setShowSearch(false);
+                        setShowFilter(false);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                        showSort
+                            ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                            : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                    }`}
+                >
+                    <ArrowUpDown size={14} />
+                    <span>Ordina</span>
+                </button>
+            </div>
+
+            {/* Search Input Panel */}
+            <div className={`${showSearch ? 'block' : 'hidden'} lg:block mb-4`}>
+                <div className="relative w-full">
                     <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                         type="text"
@@ -342,8 +395,11 @@ export const ProductManager = () => {
                         </button>
                     )}
                 </div>
-                {/* Sort Controls */}
-                <div className="flex gap-2">
+            </div>
+
+            {/* Sort Controls Panel */}
+            <div className={`${showSort ? 'block' : 'hidden'} lg:block mb-4`}>
+                <div className="flex gap-2 flex-wrap">
                     {[
                         { key: 'name', label: 'Nome' },
                         { key: 'price', label: 'Prezzo' },
@@ -357,7 +413,7 @@ export const ProductManager = () => {
                                     if (isActive) setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
                                     else { setSortBy(s.key); setSortOrder('asc'); }
                                 }}
-                                className={`flex items-center gap-1 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all border ${isActive
+                                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all border ${isActive
                                     ? 'bg-nature-600 text-white border-transparent shadow-md shadow-nature-200'
                                     : 'bg-white text-gray-500 border-gray-200 hover:border-nature-300 hover:text-nature-700'
                                     }`}
@@ -375,7 +431,7 @@ export const ProductManager = () => {
             </div>
 
             {/* Category Filter Pills */}
-            <div className="flex gap-2 bg-gray-100/50 p-2 rounded-[2rem] border border-gray-200 mb-8 overflow-x-auto custom-scrollbar no-scrollbar whitespace-nowrap">
+            <div className={`flex gap-2 bg-gray-100/50 p-2 rounded-[2rem] border border-gray-200 mb-4 lg:mb-8 overflow-x-auto custom-scrollbar no-scrollbar whitespace-nowrap ${showFilter ? 'block' : 'hidden'} lg:flex`}>
                 <button
                     onClick={() => setFilterCategory('')}
                     className={`
@@ -413,22 +469,22 @@ export const ProductManager = () => {
                         initial={{ opacity: 0, y: 100, x: '-50%' }}
                         animate={{ opacity: 1, y: 0, x: '-50%' }}
                         exit={{ opacity: 0, y: 100, x: '-50%' }}
-                        className="fixed bottom-8 left-1/2 z-50 bg-white/80 backdrop-blur-xl px-2 py-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-2 border border-white/50"
+                        className="fixed bottom-24 sm:bottom-8 left-1/2 z-50 bg-white/80 backdrop-blur-xl px-1.5 py-1.5 sm:px-2 sm:py-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center gap-1.5 sm:gap-2 border border-white/50 w-auto max-w-[95%] sm:max-w-none"
                     >
-                        <div className="flex items-center gap-3 px-4 py-2 bg-nature-600 text-white rounded-[1.5rem] shadow-lg shadow-nature-200">
+                        <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-nature-600 text-white rounded-[1.5rem] shadow-lg shadow-nature-200">
                             <div className="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm">
                                 {selectedIds.length}
                             </div>
                             <span className="font-bold text-sm hidden sm:inline">Prodotti</span>
                         </div>
 
-                        <div className="flex items-center gap-1 p-1 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
-                            <div className="flex items-center gap-1 px-2 border-r border-gray-200">
+                        <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
+                            <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 border-r border-gray-200">
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleBulkUpdate({ isAvailable: true })}
-                                    className="p-3 text-nature-600 hover:bg-nature-50 rounded-2xl transition-all"
+                                    className="p-2 sm:p-3 text-nature-600 hover:bg-nature-50 rounded-2xl transition-all"
                                     title="Disponibile"
                                 >
                                     <Eye size={22} />
@@ -437,19 +493,19 @@ export const ProductManager = () => {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleBulkUpdate({ isAvailable: false })}
-                                    className="p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
+                                    className="p-2 sm:p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
                                     title="Non Disponibile"
                                 >
                                     <EyeOff size={22} />
                                 </motion.button>
                             </div>
 
-                            <div className="flex items-center gap-1 px-2 border-r border-gray-200">
+                            <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 border-r border-gray-200">
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleBulkUpdate({ allowBackorder: true })}
-                                    className="p-3 text-sky-600 hover:bg-sky-50 rounded-2xl transition-all"
+                                    className="p-2 sm:p-3 text-sky-600 hover:bg-sky-50 rounded-2xl transition-all"
                                     title="Sempre Disponibile"
                                 >
                                     <InfinityIcon size={22} />
@@ -458,7 +514,7 @@ export const ProductManager = () => {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleBulkUpdate({ allowBackorder: false })}
-                                    className="p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
+                                    className="p-2 sm:p-3 text-gray-400 hover:bg-gray-100 rounded-2xl transition-all"
                                     title="Solo con Scorta"
                                 >
                                     <PackageX size={22} />
@@ -469,7 +525,7 @@ export const ProductManager = () => {
                                 whileHover={{ scale: 1.05, backgroundColor: '#fef2f2' }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleBulkDelete()}
-                                className="p-3 text-red-500 hover:text-red-600 rounded-2xl transition-all"
+                                className="p-2 sm:p-3 text-red-500 hover:text-red-600 rounded-2xl transition-all"
                                 title="Elimina Selezionati"
                             >
                                 <Trash2 size={22} />
@@ -479,7 +535,7 @@ export const ProductManager = () => {
                         <motion.button
                             whileHover={{ backgroundColor: '#f3f4f6' }}
                             onClick={() => setSelectedIds([])}
-                            className="p-3 text-gray-400 hover:text-gray-600 rounded-full transition-all"
+                            className="p-2 sm:p-3 text-gray-400 hover:text-gray-600 rounded-full transition-all"
                             title="Annulla selezione"
                         >
                             <X size={20} />
