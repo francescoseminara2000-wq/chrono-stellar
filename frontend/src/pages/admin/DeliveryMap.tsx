@@ -280,7 +280,7 @@ export const DeliveryMap = () => {
                 </div>
 
                 {/* Map Section */}
-                <div className="flex-1 min-h-[250px] md:min-h-0 relative z-0">
+                <div className="flex-1 w-full h-full min-h-[250px] md:min-h-0 relative z-0">
                     {isLoading ? (
                         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[1000]">
                             <div className="flex flex-col items-center gap-4">
