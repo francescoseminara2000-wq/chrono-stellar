@@ -817,6 +817,8 @@ export const OrderManager = () => {
                             <p className="text-sm text-gray-500 max-w-xs">Seleziona un ordine dall'elenco a sinistra per visualizzarne i dettagli e completare la pesatura.</p>
                         </div>
                     )}
+                </div>
+            </div>
             {isWeighingOpen && selectedOrder && (
                 <div className="fixed inset-0 bg-[#0c2e19]/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-2xl border border-nature-100 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -1062,8 +1064,6 @@ export const OrderManager = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-                </div>
-            </div>
         </div>
     );
 };
