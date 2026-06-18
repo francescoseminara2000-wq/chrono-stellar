@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2 } from 'lucide-react';
+import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -39,6 +39,9 @@ export const OrderManager = () => {
     const [filterStatus, setFilterStatus] = useState<string>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [isWeighingOpen, setIsWeighingOpen] = useState(false);
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [tempModalDate, setTempModalDate] = useState('');
+    const [tempModalTime, setTempModalTime] = useState('');
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
     const [editNotes, setEditNotes] = useState('');
@@ -798,16 +801,26 @@ export const OrderManager = () => {
                                     <div className="bg-blue-50/60 p-3 lg:p-4 rounded-xl border border-blue-100/50 text-xs flex flex-col justify-between">
                                         <div>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-1">Pianificazione Appuntamento</span>
-                                            <div className="space-y-1.5 mt-1.5">
-                                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data e Ora Appuntamento</label>
-                                                <DateTimePicker
-                                                    date={editDate}
-                                                    time={editTime}
-                                                    onChange={(d, t) => {
-                                                        setEditDate(d);
-                                                        setEditTime(t);
-                                                    }}
-                                                />
+                                            <div className="mt-2 space-y-2">
+                                                <div className="bg-white p-2.5 rounded-lg border border-blue-100 flex items-center justify-between">
+                                                    <div>
+                                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Appuntamento</span>
+                                                        <span className="font-bold text-gray-800 text-xs">
+                                                            {editDate ? `${editDate.split('-').reverse().join('/')} ${editTime || ''}` : 'Non Programmato'}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setTempModalDate(editDate);
+                                                            setTempModalTime(editTime);
+                                                            setIsScheduleModalOpen(true);
+                                                        }}
+                                                        className="px-2.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-lg transition-colors text-[10px] uppercase tracking-wide cursor-pointer"
+                                                    >
+                                                        Pianifica
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -960,6 +973,81 @@ export const OrderManager = () => {
                     )}
                 </div>
             </div>
+            {isScheduleModalOpen && selectedOrder && (
+                <div className="fixed inset-0 bg-nature-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-blue-900 text-white shrink-0">
+                            <div className="flex items-center gap-2.5">
+                                <Calendar className="text-blue-350" />
+                                <div>
+                                    <h3 className="font-black text-lg">Pianifica Appuntamento</h3>
+                                    <p className="text-blue-300 text-xs mt-0.5">Ordine #{selectedOrder.id}</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setIsScheduleModalOpen(false)} 
+                                className="p-1.5 bg-blue-800 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-6 flex flex-col">
+                            <div className="w-full space-y-4">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-2">Seleziona Data e Ora</label>
+                                <DateTimePicker
+                                    date={tempModalDate}
+                                    time={tempModalTime}
+                                    onChange={(d, t) => {
+                                        setTempModalDate(d);
+                                        setTempModalTime(t);
+                                    }}
+                                    inline={true}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-5 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-3 shrink-0">
+                            {tempModalDate && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setTempModalDate('');
+                                        setTempModalTime('');
+                                    }}
+                                    className="w-full sm:w-auto px-4 py-3 bg-red-50 hover:bg-red-105 text-red-600 font-bold text-xs rounded-xl transition-colors uppercase tracking-wider cursor-pointer text-center"
+                                >
+                                    Rimuovi Pianificazione
+                                </button>
+                            )}
+                            <div className="flex flex-1 gap-3 w-full justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsScheduleModalOpen(false)}
+                                    className="flex-1 sm:flex-none px-6 py-3 bg-white border border-gray-200 text-gray-500 hover:bg-gray-100 font-bold text-xs rounded-xl transition-colors uppercase tracking-wider cursor-pointer text-center"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditDate(tempModalDate);
+                                        setEditTime(tempModalTime);
+                                        setIsScheduleModalOpen(false);
+                                    }}
+                                    className="flex-1 sm:flex-none px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 font-bold text-xs rounded-xl shadow transition-colors uppercase tracking-wider cursor-pointer font-black text-center"
+                                >
+                                    Conferma
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {isWeighingOpen && selectedOrder && (
                 <div className="fixed inset-0 bg-[#0c2e19]/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-2xl border border-nature-100 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">

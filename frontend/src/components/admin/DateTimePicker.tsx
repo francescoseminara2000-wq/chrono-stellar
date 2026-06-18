@@ -5,6 +5,7 @@ interface DateTimePickerProps {
     date: string; // YYYY-MM-DD
     time: string; // HH:MM
     onChange: (date: string, time: string) => void;
+    inline?: boolean;
 }
 
 const MONTHS_IT = [
@@ -21,7 +22,7 @@ const POPULAR_TIMES = [
     '20:00'
 ];
 
-export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onChange }) => {
+export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onChange, inline }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +38,14 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
     // Hour and minute split for precise adjustments
     const [customHour, setCustomHour] = useState(tempTime ? tempTime.split(':')[0] : '12');
     const [customMinute, setCustomMinute] = useState(tempTime ? tempTime.split(':')[1] : '00');
+
+    const getTodayStr = () => {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
 
     useEffect(() => {
         setTempDate(date);
@@ -61,9 +70,15 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                 setIsOpen(false);
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        if (!inline) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            if (!inline) {
+                document.removeEventListener('mousedown', handleClickOutside);
+            }
+        };
+    }, [inline]);
 
     // Generate Calendar Grid
     const getDaysInMonth = (year: number, month: number) => {
@@ -102,19 +117,32 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
         const paddedDay = String(dayNum).padStart(2, '0');
         const selectedDateStr = `${currentYear}-${paddedMonth}-${paddedDay}`;
         setTempDate(selectedDateStr);
+        if (inline) {
+            onChange(selectedDateStr, tempTime || '12:00');
+        }
     };
 
     const handleSelectPopularTime = (t: string) => {
+        const d = tempDate || getTodayStr();
+        setTempDate(d);
         setTempTime(t);
         const parts = t.split(':');
         setCustomHour(parts[0]);
         setCustomMinute(parts[1]);
+        if (inline) {
+            onChange(d, t);
+        }
     };
 
     const handleCustomTimeChange = (h: string, m: string) => {
+        const d = tempDate || getTodayStr();
+        setTempDate(d);
         setCustomHour(h);
         setCustomMinute(m);
         setTempTime(`${h}:${m}`);
+        if (inline) {
+            onChange(d, `${h}:${m}`);
+        }
     };
 
     const handleConfirm = () => {
@@ -137,6 +165,139 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
         const timeStr = time ? ` alle ${time}` : '';
         return `${dateStr}${timeStr}`;
     };
+
+    if (inline) {
+        return (
+            <div className="w-full flex flex-col sm:flex-row gap-6 bg-white select-none">
+                {/* Calendar Column */}
+                <div className="flex-1 max-w-md mx-auto sm:max-w-none w-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <button
+                            type="button"
+                            onClick={handlePrevMonth}
+                            className="p-2 text-gray-400 hover:text-gray-750 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <span className="text-sm sm:text-base font-extrabold text-gray-800">
+                            {MONTHS_IT[currentMonth]} {currentYear}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={handleNextMonth}
+                            className="p-2 text-gray-400 hover:text-gray-750 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+
+                    {/* Weekdays */}
+                    <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {DAYS_WEEK_IT.map(d => (
+                            <div key={d} className="py-1">{d}</div>
+                        ))}
+                    </div>
+
+                    {/* Days Grid */}
+                    <div className="grid grid-cols-7 gap-1.5">
+                        {/* Empty cells */}
+                        {Array.from({ length: firstDayIndex }).map((_, idx) => (
+                            <div key={`empty-${idx}`} className="w-full aspect-square"></div>
+                        ))}
+
+                        {/* Days */}
+                        {Array.from({ length: daysInMonth }).map((_, idx) => {
+                            const dayNum = idx + 1;
+                            const paddedMonth = String(currentMonth + 1).padStart(2, '0');
+                            const paddedDay = String(dayNum).padStart(2, '0');
+                            const dateStr = `${currentYear}-${paddedMonth}-${paddedDay}`;
+                            const isSelected = tempDate === dateStr;
+
+                            return (
+                                <button
+                                    key={`day-${dayNum}`}
+                                    type="button"
+                                    onClick={() => handleSelectDay(dayNum)}
+                                    className={`
+                                        w-full aspect-square rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold transition-all cursor-pointer
+                                        ${isSelected
+                                            ? 'bg-blue-600 text-white shadow-md font-black ring-2 ring-blue-500/20'
+                                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                                        }
+                                    `}
+                                >
+                                    {dayNum}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Divider on Desktop */}
+                <div className="hidden sm:block w-[1px] bg-gray-100 self-stretch"></div>
+
+                {/* Time Slots Column */}
+                <div className="w-full sm:w-[220px] flex flex-col justify-between max-w-md mx-auto sm:max-w-none">
+                    <div>
+                        <span className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <Clock size={14} className="text-blue-505" /> Seleziona Orario
+                        </span>
+
+                        {/* Popular slots grid */}
+                        <div className="grid grid-cols-4 sm:grid-cols-3 gap-1.5 max-h-[180px] sm:max-h-[220px] overflow-y-auto pr-1 custom-scrollbar mb-4">
+                            {POPULAR_TIMES.map(t => {
+                                const isSelected = tempTime === t;
+                                return (
+                                    <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => handleSelectPopularTime(t)}
+                                        className={`
+                                            py-2 px-1 rounded-xl text-xs font-bold text-center border transition-all cursor-pointer
+                                            ${isSelected
+                                                ? 'bg-blue-650 text-white border-transparent font-black shadow-sm'
+                                                : 'border-gray-150 hover:border-blue-400 text-gray-650 hover:bg-blue-50/50'
+                                            }
+                                        `}
+                                    >
+                                        {t}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Custom Picker inputs */}
+                    <div className="border-t border-gray-100 pt-4">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-2">Ora personalizzata</span>
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={customHour}
+                                onChange={(e) => handleCustomTimeChange(e.target.value, customMinute)}
+                                className="flex-1 p-2 border border-gray-200 rounded-xl text-xs sm:text-sm font-bold bg-white text-gray-705 outline-none hover:border-blue-400 focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer"
+                            >
+                                {Array.from({ length: 24 }).map((_, idx) => {
+                                    const h = String(idx).padStart(2, '0');
+                                    return <option key={h} value={h}>{h}</option>;
+                                })}
+                            </select>
+                            <span className="text-gray-400 font-extrabold">:</span>
+                            <select
+                                value={customMinute}
+                                onChange={(e) => handleCustomTimeChange(customHour, e.target.value)}
+                                className="flex-1 p-2 border border-gray-200 rounded-xl text-xs sm:text-sm font-bold bg-white text-gray-705 outline-none hover:border-blue-400 focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer"
+                            >
+                                {Array.from({ length: 60 }).map((_, idx) => {
+                                    const m = String(idx).padStart(2, '0');
+                                    return <option key={m} value={m}>{m}</option>;
+                                })}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative w-full" ref={containerRef}>

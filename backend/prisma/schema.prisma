@@ -141,6 +141,7 @@ model StoreSettings {
   waTemplateOutForDelivery String?  @db.Text
   waTemplateWeighing       String?  @db.Text
   waTemplatePickupReady    String?  @db.Text
+  waTemplateScheduled      String?  @db.Text
   latitude                 Float?
   longitude                Float?
   logoUrl                  String?  @db.Text

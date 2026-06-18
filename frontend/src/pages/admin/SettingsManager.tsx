@@ -56,6 +56,7 @@ export const SettingsManager = () => {
         openingHours: '', announcementText: '', announcementActive: false,
         waTemplateCreated: '', waTemplateWeighing: '', waTemplateOutForDelivery: '',
         waTemplatePickupReady: '', waTemplateDelivered: '', waTemplateCancelled: '',
+        waTemplateScheduled: '',
         latitude: null as number | null, longitude: null as number | null,
         logoUrl: null as string | null,
         colorTheme: 'green',
@@ -72,6 +73,7 @@ export const SettingsManager = () => {
         waTemplatePickupReady: useRef<HTMLTextAreaElement>(null),
         waTemplateDelivered: useRef<HTMLTextAreaElement>(null),
         waTemplateCancelled: useRef<HTMLTextAreaElement>(null),
+        waTemplateScheduled: useRef<HTMLTextAreaElement>(null),
     };
 
     // --- Delivery Zones State ---
@@ -132,6 +134,7 @@ export const SettingsManager = () => {
                 waTemplatePickupReady: data.waTemplatePickupReady || '',
                 waTemplateDelivered: data.waTemplateDelivered || '',
                 waTemplateCancelled: data.waTemplateCancelled || '',
+                waTemplateScheduled: data.waTemplateScheduled || '',
                 latitude: data.latitude || null,
                 longitude: data.longitude || null,
                 logoUrl: data.logoUrl || null,
@@ -617,6 +620,7 @@ export const SettingsManager = () => {
                                 <TemplateField label="2. Pesatura Completa" field="waTemplateWeighing" value={formData.waTemplateWeighing} tags={['id', 'cliente', 'totale', 'prodotti']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplateWeighing: v })} textareaRef={refs.waTemplateWeighing} />
                                 <TemplateField label="3. In Consegna" field="waTemplateOutForDelivery" value={formData.waTemplateOutForDelivery} tags={['id', 'cliente', 'totale', 'indirizzo', 'note']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplateOutForDelivery: v })} textareaRef={refs.waTemplateOutForDelivery} />
                                 <TemplateField label="4. Pronto al Ritiro" field="waTemplatePickupReady" value={formData.waTemplatePickupReady} tags={['id', 'cliente', 'totale']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplatePickupReady: v })} textareaRef={refs.waTemplatePickupReady} />
+                                <TemplateField label="5. Programmazione Appuntamento" field="waTemplateScheduled" value={formData.waTemplateScheduled} tags={['id', 'cliente', 'data', 'ora', 'metodo']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplateScheduled: v })} textareaRef={refs.waTemplateScheduled} />
                             </div>
                         </div>
 

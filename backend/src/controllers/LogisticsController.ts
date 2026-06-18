@@ -280,18 +280,34 @@ export class LogisticsController {
             });
 
             // Trigger notification about schedule change
-            if (updatedOrder.customerPhone || updatedOrder.customerEmail) {
+            if (scheduledDate && (updatedOrder.customerPhone || updatedOrder.customerEmail)) {
                 const customerName = updatedOrder.customerName || 'Cliente';
-                const formattedDate = scheduledDate ? scheduledDate.split('-').reverse().join('/') : '';
+                const formattedDate = scheduledDate.split('-').reverse().join('/');
                 const timeStr = scheduledTime ? ` alle ${scheduledTime}` : '';
                 
                 // WhatsApp
                 const whatsAppService = WhatsAppService.getInstance();
                 const waStatus = whatsAppService.getStatus();
                 const isDelivery = updatedOrder.deliveryMethod === 'DELIVERY';
-                const methodStr = isDelivery ? 'la consegna' : 'il ritiro';
-                const verbStr = isDelivery ? 'stata programmata' : 'stato programmato';
-                const textMessage = `Ciao ${customerName}, ${methodStr} del tuo ordine #${updatedOrder.id} è ${verbStr} per il ${formattedDate}${timeStr}. A presto!`;
+                const methodStr = isDelivery ? 'consegna' : 'ritiro';
+                
+                // Fetch settings for scheduling template
+                const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+                
+                let textMessage = '';
+                // @ts-ignore
+                if (settings?.waTemplateScheduled) {
+                    // @ts-ignore
+                    textMessage = settings.waTemplateScheduled
+                        .replace(/\[cliente\]/g, customerName)
+                        .replace(/\[id\]/g, String(updatedOrder.id))
+                        .replace(/\[data\]/g, formattedDate)
+                        .replace(/\[ora\]/g, scheduledTime || 'Da concordare')
+                        .replace(/\[metodo\]/g, methodStr);
+                } else {
+                    const verbStr = isDelivery ? 'stata programmata' : 'stato programmato';
+                    textMessage = `Ciao ${customerName}, la ${methodStr} del tuo ordine #${updatedOrder.id} è ${verbStr} per il ${formattedDate}${timeStr}. A presto!`;
+                }
                 
                 if (waStatus.isConnected && updatedOrder.customerPhone) {
                     try {

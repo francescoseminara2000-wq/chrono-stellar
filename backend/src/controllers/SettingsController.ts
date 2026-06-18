@@ -34,7 +34,9 @@ export class SettingsController {
                     primaryColor: '#16a34a',
                     accentColor: '#ef4444',
                     pickupCutoffHour: 12,
-                    deliveryCutoffHour: 12
+                    deliveryCutoffHour: 12,
+                    // @ts-ignore
+                    waTemplateScheduled: 'Ciao [cliente], la pianificazione del tuo ordine #[id] è stata programmata per il [data] alle [ora]. A presto!'
                 }
             });
         }
@@ -78,6 +80,8 @@ export class SettingsController {
                 waTemplateDelivered,
                 // @ts-ignore
                 waTemplateCancelled,
+                // @ts-ignore
+                waTemplateScheduled,
                 latitude,
                 longitude,
                 logoUrl,
@@ -111,6 +115,8 @@ export class SettingsController {
                     waTemplateDelivered,
                     // @ts-ignore
                     waTemplateCancelled,
+                    // @ts-ignore
+                    waTemplateScheduled,
                     latitude,
                     longitude,
                     logoUrl,
