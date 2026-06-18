@@ -184,7 +184,7 @@ export const Checkout = () => {
             userId: user?.id || null,
             customerName: user?.name || formData.name,
             customerEmail: user?.email || formData.email,
-            items: items.map(i => ({ id: i.id, quantity: i.quantity })),
+            items: items.map(i => ({ id: i.id, quantity: i.quantity, orderedUnit: i.unitType })),
             paymentMethod: 'COD',
             deliveryMethod,
             shippingAddress: deliveryMethod === 'DELIVERY'

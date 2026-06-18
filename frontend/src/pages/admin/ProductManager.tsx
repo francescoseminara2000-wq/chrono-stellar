@@ -956,9 +956,16 @@ export const ProductManager = () => {
                                         </div>
 
                                         {formData.isVariableWeight && (
-                                            <div className="col-span-2 text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
-                                                Il prezzo finale verrà calcolato quando peserai il prodotto per l'ordine.
-                                            </div>
+                                            <>
+                                                <div className="col-span-2 md:col-span-1 space-y-2">
+                                                    <label className="block text-sm font-bold text-gray-700">Peso Indicativo Pezzo (kg)</label>
+                                                    <input type="number" step="0.01" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all" value={formData.stepAmount} onChange={e => setFormData({ ...formData, stepAmount: e.target.value })} placeholder="es. 1.5 per anguria, lascia 0 se acquistabile solo a peso" />
+                                                    <p className="text-[10px] text-gray-400">Imposta un valore maggiore di 0 per consentire al cliente di ordinare questo prodotto a pezzi (calcolando il peso stimato) o a peso.</p>
+                                                </div>
+                                                <div className="col-span-2 text-sm text-yellow-600 bg-yellow-50 p-3 rounded-2xl border border-yellow-100/50">
+                                                    Il prezzo finale verrà calcolato quando peserai il prodotto per l'ordine.
+                                                </div>
+                                            </>
                                         )}
 
                                         <div className="col-span-2 space-y-2">

@@ -108,7 +108,7 @@ export class ProductController {
             if (priceCents) data.priceCents = Number(priceCents);
             if (unitType) data.unitType = unitType as UnitType;
             if (isVariableWeight !== undefined) data.isVariableWeight = isVariableWeight === 'true' || isVariableWeight === true;
-            if (stepAmount) data.stepAmount = Number(stepAmount);
+            if (stepAmount !== undefined) data.stepAmount = Number(stepAmount);
             if (isAvailable !== undefined) data.isAvailable = isAvailable === 'true' || isAvailable === true;
             if (req.body.stockQuantity !== undefined) data.stockQuantity = Number(req.body.stockQuantity);
             if (req.body.lowStockThreshold !== undefined) data.lowStockThreshold = Number(req.body.lowStockThreshold);

@@ -57,14 +57,15 @@ model Order {
 }
 
 model OrderItem {
-  id                Int      @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
   orderId           Int
   productId         Int
   priceAtPurchase   Int
-  quantityOrdered   Decimal  @db.Decimal(10, 2)
-  quantityFulfilled Decimal? @db.Decimal(10, 2)
-  order             Order    @relation(fields: [orderId], references: [id], map: "OrderItem_orderId_fkey")
-  product           Product  @relation(fields: [productId], references: [id], map: "OrderItem_productId_fkey")
+  quantityOrdered   Decimal   @db.Decimal(10, 2)
+  quantityFulfilled Decimal?  @db.Decimal(10, 2)
+  orderedUnit       UnitType?
+  order             Order     @relation(fields: [orderId], references: [id], map: "OrderItem_orderId_fkey")
+  product           Product   @relation(fields: [productId], references: [id], map: "OrderItem_productId_fkey")
 
   @@index([orderId], map: "OrderItem_orderId_idx")
   @@index([productId], map: "OrderItem_productId_idx")

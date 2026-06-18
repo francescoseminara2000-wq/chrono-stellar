@@ -181,10 +181,12 @@ export class WhatsAppService {
             order.items.forEach((item: any) => {
                 if (type === 'WEIGHING_COMPLETED') {
                     if (item.product.isVariableWeight) {
-                        const unitStr = item.product.unitType === 'PZ' ? 'pz' : 'kg';
+                        const chosenUnit = item.orderedUnit || item.product.unitType;
+                        const unitStr = chosenUnit === 'PZ' ? 'pz' : 'kg';
                         productsList += `- ${item.product.name}: ${item.quantityFulfilled}kg (Ord: ${item.quantityOrdered} ${unitStr})\n`;
                     } else {
-                        const unitText = item.product.unitType === 'BOX' ? 'box' : item.product.unitType.toLowerCase();
+                        const chosenUnit = item.orderedUnit || item.product.unitType;
+                        const unitText = chosenUnit === 'BOX' ? 'box' : chosenUnit.toLowerCase();
                         productsList += `- ${item.product.name}: ${item.quantityFulfilled} ${unitText}\n`;
                     }
                 } else {

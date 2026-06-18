@@ -24,7 +24,18 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelect, onUnitSelect }) => {
-    const { items, addItem, updateQuantity } = useCartStore();
+    const { items, addItem, updateQuantity, updateItemUnit } = useCartStore();
+
+    const cartItem = items.find(i => i.id === product.id);
+    const [selectedUnit, setSelectedUnit] = React.useState<'KG' | 'PZ' | 'BOX'>(
+        cartItem ? cartItem.unitType : product.unitType
+    );
+
+    React.useEffect(() => {
+        if (cartItem) {
+            setSelectedUnit(cartItem.unitType);
+        }
+    }, [cartItem]);
 
     const getProductQuantity = (productId: number) => {
         const item = items.find(i => i.id === productId);
@@ -99,12 +110,44 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelec
                     <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 min-h-[2.5em]">
                         {product.description || "Freschezza garantita dalla nostra selezione."}
                     </p>
-                    {product.isVariableWeight && product.unitType === 'PZ' && (
+                    {product.isVariableWeight && selectedUnit === 'PZ' && product.stepAmount > 0 && (
                         <span className="text-[10px] text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-lg mt-1.5 inline-block w-fit shrink-0">
                             Pezzo da circa {product.stepAmount} kg
                         </span>
                     )}
                 </div>
+
+                {/* Unit Selector Tab for dual-unit items */}
+                {product.unitType === 'KG' && product.isVariableWeight && product.stepAmount > 0 && (
+                    <div className="flex bg-gray-100 p-0.5 rounded-lg mb-3 border border-gray-200/50 text-[11px] font-bold mt-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (cartItem) {
+                                    updateItemUnit(product.id, 'KG', 1);
+                                } else {
+                                    setSelectedUnit('KG');
+                                }
+                            }}
+                            className={`flex-1 py-1.5 rounded-md transition-all text-center ${selectedUnit === 'KG' ? 'bg-white text-nature-950 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                        >
+                            Al kg
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (cartItem) {
+                                    updateItemUnit(product.id, 'PZ', 1);
+                                } else {
+                                    setSelectedUnit('PZ');
+                                }
+                            }}
+                            className={`flex-1 py-1.5 rounded-md transition-all text-center ${selectedUnit === 'PZ' ? 'bg-white text-nature-950 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                        >
+                            A pezzi
+                        </button>
+                    </div>
+                )}
 
                 <div className="mt-auto flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 pt-2">
                     {/* Price */}
@@ -115,14 +158,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelec
                                 €{(product.priceCents / 100).toFixed(2)}
                             </span>
                             <span className="text-[10px] sm:text-sm text-gray-500 font-medium">
-                                /{product.isVariableWeight && product.unitType === 'PZ' ? 'kg' : (product.unitType === 'BOX' ? 'box' : product.unitType.toLowerCase())}
+                                /{product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'box' : product.unitType.toLowerCase())}
                             </span>
                         </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex-shrink-0 w-full sm:w-auto flex justify-end shrink-0">
-                        {product.unitType === 'KG' ? (
+                        {selectedUnit === 'KG' ? (
                             <button
                                 onClick={() => onWeightSelect(product)}
                                 className={`
@@ -173,7 +216,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelec
                                 </div>
                             ) : (
                                 <button
-                                    onClick={() => addItem({ ...product, unitType: product.unitType as any }, 1)}
+                                    onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
                                     className="w-full sm:w-12 h-8 sm:h-12 bg-nature-900 text-white rounded-lg sm:rounded-2xl flex items-center justify-center hover:bg-nature-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-sm"
                                 >
                                     <Plus size={16} className="sm:w-6 sm:h-6" strokeWidth={2.5} />

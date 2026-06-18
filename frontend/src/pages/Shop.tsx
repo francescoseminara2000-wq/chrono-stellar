@@ -35,7 +35,7 @@ export const Shop = () => {
     const [filterCategory, setFilterCategory] = useState<string>('');
     const [sortBy, setSortBy] = useState<string>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-    const { items, addItem, updateQuantity } = useCartStore();
+    const { items, addItem, updateItemUnit } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
     const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
 
@@ -239,13 +239,13 @@ export const Shop = () => {
                                 id: product.id,
                                 name: product.name,
                                 priceCents: product.priceCents,
-                                unitType: product.unitType as any,
+                                unitType: 'KG',
                                 isVariableWeight: product.isVariableWeight,
                                 stepAmount: product.stepAmount,
                                 imageUrl: product.imageUrl
                             }, weight);
                         } else {
-                            updateQuantity(product.id, weight);
+                            updateItemUnit(product.id, 'KG', weight);
                         }
                     }
                 }}
@@ -258,22 +258,23 @@ export const Shop = () => {
                 productName={selectedProductForUnit?.name || ''}
                 currentQty={selectedProductForUnit ? getProductQuantity(selectedProductForUnit.id) : 0}
                 unitPrice={selectedProductForUnit?.priceCents || 0}
-                unitType={selectedProductForUnit?.unitType as any}
+                unitType={selectedProductForUnit && selectedProductForUnit.unitType === 'KG' ? 'PZ' : (selectedProductForUnit?.unitType as any || 'PZ')}
                 onConfirm={(qty) => {
                     if (selectedProductForUnit) {
                         const product = selectedProductForUnit;
+                        const unit = product.unitType === 'KG' ? 'PZ' : product.unitType;
                         if (getProductQuantity(product.id) === 0) {
                             addItem({
                                 id: product.id,
                                 name: product.name,
                                 priceCents: product.priceCents,
-                                unitType: product.unitType as any,
+                                unitType: unit as any,
                                 isVariableWeight: product.isVariableWeight,
                                 stepAmount: product.stepAmount,
                                 imageUrl: product.imageUrl
                             }, qty);
                         } else {
-                            updateQuantity(product.id, qty);
+                            updateItemUnit(product.id, unit as any, qty);
                         }
                     }
                 }}

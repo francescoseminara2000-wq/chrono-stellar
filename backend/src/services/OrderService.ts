@@ -2,7 +2,7 @@ import { prisma } from '../lib/prisma';
 import { WhatsAppService } from './WhatsAppService';
 import { PaymentStrategy } from '../domain/payment/PaymentStrategy';
 import { CashOnDeliveryStrategy } from '../infrastructure/payment/CodStrategy';
-import { PrismaClient, Prisma, OrderStatus } from '@prisma/client';
+import { PrismaClient, Prisma, OrderStatus, UnitType } from '@prisma/client';
 
 export class OrderService {
     private paymentStrategies: Map<string, PaymentStrategy>;
@@ -15,7 +15,7 @@ export class OrderService {
     }
 
     async createOrder(
-        items: { id: number; quantity: number }[],
+        items: { id: number; quantity: number; orderedUnit?: UnitType }[],
         paymentMethod: string,
         deliveryDetails: { method: string; address?: string; notes?: string; shippingCost?: number; latitude?: number; longitude?: number; scheduledDate?: string },
         customerDetails: { userId?: number; name?: string; email?: string; phone?: string }
@@ -32,6 +32,7 @@ export class OrderService {
             priceAtPurchase: number;
             quantityOrdered: Prisma.Decimal;
             quantityFulfilled: Prisma.Decimal | null;
+            orderedUnit: UnitType;
         }[] = [];
 
         for (const item of items) {
@@ -40,13 +41,18 @@ export class OrderService {
             if (!product.isAvailable) throw new Error(`Product ${product.name} is not available`);
 
             const quantity = new Prisma.Decimal(item.quantity);
+            const chosenUnit = item.orderedUnit || product.unitType;
 
             // Stock Check Enforcement
-            if (!product.allowBackorder && product.stockQuantity.lessThan(quantity)) {
-                throw new Error(`Quantità non disponibile per ${product.name}. Disponibili: ${product.stockQuantity} ${product.unitType}`);
+            const qtyInBaseUnit = (product.isVariableWeight && chosenUnit === 'PZ' && product.unitType === 'KG')
+                ? quantity.mul(product.stepAmount)
+                : quantity;
+
+            if (!product.allowBackorder && product.stockQuantity.lessThan(qtyInBaseUnit)) {
+                throw new Error(`Quantità non disponibile per ${product.name}. Disponibili: ${product.stockQuantity} ${product.unitType.toLowerCase()}`);
             }
 
-            const multiplier = (product.isVariableWeight && product.unitType === 'PZ') ? product.stepAmount.toNumber() : 1;
+            const multiplier = (product.isVariableWeight && chosenUnit === 'PZ') ? product.stepAmount.toNumber() : 1;
             const lineTotal = product.priceCents * item.quantity * multiplier;
 
             estimatedTotal += lineTotal;
@@ -54,7 +60,8 @@ export class OrderService {
                 productId: product.id,
                 priceAtPurchase: product.priceCents,
                 quantityOrdered: quantity,
-                quantityFulfilled: product.isVariableWeight ? null : quantity
+                quantityFulfilled: product.isVariableWeight ? null : quantity,
+                orderedUnit: chosenUnit
             });
         }
 

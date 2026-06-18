@@ -26,9 +26,23 @@ export const ProductDetail = () => {
     const [product, setProduct] = useState<Product | null>(null);
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const { items, addItem, updateQuantity } = useCartStore();
+    const { items, addItem, updateQuantity, updateItemUnit } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
     const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
+
+    const cartItem = items.find(i => i.id === Number(id));
+    const [selectedUnit, setSelectedUnit] = useState<'KG' | 'PZ' | 'BOX'>(
+        cartItem ? cartItem.unitType : 'KG'
+    );
+
+    useEffect(() => {
+        if (product) {
+            const cItem = items.find(i => i.id === product.id);
+            if (cItem) {
+                setSelectedUnit(cItem.unitType);
+            }
+        }
+    }, [items, product]);
 
     const getProductQuantity = (productId: number) => {
         const item = items.find(i => i.id === productId);
@@ -157,10 +171,10 @@ export const ProductDetail = () => {
                                     €{(product.priceCents / 100).toFixed(2)}
                                 </span>
                                 <span className="text-xl text-gray-500 font-medium mb-1">
-                                    / {product.isVariableWeight && product.unitType === 'PZ' ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
+                                    / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
                                 </span>
                             </div>
-                            {product.isVariableWeight && product.unitType === 'PZ' && (
+                            {product.isVariableWeight && selectedUnit === 'PZ' && product.stepAmount > 0 && (
                                 <span className="text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl block w-fit">
                                     Pezzo da circa {product.stepAmount} kg
                                 </span>
@@ -191,9 +205,41 @@ export const ProductDetail = () => {
                         )}
 
                         <div className="mt-auto bg-white p-6 rounded-[2rem] shadow-xl border border-gray-100">
+                            {/* Unit Selector Tab for dual-unit items */}
+                            {product.unitType === 'KG' && product.isVariableWeight && product.stepAmount > 0 && (
+                                <div className="flex bg-gray-100 p-0.5 rounded-xl mb-4 border border-gray-200/50 text-xs font-bold">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (cartItem) {
+                                                updateItemUnit(product.id, 'KG', 1);
+                                            } else {
+                                                setSelectedUnit('KG');
+                                            }
+                                        }}
+                                        className={`flex-1 py-2 rounded-lg transition-all text-center ${selectedUnit === 'KG' ? 'bg-white text-nature-950 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                                    >
+                                        Al kg
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (cartItem) {
+                                                updateItemUnit(product.id, 'PZ', 1);
+                                            } else {
+                                                setSelectedUnit('PZ');
+                                            }
+                                        }}
+                                        className={`flex-1 py-2 rounded-lg transition-all text-center ${selectedUnit === 'PZ' ? 'bg-white text-nature-950 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                                    >
+                                        A pezzi
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="flex flex-col md:flex-row gap-4 items-stretch">
                                 {/* Controller Logic */}
-                                {product.unitType === 'KG' ? (
+                                {selectedUnit === 'KG' ? (
                                     <button
                                         onClick={() => setSelectedProductForWeight(product)}
                                         className="flex-1 bg-nature-900 hover:bg-nature-800 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-lg shadow-nature-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
@@ -240,7 +286,7 @@ export const ProductDetail = () => {
                                         </div>
                                     ) : (
                                         <button
-                                            onClick={() => addItem({ ...product }, 1)}
+                                            onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
                                             className="flex-1 bg-nature-900 hover:bg-nature-800 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-lg shadow-nature-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                                         >
                                             <ShoppingBasket />
@@ -289,9 +335,9 @@ export const ProductDetail = () => {
                     onConfirm={(weight) => {
                         if (selectedProductForWeight) {
                             if (getProductQuantity(selectedProductForWeight.id) === 0) {
-                                addItem({ ...selectedProductForWeight }, weight);
+                                addItem({ ...selectedProductForWeight, unitType: 'KG' }, weight);
                             } else {
-                                updateQuantity(selectedProductForWeight.id, weight);
+                                updateItemUnit(selectedProductForWeight.id, 'KG', weight);
                             }
                         }
                     }}
@@ -304,13 +350,14 @@ export const ProductDetail = () => {
                     productName={selectedProductForUnit?.name || ''}
                     currentQty={selectedProductForUnit ? getProductQuantity(selectedProductForUnit.id) : 0}
                     unitPrice={selectedProductForUnit?.priceCents || 0}
-                    unitType={selectedProductForUnit?.unitType as any}
+                    unitType={selectedProductForUnit && selectedProductForUnit.unitType === 'KG' ? 'PZ' : (selectedProductForUnit?.unitType as any || 'PZ')}
                     onConfirm={(qty) => {
                         if (selectedProductForUnit) {
+                            const unit = selectedProductForUnit.unitType === 'KG' ? 'PZ' : selectedProductForUnit.unitType;
                             if (getProductQuantity(selectedProductForUnit.id) === 0) {
-                                addItem({ ...selectedProductForUnit }, qty);
+                                addItem({ ...selectedProductForUnit, unitType: unit }, qty);
                             } else {
-                                updateQuantity(selectedProductForUnit.id, qty);
+                                updateItemUnit(selectedProductForUnit.id, unit, qty);
                             }
                         }
                     }}

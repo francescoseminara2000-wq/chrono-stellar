@@ -226,7 +226,7 @@ export const OrderManager = () => {
         setSelectedOrder(order);
         const initialData: Record<number, number> = {};
         order.items.forEach(item => {
-            const isPieceVariableWeight = item.product.isVariableWeight && item.product.unitType === 'PZ';
+            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
             const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
             initialData[item.id] = Number(item.quantityFulfilled || defaultQty);
         });
@@ -880,7 +880,7 @@ export const OrderManager = () => {
                                     </div>
                                     <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
                                         {selectedOrder.items.map(item => {
-                                            const isPieceVariableWeight = item.product.isVariableWeight && item.product.unitType === 'PZ';
+                                            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                             const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
                                             const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
 
@@ -1100,7 +1100,7 @@ export const OrderManager = () => {
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
                             {selectedOrder.items.map(item => {
-                                const isPieceVariableWeight = item.product.isVariableWeight && item.product.unitType === 'PZ';
+                                const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                 const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
                                 const itemActualQty = typeof fulfillmentData[item.id] === 'number' 
                                     ? fulfillmentData[item.id] 
@@ -1214,7 +1214,7 @@ export const OrderManager = () => {
                                 <button onClick={() => {
                                     const resetData: Record<number, number> = {};
                                     selectedOrder.items.forEach(item => {
-                                        const isPieceVariableWeight = item.product.isVariableWeight && item.product.unitType === 'PZ';
+                                        const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                         const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
                                         resetData[item.id] = Number(item.quantityFulfilled || defaultQty);
                                     });
