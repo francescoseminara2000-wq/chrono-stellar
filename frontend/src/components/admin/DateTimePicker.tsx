@@ -251,7 +251,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                 <div className="w-full sm:w-[220px] flex flex-col justify-between max-w-md mx-auto sm:max-w-none">
                     <div>
                         <span className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                            <Clock size={14} className="text-blue-505" /> Seleziona Orario
+                            <Clock size={14} className="text-blue-500" /> Seleziona Orario
                         </span>
 
                         {/* Popular slots grid */}
@@ -266,8 +266,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                         className={`
                                             py-2 px-1 rounded-xl text-xs font-bold text-center border transition-all cursor-pointer
                                             ${isSelected
-                                                ? 'bg-blue-650 text-white border-transparent font-black shadow-sm'
-                                                : 'border-gray-150 hover:border-blue-400 text-gray-650 hover:bg-blue-50/50'
+                                                ? 'bg-blue-600 text-white border-transparent font-black shadow-sm'
+                                                : 'border-gray-200 hover:border-blue-400 text-gray-600 hover:bg-blue-50/50'
                                             }
                                         `}
                                     >
@@ -389,7 +389,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                         {/* Time Slots Column */}
                         <div className="w-full sm:w-[200px] flex flex-col">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <Clock size={12} className="text-blue-505" /> Seleziona Orario
+                                <Clock size={12} className="text-blue-500" /> Seleziona Orario
                             </span>
 
                             {/* Popular slots grid */}
@@ -405,7 +405,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                                 py-1 px-1.5 rounded-md text-[10px] font-bold text-center border transition-all
                                                 ${isSelected
                                                     ? 'bg-blue-600 text-white border-transparent font-black'
-                                                    : 'border-gray-100 hover:border-blue-400 text-gray-600 hover:bg-blue-55/20'
+                                                    : 'border-gray-200 hover:border-blue-400 text-gray-600 hover:bg-blue-50/20'
                                                 }
                                             `}
                                         >

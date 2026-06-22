@@ -411,6 +411,41 @@ export const OrderManager = () => {
         }
     };
 
+    const handleSaveSchedule = async (newDate: string, newTime: string) => {
+        if (!selectedOrder) return;
+        setIsSavingEdits(true);
+        try {
+            const resSchedule = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}/schedule`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    scheduledDate: newDate || null,
+                    scheduledTime: newTime || null
+                })
+            });
+
+            if (resSchedule.ok) {
+                const updatedOrder = await resSchedule.json();
+                setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+                setSelectedOrder(updatedOrder);
+                setEditDate(updatedOrder.scheduledDate || '');
+                setEditTime(updatedOrder.scheduledTime || '');
+                addToast('Pianificazione salvata con successo!', 'success');
+            } else {
+                const data = await resSchedule.json();
+                throw new Error(data.error || 'Impossibile salvare la pianificazione.');
+            }
+        } catch (err: any) {
+            console.error(err);
+            addToast(err.message || 'Errore durante il salvataggio.', 'error');
+        } finally {
+            setIsSavingEdits(false);
+        }
+    };
+
     const calculateCurrentTotal = () => {
         if (!selectedOrder) return 0;
         return selectedOrder.items.reduce((acc, item) => {
@@ -1057,8 +1092,7 @@ export const OrderManager = () => {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setEditDate(tempModalDate);
-                                        setEditTime(tempModalTime);
+                                        handleSaveSchedule(tempModalDate, tempModalTime);
                                         setIsScheduleModalOpen(false);
                                     }}
                                     className="flex-1 sm:flex-none px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 font-bold text-xs rounded-xl shadow transition-colors uppercase tracking-wider cursor-pointer font-black text-center"
