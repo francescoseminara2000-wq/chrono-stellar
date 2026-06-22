@@ -3,7 +3,7 @@ import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { LocationPicker } from '../components/LocationPicker';
+
 import { sanitizeImageUrl } from '../utils/imageUrl';
 import { SearchableSelect } from '../components/admin/SearchableSelect';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -435,16 +435,16 @@ export const Checkout = () => {
 
     return (
         <>
-            <div className="bg-gray-50 min-h-screen py-12">
+            <div className="bg-gray-50 min-h-screen py-4 md:py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <h1 className="font-script text-3xl md:text-5xl text-nature-900 mb-8 text-center">Checkout</h1>
+                    <h1 className="font-script text-2xl md:text-5xl text-nature-900 mb-4 md:mb-8 text-center">Checkout</h1>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
                         {/* Form Wizard */}
-                        <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div className="lg:col-span-2 bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
                             
                             {/* Visual Progress Stepper */}
-                            <div className="mb-8 border-b border-gray-100 pb-6">
+                            <div className="mb-4 md:mb-8 border-b border-gray-100 pb-4 md:pb-6">
                                 <div className="flex flex-row justify-between items-center gap-2 overflow-x-auto py-1">
                                     {steps.map((s, idx) => {
                                         const isCompleted = s.id < step;
@@ -500,27 +500,27 @@ export const Checkout = () => {
                                         >
                                             {/* STEP 1: CONSEGNA & DATA */}
                                             {step === 1 && (
-                                                <div className="space-y-6">
+                                                <div className="space-y-4 md:space-y-6">
                                                     <div>
-                                                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-nature-900">
-                                                            <Store size={20} className="text-nature-500" /> Scegli il Metodo di Consegna
+                                                        <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2 text-nature-900">
+                                                            <Store size={18} className="text-nature-500" /> Scegli il Metodo di Consegna
                                                         </h3>
-                                                        <div className="grid grid-cols-2 gap-4">
+                                                        <div className="grid grid-cols-2 gap-3 md:gap-4">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setDeliveryMethod('PICKUP')}
-                                                                className={`p-5 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all duration-300 ${deliveryMethod === 'PICKUP' ? 'border-nature-500 bg-nature-50 text-nature-700 ring-2 ring-nature-500/10' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                                                                className={`p-3 md:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all duration-300 ${deliveryMethod === 'PICKUP' ? 'border-nature-500 bg-nature-50 text-nature-700 ring-2 ring-nature-500/10' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
                                                             >
-                                                                <Store size={36} />
-                                                                <span className="font-bold text-base">Ritiro in Negozio</span>
+                                                                <Store className="w-7 h-7 md:w-9 md:h-9" />
+                                                                <span className="font-bold text-sm md:text-base">Ritiro in Negozio</span>
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setDeliveryMethod('DELIVERY')}
-                                                                className={`p-5 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all duration-300 ${deliveryMethod === 'DELIVERY' ? 'border-nature-500 bg-nature-50 text-nature-700 ring-2 ring-nature-500/10' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                                                                className={`p-3 md:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all duration-300 ${deliveryMethod === 'DELIVERY' ? 'border-nature-500 bg-nature-50 text-nature-700 ring-2 ring-nature-500/10' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
                                                             >
-                                                                <Truck size={36} />
-                                                                <span className="font-bold text-base">Consegna a Casa</span>
+                                                                <Truck className="w-7 h-7 md:w-9 md:h-9" />
+                                                                <span className="font-bold text-sm md:text-base">Consegna a Casa</span>
                                                             </button>
                                                         </div>
 
@@ -546,7 +546,7 @@ export const Checkout = () => {
                                                         )}
 
                                                         {/* Available Dates UI */}
-                                                        <div className="mt-6 p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-3">
+                                                        <div className="mt-4 md:mt-6 p-3 md:p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-3">
                                                             {deliveryMethod === 'PICKUP' ? (
                                                                 <div className="space-y-2">
                                                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
@@ -595,25 +595,25 @@ export const Checkout = () => {
 
                                             {/* STEP 2: DATI PERSONALI */}
                                             {step === 2 && (
-                                                <div className="space-y-6">
-                                                    <h3 className="font-bold text-lg text-nature-900 flex items-center gap-2">
-                                                        <User size={20} className="text-nature-500" /> Informazioni di Contatto
+                                                <div className="space-y-4 md:space-y-6">
+                                                    <h3 className="font-bold text-base md:text-lg text-nature-900 flex items-center gap-2">
+                                                        <User size={18} className="text-nature-500" /> Informazioni di Contatto
                                                     </h3>
 
                                                     {user && (
-                                                        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                                                            <User size={16} className="text-nature-500" /> Loggato come <strong>{user.name}</strong> ({user.email})
+                                                        <div className="flex items-center gap-2 text-xs md:text-sm text-gray-500 bg-gray-50 p-2.5 md:p-3.5 rounded-xl border border-gray-100">
+                                                            <User size={14} className="text-nature-500" /> Loggato come <strong>{user.name}</strong> ({user.email})
                                                         </div>
                                                     )}
 
-                                                    <div className="space-y-4">
+                                                    <div className="space-y-3 md:space-y-4">
                                                         <div>
                                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nome e Cognome</label>
                                                             <input
                                                                 required
                                                                 type="text"
                                                                 placeholder="Mario Rossi"
-                                                                className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow"
+                                                                className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
                                                                 value={formData.name}
                                                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                                                             />
@@ -626,7 +626,7 @@ export const Checkout = () => {
                                                                     required
                                                                     type="email"
                                                                     placeholder="mario.rossi@example.com"
-                                                                    className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow"
+                                                                    className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
                                                                     value={formData.email}
                                                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                                                 />
@@ -639,7 +639,7 @@ export const Checkout = () => {
                                                                 required
                                                                 type="tel"
                                                                 placeholder="+39 333 1234567"
-                                                                className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow"
+                                                                className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
                                                                 value={formData.phone}
                                                                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                                             />
@@ -648,22 +648,22 @@ export const Checkout = () => {
                                                 </div>
                                             )}
 
-                                            {/* STEP 3: INDIRIZZO E MAPPA */}
+                                            {/* STEP 3: INDIRIZZO */}
                                             {step === 3 && deliveryMethod === 'DELIVERY' && (
-                                                <div className="space-y-6">
-                                                    <h3 className="font-bold text-lg text-nature-900 flex items-center gap-2">
-                                                        <Truck size={20} className="text-nature-500" /> Indirizzo di Spedizione
+                                                <div className="space-y-4 md:space-y-6">
+                                                    <h3 className="font-bold text-base md:text-lg text-nature-900 flex items-center gap-2">
+                                                        <Truck size={18} className="text-nature-500" /> Indirizzo di Spedizione
                                                     </h3>
 
-                                                    <div className="space-y-4">
-                                                        <div className="grid grid-cols-3 gap-4">
+                                                    <div className="space-y-3 md:space-y-4">
+                                                        <div className="grid grid-cols-3 gap-3 md:gap-4">
                                                             <div className="col-span-2">
                                                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Via / Piazza</label>
                                                                 <input
                                                                     required
                                                                     type="text"
                                                                     placeholder="Via Roma"
-                                                                    className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow"
+                                                                    className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
                                                                     value={formData.street}
                                                                     onChange={e => setFormData({ ...formData, street: e.target.value })}
                                                                 />
@@ -674,20 +674,20 @@ export const Checkout = () => {
                                                                     required
                                                                     type="text"
                                                                     placeholder="12"
-                                                                    className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow"
+                                                                    className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
                                                                     value={formData.civic}
                                                                     onChange={e => setFormData({ ...formData, civic: e.target.value })}
                                                                 />
                                                             </div>
                                                         </div>
                                                         
-                                                        <div className="grid grid-cols-3 gap-4">
+                                                        <div className="grid grid-cols-3 gap-3 md:gap-4">
                                                             <div>
                                                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">CAP</label>
                                                                 <input
                                                                     required
                                                                     type="text"
-                                                                    className="w-full p-3.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed outline-none"
+                                                                    className="w-full p-3 border md:p-3.5 border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed outline-none text-sm"
                                                                     readOnly
                                                                     value={formData.zip}
                                                                 />
@@ -697,30 +697,11 @@ export const Checkout = () => {
                                                                 <input
                                                                     required
                                                                     type="text"
-                                                                    className="w-full p-3.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed outline-none"
+                                                                    className="w-full p-3 border md:p-3.5 border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed outline-none text-sm"
                                                                     readOnly
                                                                     value={formData.city}
                                                                 />
                                                             </div>
-                                                        </div>
-
-                                                        {/* Location Picker in Checkout */}
-                                                        <div className="pt-4 border-t border-gray-100">
-                                                            <div className="flex items-center gap-3 mb-4">
-                                                                <div className="w-10 h-10 bg-nature-100 text-nature-600 rounded-full flex items-center justify-center">
-                                                                    <Truck size={20} />
-                                                                </div>
-                                                                <div>
-                                                                    <h4 className="font-bold text-gray-900 leading-none">Punto di Consegna Geocalizzato</h4>
-                                                                    <p className="text-[11px] text-gray-400 mt-1">Trascina il segnaposto sulla mappa per la massima precisione.</p>
-                                                                </div>
-                                                            </div>
-
-                                                            <LocationPicker
-                                                                initialLat={formData.latitude}
-                                                                initialLng={formData.longitude}
-                                                                onLocationSelect={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
-                                                            />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -728,31 +709,31 @@ export const Checkout = () => {
 
                                             {/* STEP 4 (Step 3 if PICKUP): NOTE & CONFERMA */}
                                             {((step === 4 && deliveryMethod === 'DELIVERY') || (step === 3 && deliveryMethod === 'PICKUP')) && (
-                                                <div className="space-y-6">
-                                                    <h3 className="font-bold text-lg text-nature-900 flex items-center gap-2">
-                                                        <ShoppingBag size={20} className="text-nature-500" /> Riepilogo & Conferma Finale
+                                                <div className="space-y-4 md:space-y-6">
+                                                    <h3 className="font-bold text-base md:text-lg text-nature-900 flex items-center gap-2">
+                                                        <ShoppingBag size={18} className="text-nature-500" /> Riepilogo & Conferma Finale
                                                     </h3>
 
-                                                    <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-3.5">
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-gray-500">Metodo di Consegna:</span>
-                                                            <span className="font-bold text-nature-900">{deliveryMethod === 'DELIVERY' ? 'Consegna a domicilio' : 'Ritiro in negozio'}</span>
+                                                    <div className="bg-gray-50 p-3.5 md:p-5 rounded-2xl border border-gray-100 space-y-2 md:space-y-3.5">
+                                                        <div className="flex justify-between text-xs md:text-sm">
+                                                            <span className="text-gray-500">Metodo:</span>
+                                                            <span className="font-bold text-nature-900">{deliveryMethod === 'DELIVERY' ? 'Spedizione' : 'Ritiro'}</span>
                                                         </div>
-                                                        <div className="flex justify-between text-sm">
+                                                        <div className="flex justify-between text-xs md:text-sm">
                                                             <span className="text-gray-500">Cliente:</span>
-                                                            <span className="font-bold text-nature-900">{formData.name}</span>
+                                                            <span className="font-bold text-nature-900 truncate max-w-[180px]">{formData.name}</span>
                                                         </div>
-                                                        <div className="flex justify-between text-sm">
+                                                        <div className="flex justify-between text-xs md:text-sm">
                                                             <span className="text-gray-500">Telefono:</span>
                                                             <span className="font-bold text-nature-900">{formData.phone}</span>
                                                         </div>
                                                         {deliveryMethod === 'DELIVERY' && (
-                                                            <div className="flex justify-between text-sm">
+                                                            <div className="flex justify-between text-xs md:text-sm">
                                                                 <span className="text-gray-500 shrink-0">Indirizzo:</span>
-                                                                <span className="font-bold text-nature-900 text-right">{formData.street}, {formData.civic} - {formData.zip} {formData.city}</span>
+                                                                <span className="font-bold text-nature-900 text-right truncate max-w-[180px]" title={`${formData.street}, ${formData.civic} - ${formData.zip} ${formData.city}`}>{formData.street}, {formData.civic}</span>
                                                             </div>
                                                         )}
-                                                        <div className="flex justify-between text-sm">
+                                                        <div className="flex justify-between text-xs md:text-sm">
                                                             <span className="text-gray-500">Data Richiesta:</span>
                                                             <span className="font-bold text-nature-600">
                                                                 {availableDates.find(d => d.date === selectedDate)?.label || selectedDate}
@@ -761,11 +742,11 @@ export const Checkout = () => {
                                                     </div>
 
                                                     <div className="space-y-2">
-                                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Note aggiuntive per l'ordine (opzionale)</label>
+                                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Note aggiuntive (opzionale)</label>
                                                         <textarea
-                                                            placeholder="Note di orario, istruzioni specifiche di consegna, citofono o altro..."
-                                                            rows={4}
-                                                            className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow resize-y text-sm"
+                                                            placeholder="Note di orario, citofono o istruzioni speciali..."
+                                                            rows={3}
+                                                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow resize-y text-xs md:text-sm"
                                                             value={formData.notes}
                                                             onChange={e => setFormData({ ...formData, notes: e.target.value })}
                                                         />
@@ -785,12 +766,12 @@ export const Checkout = () => {
                                 )}
 
                                 {/* Navigation Action Bar */}
-                                <div className="flex justify-between items-center gap-4 mt-8 pt-6 border-t border-gray-100">
+                                <div className="flex justify-between items-center gap-3 mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-100">
                                     {step > 1 && (
                                         <button
                                             type="button"
                                             onClick={() => { setValidationError(''); setStep(step - 1); }}
-                                            className="px-6 py-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 rounded-xl font-bold transition-colors select-none"
+                                            className="px-4 py-2.5 md:px-6 md:py-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 rounded-xl font-bold text-xs md:text-sm transition-colors select-none"
                                         >
                                             ← Indietro
                                         </button>
@@ -801,7 +782,7 @@ export const Checkout = () => {
                                             key="btn-next"
                                             type="button"
                                             onClick={handleNextStep}
-                                            className="px-8 py-3 bg-nature-600 hover:bg-nature-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-colors ml-auto select-none"
+                                            className="px-6 py-2.5 md:px-8 md:py-3 bg-nature-600 hover:bg-nature-700 text-white rounded-xl font-bold text-xs md:text-sm shadow-md hover:shadow-lg transition-colors ml-auto select-none"
                                         >
                                             Avanti →
                                         </button>
@@ -810,7 +791,7 @@ export const Checkout = () => {
                                             key="btn-submit"
                                             type="submit"
                                             disabled={validating}
-                                            className="px-10 py-3.5 bg-nature-600 hover:bg-nature-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-black rounded-xl shadow-lg hover:shadow-xl transition-all ml-auto text-base tracking-wide select-none active:scale-[0.98]"
+                                            className="px-6 py-2.5 md:px-10 md:py-3.5 bg-nature-600 hover:bg-nature-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-black rounded-xl shadow-lg hover:shadow-xl text-xs md:text-base tracking-wide transition-all ml-auto select-none active:scale-[0.98]"
                                         >
                                             {validating ? 'Verifica scorte...' : 'Conferma Ordine ✓'}
                                         </button>

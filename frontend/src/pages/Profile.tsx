@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { User, MapPin, Phone, Save, Bell } from 'lucide-react';
 
-import { LocationPicker } from '../components/LocationPicker';
+
 import { sanitizeImageUrl } from '../utils/imageUrl';
 import { SearchableSelect } from '../components/admin/SearchableSelect';
 
@@ -263,16 +263,7 @@ export const Profile = () => {
                             </div>
                         </div>
 
-                        {/* Location Picker */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Posizione Esatta (Opzionale)</label>
-                            <p className="text-xs text-gray-500 mb-2">Seleziona la tua posizione sulla mappa per aiutare il corriere.</p>
-                            <LocationPicker
-                                initialLat={formData.latitude || undefined}
-                                initialLng={formData.longitude || undefined}
-                                onLocationSelect={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
-                            />
-                        </div>
+
 
                         <div className="pt-4">
                             <button
