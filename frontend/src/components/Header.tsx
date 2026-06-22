@@ -155,7 +155,7 @@ export const Header = () => {
 
     const { settings } = useAppState();
 
-    const itemCount = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
+    const itemCount = items.length;
     const { user, logout, token } = useAuthStore();
 
     const [pushEnabled, setPushEnabled] = React.useState(false);
@@ -273,7 +273,7 @@ export const Header = () => {
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
                                             exit={{ scale: 0 }}
-                                            className="absolute -top-1 -right-1 bg-fruit-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm border-2 border-white"
+                                            className="absolute -top-1.5 -right-1.5 bg-fruit-500 text-white text-[10px] font-extrabold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md border-2 border-white select-none pointer-events-none"
                                         >
                                             {itemCount}
                                         </motion.span>
@@ -292,7 +292,7 @@ export const Header = () => {
                                 <motion.span
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute top-0 right-0 bg-fruit-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm"
+                                    className="absolute -top-1 -right-1 bg-fruit-500 text-white text-[10px] font-extrabold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md border-2 border-white select-none pointer-events-none"
                                 >
                                     {itemCount}
                                 </motion.span>

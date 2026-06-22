@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Product {
     id: number;
@@ -27,62 +28,70 @@ interface CartState {
     hasVariableWeightItems: () => boolean;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
-    items: [],
+export const useCartStore = create<CartState>()(
+    persist(
+        (set, get) => ({
+            items: [],
 
-    addItem: (product, quantity) => {
-        set((state) => {
-            const existing = state.items.find((i) => i.id === product.id);
-            if (existing) {
-                return {
+            addItem: (product, quantity) => {
+                set((state) => {
+                    const existing = state.items.find((i) => i.id === product.id);
+                    if (existing) {
+                        return {
+                            items: state.items.map((i) =>
+                                i.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+                            ),
+                        };
+                    }
+                    return { items: [...state.items, { ...product, quantity }] };
+                });
+            },
+
+            removeItem: (productId) => {
+                set((state) => ({
+                    items: state.items.filter((i) => i.id !== productId),
+                }));
+            },
+
+            clearCart: () => set({ items: [] }),
+
+            updateItemUnit: (productId, unitType, quantity) => {
+                set((state) => ({
                     items: state.items.map((i) =>
-                        i.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
+                        i.id === productId ? { ...i, unitType, quantity } : i
                     ),
-                };
+                }));
+            },
+
+            updateQuantity: (productId: number, quantity: number) => {
+                set((state) => {
+                    if (quantity <= 0) {
+                        return { items: state.items.filter((i) => i.id !== productId) };
+                    }
+                    return {
+                        items: state.items.map((i) =>
+                            i.id === productId ? { ...i, quantity } : i
+                        ),
+                    };
+                });
+            },
+
+            getEstimatedTotal: () => {
+                const { items } = get();
+                return items.reduce((total, item) => {
+                    const multiplier = (item.isVariableWeight && item.unitType === 'PZ') ? (item.stepAmount || 1) : 1;
+                    return total + (item.priceCents * item.quantity * multiplier);
+                }, 0);
+            },
+
+            hasVariableWeightItems: () => {
+                const { items } = get();
+                return items.some((item) => item.isVariableWeight);
             }
-            return { items: [...state.items, { ...product, quantity }] };
-        });
-    },
-
-    removeItem: (productId) => {
-        set((state) => ({
-            items: state.items.filter((i) => i.id !== productId),
-        }));
-    },
-
-    clearCart: () => set({ items: [] }),
-
-    updateItemUnit: (productId, unitType, quantity) => {
-        set((state) => ({
-            items: state.items.map((i) =>
-                i.id === productId ? { ...i, unitType, quantity } : i
-            ),
-        }));
-    },
-
-    updateQuantity: (productId: number, quantity: number) => {
-        set((state) => {
-            if (quantity <= 0) {
-                return { items: state.items.filter((i) => i.id !== productId) };
-            }
-            return {
-                items: state.items.map((i) =>
-                    i.id === productId ? { ...i, quantity } : i
-                ),
-            };
-        });
-    },
-
-    getEstimatedTotal: () => {
-        const { items } = get();
-        return items.reduce((total, item) => {
-            const multiplier = (item.isVariableWeight && item.unitType === 'PZ') ? (item.stepAmount || 1) : 1;
-            return total + (item.priceCents * item.quantity * multiplier);
-        }, 0);
-    },
-
-    hasVariableWeightItems: () => {
-        const { items } = get();
-        return items.some((item) => item.isVariableWeight);
-    }
-}));
+        }),
+        {
+            name: 'chrono-stellar-cart',
+            partialize: (state) => ({ items: state.items })
+        }
+    )
+);
