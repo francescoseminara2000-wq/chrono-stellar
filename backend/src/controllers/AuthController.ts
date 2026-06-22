@@ -237,6 +237,7 @@ export class AuthController {
                 where: { id: user.id },
                 data: {
                     password: hashedPassword,
+                    isEmailVerified: true,
                     resetPasswordToken: null,
                     resetPasswordExpires: null
                 }

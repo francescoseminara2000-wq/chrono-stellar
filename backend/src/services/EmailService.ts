@@ -218,6 +218,30 @@ export class EmailService {
         return this.sendMail(to, subject, this.getEmailTemplate('Recupero della Password', content, settings), settings);
     }
 
+    async sendCheckoutRegistrationEmail(to: string, token: string) {
+        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        const siteName = settings?.siteName || 'Chrono Stellar';
+        const url = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+        const subject = `Imposta la tua Password - ${siteName}`;
+
+        const content = `
+            <p>Ciao,</p>
+            <p>Grazie per aver effettuato un ordine su <strong>${siteName}</strong> e per aver scelto di registrarti!</p>
+            <p>Per completare la registrazione del tuo account e poter tracciare i tuoi ordini, clicca sul pulsante sottostante per impostare la tua password di accesso. Questo link scadrà tra <strong>72 ore</strong>.</p>
+            <div style="text-align: center;">
+                <a href="${url}" class="btn">Imposta la tua Password</a>
+            </div>
+            <p style="font-size: 14px; color: #666; margin-top: 30px;">
+                Se il pulsante non funziona, puoi copiare e incollare il seguente link nel tuo browser:<br>
+                <a href="${url}" style="word-break: break-all; color: ${settings?.primaryColor || '#1e3f20'};">${url}</a>
+            </p>
+            <p>Una volta impostata la password, potrai accedere alla tua area personale con il tuo indirizzo email.</p>
+            <p>A presto,<br>Il Team di ${siteName}</p>
+        `;
+
+        return this.sendMail(to, subject, this.getEmailTemplate('Imposta la tua Password', content, settings), settings);
+    }
+
     async sendOrderConfirmationEmail(to: string, order: any) {
         const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
         const siteName = settings?.siteName || 'Chrono Stellar';

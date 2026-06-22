@@ -18,7 +18,7 @@ export class OrderService {
         items: { id: number; quantity: number; orderedUnit?: UnitType }[],
         paymentMethod: string,
         deliveryDetails: { method: string; address?: string; notes?: string; shippingCost?: number; latitude?: number; longitude?: number; scheduledDate?: string },
-        customerDetails: { userId?: number; name?: string; email?: string; phone?: string }
+        customerDetails: { userId?: number; name?: string; email?: string; phone?: string; registerUser?: boolean; street?: string; civic?: string; city?: string; zipCode?: string }
     ) {
         const strategy = this.paymentStrategies.get(paymentMethod);
         if (!strategy) {
@@ -94,12 +94,45 @@ export class OrderService {
             }
         }
 
+        let registrationToken: string | null = null;
+        let finalUserId = customerDetails.userId || null;
+
         // 2. Create Order and Update Stock
         const order = await prisma.$transaction(async (tx) => {
+            if (!finalUserId && customerDetails.registerUser && customerDetails.email) {
+                const existingUser = await tx.user.findUnique({
+                    where: { email: customerDetails.email }
+                });
+                if (existingUser) {
+                    throw new Error("L'indirizzo email inserito è già registrato. Accedi al tuo account per effettuare l'ordine o deseleziona la registrazione.");
+                }
+
+                const crypto = require('crypto');
+                registrationToken = crypto.randomBytes(32).toString('hex');
+                const resetPasswordExpires = new Date(Date.now() + 259200000); // 72 hours
+
+                const newUser = await tx.user.create({
+                    data: {
+                        email: customerDetails.email,
+                        name: customerDetails.name,
+                        phone: customerDetails.phone,
+                        street: customerDetails.street || null,
+                        civic: customerDetails.civic || null,
+                        city: customerDetails.city || null,
+                        zipCode: customerDetails.zipCode || null,
+                        role: 'CUSTOMER',
+                        isEmailVerified: false,
+                        resetPasswordToken: registrationToken,
+                        resetPasswordExpires
+                    }
+                });
+                finalUserId = newUser.id;
+            }
+
             // Create the order
             const newOrder = await tx.order.create({
                 data: {
-                    userId: customerDetails.userId || null,
+                    userId: finalUserId,
                     customerName: customerDetails.name,
                     customerEmail: customerDetails.email,
                     customerPhone: customerDetails.phone,
@@ -167,6 +200,17 @@ export class OrderService {
                 await emailService.sendOrderConfirmationEmail(order.customerEmail, order);
             } catch (error) {
                 console.error('Failed to send order confirmation email:', error);
+            }
+        }
+
+        // If registration was requested, send the password-setup link
+        if (registrationToken && customerDetails.email) {
+            try {
+                const EmailService = require('./EmailService').EmailService;
+                const emailService = new EmailService();
+                await emailService.sendCheckoutRegistrationEmail(customerDetails.email, registrationToken);
+            } catch (error) {
+                console.error('Failed to send checkout registration email:', error);
             }
         }
 

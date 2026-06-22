@@ -59,6 +59,16 @@ export const Checkout = () => {
         return localStorage.getItem('checkout_selectedDate') || '';
     });
 
+    const [registerUser, setRegisterUser] = useState<boolean>(() => {
+        const saved = localStorage.getItem('checkout_registerUser');
+        return saved === 'true';
+    });
+
+    const [changeAddress, setChangeAddress] = useState<boolean>(() => {
+        const saved = localStorage.getItem('checkout_changeAddress');
+        return saved === 'true';
+    });
+
     const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
     const [shippingCost, setShippingCost] = useState(0);
     const [submitted, setSubmitted] = useState(false);
@@ -80,6 +90,14 @@ export const Checkout = () => {
     useEffect(() => {
         localStorage.setItem('checkout_selectedDate', selectedDate);
     }, [selectedDate]);
+
+    useEffect(() => {
+        localStorage.setItem('checkout_registerUser', registerUser.toString());
+    }, [registerUser]);
+
+    useEffect(() => {
+        localStorage.setItem('checkout_changeAddress', changeAddress.toString());
+    }, [changeAddress]);
 
     // Fetch available dates based on delivery method and selected city
     useEffect(() => {
@@ -154,6 +172,28 @@ export const Checkout = () => {
             }
         }
     }, [user, deliveryZones]);
+
+    // Sync address fields with user profile if not overriding
+    useEffect(() => {
+        if (user && !changeAddress) {
+            setFormData(prev => ({
+                ...prev,
+                street: user.street || '',
+                civic: user.civic || '',
+                city: user.city || '',
+                zip: user.zipCode || '',
+                latitude: user.latitude || undefined,
+                longitude: user.longitude || undefined
+            }));
+        }
+    }, [user, changeAddress]);
+
+    // Automatically enable override if profile address is missing
+    useEffect(() => {
+        if (user && (!user.street || !user.city)) {
+            setChangeAddress(true);
+        }
+    }, [user]);
 
     // Handle City Selection
     const handleCityChange = (selectedCity: string) => {
@@ -308,7 +348,12 @@ export const Checkout = () => {
             customerPhone: user?.phone || formData.phone,
             latitude: formData.latitude,
             longitude: formData.longitude,
-            scheduledDate: selectedDate || null
+            scheduledDate: selectedDate || null,
+            registerUser: !user && registerUser,
+            street: formData.street,
+            civic: formData.civic,
+            city: formData.city,
+            zipCode: formData.zip
         };
 
         try {
@@ -329,6 +374,10 @@ export const Checkout = () => {
                 localStorage.removeItem('checkout_deliveryMethod');
                 localStorage.removeItem('checkout_formData');
                 localStorage.removeItem('checkout_selectedDate');
+                localStorage.removeItem('checkout_registerUser');
+                localStorage.removeItem('checkout_changeAddress');
+                setRegisterUser(false);
+                setChangeAddress(false);
             } else {
                 setIsSubmitting(false);
                 const errData = await res.json().catch(() => ({}));
@@ -527,21 +576,55 @@ export const Checkout = () => {
                                                         {/* Delivery City selector */}
                                                         {deliveryMethod === 'DELIVERY' && (
                                                             <div className="mt-6 space-y-2">
+                                                                {user && (
+                                                                    <div className="mb-4 flex items-center gap-2 p-3 bg-nature-50/50 rounded-xl border border-nature-100">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            id="changeAddress"
+                                                                            checked={changeAddress}
+                                                                            onChange={(e) => {
+                                                                                const checked = e.target.checked;
+                                                                                setChangeAddress(checked);
+                                                                                if (!checked) {
+                                                                                    // Reset to profile address
+                                                                                    setFormData(prev => ({
+                                                                                        ...prev,
+                                                                                        street: user.street || '',
+                                                                                        civic: user.civic || '',
+                                                                                        city: user.city || '',
+                                                                                        zip: user.zipCode || ''
+                                                                                    }));
+                                                                                }
+                                                                            }}
+                                                                            className="w-4 h-4 text-nature-600 border-gray-300 rounded focus:ring-nature-500"
+                                                                        />
+                                                                        <label htmlFor="changeAddress" className="text-xs font-semibold text-nature-955 cursor-pointer">
+                                                                            Usa un indirizzo di consegna diverso da quello registrato
+                                                                        </label>
+                                                                    </div>
+                                                                )}
+
                                                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
                                                                     Comune di Consegna
                                                                 </label>
-                                                                <SearchableSelect
-                                                                     options={[
-                                                                         { value: '', label: 'Seleziona Comune' },
-                                                                         ...deliveryZones.map(zone => ({
-                                                                             value: zone.city,
-                                                                             label: `${zone.city} (+€${(zone.shippingCost / 100).toFixed(2)})`
-                                                                         }))
-                                                                     ]}
-                                                                     value={formData.city}
-                                                                     onChange={handleCityChange}
-                                                                     placeholder="Seleziona Comune"
-                                                                 />
+                                                                {user && !changeAddress ? (
+                                                                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-750 font-bold">
+                                                                        {formData.city || 'Nessun comune registrato nel profilo'}
+                                                                    </div>
+                                                                ) : (
+                                                                    <SearchableSelect
+                                                                         options={[
+                                                                             { value: '', label: 'Seleziona Comune' },
+                                                                             ...deliveryZones.map(zone => ({
+                                                                                 value: zone.city,
+                                                                                 label: `${zone.city} (+€${(zone.shippingCost / 100).toFixed(2)})`
+                                                                             }))
+                                                                         ]}
+                                                                         value={formData.city}
+                                                                         onChange={handleCityChange}
+                                                                         placeholder="Seleziona Comune"
+                                                                     />
+                                                                )}
                                                             </div>
                                                         )}
 
@@ -644,6 +727,26 @@ export const Checkout = () => {
                                                                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                                             />
                                                         </div>
+
+                                                        {!user && (
+                                                            <div className="flex items-start gap-2.5 p-3.5 bg-nature-50/50 rounded-2xl border border-nature-100 mt-4 text-left">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    id="registerUser"
+                                                                    checked={registerUser}
+                                                                    onChange={e => setRegisterUser(e.target.checked)}
+                                                                    className="mt-1 w-4 h-4 text-nature-600 border-gray-300 rounded focus:ring-nature-500"
+                                                                />
+                                                                <div>
+                                                                    <label htmlFor="registerUser" className="text-sm font-bold text-nature-955 cursor-pointer block">
+                                                                        Voglio registrarmi
+                                                                    </label>
+                                                                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                                                                        Riceverai un'email per impostare la password dopo aver completato l'ordine. Potrai seguire lo stato dei tuoi ordini.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -655,6 +758,34 @@ export const Checkout = () => {
                                                         <Truck size={18} className="text-nature-500" /> Indirizzo di Spedizione
                                                     </h3>
 
+                                                    {user && (
+                                                        <div className="flex items-center gap-2 p-3 bg-nature-50/50 rounded-xl border border-nature-100">
+                                                            <input
+                                                                type="checkbox"
+                                                                id="changeAddressStep3"
+                                                                checked={changeAddress}
+                                                                onChange={(e) => {
+                                                                    const checked = e.target.checked;
+                                                                    setChangeAddress(checked);
+                                                                    if (!checked) {
+                                                                        // Reset to profile address
+                                                                        setFormData(prev => ({
+                                                                            ...prev,
+                                                                            street: user.street || '',
+                                                                            civic: user.civic || '',
+                                                                            city: user.city || '',
+                                                                            zip: user.zipCode || ''
+                                                                        }));
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 text-nature-600 border-gray-300 rounded focus:ring-nature-500"
+                                                            />
+                                                            <label htmlFor="changeAddressStep3" className="text-xs font-semibold text-nature-955 cursor-pointer">
+                                                                Modifica l'indirizzo per questo ordine rispetto a quello registrato
+                                                            </label>
+                                                        </div>
+                                                    )}
+
                                                     <div className="space-y-3 md:space-y-4">
                                                         <div className="grid grid-cols-3 gap-3 md:gap-4">
                                                             <div className="col-span-2">
@@ -663,7 +794,8 @@ export const Checkout = () => {
                                                                     required
                                                                     type="text"
                                                                     placeholder="Via Roma"
-                                                                    className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
+                                                                    className={`w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm ${user && !changeAddress ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : ''}`}
+                                                                    readOnly={!!user && !changeAddress}
                                                                     value={formData.street}
                                                                     onChange={e => setFormData({ ...formData, street: e.target.value })}
                                                                 />
@@ -674,7 +806,8 @@ export const Checkout = () => {
                                                                     required
                                                                     type="text"
                                                                     placeholder="12"
-                                                                    className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
+                                                                    className={`w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm ${user && !changeAddress ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : ''}`}
+                                                                    readOnly={!!user && !changeAddress}
                                                                     value={formData.civic}
                                                                     onChange={e => setFormData({ ...formData, civic: e.target.value })}
                                                                 />
