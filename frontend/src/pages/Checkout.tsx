@@ -280,7 +280,6 @@ export const Checkout = () => {
         // Prevent submit on enter key if we are not on the last step
         const totalSteps = deliveryMethod === 'DELIVERY' ? 4 : 3;
         if (step < totalSteps) {
-            handleNextStep();
             return;
         }
 
@@ -735,6 +734,7 @@ export const Checkout = () => {
                                     
                                     {step < finalStepIndex ? (
                                         <button
+                                            key="btn-next"
                                             type="button"
                                             onClick={handleNextStep}
                                             className="px-8 py-3 bg-nature-600 hover:bg-nature-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-colors ml-auto select-none"
@@ -743,6 +743,7 @@ export const Checkout = () => {
                                         </button>
                                     ) : (
                                         <button
+                                            key="btn-submit"
                                             type="submit"
                                             disabled={validating}
                                             className="px-10 py-3.5 bg-nature-600 hover:bg-nature-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-black rounded-xl shadow-lg hover:shadow-xl transition-all ml-auto text-base tracking-wide select-none active:scale-[0.98]"
