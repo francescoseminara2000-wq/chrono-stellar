@@ -126,3 +126,22 @@ body {
     background: #E5E7EB !important;
     color: #111827 !important;
 }
+
+/* Quill text invert for dark sections */
+.quill-content.quill-invert h1,
+.quill-content.quill-invert h2,
+.quill-content.quill-invert h3,
+.quill-content.quill-invert h4,
+.quill-content.quill-invert h5,
+.quill-content.quill-invert h6 {
+    color: #ffffff !important;
+}
+
+.quill-content.quill-invert p,
+.quill-content.quill-invert li,
+.quill-content.quill-invert span,
+.quill-content.quill-invert strong,
+.quill-content.quill-invert em,
+.quill-content.quill-invert a {
+    color: rgba(255, 255, 255, 0.9) !important;
+}

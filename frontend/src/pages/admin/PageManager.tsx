@@ -992,9 +992,62 @@ export const PageManager = () => {
                                                                 </div>
                                                             </div>
                                                         )}
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
+
+                                                            {/* common section style editor */}
+                                                            <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Spaziatura Verticale</label>
+                                                                    <div className="flex gap-2">
+                                                                        {[
+                                                                            { value: 'compact', label: 'Ridotta' },
+                                                                            { value: 'normal', label: 'Normale' },
+                                                                            { value: 'large', label: 'Ampia' }
+                                                                        ].map(opt => (
+                                                                            <button
+                                                                                key={opt.value}
+                                                                                type="button"
+                                                                                onClick={() => updateBlockData(block.id, { paddingY: opt.value })}
+                                                                                className={`flex-1 text-xs py-1.5 px-3 rounded-lg border font-medium transition-colors ${
+                                                                                    (block.data.paddingY || 'normal') === opt.value
+                                                                                        ? 'bg-nature-600 border-nature-600 text-white shadow-sm'
+                                                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                                                }`}
+                                                                            >
+                                                                                {opt.label}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Colore Sfondo</label>
+                                                                    <div className="flex gap-2">
+                                                                        {[
+                                                                            { value: 'default', label: 'Auto' },
+                                                                            { value: 'white', label: 'Bianco' },
+                                                                            { value: 'gray', label: 'Grigio' },
+                                                                            { value: 'theme', label: 'Tema' },
+                                                                            { value: 'dark', label: 'Scuro' }
+                                                                        ].map(opt => (
+                                                                            <button
+                                                                                key={opt.value}
+                                                                                type="button"
+                                                                                onClick={() => updateBlockData(block.id, { bgColor: opt.value })}
+                                                                                className={`flex-1 text-xs py-1.5 px-2 rounded-lg border font-medium transition-colors ${
+                                                                                    (block.data.bgColor || 'default') === opt.value
+                                                                                        ? 'bg-nature-600 border-nature-600 text-white shadow-sm'
+                                                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                                                }`}
+                                                                            >
+                                                                                {opt.label}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
                                                                             )}
                                                                         </Draggable>
                                                                     </div>
