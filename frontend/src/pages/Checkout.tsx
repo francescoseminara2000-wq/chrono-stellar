@@ -191,6 +191,7 @@ export const Checkout = () => {
     }>>([]);
     const [showStockModal, setShowStockModal] = useState(false);
     const [validating, setValidating] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const checkStock = async (): Promise<boolean> => {
         setValidating(true);
@@ -283,8 +284,14 @@ export const Checkout = () => {
             return;
         }
 
+        setIsSubmitting(true);
+
         const isValid = await checkStock();
-        if (!isValid) { setShowStockModal(true); return; }
+        if (!isValid) {
+            setIsSubmitting(false);
+            setShowStockModal(true);
+            return;
+        }
 
         const orderData = {
             userId: user?.id || null,
@@ -312,6 +319,9 @@ export const Checkout = () => {
             });
 
             if (res.ok) {
+                // Keep the loading screen for a minimum of 1.5s for a premium feel
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                setIsSubmitting(false);
                 setSubmitted(true);
                 clearCart();
                 // Clear localStorage drafts
@@ -320,14 +330,68 @@ export const Checkout = () => {
                 localStorage.removeItem('checkout_formData');
                 localStorage.removeItem('checkout_selectedDate');
             } else {
+                setIsSubmitting(false);
                 const errData = await res.json().catch(() => ({}));
                 alert(errData.error || 'Errore durante l\'ordine');
             }
         } catch (err) {
+            setIsSubmitting(false);
             console.error(err);
             alert('Errore di connessione');
         }
     };
+
+    if (isSubmitting) {
+        return (
+            <div className="min-h-screen bg-nature-50 flex items-center justify-center p-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white p-8 rounded-3xl shadow-xl max-w-md text-center flex flex-col items-center gap-6 border border-gray-100 animate-in fade-in duration-300"
+                >
+                    {/* Pulsing Loading Spinner & Icon */}
+                    <div className="relative flex items-center justify-center w-24 h-24">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-0 border-4 border-nature-200 border-t-nature-600 rounded-full"
+                        />
+                        <motion.div
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            className="w-16 h-16 bg-nature-50 rounded-2xl flex items-center justify-center text-nature-600 shadow-inner"
+                        >
+                            <ShoppingBag size={32} />
+                        </motion.div>
+                    </div>
+
+                    <div>
+                        <h2 className="font-bold text-xl text-nature-900">Invio dell'ordine...</h2>
+                        <p className="text-sm text-gray-500 mt-2">
+                            Stiamo verificando la disponibilità dei prodotti e registrando il tuo ordine. Attendi qualche istante.
+                        </p>
+                    </div>
+
+                    {/* Progress dots */}
+                    <div className="flex gap-1.5 mt-2">
+                        {[0, 1, 2].map((i) => (
+                            <motion.div
+                                key={i}
+                                animate={{ y: [0, -5, 0] }}
+                                transition={{
+                                    duration: 0.6,
+                                    repeat: Infinity,
+                                    delay: i * 0.15,
+                                    ease: "easeInOut"
+                                }}
+                                className="w-2.5 h-2.5 bg-nature-600 rounded-full"
+                            />
+                        ))}
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
 
     if (submitted) {
         return (
