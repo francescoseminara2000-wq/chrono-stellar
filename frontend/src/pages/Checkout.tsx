@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { useAppState } from '../store/useAppState';
 import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -24,6 +25,7 @@ interface CheckoutFormData {
 export const Checkout = () => {
     const { items, getEstimatedTotal, clearCart, updateQuantity, removeItem } = useCartStore();
     const { user } = useAuthStore();
+    const { settings } = useAppState();
 
     // Persisted states from localStorage
     const [step, setStep] = useState<number>(() => {
@@ -59,6 +61,10 @@ export const Checkout = () => {
         return localStorage.getItem('checkout_selectedDate') || '';
     });
 
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>(() => {
+        return localStorage.getItem('checkout_selectedTimeSlot') || '09:00 - 11:00';
+    });
+
     const [registerUser, setRegisterUser] = useState<boolean>(() => {
         const saved = localStorage.getItem('checkout_registerUser');
         return saved === 'true';
@@ -90,6 +96,10 @@ export const Checkout = () => {
     useEffect(() => {
         localStorage.setItem('checkout_selectedDate', selectedDate);
     }, [selectedDate]);
+
+    useEffect(() => {
+        localStorage.setItem('checkout_selectedTimeSlot', selectedTimeSlot);
+    }, [selectedTimeSlot]);
 
     useEffect(() => {
         localStorage.setItem('checkout_registerUser', registerUser.toString());
@@ -349,6 +359,7 @@ export const Checkout = () => {
             latitude: formData.latitude,
             longitude: formData.longitude,
             scheduledDate: selectedDate || null,
+            scheduledTime: selectedTimeSlot || null,
             registerUser: !user && registerUser,
             street: formData.street,
             civic: formData.civic,
@@ -374,6 +385,7 @@ export const Checkout = () => {
                 localStorage.removeItem('checkout_deliveryMethod');
                 localStorage.removeItem('checkout_formData');
                 localStorage.removeItem('checkout_selectedDate');
+                localStorage.removeItem('checkout_selectedTimeSlot');
                 localStorage.removeItem('checkout_registerUser');
                 localStorage.removeItem('checkout_changeAddress');
                 setRegisterUser(false);
@@ -628,8 +640,8 @@ export const Checkout = () => {
                                                             </div>
                                                         )}
 
-                                                        {/* Available Dates UI */}
-                                                        <div className="mt-4 md:mt-6 p-3 md:p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-3">
+                                                        {/* Available Dates & Time Slots UI */}
+                                                        <div className="mt-4 md:mt-6 p-3 md:p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-4">
                                                             {deliveryMethod === 'PICKUP' ? (
                                                                 <div className="space-y-2">
                                                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
@@ -669,6 +681,36 @@ export const Checkout = () => {
                                                                             )}
                                                                         </div>
                                                                     )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Time Slots Grid */}
+                                                            {selectedDate && availableDates.length > 0 && (
+                                                                <div className="pt-3 border-t border-gray-200/70 space-y-2.5">
+                                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
+                                                                        <Clock size={12} className="text-nature-600" /> Fascia Oraria di {deliveryMethod === 'DELIVERY' ? 'Consegna' : 'Ritiro'}
+                                                                    </label>
+                                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                                        {(settings?.deliveryTimeSlots || '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00')
+                                                                            .split(',')
+                                                                            .map(s => s.trim())
+                                                                            .filter(Boolean)
+                                                                            .map(slot => (
+                                                                                <button
+                                                                                    key={slot}
+                                                                                    type="button"
+                                                                                    onClick={() => setSelectedTimeSlot(slot)}
+                                                                                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                                                                                        selectedTimeSlot === slot
+                                                                                            ? 'bg-nature-900 text-white border-nature-900 shadow-md ring-2 ring-nature-600/30 font-black'
+                                                                                            : 'bg-white text-gray-800 border-gray-200 hover:border-nature-300 hover:bg-nature-50/50 font-bold'
+                                                                                    }`}
+                                                                                >
+                                                                                    <span className="text-xs">{slot}</span>
+                                                                                    <Clock size={12} className={selectedTimeSlot === slot ? 'text-amber-400' : 'text-gray-400'} />
+                                                                                </button>
+                                                                            ))}
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -870,6 +912,12 @@ export const Checkout = () => {
                                                             <span className="text-gray-500">Data Richiesta:</span>
                                                             <span className="font-bold text-nature-600">
                                                                 {availableDates.find(d => d.date === selectedDate)?.label || selectedDate}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between text-xs md:text-sm">
+                                                            <span className="text-gray-500">Fascia Oraria:</span>
+                                                            <span className="font-bold text-nature-700 bg-nature-100/70 px-2 py-0.5 rounded text-xs">
+                                                                {selectedTimeSlot}
                                                             </span>
                                                         </div>
                                                     </div>

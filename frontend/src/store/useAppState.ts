@@ -17,6 +17,7 @@ interface StoreSettings {
     accentColor: string;
     pickupCutoffHour: number;
     deliveryCutoffHour: number;
+    deliveryTimeSlots?: string;
 }
 
 interface AppState {

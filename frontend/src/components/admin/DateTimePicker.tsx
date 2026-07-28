@@ -250,12 +250,39 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                 {/* Time Slots Column */}
                 <div className="w-full sm:w-[220px] flex flex-col justify-between max-w-md mx-auto sm:max-w-none">
                     <div>
-                        <span className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                            <Clock size={14} className="text-blue-500" /> Seleziona Orario
+                        <span className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <Clock size={14} className="text-blue-500" /> Fasce Orarie
+                        </span>
+
+                        {/* Quick Time Slots */}
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
+                            {['09:00 - 11:00', '11:00 - 13:00', '15:00 - 17:00', '17:00 - 19:00'].map(slot => {
+                                const isSelected = tempTime === slot;
+                                return (
+                                    <button
+                                        key={slot}
+                                        type="button"
+                                        onClick={() => handleSelectPopularTime(slot)}
+                                        className={`
+                                            py-1.5 px-1 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer truncate
+                                            ${isSelected
+                                                ? 'bg-blue-600 text-white border-transparent font-black shadow-sm'
+                                                : 'border-gray-200 hover:border-blue-400 text-gray-700 hover:bg-blue-50/50'
+                                            }
+                                        `}
+                                    >
+                                        {slot}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 block">
+                            Orario Singolo
                         </span>
 
                         {/* Popular slots grid */}
-                        <div className="grid grid-cols-4 sm:grid-cols-3 gap-1.5 max-h-[180px] sm:max-h-[220px] overflow-y-auto pr-1 custom-scrollbar mb-4">
+                        <div className="grid grid-cols-4 sm:grid-cols-3 gap-1.5 max-h-[120px] sm:max-h-[140px] overflow-y-auto pr-1 custom-scrollbar mb-3">
                             {POPULAR_TIMES.map(t => {
                                 const isSelected = tempTime === t;
                                 return (
@@ -264,7 +291,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                         type="button"
                                         onClick={() => handleSelectPopularTime(t)}
                                         className={`
-                                            py-2 px-1 rounded-xl text-xs font-bold text-center border transition-all cursor-pointer
+                                            py-1.5 px-1 rounded-xl text-xs font-bold text-center border transition-all cursor-pointer
                                             ${isSelected
                                                 ? 'bg-blue-600 text-white border-transparent font-black shadow-sm'
                                                 : 'border-gray-200 hover:border-blue-400 text-gray-600 hover:bg-blue-50/50'
@@ -389,11 +416,38 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                         {/* Time Slots Column */}
                         <div className="w-full sm:w-[200px] flex flex-col">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <Clock size={12} className="text-blue-500" /> Seleziona Orario
+                                <Clock size={12} className="text-blue-500" /> Fasce Orarie
+                            </span>
+
+                            {/* Quick Time Slots */}
+                            <div className="grid grid-cols-2 gap-1 mb-2">
+                                {['09:00 - 11:00', '11:00 - 13:00', '15:00 - 17:00', '17:00 - 19:00'].map(slot => {
+                                    const isSelected = tempTime === slot;
+                                    return (
+                                        <button
+                                            key={slot}
+                                            type="button"
+                                            onClick={() => handleSelectPopularTime(slot)}
+                                            className={`
+                                                py-1 px-1 rounded text-[10px] font-bold text-center border transition-all truncate
+                                                ${isSelected
+                                                    ? 'bg-blue-600 text-white border-transparent font-black shadow-sm'
+                                                    : 'border-gray-200 hover:border-blue-400 text-gray-700 hover:bg-blue-50/50'
+                                                }
+                                            `}
+                                        >
+                                            {slot}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 block">
+                                Orario Singolo
                             </span>
 
                             {/* Popular slots grid */}
-                            <div className="grid grid-cols-4 sm:grid-cols-3 gap-1 max-h-[140px] overflow-y-auto pr-1 custom-scrollbar mb-3">
+                            <div className="grid grid-cols-4 sm:grid-cols-3 gap-1 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar mb-2">
                                 {POPULAR_TIMES.map(t => {
                                     const isSelected = tempTime === t;
                                     return (
@@ -402,7 +456,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ date, time, onCh
                                             type="button"
                                             onClick={() => handleSelectPopularTime(t)}
                                             className={`
-                                                py-1 px-1.5 rounded-md text-[10px] font-bold text-center border transition-all
+                                                py-1 px-1 rounded-md text-[10px] font-bold text-center border transition-all
                                                 ${isSelected
                                                     ? 'bg-blue-600 text-white border-transparent font-black'
                                                     : 'border-gray-200 hover:border-blue-400 text-gray-600 hover:bg-blue-50/20'

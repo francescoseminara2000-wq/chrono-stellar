@@ -151,6 +151,7 @@ model StoreSettings {
   accentColor              String?  @default("#ef4444")
   pickupCutoffHour         Int      @default(12)
   deliveryCutoffHour       Int      @default(12)
+  deliveryTimeSlots        String?  @db.Text
 }
 
 model Transaction {

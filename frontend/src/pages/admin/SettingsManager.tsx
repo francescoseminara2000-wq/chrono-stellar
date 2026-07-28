@@ -63,7 +63,8 @@ export const SettingsManager = () => {
         primaryColor: '#16a34a',
         accentColor: '#ef4444',
         pickupCutoffHour: 12,
-        deliveryCutoffHour: 12
+        deliveryCutoffHour: 12,
+        deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00'
     });
 
     const refs = {
@@ -142,7 +143,8 @@ export const SettingsManager = () => {
                 primaryColor: data.primaryColor || '#16a34a',
                 accentColor: data.accentColor || '#ef4444',
                 pickupCutoffHour: data.pickupCutoffHour !== undefined ? data.pickupCutoffHour : 12,
-                deliveryCutoffHour: data.deliveryCutoffHour !== undefined ? data.deliveryCutoffHour : 12
+                deliveryCutoffHour: data.deliveryCutoffHour !== undefined ? data.deliveryCutoffHour : 12,
+                deliveryTimeSlots: data.deliveryTimeSlots || '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00'
             });
         }
     };
@@ -549,7 +551,7 @@ export const SettingsManager = () => {
                                 <p className="text-xs text-gray-400 mb-4">
                                     Specifica l'ora massima in cui inserire ordini per lo stesso giorno (fuso orario Europe/Rome). Oltre questo orario, la prima data utile slitterà al giorno successivo.
                                 </p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500">Ora Limite Ritiro in Negozio (0-23)</label>
                                         <input 
@@ -571,6 +573,33 @@ export const SettingsManager = () => {
                                             onChange={e => setFormData({ ...formData, deliveryCutoffHour: parseInt(e.target.value) || 0 })} 
                                             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20" 
                                         />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 pt-4 border-t border-gray-100">
+                                    <label className="text-sm font-bold text-gray-700 block">Fasce Orarie Consegna / Ritiro (Predefinite)</label>
+                                    <p className="text-xs text-gray-400">
+                                        Inserisci le fasce orarie che i clienti potranno selezionare al Checkout, separate da una virgola.
+                                    </p>
+                                    <input
+                                        type="text"
+                                        placeholder="09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00"
+                                        value={formData.deliveryTimeSlots || ''}
+                                        onChange={e => setFormData({ ...formData, deliveryTimeSlots: e.target.value })}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 text-sm font-mono"
+                                    />
+                                    {/* Preview buttons */}
+                                    <div className="pt-2 flex flex-wrap gap-2">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider w-full block">Anteprima per i clienti:</span>
+                                        {(formData.deliveryTimeSlots || '')
+                                            .split(',')
+                                            .map(s => s.trim())
+                                            .filter(Boolean)
+                                            .map((slot, idx) => (
+                                                <span key={idx} className="px-3 py-1.5 bg-nature-50 text-nature-800 border border-nature-200 font-extrabold text-xs rounded-xl shadow-sm">
+                                                    {slot}
+                                                </span>
+                                            ))}
                                     </div>
                                 </div>
                             </div>

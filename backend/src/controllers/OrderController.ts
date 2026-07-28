@@ -14,7 +14,7 @@ export class OrderController {
 
     async create(req: Request, res: Response) {
         try {
-            const { userId, items, paymentMethod, deliveryMethod, shippingAddress, deliveryNotes, customerName, customerEmail, shippingCost, customerPhone, latitude, longitude, scheduledDate, registerUser, street, civic, city, zipCode } = req.body;
+            const { userId, items, paymentMethod, deliveryMethod, shippingAddress, deliveryNotes, customerName, customerEmail, shippingCost, customerPhone, latitude, longitude, scheduledDate, scheduledTime, registerUser, street, civic, city, zipCode } = req.body;
 
             // Validate minimal guest info
             if (!userId && (!customerName || !customerEmail)) {
@@ -24,7 +24,7 @@ export class OrderController {
             const order = await this.orderService.createOrder(
                 items,
                 paymentMethod,
-                { method: deliveryMethod, address: shippingAddress, notes: deliveryNotes, shippingCost, latitude, longitude, scheduledDate },
+                { method: deliveryMethod, address: shippingAddress, notes: deliveryNotes, shippingCost, latitude, longitude, scheduledDate, scheduledTime },
                 { userId, name: customerName, email: customerEmail, phone: customerPhone, registerUser, street, civic, city, zipCode }
             );
 

@@ -728,7 +728,7 @@ export const OrderManager = () => {
                                                 </p>
                                                 {order.scheduledDate && (
                                                     <p className="text-[9px] text-blue-600 font-bold mt-0.5">
-                                                        Pianificato: {order.scheduledDate.split('-').reverse().join('/')} {order.scheduledTime || ''}
+                                                        Pianificato: {order.scheduledDate.split('-').reverse().join('/')}{order.scheduledTime ? (order.scheduledTime.includes('-') ? ` • Fascia: ${order.scheduledTime}` : ` alle ${order.scheduledTime}`) : ''}
                                                     </p>
                                                 )}
                                             </div>
@@ -758,7 +758,7 @@ export const OrderManager = () => {
                                                     <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
                                                     {order.scheduledDate && (
                                                         <p className="text-xs text-blue-600 font-bold mt-1">
-                                                            Pianificato: {order.scheduledDate.split('-').reverse().join('/')} {order.scheduledTime || ''}
+                                                            Pianificato: {order.scheduledDate.split('-').reverse().join('/')}{order.scheduledTime ? (order.scheduledTime.includes('-') ? ` • Fascia: ${order.scheduledTime}` : ` alle ${order.scheduledTime}`) : ''}
                                                         </p>
                                                     )}
                                                 </div>

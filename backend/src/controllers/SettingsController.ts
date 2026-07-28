@@ -35,9 +35,16 @@ export class SettingsController {
                     accentColor: '#ef4444',
                     pickupCutoffHour: 12,
                     deliveryCutoffHour: 12,
+                    deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00',
                     // @ts-ignore
                     waTemplateScheduled: 'Ciao [cliente], la pianificazione del tuo ordine #[id] è stata programmata per il [data] alle [ora]. A presto!'
                 }
+            });
+        }
+        if (!settings.deliveryTimeSlots) {
+            settings = await prisma.storeSettings.update({
+                where: { id: 1 },
+                data: { deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00' }
             });
         }
         return settings;
@@ -89,7 +96,8 @@ export class SettingsController {
                 primaryColor,
                 accentColor,
                 pickupCutoffHour,
-                deliveryCutoffHour
+                deliveryCutoffHour,
+                deliveryTimeSlots
             } = req.body;
 
             const updatedSettings = await prisma.storeSettings.update({
@@ -124,7 +132,8 @@ export class SettingsController {
                     primaryColor,
                     accentColor,
                     pickupCutoffHour: pickupCutoffHour !== undefined ? Number(pickupCutoffHour) : undefined,
-                    deliveryCutoffHour: deliveryCutoffHour !== undefined ? Number(deliveryCutoffHour) : undefined
+                    deliveryCutoffHour: deliveryCutoffHour !== undefined ? Number(deliveryCutoffHour) : undefined,
+                    deliveryTimeSlots: deliveryTimeSlots !== undefined ? String(deliveryTimeSlots) : undefined
                 }
             });
 
