@@ -7,7 +7,7 @@ export class AdminService {
      * Fulfills an order by updating the actual quantities weighed.
      * Recalculates final total.
      */
-    async fulfillOrder(orderId: number, actualQuantities: { orderItemId: number; quantityFulfilled: number }[]) {
+    async fulfillOrder(orderId: number, actualQuantities: { orderItemId: number; quantityFulfilled: number; priceAtPurchase?: number }[]) {
         return await prisma.$transaction(async (tx) => {
             const order = await tx.order.findUnique({
                 where: { id: orderId },
@@ -16,59 +16,50 @@ export class AdminService {
 
             if (!order) throw new Error(`Ordine #${orderId} non trovato nel database.`);
 
-            const allowedStatuses: OrderStatus[] = [OrderStatus.PENDING, OrderStatus.WEIGHING_COMPLETED];
+            const allowedStatuses: OrderStatus[] = [
+                OrderStatus.PENDING, 
+                OrderStatus.WEIGHING_COMPLETED,
+                OrderStatus.OUT_FOR_DELIVERY
+            ];
             if (!allowedStatuses.includes(order.status)) {
-                throw new Error(`L'ordine #${orderId} non può essere pesato perché si trova in stato "${order.status}".`);
+                throw new Error(`L'ordine #${orderId} non può essere modificato perché si trova in stato "${order.status}".`);
             }
 
             let finalTotal = 0;
 
-            // Update each item
-            for (const update of actualQuantities) {
-                const item = order.items.find(i => i.id === update.orderItemId);
-                if (!item) throw new Error(`Item ${update.orderItemId} not found in order ${orderId}`);
-
-                // Update item quantity
-                await tx.orderItem.update({
-                    where: { id: item.id },
-                    data: { quantityFulfilled: update.quantityFulfilled }
-                });
-
-                // Calculate item final price
-                // Logic: priceAtPurchase * fulfilled quantity
-                // Note: quantityFulfilled might be float (e.g. 1.5kg). priceAtPurchase is cents per unit.
-                // We need to handle floating point math carefully.
-                const itemTotal = item.priceAtPurchase * update.quantityFulfilled;
-                finalTotal += itemTotal;
-            }
-
-            // Handle items that were NOT in the update array? 
-            // For MVP, assume admin sends all variable weight items or we fulfill non-variable ones automatically.
-            // Let's assume non-updated items are basically "fulfilled as ordered" IF they are not variable weight?
-            // Or simply: strict requirement to send all.
-            // Let's iterate over ALL items to be safe and use quantityOrdered if fulfilled is missing (for non-variable parts).
-
-            // Re-fetch items or use logic above?
-            // Better approach: Iterate over original items.
-
-            finalTotal = 0; // Reset
             for (const item of order.items) {
                 const update = actualQuantities.find(u => u.orderItemId === item.id);
                 let qty = item.quantityOrdered.toNumber(); // Default to ordered
+                let priceCents = item.priceAtPurchase;
 
                 if (update) {
-                    qty = update.quantityFulfilled;
+                    if (typeof update.quantityFulfilled === 'number' && !isNaN(update.quantityFulfilled)) {
+                        qty = update.quantityFulfilled;
+                    }
+                    if (typeof update.priceAtPurchase === 'number' && !isNaN(update.priceAtPurchase) && update.priceAtPurchase >= 0) {
+                        priceCents = Math.round(update.priceAtPurchase);
+                    }
+
+                    await tx.orderItem.update({
+                        where: { id: item.id },
+                        data: { 
+                            quantityFulfilled: qty,
+                            priceAtPurchase: priceCents
+                        }
+                    });
                 } else {
-                    // If not updated, verify if it needed weighing?
-                    // For MVP, assume if not provided, it matches ordered (or we strictly require it).
-                    // Let's set fulfilled = ordered for those not updated.
                     await tx.orderItem.update({
                         where: { id: item.id },
                         data: { quantityFulfilled: qty }
                     });
                 }
 
-                finalTotal += (item.priceAtPurchase * qty);
+                finalTotal += (priceCents * qty);
+            }
+
+            // Include shipping cost if present
+            if (order.shippingCost) {
+                finalTotal += order.shippingCost;
             }
 
             // Update Order

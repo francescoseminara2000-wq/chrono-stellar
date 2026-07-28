@@ -36,6 +36,7 @@ export const OrderManager = () => {
     const [isMultiSelectActive, setIsMultiSelectActive] = useState(false);
     const [searchParams] = useSearchParams();
     const [fulfillmentData, setFulfillmentData] = useState<Record<number, number>>({});
+    const [fulfillmentPriceData, setFulfillmentPriceData] = useState<Record<number, number>>({});
     const [filterStatus, setFilterStatus] = useState<string>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [isWeighingOpen, setIsWeighingOpen] = useState(false);
@@ -225,23 +226,52 @@ export const OrderManager = () => {
     const handleSelectOrder = (order: Order) => {
         setSelectedOrder(order);
         const initialData: Record<number, number> = {};
+        const initialPriceData: Record<number, number> = {};
         order.items.forEach(item => {
             const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
             const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-            initialData[item.id] = Number(item.quantityFulfilled || defaultQty);
+            initialData[item.id] = Number(item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? item.quantityFulfilled : defaultQty);
+            initialPriceData[item.id] = Number((item.priceAtPurchase || item.product.priceCents) / 100);
         });
         setFulfillmentData(initialData);
+        setFulfillmentPriceData(initialPriceData);
+    };
+
+    const handleOpenWeighingModal = () => {
+        if (!selectedOrder) return;
+        const resetQtyData: Record<number, number> = {};
+        const resetPriceData: Record<number, number> = {};
+        selectedOrder.items.forEach(item => {
+            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+            const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
+            resetQtyData[item.id] = Number(item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? item.quantityFulfilled : defaultQty);
+            resetPriceData[item.id] = Number((item.priceAtPurchase || item.product.priceCents) / 100);
+        });
+        setFulfillmentData(resetQtyData);
+        setFulfillmentPriceData(resetPriceData);
+        setIsWeighingOpen(true);
     };
 
     const handleFulfill = async () => {
         if (!selectedOrder) return;
 
-        const items = Object.entries(fulfillmentData)
-            .filter(([_, quantity]) => quantity !== undefined && !isNaN(Number(quantity)))
-            .map(([id, quantity]) => ({
-                orderItemId: Number(id),
-                quantityFulfilled: Number(quantity)
-            }));
+        const items = selectedOrder.items.map(item => {
+            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+            const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
+            const qty = typeof fulfillmentData[item.id] === 'number'
+                ? fulfillmentData[item.id]
+                : (((fulfillmentData[item.id] as any) === '' ? 0 : (item.quantityFulfilled || defaultQty)) as number);
+
+            const priceEuro = typeof fulfillmentPriceData[item.id] === 'number'
+                ? fulfillmentPriceData[item.id]
+                : (((fulfillmentPriceData[item.id] as any) === '' ? 0 : ((item.priceAtPurchase || item.product.priceCents) / 100)) as number);
+
+            return {
+                orderItemId: item.id,
+                quantityFulfilled: isNaN(Number(qty)) ? 0 : Number(qty),
+                priceAtPurchase: isNaN(Number(priceEuro)) ? item.priceAtPurchase : Math.round(Number(priceEuro) * 100)
+            };
+        });
 
         try {
             const res = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}/fulfill`, {
@@ -257,7 +287,7 @@ export const OrderManager = () => {
                 const updatedOrder = await res.json();
                 setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
                 setSelectedOrder(updatedOrder);
-                addToast('Pesatura completata correttamente!', 'success');
+                addToast('Pesatura e variazioni di prezzo salvate!', 'success');
             } else {
                 const errorData = await res.json();
                 console.error('Fulfillment error:', errorData);
@@ -448,10 +478,22 @@ export const OrderManager = () => {
 
     const calculateCurrentTotal = () => {
         if (!selectedOrder) return 0;
-        return selectedOrder.items.reduce((acc, item) => {
-            const qty = fulfillmentData[item.id] || 0;
-            return acc + (item.product.priceCents * qty);
+        const itemsTotal = selectedOrder.items.reduce((acc, item) => {
+            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+            const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
+            const qty = typeof fulfillmentData[item.id] === 'number'
+                ? fulfillmentData[item.id]
+                : (((fulfillmentData[item.id] as any) === '' ? 0 : (item.quantityFulfilled || itemEstQtyKg)) as number);
+
+            const unitPriceEuro = typeof fulfillmentPriceData[item.id] === 'number'
+                ? fulfillmentPriceData[item.id]
+                : (((fulfillmentPriceData[item.id] as any) === '' ? 0 : ((item.priceAtPurchase || item.product.priceCents) / 100)) as number);
+
+            return acc + (unitPriceEuro * 100 * qty);
         }, 0);
+
+        const shipping = (selectedOrder as any).shippingCost || 0;
+        return Math.round(itemsTotal + shipping);
     };
 
     const filteredOrders = orders.filter(o => {
@@ -931,15 +973,24 @@ export const OrderManager = () => {
                                                 itemActualQty = itemEstQtyKg;
                                             }
 
-                                            const itemActualCost = (item.product.priceCents * itemActualQty) / 100;
+                                            const itemPriceCents = item.priceAtPurchase || item.product.priceCents;
+                                            const isPriceModified = item.priceAtPurchase && item.priceAtPurchase !== item.product.priceCents;
+                                            const itemActualCost = (itemPriceCents * itemActualQty) / 100;
 
                                             return (
                                                 <div key={item.id} className="grid grid-cols-12 gap-2 sm:gap-3 items-center py-2 px-2.5 sm:px-3 bg-gray-50/50 hover:bg-gray-50 rounded-lg border border-gray-100/50 text-xs">
                                                     {/* Product details */}
                                                     <div className="col-span-5 min-w-0">
-                                                        <p className="font-bold text-gray-900 truncate" title={item.product.name}>{item.product.name}</p>
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <p className="font-bold text-gray-900 truncate" title={item.product.name}>{item.product.name}</p>
+                                                            {isPriceModified && (
+                                                                <span className="text-[9px] font-extrabold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
+                                                                    Prezzo Modificato
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
-                                                            Unitario: € {(item.product.priceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                            Unitario: € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
                                                             {isPieceVariableWeight && <span className="block text-[9px] text-amber-600">(circa {item.product.stepAmount} kg/pz)</span>}
                                                         </p>
                                                     </div>
@@ -991,9 +1042,9 @@ export const OrderManager = () => {
                                 </div>
 
                                 <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto">
-                                    {(selectedOrder.status === 'PENDING' || selectedOrder.status === 'WEIGHING_COMPLETED') && (
-                                        <button onClick={() => setIsWeighingOpen(true)} className="px-3 py-2.5 sm:px-4 sm:py-2.5 bg-nature-600 hover:bg-nature-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-initial">
-                                            <Scale size={16} /> Pesatura
+                                    {(selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED') && (
+                                        <button onClick={handleOpenWeighingModal} className="px-3 py-2.5 sm:px-4 sm:py-2.5 bg-nature-600 hover:bg-nature-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-initial">
+                                            <Scale size={16} /> Pesatura e Prezzi
                                         </button>
                                     )}
 
@@ -1113,18 +1164,21 @@ export const OrderManager = () => {
                             <div className="flex items-center gap-2.5">
                                 <Scale className="text-nature-300 animate-pulse" />
                                 <div>
-                                    <h3 className="font-black text-lg">Pesatura Ordine #{selectedOrder.id}</h3>
-                                    <p className="text-nature-300 text-xs mt-0.5">Inserisci il peso effettivo per ciascun articolo a peso variabile.</p>
+                                    <h3 className="font-black text-lg">Pesatura & Variazioni Prezzo Ordine #{selectedOrder.id}</h3>
+                                    <p className="text-nature-300 text-xs mt-0.5">Modifica il peso effettivo o applica variazioni al prezzo unitario per ciascun articolo.</p>
                                 </div>
                             </div>
                             <button onClick={() => {
-                                const resetData: Record<number, number> = {};
+                                const resetQtyData: Record<number, number> = {};
+                                const resetPriceData: Record<number, number> = {};
                                 selectedOrder.items.forEach(item => {
-                                    const isPieceVariableWeight = item.product.isVariableWeight && item.product.unitType === 'PZ';
+                                    const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                     const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-                                    resetData[item.id] = Number(item.quantityFulfilled || defaultQty);
+                                    resetQtyData[item.id] = Number(item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? item.quantityFulfilled : defaultQty);
+                                    resetPriceData[item.id] = Number((item.priceAtPurchase || item.product.priceCents) / 100);
                                 });
-                                setFulfillmentData(resetData);
+                                setFulfillmentData(resetQtyData);
+                                setFulfillmentPriceData(resetPriceData);
                                 setIsWeighingOpen(false);
                             }} className="p-1.5 bg-nature-800 rounded-lg hover:bg-nature-700 transition-colors">
                                 <X size={20} />
@@ -1139,96 +1193,131 @@ export const OrderManager = () => {
                                 const itemActualQty = typeof fulfillmentData[item.id] === 'number' 
                                     ? fulfillmentData[item.id] 
                                     : (((fulfillmentData[item.id] as any) === '' ? 0 : (item.quantityFulfilled || itemEstQtyKg)) as number);
-                                const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
-                                const itemActualCost = (item.product.priceCents * itemActualQty) / 100;
+                                const itemEstCost = ((item.priceAtPurchase || item.product.priceCents) * itemEstQtyKg) / 100;
+                                const itemUnitPriceEuro = typeof fulfillmentPriceData[item.id] === 'number'
+                                    ? fulfillmentPriceData[item.id]
+                                    : (((fulfillmentPriceData[item.id] as any) === '' ? 0 : ((item.priceAtPurchase || item.product.priceCents) / 100)) as number);
+                                const itemActualCost = itemUnitPriceEuro * itemActualQty;
                                 
                                 return (
-                                    <div key={item.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-extrabold text-gray-900">{item.product.name}</span>
-                                                {item.product.isVariableWeight && (
-                                                    <span className="text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">Peso Variabile</span>
-                                                )}
+                                    <div key={item.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-extrabold text-gray-900">{item.product.name}</span>
+                                                    {item.product.isVariableWeight && (
+                                                        <span className="text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">Peso Variabile</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
+                                                    Catalogo: € {(item.product.priceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                    {isPieceVariableWeight && <span className="inline-block ml-1 text-amber-600">(circa {item.product.stepAmount} kg/pz)</span>}
+                                                </p>
                                             </div>
-                                            <p className="text-xs text-gray-400 font-semibold mt-1">
-                                                Prezzo unitario: € {(item.product.priceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                {isPieceVariableWeight && <span className="block text-[10px] text-amber-600">(circa {item.product.stepAmount} kg/pz)</span>}
-                                            </p>
-                                        </div>
 
-                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 shrink-0">
                                             {/* Weights info */}
-                                            <div className="text-xs">
+                                            <div className="text-xs text-right">
                                                 <p className="text-gray-500 font-medium">Richiesto: <span className="font-bold text-gray-700">{item.quantityOrdered} {item.product.unitType.toLowerCase()}{isPieceVariableWeight ? ` (circa ${itemEstQtyKg.toFixed(1)} kg)` : ''}</span></p>
                                                 <p className="text-[10px] text-gray-400 mt-0.5">Costo stimato: € {itemEstCost.toFixed(2)}</p>
                                             </div>
+                                        </div>
 
-                                            {/* Input */}
-                                            <div className="flex flex-col items-end gap-1.5">
-                                                {item.product.isVariableWeight ? (
-                                                    <div className="flex items-center gap-1.5">
-                                                        {/* Minus Button */}
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const currentVal = Number(fulfillmentData[item.id] !== undefined ? fulfillmentData[item.id] : (item.quantityFulfilled || itemEstQtyKg));
-                                                                const newVal = Math.max(0, currentVal - 0.1);
-                                                                setFulfillmentData({
-                                                                    ...fulfillmentData,
-                                                                    [item.id]: parseFloat(newVal.toFixed(2))
-                                                                });
-                                                            }}
-                                                            className="w-8 h-8 rounded-xl bg-yellow-100 hover:bg-yellow-200 text-yellow-900 flex items-center justify-center font-black text-base select-none transition-colors border border-yellow-200 active:scale-90"
-                                                            title="Riduci peso di 0.1 kg"
-                                                        >
-                                                            -
-                                                        </button>
+                                        {/* Controls Row */}
+                                        <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-gray-200/60">
+                                            {/* Unit price edit control */}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-gray-600">Prezzo unitario:</span>
+                                                <div className="flex items-center gap-1 bg-blue-50 px-2 py-1.5 rounded-xl border border-blue-200 focus-within:ring-2 focus-within:ring-blue-400 shadow-sm">
+                                                    <span className="text-xs font-bold text-blue-700">€</span>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        className="w-16 text-right bg-transparent font-black text-blue-900 outline-none text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                        value={fulfillmentPriceData[item.id] !== undefined ? fulfillmentPriceData[item.id] : ((item.priceAtPurchase || item.product.priceCents) / 100)}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setFulfillmentPriceData({
+                                                                ...fulfillmentPriceData,
+                                                                [item.id]: val === '' ? '' as any : parseFloat(val)
+                                                            });
+                                                        }}
+                                                    />
+                                                    <span className="text-[11px] font-bold text-blue-700">/ {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}</span>
+                                                </div>
+                                            </div>
 
-                                                        {/* Input wrapper */}
-                                                        <div className="flex items-center gap-1.5 bg-yellow-50 px-2 py-1.5 rounded-xl border border-yellow-200 focus-within:ring-2 focus-within:ring-yellow-400 justify-end w-fit shadow-sm">
-                                                            <Scale size={13} className="text-yellow-600 hidden sm:inline" />
-                                                            <input
-                                                                type="number"
-                                                                step="0.01"
-                                                                className="w-12 text-right bg-transparent font-black text-yellow-900 outline-none text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                                value={fulfillmentData[item.id] !== undefined ? fulfillmentData[item.id] : ''}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value;
-                                                                    setFulfillmentData({ 
-                                                                        ...fulfillmentData, 
-                                                                        [item.id]: val === '' ? '' as any : parseFloat(val) 
+                                            {/* Quantity/Weight input control */}
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-bold text-gray-600 mr-1">{item.product.isVariableWeight ? 'Peso effettivo:' : 'Quantità:'}</span>
+                                                    {item.product.isVariableWeight ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            {/* Minus Button */}
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const currentVal = Number(fulfillmentData[item.id] !== undefined ? fulfillmentData[item.id] : (item.quantityFulfilled || itemEstQtyKg));
+                                                                    const newVal = Math.max(0, currentVal - 0.1);
+                                                                    setFulfillmentData({
+                                                                        ...fulfillmentData,
+                                                                        [item.id]: parseFloat(newVal.toFixed(2))
                                                                     });
                                                                 }}
-                                                            />
-                                                            <span className="text-xs font-bold text-yellow-700">kg</span>
-                                                        </div>
+                                                                className="w-8 h-8 rounded-xl bg-yellow-100 hover:bg-yellow-200 text-yellow-900 flex items-center justify-center font-black text-base select-none transition-colors border border-yellow-200 active:scale-90"
+                                                                title="Riduci peso di 0.1 kg"
+                                                            >
+                                                                -
+                                                            </button>
 
-                                                        {/* Plus Button */}
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const currentVal = Number(fulfillmentData[item.id] !== undefined ? fulfillmentData[item.id] : (item.quantityFulfilled || itemEstQtyKg));
-                                                                const newVal = currentVal + 0.1;
-                                                                setFulfillmentData({
-                                                                    ...fulfillmentData,
-                                                                    [item.id]: parseFloat(newVal.toFixed(2))
-                                                                });
-                                                            }}
-                                                            className="w-8 h-8 rounded-xl bg-yellow-100 hover:bg-yellow-200 text-yellow-950 flex items-center justify-center font-black text-base select-none transition-colors border border-yellow-200 active:scale-90"
-                                                            title="Aumenta peso di 0.1 kg"
-                                                        >
-                                                            +
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="bg-gray-100 px-3 py-1 rounded-xl border border-gray-200 text-gray-650 text-xs font-bold">
-                                                        {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                    </div>
-                                                )}
-                                                <span className="text-[11px] font-black text-nature-700">
-                                                    Costo effettivo: € {itemActualCost.toFixed(2)}
-                                                </span>
+                                                            {/* Input wrapper */}
+                                                            <div className="flex items-center gap-1.5 bg-yellow-50 px-2 py-1.5 rounded-xl border border-yellow-200 focus-within:ring-2 focus-within:ring-yellow-400 justify-end w-fit shadow-sm">
+                                                                <Scale size={13} className="text-yellow-600 hidden sm:inline" />
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    className="w-14 text-right bg-transparent font-black text-yellow-900 outline-none text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                                    value={fulfillmentData[item.id] !== undefined ? fulfillmentData[item.id] : ''}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setFulfillmentData({ 
+                                                                            ...fulfillmentData, 
+                                                                            [item.id]: val === '' ? '' as any : parseFloat(val) 
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <span className="text-xs font-bold text-yellow-700">kg</span>
+                                                            </div>
+
+                                                            {/* Plus Button */}
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const currentVal = Number(fulfillmentData[item.id] !== undefined ? fulfillmentData[item.id] : (item.quantityFulfilled || itemEstQtyKg));
+                                                                    const newVal = currentVal + 0.1;
+                                                                    setFulfillmentData({
+                                                                        ...fulfillmentData,
+                                                                        [item.id]: parseFloat(newVal.toFixed(2))
+                                                                    });
+                                                                }}
+                                                                className="w-8 h-8 rounded-xl bg-yellow-100 hover:bg-yellow-200 text-yellow-950 flex items-center justify-center font-black text-base select-none transition-colors border border-yellow-200 active:scale-90"
+                                                                title="Aumenta peso di 0.1 kg"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold">
+                                                            {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="text-right">
+                                                    <span className="text-[11px] font-black text-nature-700 block">
+                                                        Costo effettivo: € {itemActualCost.toFixed(2)}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1246,13 +1335,16 @@ export const OrderManager = () => {
                             </div>
                             <div className="flex items-center gap-2 justify-end w-full sm:w-auto">
                                 <button onClick={() => {
-                                    const resetData: Record<number, number> = {};
+                                    const resetQtyData: Record<number, number> = {};
+                                    const resetPriceData: Record<number, number> = {};
                                     selectedOrder.items.forEach(item => {
                                         const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                         const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-                                        resetData[item.id] = Number(item.quantityFulfilled || defaultQty);
+                                        resetQtyData[item.id] = Number(item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? item.quantityFulfilled : defaultQty);
+                                        resetPriceData[item.id] = Number((item.priceAtPurchase || item.product.priceCents) / 100);
                                     });
-                                    setFulfillmentData(resetData);
+                                    setFulfillmentData(resetQtyData);
+                                    setFulfillmentPriceData(resetPriceData);
                                     setIsWeighingOpen(false);
                                 }} className="px-4 py-2.5 text-gray-500 font-bold hover:bg-gray-200 text-sm rounded-xl transition-colors">
                                     Annulla
@@ -1261,7 +1353,7 @@ export const OrderManager = () => {
                                     await handleFulfill();
                                     setIsWeighingOpen(false);
                                 }} className="px-5 py-2.5 bg-nature-600 hover:bg-nature-700 text-white font-bold text-sm rounded-xl shadow transition-all flex items-center justify-center gap-1.5">
-                                    <Scale size={16} /> Salva Pesatura
+                                    <Scale size={16} /> Salva Pesatura & Prezzi
                                 </button>
                             </div>
                         </div>
