@@ -348,7 +348,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                             ? 'min-h-[40vh] md:min-h-[50vh] pt-16' 
                             : (block.data.paddingY === 'large' ? 'min-h-[65vh] md:min-h-[80vh] pt-24' : 'min-h-[50vh] md:min-h-[65vh] pt-20');
                         return (
-                            <AnimatedSection key={block.id} className={`relative z-[50] ${heroHeight} flex items-center justify-center overflow-hidden bg-nature-900 group ${shouldOverlap ? '-mt-8 md:-mt-12 rounded-t-[3rem] shadow-[0_-15px_40px_rgba(0,0,0,0.03)]' : ''}`}>
+                            <AnimatedSection key={block.id} className={`relative z-10 ${heroHeight} flex items-center justify-center overflow-hidden bg-nature-900 group ${shouldOverlap ? '-mt-8 md:-mt-12 rounded-t-[3rem] shadow-[0_-15px_40px_rgba(0,0,0,0.03)]' : ''}`}>
                                 <motion.div 
                                     initial={{ scale: 1.15 }}
                                     animate={{ scale: 1 }}
@@ -364,7 +364,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-nature-900/90 via-nature-900/40 to-black/30"></div>
                                 </motion.div>
                                 
-                                <div className="relative z-[45] text-center text-white px-4 max-w-5xl mx-auto w-full mb-8 md:mb-10">
+                                <div className="relative z-20 text-center text-white px-4 max-w-5xl mx-auto w-full mb-8 md:mb-10">
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.8, y: -20, filter: 'blur(5px)' }}
                                         animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
@@ -401,8 +401,8 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                                         </motion.div>
                                     )}
                                 </div>
-                                {/* Bottom Wave Decoration - Keeps z-[30] to overlap next block, but allows text container (z-[40]) to stay above it */}
-                                <div className={`absolute bottom-0 left-0 w-full overflow-hidden leading-none z-[30] translate-y-[1px] ${nextBgColor} drop-shadow-[0_-5px_15px_rgba(0,0,0,0.05)]`}>
+                                {/* Bottom Wave Decoration - Keeps z-10 to overlap next block */}
+                                <div className={`absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 translate-y-[1px] ${nextBgColor} drop-shadow-[0_-5px_15px_rgba(0,0,0,0.05)]`}>
                                     <svg className="relative block w-full h-[60px] md:h-[100px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
                                         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C89.71,114.62,204.34,74.52,321.39,56.44Z" className="fill-current"></path>
                                     </svg>
