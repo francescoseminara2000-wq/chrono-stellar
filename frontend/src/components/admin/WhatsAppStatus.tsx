@@ -6,6 +6,7 @@ export const WhatsAppStatus = () => {
     const { token } = useAuthStore();
     const [status, setStatus] = useState<{ isConnected: boolean; qrCode: string | null }>({ isConnected: false, qrCode: null });
     const [isOpen, setIsOpen] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
 
     const fetchStatus = () => {
         fetch(`/api/admin/whatsapp/status`, {
@@ -14,6 +15,22 @@ export const WhatsAppStatus = () => {
             .then(res => res.json())
             .then(setStatus)
             .catch(console.error);
+    };
+
+    const handleReset = async () => {
+        setIsResetting(true);
+        try {
+            await fetch('/api/admin/whatsapp/reset', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setStatus({ isConnected: false, qrCode: null });
+            setTimeout(fetchStatus, 1500);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setTimeout(() => setIsResetting(false), 2000);
+        }
     };
 
     useEffect(() => {
@@ -51,31 +68,48 @@ export const WhatsAppStatus = () => {
 
             <div className="p-6 flex flex-col items-center justify-center min-h-[300px]">
                 {status.isConnected ? (
-                    <div className="text-center">
-                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="text-center w-full">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                             <Smartphone size={40} />
                         </div>
                         <h4 className="font-bold text-green-800 text-lg mb-2">Connesso!</h4>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 mb-4">
                             Il server invierà automaticamente i messaggi ai clienti.
                         </p>
+                        <button
+                            onClick={handleReset}
+                            disabled={isResetting}
+                            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 mx-auto active:scale-95"
+                        >
+                            <RefreshCw size={13} className={isResetting ? "animate-spin" : ""} />
+                            {isResetting ? 'Resettando...' : 'Resetta / Cambia Account'}
+                        </button>
                     </div>
                 ) : (
                     <div className="text-center w-full">
                         {status.qrCode ? (
                             <>
-                                <p className="text-sm text-gray-600 mb-4 font-bold">Scansiona con WhatsApp:</p>
-                                <img src={status.qrCode} alt="QR Code" className="w-48 h-48 mx-auto border-4 border-white shadow-sm mb-4" />
+                                <p className="text-sm text-gray-600 mb-3 font-bold">Scansiona con WhatsApp:</p>
+                                <img src={status.qrCode} alt="QR Code" className="w-48 h-48 mx-auto border-4 border-white shadow-md rounded-xl mb-3" />
                             </>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-48">
-                                <RefreshCw className="animate-spin text-gray-400 mb-2" size={32} />
-                                <p className="text-gray-400 text-sm">Caricamento QR...</p>
+                            <div className="flex flex-col items-center justify-center h-44">
+                                <RefreshCw className="animate-spin text-green-600 mb-2" size={32} />
+                                <p className="text-gray-600 font-bold text-sm">Caricamento QR Code...</p>
+                                <p className="text-xs text-gray-400 mt-1">Se il QR non compare, clicca in basso.</p>
                             </div>
                         )}
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-[11px] text-gray-400 my-2">
                             Apri WhatsApp {'>'} Menu {'>'} Dispositivi collegati
                         </p>
+                        <button
+                            onClick={handleReset}
+                            disabled={isResetting}
+                            className="mt-2 w-full py-2.5 bg-green-50 hover:bg-green-100 text-green-800 border border-green-200 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                        >
+                            <RefreshCw size={14} className={isResetting ? "animate-spin" : ""} />
+                            {isResetting ? 'Rigenerazione QR in corso...' : 'Resetta Connessione & Rigenera QR'}
+                        </button>
                     </div>
                 )}
             </div>

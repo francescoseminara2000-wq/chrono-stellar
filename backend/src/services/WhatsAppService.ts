@@ -1,14 +1,21 @@
 import { prisma } from '../lib/prisma';
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
 
 export class WhatsAppService {
-    private client: Client;
+    private client!: Client;
     private qrCode: string | null = null;
     private isReady: boolean = false;
     private static instance: WhatsAppService;
 
     private constructor() {
+        this.createClient();
+        this.setupExitHandlers();
+    }
+
+    private createClient() {
         this.client = new Client({
             authStrategy: new LocalAuth(),
             puppeteer: {
@@ -18,7 +25,36 @@ export class WhatsAppService {
         });
 
         this.initialize();
-        this.setupExitHandlers();
+    }
+
+    public async resetConnection() {
+        console.log('[WhatsApp] Resetting WhatsApp connection and session...');
+        this.isReady = false;
+        this.qrCode = null;
+
+        try {
+            if (this.client) {
+                await this.client.logout().catch(() => {});
+                await this.client.destroy().catch(() => {});
+            }
+        } catch (err) {
+            console.error('[WhatsApp] Error shutting down client:', err);
+        }
+
+        // Try removing .wwebjs_auth directory if exists to clear stuck/corrupt session
+        try {
+            const authPath = path.join(process.cwd(), '.wwebjs_auth');
+            if (fs.existsSync(authPath)) {
+                fs.rmSync(authPath, { recursive: true, force: true });
+                console.log('[WhatsApp] Cleared .wwebjs_auth folder');
+            }
+        } catch (fsErr) {
+            console.error('[WhatsApp] Could not remove .wwebjs_auth folder:', fsErr);
+        }
+
+        // Re-create Client instance & initialize
+        this.createClient();
+        return { success: true, message: 'WhatsApp session reset. Generating new QR Code...' };
     }
 
     private setupExitHandlers() {
@@ -78,7 +114,6 @@ export class WhatsAppService {
         this.client.on('disconnected', (reason) => {
             console.log('WhatsApp Client was logged out', reason);
             this.isReady = false;
-            // Client usually destroys itself on logout, might need re-init
             this.client.initialize();
         });
 

@@ -98,6 +98,7 @@ app.get('/api/admin/logistics/dashboard', authenticateToken, requireAdmin, (req,
 import { WhatsAppController } from './controllers/WhatsAppController';
 const whatsAppController = new WhatsAppController();
 app.get('/api/admin/whatsapp/status', authenticateToken, requireAdmin, (req, res) => whatsAppController.getStatus(req, res));
+app.post('/api/admin/whatsapp/reset', authenticateToken, requireAdmin, (req, res) => whatsAppController.reset(req, res));
 
 // Settings (Global Store Info)
 import { SettingsController } from './controllers/SettingsController';
