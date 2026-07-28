@@ -5,7 +5,7 @@ export class SettingsController {
 
     // Ensure that a settings record exists, since it's a singleton (ID = 1)
     private async getOrCreateSettings() {
-        let settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        let settings: any = await prisma.storeSettings.findUnique({ where: { id: 1 } });
         if (!settings) {
             settings = await prisma.storeSettings.create({
                 data: {
@@ -35,17 +35,21 @@ export class SettingsController {
                     accentColor: '#ef4444',
                     pickupCutoffHour: 12,
                     deliveryCutoffHour: 12,
-                    deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00',
                     // @ts-ignore
                     waTemplateScheduled: 'Ciao [cliente], la pianificazione del tuo ordine #[id] è stata programmata per il [data] alle [ora]. A presto!'
                 }
             });
         }
         if (!settings.deliveryTimeSlots) {
-            settings = await prisma.storeSettings.update({
-                where: { id: 1 },
-                data: { deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00' }
-            });
+            try {
+                settings = await prisma.storeSettings.update({
+                    where: { id: 1 },
+                    data: { deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00' } as any
+                });
+            } catch (err) {
+                console.warn('[SettingsController] Could not update deliveryTimeSlots column:', err);
+                settings.deliveryTimeSlots = '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00';
+            }
         }
         return settings;
     }
@@ -100,41 +104,39 @@ export class SettingsController {
                 deliveryTimeSlots
             } = req.body;
 
+            const updateData: any = {
+                siteName,
+                tagline,
+                contactEmail,
+                contactPhone,
+                contactAddress,
+                openingHours,
+                announcementText,
+                announcementActive,
+                waTemplateCreated,
+                waTemplateWeighing,
+                waTemplateOutForDelivery,
+                waTemplatePickupReady,
+                waTemplateDelivered,
+                waTemplateCancelled,
+                waTemplateScheduled,
+                latitude,
+                longitude,
+                logoUrl,
+                colorTheme,
+                primaryColor,
+                accentColor,
+                pickupCutoffHour: pickupCutoffHour !== undefined ? Number(pickupCutoffHour) : undefined,
+                deliveryCutoffHour: deliveryCutoffHour !== undefined ? Number(deliveryCutoffHour) : undefined
+            };
+
+            if (deliveryTimeSlots !== undefined) {
+                updateData.deliveryTimeSlots = String(deliveryTimeSlots);
+            }
+
             const updatedSettings = await prisma.storeSettings.update({
                 where: { id: 1 },
-                data: {
-                    siteName,
-                    tagline,
-                    contactEmail,
-                    contactPhone,
-                    contactAddress,
-                    openingHours,
-                    announcementText,
-                    announcementActive,
-                    // @ts-ignore
-                    waTemplateCreated,
-                    // @ts-ignore
-                    waTemplateWeighing,
-                    // @ts-ignore
-                    waTemplateOutForDelivery,
-                    // @ts-ignore
-                    waTemplatePickupReady,
-                    // @ts-ignore
-                    waTemplateDelivered,
-                    // @ts-ignore
-                    waTemplateCancelled,
-                    // @ts-ignore
-                    waTemplateScheduled,
-                    latitude,
-                    longitude,
-                    logoUrl,
-                    colorTheme,
-                    primaryColor,
-                    accentColor,
-                    pickupCutoffHour: pickupCutoffHour !== undefined ? Number(pickupCutoffHour) : undefined,
-                    deliveryCutoffHour: deliveryCutoffHour !== undefined ? Number(deliveryCutoffHour) : undefined,
-                    deliveryTimeSlots: deliveryTimeSlots !== undefined ? String(deliveryTimeSlots) : undefined
-                }
+                data: updateData
             });
 
             res.json(updatedSettings);
