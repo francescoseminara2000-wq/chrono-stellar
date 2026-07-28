@@ -18,6 +18,9 @@ interface StoreSettings {
     pickupCutoffHour: number;
     deliveryCutoffHour: number;
     deliveryTimeSlots?: string;
+    revolutApiKey?: string;
+    revolutEnvironment?: string;
+    revolutEnabled?: boolean;
 }
 
 interface AppState {

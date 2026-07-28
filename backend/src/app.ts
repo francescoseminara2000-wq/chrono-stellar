@@ -15,6 +15,7 @@ import { PushController } from './controllers/PushController';
 import { StatsController } from './controllers/StatsController';
 import { CategoryController } from './controllers/CategoryController';
 import { LogisticsController } from './controllers/LogisticsController';
+import { RevolutController } from './controllers/RevolutController';
 
 const app = express();
 
@@ -40,8 +41,10 @@ const pushController = new PushController();
 const statsController = new StatsController();
 const categoryController = new CategoryController();
 const logisticsController = new LogisticsController();
+const revolutController = new RevolutController();
 
 // API Routes
+app.post('/api/webhooks/revolut', (req, res) => revolutController.handleWebhook(req, res));
 // Public
 app.get('/api/products', (req, res) => productController.listPublic(req, res));
 app.get('/api/delivery-zones', (req, res) => deliveryZoneController.listActive(req, res)); // For checkout

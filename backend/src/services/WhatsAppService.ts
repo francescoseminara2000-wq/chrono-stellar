@@ -131,10 +131,10 @@ export class WhatsAppService {
     }
 
     public async sendMessage(phoneNumber: string, message: string) {
-        console.log(`[WhatsApp] Attempting to send to: ${phoneNumber}`);
+        console.log(`[WhatsApp] Attempting to send message to: ${phoneNumber}`);
 
         if (!this.isReady) {
-            console.warn('[WhatsApp] Client not ready');
+            console.warn('[WhatsApp] Client not ready (isReady = false)');
             throw new Error('WhatsApp client is not ready');
         }
 
@@ -145,22 +145,27 @@ export class WhatsAppService {
             // Handle Italian numbers logic
             if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
                 cleanPhone = '39' + cleanPhone;
-            }
-            else if (cleanPhone.startsWith('0039')) {
+            } else if (cleanPhone.startsWith('0039')) {
                 cleanPhone = cleanPhone.substring(2);
+            } else if (cleanPhone.length === 12 && cleanPhone.startsWith('393')) {
+                // Already valid Italian international format 393XXXXXXXXX
             }
 
-            console.log(`[WhatsApp] Cleaned number: ${cleanPhone}`);
+            console.log(`[WhatsApp] Formatted phone number: ${cleanPhone}`);
 
             let chatId = `${cleanPhone}@c.us`;
 
-            // Try to validate number first
-            const check = await this.client.getNumberId(cleanPhone);
-            if (check) {
-                chatId = check._serialized;
-                console.log(`[WhatsApp] Number validated: ${chatId}`);
-            } else {
-                console.warn(`[WhatsApp] Number verification failed for ${cleanPhone}. Trying to send anyway to ${chatId}...`);
+            // Try to validate number with 3s timeout
+            try {
+                const getNumberPromise = this.client.getNumberId(cleanPhone);
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout getNumberId')), 3000));
+                const check: any = await Promise.race([getNumberPromise, timeoutPromise]).catch(() => null);
+                if (check && check._serialized) {
+                    chatId = check._serialized;
+                    console.log(`[WhatsApp] Number validated by WhatsApp API: ${chatId}`);
+                }
+            } catch (vErr) {
+                console.warn(`[WhatsApp] Number verification skipped or timed out, sending directly to ${chatId}`);
             }
 
             await this.client.sendMessage(chatId, message);

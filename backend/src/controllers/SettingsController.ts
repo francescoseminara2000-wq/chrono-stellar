@@ -115,7 +115,10 @@ export class SettingsController {
                 accentColor,
                 pickupCutoffHour,
                 deliveryCutoffHour,
-                deliveryTimeSlots
+                deliveryTimeSlots,
+                revolutApiKey,
+                revolutEnvironment,
+                revolutEnabled
             } = req.body;
 
             const updateData: any = {
@@ -146,6 +149,15 @@ export class SettingsController {
 
             if (deliveryTimeSlots !== undefined) {
                 updateData.deliveryTimeSlots = String(deliveryTimeSlots);
+            }
+            if (revolutApiKey !== undefined) {
+                updateData.revolutApiKey = String(revolutApiKey);
+            }
+            if (revolutEnvironment !== undefined) {
+                updateData.revolutEnvironment = String(revolutEnvironment);
+            }
+            if (revolutEnabled !== undefined) {
+                updateData.revolutEnabled = Boolean(revolutEnabled);
             }
 
             const updatedSettings = await prisma.storeSettings.update({

@@ -12,32 +12,25 @@ const emailService = new EmailService();
 
 async function notifyClientOfStatusUpdate(order: any, status: string) {
     try {
-        let preference = 'EMAIL';
-        if (order.userId) {
-            const user = await prisma.user.findUnique({ where: { id: order.userId } });
-            if (user && user.notificationPreference) {
-                preference = user.notificationPreference;
+        const waStatus = whatsAppService.getStatus();
+        let whatsAppSent = false;
+
+        if (waStatus.isConnected && order.customerPhone) {
+            console.log(`[AdminController] Sending WhatsApp notification for status ${status} to order #${order.id} (${order.customerPhone})`);
+            try {
+                await whatsAppService.sendOrderNotification(order, status as any);
+                whatsAppSent = true;
+            } catch (err) {
+                console.error('[AdminController] WhatsApp notification failed, falling back to email:', err);
             }
         }
 
-        const waStatus = whatsAppService.getStatus();
-
-        if (preference === 'WHATSAPP' && order.customerPhone && waStatus.isConnected) {
-            console.log(`[AdminController] Sending WhatsApp notification for status ${status} to order #${order.id}`);
-            try {
-                await whatsAppService.sendOrderNotification(order, status as any);
-            } catch (err) {
-                console.error('WhatsApp notification failed, falling back to email:', err);
-                if (order.customerEmail) {
-                    await emailService.sendOrderStatusUpdateEmail(order.customerEmail, order, status);
-                }
-            }
-        } else if (order.customerEmail) {
-            console.log(`[AdminController] Sending Email notification for status ${status} to order #${order.id}`);
+        if (!whatsAppSent && order.customerEmail) {
+            console.log(`[AdminController] Sending Email notification for status ${status} to order #${order.id} (${order.customerEmail})`);
             await emailService.sendOrderStatusUpdateEmail(order.customerEmail, order, status);
         }
     } catch (err) {
-        console.error('Failed to notify client:', err);
+        console.error('Failed to notify client of status update:', err);
     }
 }
 

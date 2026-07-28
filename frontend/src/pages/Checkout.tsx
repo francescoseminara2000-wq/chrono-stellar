@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAppState } from '../store/useAppState';
-import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock } from 'lucide-react';
+import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -75,6 +75,13 @@ export const Checkout = () => {
         return saved === 'true';
     });
 
+    const [paymentMethod, setPaymentMethod] = useState<'COD' | 'REVOLUT'>(() => {
+        const saved = localStorage.getItem('checkout_paymentMethod');
+        return (saved as any) || 'COD';
+    });
+
+    const [revolutCheckoutUrl, setRevolutCheckoutUrl] = useState<string | null>(null);
+
     const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
     const [shippingCost, setShippingCost] = useState(0);
     const [submitted, setSubmitted] = useState(false);
@@ -84,6 +91,10 @@ export const Checkout = () => {
     useEffect(() => {
         localStorage.setItem('checkout_step', step.toString());
     }, [step]);
+
+    useEffect(() => {
+        localStorage.setItem('checkout_paymentMethod', paymentMethod);
+    }, [paymentMethod]);
 
     useEffect(() => {
         localStorage.setItem('checkout_deliveryMethod', deliveryMethod);
@@ -348,7 +359,7 @@ export const Checkout = () => {
             customerName: user?.name || formData.name,
             customerEmail: user?.email || formData.email,
             items: items.map(i => ({ id: i.id, quantity: i.quantity, orderedUnit: i.unitType })),
-            paymentMethod: 'COD',
+            paymentMethod: paymentMethod,
             deliveryMethod,
             shippingAddress: deliveryMethod === 'DELIVERY'
                 ? `${formData.street}, ${formData.civic} - ${formData.zip} ${formData.city}`
@@ -375,6 +386,12 @@ export const Checkout = () => {
             });
 
             if (res.ok) {
+                const createdOrder = await res.json();
+                const revolutUrl = createdOrder?.transaction?.metadata?.checkoutUrl;
+                if (revolutUrl) {
+                    setRevolutCheckoutUrl(revolutUrl);
+                }
+
                 // Keep the loading screen for a minimum of 1.5s for a premium feel
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 setIsSubmitting(false);
@@ -462,12 +479,32 @@ export const Checkout = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
                     </div>
                     <h2 className="font-script text-4xl text-nature-900 mb-4">Grazie per il tuo ordine!</h2>
-                    <p className="text-gray-600 mb-8">
+                    <p className="text-gray-600 mb-6">
                         Abbiamo ricevuto la tua richiesta. {deliveryMethod === 'DELIVERY' ? 'Ti consegneremo la spesa' : 'Ti aspettiamo in negozio'} il prima possibile.
                         {user && <br />}
                         {user && <span className="text-sm font-bold text-nature-600">Puoi seguire lo stato dell'ordine nel tuo profilo.</span>}
                     </p>
-                    <a href="/shop" className="bg-nature-600 text-white px-8 py-3 rounded-full font-bold hover:bg-nature-700 transition-colors">
+
+                    {revolutCheckoutUrl && (
+                        <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-3">
+                            <div className="font-bold text-indigo-900 text-sm flex items-center justify-center gap-2">
+                                <CreditCard size={18} /> Completa il Pagamento Online
+                            </div>
+                            <p className="text-xs text-indigo-700">
+                                Clicca sul pulsante sottostante per accedere al checkout sicuro Revolut.
+                            </p>
+                            <a
+                                href={revolutCheckoutUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-extrabold text-sm shadow-md transition-all w-full"
+                            >
+                                💳 Paga Ora con Revolut Pay
+                            </a>
+                        </div>
+                    )}
+
+                    <a href="/shop" className="bg-nature-600 text-white px-8 py-3 rounded-full font-bold hover:bg-nature-700 transition-colors inline-block mt-2">
                         Torna allo Shop
                     </a>
                 </div>
@@ -919,6 +956,62 @@ export const Checkout = () => {
                                                             <span className="font-bold text-nature-700 bg-nature-100/70 px-2 py-0.5 rounded text-xs">
                                                                 {selectedTimeSlot}
                                                             </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Payment Method Selector */}
+                                                    <div className="space-y-2.5 pt-2">
+                                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
+                                                            <CreditCard size={12} className="text-nature-600" /> Metodo di Pagamento
+                                                        </label>
+
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPaymentMethod('COD')}
+                                                                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                                                                    paymentMethod === 'COD'
+                                                                        ? 'bg-nature-900 text-white border-nature-900 shadow-md ring-2 ring-nature-600/30'
+                                                                        : 'bg-white text-gray-800 border-gray-200 hover:border-nature-300'
+                                                                }`}
+                                                            >
+                                                                <div className={`p-2 rounded-xl shrink-0 ${paymentMethod === 'COD' ? 'bg-nature-800 text-amber-300' : 'bg-nature-50 text-nature-700'}`}>
+                                                                    💵
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-extrabold text-xs">Alla Consegna / Ritiro</div>
+                                                                    <div className={`text-[10px] ${paymentMethod === 'COD' ? 'text-nature-200' : 'text-gray-400'}`}>
+                                                                        Contanti o POS alla consegna
+                                                                    </div>
+                                                                </div>
+                                                            </button>
+
+                                                            {settings?.revolutEnabled && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setPaymentMethod('REVOLUT')}
+                                                                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                                                                        paymentMethod === 'REVOLUT'
+                                                                            ? 'bg-indigo-900 text-white border-indigo-900 shadow-md ring-2 ring-indigo-600/30'
+                                                                            : 'bg-white text-gray-800 border-gray-200 hover:border-indigo-300'
+                                                                    }`}
+                                                                >
+                                                                    <div className={`p-2 rounded-xl shrink-0 ${paymentMethod === 'REVOLUT' ? 'bg-indigo-800 text-amber-300' : 'bg-indigo-50 text-indigo-700'}`}>
+                                                                        💳
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-extrabold text-xs flex items-center gap-1.5">
+                                                                            Revolut Pay / Carta
+                                                                            <span className="px-1.5 py-0.5 bg-indigo-500 text-white rounded text-[9px] font-black uppercase">
+                                                                                {settings.revolutEnvironment === 'sandbox' ? 'Test' : 'Online'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className={`text-[10px] ${paymentMethod === 'REVOLUT' ? 'text-indigo-200' : 'text-gray-400'}`}>
+                                                                            Pagamento sicuro Revolut
+                                                                        </div>
+                                                                    </div>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
 

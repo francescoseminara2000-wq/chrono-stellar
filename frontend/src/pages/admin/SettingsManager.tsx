@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import {
     Save, Globe, Phone, MapPin, Megaphone,
     MessageSquare, User as UserIcon, Upload, Trash2,
-    Plus, Edit2, X, Tag
+    Plus, Edit2, X, Tag, CreditCard
 } from 'lucide-react';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
@@ -64,7 +64,10 @@ export const SettingsManager = () => {
         accentColor: '#ef4444',
         pickupCutoffHour: 12,
         deliveryCutoffHour: 12,
-        deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00'
+        deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00',
+        revolutApiKey: '',
+        revolutEnvironment: 'sandbox',
+        revolutEnabled: false
     });
 
     const refs = {
@@ -144,7 +147,10 @@ export const SettingsManager = () => {
                 accentColor: data.accentColor || '#ef4444',
                 pickupCutoffHour: data.pickupCutoffHour !== undefined ? data.pickupCutoffHour : 12,
                 deliveryCutoffHour: data.deliveryCutoffHour !== undefined ? data.deliveryCutoffHour : 12,
-                deliveryTimeSlots: data.deliveryTimeSlots || '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00'
+                deliveryTimeSlots: data.deliveryTimeSlots || '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00',
+                revolutApiKey: data.revolutApiKey || '',
+                revolutEnvironment: data.revolutEnvironment || 'sandbox',
+                revolutEnabled: Boolean(data.revolutEnabled)
             });
         }
     };
@@ -355,6 +361,7 @@ export const SettingsManager = () => {
 
     const tabs = [
         { id: 'general', label: 'Generale', icon: <Globe size={18} /> },
+        { id: 'revolut', label: 'Pagamenti Revolut', icon: <CreditCard size={18} /> },
         { id: 'whatsapp', label: 'WhatsApp', icon: <MessageSquare size={18} /> },
         { id: 'zones', label: 'Zone', icon: <MapPin size={18} /> },
         { id: 'categories', label: 'Categorie', icon: <Tag size={18} /> },
@@ -634,6 +641,89 @@ export const SettingsManager = () => {
                             >
                                 {isSaving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save size={20} />}
                                 <span>Salva Generale</span>
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {activeTab === 'revolut' && (
+                    <form onSubmit={handleSettingsSubmit} className="space-y-8 animate-in fade-in duration-300">
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                <div>
+                                    <h3 className="text-xl font-bold flex items-center gap-2 text-indigo-600">
+                                        <CreditCard size={22} /> Revolut Merchant API
+                                    </h3>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Abilita e gestisci i pagamenti online tramite Revolut Pay e Carte di Credito.
+                                    </p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.revolutEnabled}
+                                        onChange={e => setFormData({ ...formData, revolutEnabled: e.target.checked })}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <span className="ml-3 text-sm font-bold text-gray-700">
+                                        {formData.revolutEnabled ? 'Attivo' : 'Disattivato'}
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-700">Ambiente (Environment)</label>
+                                    <select
+                                        value={formData.revolutEnvironment}
+                                        onChange={e => setFormData({ ...formData, revolutEnvironment: e.target.value })}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 font-bold text-sm focus:ring-2 focus:ring-indigo-500/20"
+                                    >
+                                        <option value="sandbox">🧪 Sandbox (Test & Simulazione)</option>
+                                        <option value="production">🚀 Produzione (Live)</option>
+                                    </select>
+                                    <p className="text-[11px] text-gray-400">
+                                        Seleziona <strong>Sandbox</strong> per effettuare test con carte simulate senza addebiti reali.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-700">Chiave API Segreta (Secret API Key)</label>
+                                    <input
+                                        type="password"
+                                        placeholder="sk_..."
+                                        value={formData.revolutApiKey}
+                                        onChange={e => setFormData({ ...formData, revolutApiKey: e.target.value })}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 font-mono text-sm focus:ring-2 focus:ring-indigo-500/20"
+                                    />
+                                    <p className="text-[11px] text-gray-400">
+                                        Copia la chiave segreta dal tuo account Revolut Business (Merchant API).
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="bg-indigo-50/50 rounded-2xl p-5 border border-indigo-100 text-xs text-indigo-900 space-y-2">
+                                <div className="font-bold text-sm flex items-center gap-2">
+                                    🔗 Endpoint Webhook Revolut
+                                </div>
+                                <p className="text-gray-600">
+                                    Imposta il seguente URL Webhook nel tuo pannello Revolut Merchant per ricevere aggiornamenti in tempo reale:
+                                </p>
+                                <div className="p-2.5 bg-white rounded-xl border border-indigo-200 font-mono text-xs select-all break-all">
+                                    {window.location.origin}/api/webhooks/revolut
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end p-4 sticky bottom-6 z-20">
+                            <button
+                                type="submit"
+                                disabled={isSaving}
+                                className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold shadow-2xl hover:bg-indigo-700 transition-all flex items-center gap-2"
+                            >
+                                {isSaving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save size={20} />}
+                                <span>Salva Impostazioni Revolut</span>
                             </button>
                         </div>
                     </form>

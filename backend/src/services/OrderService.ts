@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma';
 import { WhatsAppService } from './WhatsAppService';
 import { PaymentStrategy } from '../domain/payment/PaymentStrategy';
 import { CashOnDeliveryStrategy } from '../infrastructure/payment/CodStrategy';
+import { RevolutPaymentStrategy } from '../infrastructure/payment/RevolutStrategy';
 import { PrismaClient, Prisma, OrderStatus, UnitType } from '@prisma/client';
 
 export class OrderService {
@@ -11,7 +12,9 @@ export class OrderService {
         this.paymentStrategies = new Map();
         // Register strategies
         const cod = new CashOnDeliveryStrategy();
+        const revolut = new RevolutPaymentStrategy();
         this.paymentStrategies.set(cod.name, cod);
+        this.paymentStrategies.set(revolut.name, revolut);
     }
 
     async createOrder(
@@ -174,33 +177,29 @@ export class OrderService {
             return newOrder;
         });
 
-        // Fetch user preferences if user is registered
-        let sendWhatsApp = false;
-        let sendEmail = true;
+        // Trigger notifications (WhatsApp primary if server connected & phone present, with Email fallback)
+        const whatsAppService = WhatsAppService.getInstance();
+        const waStatus = whatsAppService.getStatus();
+        let whatsAppSent = false;
 
-        if (order.userId) {
-            const user = await prisma.user.findUnique({ where: { id: order.userId } });
-            if (user?.notificationPreference === 'WHATSAPP') {
-                sendWhatsApp = true;
-                sendEmail = false;
+        if (waStatus.isConnected && order.customerPhone) {
+            try {
+                console.log(`[OrderService] Sending WhatsApp order confirmation for order #${order.id} to ${order.customerPhone}`);
+                await whatsAppService.sendOrderNotification(order, 'CREATED');
+                whatsAppSent = true;
+            } catch (error) {
+                console.error('[OrderService] Failed to send order confirmation WhatsApp message:', error);
             }
         }
 
-        // Trigger notifications based on preference
-        if (sendWhatsApp && order.customerPhone) {
+        if ((!whatsAppSent || !order.customerPhone) && order.customerEmail) {
             try {
-                const whatsAppService = WhatsAppService.getInstance();
-                await whatsAppService.sendOrderNotification(order, 'CREATED');
-            } catch (error) {
-                console.error('Failed to send order confirmation WhatsApp message:', error);
-            }
-        } else if (sendEmail && order.customerEmail) {
-            try {
+                console.log(`[OrderService] Sending Email order confirmation for order #${order.id} to ${order.customerEmail}`);
                 const EmailService = require('./EmailService').EmailService;
                 const emailService = new EmailService();
                 await emailService.sendOrderConfirmationEmail(order.customerEmail, order);
             } catch (error) {
-                console.error('Failed to send order confirmation email:', error);
+                console.error('[OrderService] Failed to send order confirmation email:', error);
             }
         }
 
