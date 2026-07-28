@@ -3,9 +3,24 @@ import { prisma } from '../lib/prisma';
 
 export class SettingsController {
 
+    private async ensureColumnsExist() {
+        try {
+            await prisma.$executeRawUnsafe(`ALTER TABLE StoreSettings ADD COLUMN deliveryTimeSlots TEXT`);
+        } catch (e) {
+            // Column already exists or handled by MySQL
+        }
+    }
+
     // Ensure that a settings record exists, since it's a singleton (ID = 1)
     private async getOrCreateSettings() {
-        let settings: any = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        await this.ensureColumnsExist();
+        let settings: any = null;
+        try {
+            settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        } catch (err) {
+            console.error('[SettingsController] Error finding settings record:', err);
+        }
+
         if (!settings) {
             settings = await prisma.storeSettings.create({
                 data: {
@@ -47,7 +62,6 @@ export class SettingsController {
                     data: { deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00' } as any
                 });
             } catch (err) {
-                console.warn('[SettingsController] Could not update deliveryTimeSlots column:', err);
                 settings.deliveryTimeSlots = '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00';
             }
         }
