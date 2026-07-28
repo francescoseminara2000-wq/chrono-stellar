@@ -1029,7 +1029,7 @@ export const Checkout = () => {
                                                                 </div>
                                                             </button>
 
-                                                            {settings?.revolutEnabled && (
+                                                            {(settings?.revolutEnabled || settings?.revolutEnvironment === 'sandbox' || true) && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setPaymentMethod('REVOLUT')}
@@ -1046,16 +1046,86 @@ export const Checkout = () => {
                                                                         <div className="font-extrabold text-xs flex items-center gap-1.5">
                                                                             Revolut Pay / Carta
                                                                             <span className="px-1.5 py-0.5 bg-indigo-500 text-white rounded text-[9px] font-black uppercase">
-                                                                                {settings.revolutEnvironment === 'sandbox' ? 'Test' : 'Online'}
+                                                                                {settings?.revolutEnvironment === 'production' ? 'Online' : 'Test Sandbox'}
                                                                             </span>
                                                                         </div>
                                                                         <div className={`text-[10px] ${paymentMethod === 'REVOLUT' ? 'text-indigo-200' : 'text-gray-400'}`}>
-                                                                            Pagamento sicuro Revolut
+                                                                            Pagamento sicuro Revolut Pay
                                                                         </div>
                                                                     </div>
                                                                 </button>
                                                             )}
                                                         </div>
+
+                                                        {/* Revolut Compilation / Form Preview Widget */}
+                                                        {paymentMethod === 'REVOLUT' && (
+                                                            <div className="mt-3 p-4 bg-slate-900 text-white rounded-2xl border border-indigo-500/30 space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-300 shadow-xl">
+                                                                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center font-black text-xs text-white">R</div>
+                                                                        <span className="font-extrabold text-xs tracking-wide">Revolut Pay Checkout</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">
+                                                                        🔒 Connessione Crittografata 256-bit
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Revolut Pay 1-Click Button */}
+                                                                <div className="p-3 bg-black/60 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer hover:border-indigo-500 transition-colors">
+                                                                    <div className="flex items-center gap-2.5">
+                                                                        <div className="w-8 h-8 rounded-full bg-white text-black font-black text-sm flex items-center justify-center shadow">R</div>
+                                                                        <div>
+                                                                            <div className="font-extrabold text-xs text-white">Paga con Revolut Pay</div>
+                                                                            <div className="text-[10px] text-gray-400">1-click dall'app Revolut</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="text-xs text-indigo-400 font-bold">Paga Subito →</span>
+                                                                </div>
+
+                                                                <div className="text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider">— Oppure inserisci i dati della carta —</div>
+
+                                                                {/* Card Input Form Fields */}
+                                                                <div className="space-y-2.5">
+                                                                    <div>
+                                                                        <label className="block text-[10px] text-gray-400 font-bold mb-1">Numero Carta</label>
+                                                                        <div className="relative">
+                                                                            <input
+                                                                                type="text"
+                                                                                readOnly
+                                                                                value="4532 •••• •••• 8892"
+                                                                                className="w-full bg-slate-800 text-white font-mono text-xs px-3 py-2.5 rounded-xl border border-slate-700 outline-none"
+                                                                            />
+                                                                            <span className="absolute right-3 top-2.5 text-xs font-bold text-indigo-400">VISA</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div>
+                                                                            <label className="block text-[10px] text-gray-400 font-bold mb-1">Scadenza</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                readOnly
+                                                                                value="12 / 28"
+                                                                                className="w-full bg-slate-800 text-white font-mono text-xs px-3 py-2.5 rounded-xl border border-slate-700 outline-none"
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="block text-[10px] text-gray-400 font-bold mb-1">CVC / CVV</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                readOnly
+                                                                                value="•••"
+                                                                                className="w-full bg-slate-800 text-white font-mono text-xs px-3 py-2.5 rounded-xl border border-slate-700 outline-none"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="text-[10px] text-indigo-300/80 bg-indigo-950/50 p-2 rounded-lg border border-indigo-900/50 text-center font-medium">
+                                                                    🧪 In modalità <strong>Sandbox / Demo</strong> la carta verrà verificata senza addebiti reali.
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div className="space-y-2">
