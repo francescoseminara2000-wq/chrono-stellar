@@ -11,8 +11,8 @@ export class RevolutPaymentStrategy implements PaymentStrategy {
         const apiKey = settings?.revolutApiKey;
         const environment = settings?.revolutEnvironment || 'sandbox';
 
-        if (!apiKey) {
-            console.warn('[RevolutStrategy] Revolut API Key non configurata nelle impostazioni.');
+        if (!apiKey || apiKey.trim() === '' || apiKey === 'demo') {
+            console.log('[RevolutStrategy] API Key non inserita. Utilizzo modalità simulazione interattiva (Demo Simulator).');
             return {
                 orderId: order.id,
                 amount,
@@ -21,9 +21,9 @@ export class RevolutPaymentStrategy implements PaymentStrategy {
                 status: TransactionStatus.PENDING,
                 gatewayTxId: `REV-SIM-${order.id}-${Date.now()}`,
                 metadata: {
-                    error: 'API Key mancante',
+                    isDemo: true,
                     environment,
-                    checkoutUrl: null
+                    checkoutUrl: `/checkout/demo-revolut?orderId=${order.id}&amount=${amount}`
                 }
             };
         }

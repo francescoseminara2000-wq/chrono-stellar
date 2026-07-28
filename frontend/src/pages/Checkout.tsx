@@ -81,6 +81,8 @@ export const Checkout = () => {
     });
 
     const [revolutCheckoutUrl, setRevolutCheckoutUrl] = useState<string | null>(null);
+    const [lastOrderId, setLastOrderId] = useState<number | null>(null);
+    const [simulatedSuccess, setSimulatedSuccess] = useState(false);
 
     const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
     const [shippingCost, setShippingCost] = useState(0);
@@ -387,6 +389,9 @@ export const Checkout = () => {
 
             if (res.ok) {
                 const createdOrder = await res.json();
+                if (createdOrder?.id) {
+                    setLastOrderId(createdOrder.id);
+                }
                 const revolutUrl = createdOrder?.transaction?.metadata?.checkoutUrl;
                 if (revolutUrl) {
                     setRevolutCheckoutUrl(revolutUrl);
@@ -486,22 +491,60 @@ export const Checkout = () => {
                     </p>
 
                     {revolutCheckoutUrl && (
-                        <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-3">
-                            <div className="font-bold text-indigo-900 text-sm flex items-center justify-center gap-2">
-                                <CreditCard size={18} /> Completa il Pagamento Online
+                        revolutCheckoutUrl.includes('demo-revolut') ? (
+                            simulatedSuccess ? (
+                                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl text-center space-y-2 animate-in fade-in duration-300">
+                                    <div className="font-extrabold text-green-700 text-sm flex items-center justify-center gap-2">
+                                        ✓ Pagamento Simulato Ricevuto!
+                                    </div>
+                                    <p className="text-xs text-green-600">
+                                        Transazione completata con successo nella modalità demo.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-3">
+                                    <div className="font-bold text-indigo-900 text-sm flex items-center justify-center gap-2">
+                                        🧪 Simulatore Pagamento Revolut (Demo)
+                                    </div>
+                                    <p className="text-xs text-indigo-700">
+                                        Stai provando la modalità demo senza account Revolut collegato. Fai clic sotto per simulare un pagamento riuscito:
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            if (lastOrderId) {
+                                                await fetch('/api/revolut/simulate', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ orderId: lastOrderId })
+                                                });
+                                                setSimulatedSuccess(true);
+                                            }
+                                        }}
+                                        className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-extrabold text-sm shadow-md transition-all w-full cursor-pointer"
+                                    >
+                                        💳 Simula Pagamento Riuscito (Demo)
+                                    </button>
+                                </div>
+                            )
+                        ) : (
+                            <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-3">
+                                <div className="font-bold text-indigo-900 text-sm flex items-center justify-center gap-2">
+                                    <CreditCard size={18} /> Completa il Pagamento Online
+                                </div>
+                                <p className="text-xs text-indigo-700">
+                                    Clicca sul pulsante sottostante per accedere al checkout sicuro Revolut.
+                                </p>
+                                <a
+                                    href={revolutCheckoutUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-extrabold text-sm shadow-md transition-all w-full"
+                                >
+                                    💳 Paga Ora con Revolut Pay
+                                </a>
                             </div>
-                            <p className="text-xs text-indigo-700">
-                                Clicca sul pulsante sottostante per accedere al checkout sicuro Revolut.
-                            </p>
-                            <a
-                                href={revolutCheckoutUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-extrabold text-sm shadow-md transition-all w-full"
-                            >
-                                💳 Paga Ora con Revolut Pay
-                            </a>
-                        </div>
+                        )
                     )}
 
                     <a href="/shop" className="bg-nature-600 text-white px-8 py-3 rounded-full font-bold hover:bg-nature-700 transition-colors inline-block mt-2">

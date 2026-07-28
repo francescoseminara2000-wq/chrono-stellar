@@ -58,4 +58,39 @@ export class RevolutController {
             res.status(500).json({ error: 'Webhook processing error' });
         }
     }
+
+    // Simulation helper endpoint for testing without Revolut Merchant account
+    async simulatePayment(req: Request, res: Response) {
+        try {
+            const { orderId } = req.body;
+            if (!orderId) {
+                return res.status(400).json({ error: 'orderId is required' });
+            }
+
+            const transaction = await prisma.transaction.findFirst({
+                where: { orderId: Number(orderId) }
+            });
+
+            if (!transaction) {
+                return res.status(404).json({ error: 'Transaction not found for order' });
+            }
+
+            const updated = await prisma.transaction.update({
+                where: { id: transaction.id },
+                data: {
+                    status: TransactionStatus.CAPTURED,
+                    metadata: {
+                        ...(transaction.metadata as object || {}),
+                        simulatedAt: new Date().toISOString(),
+                        simulatedBy: 'User Demo Checkout'
+                    }
+                }
+            });
+
+            res.json({ success: true, transaction: updated });
+        } catch (err: any) {
+            console.error('[RevolutController] Simulation error:', err);
+            res.status(500).json({ error: err.message });
+        }
+    }
 }

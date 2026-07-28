@@ -45,6 +45,7 @@ const revolutController = new RevolutController();
 
 // API Routes
 app.post('/api/webhooks/revolut', (req, res) => revolutController.handleWebhook(req, res));
+app.post('/api/revolut/simulate', (req, res) => revolutController.simulatePayment(req, res));
 // Public
 app.get('/api/products', (req, res) => productController.listPublic(req, res));
 app.get('/api/delivery-zones', (req, res) => deliveryZoneController.listActive(req, res)); // For checkout
