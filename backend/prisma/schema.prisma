@@ -279,3 +279,18 @@ model SiteVisit {
   @@index([userId])
 }
 
+model ItinerantMarket {
+  id             Int      @id @default(autoincrement())
+  dayNum         Int      // 1 = Lunedì, 2 = Martedì, etc.
+  dayName        String
+  location       String
+  province       String
+  details        String
+  hours          String
+  description    String   @db.Text
+  googleMapsUrl  String?  @db.Text
+  imageUrl       String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+

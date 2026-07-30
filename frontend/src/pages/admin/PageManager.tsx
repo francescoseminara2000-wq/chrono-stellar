@@ -147,8 +147,39 @@ export const PageManager = () => {
 
     const [error, setError] = useState('');
 
+    // Markets Manager State
+    const [isMarketsModalOpen, setIsMarketsModalOpen] = useState(false);
+    const [markets, setMarkets] = useState<any[]>([]);
+    const [isEditingMarket, setIsEditingMarket] = useState(false);
+    const [selectedMarketId, setSelectedMarketId] = useState<number | null>(null);
+    const [marketFormData, setMarketFormData] = useState({
+        dayNum: 1,
+        dayName: 'Lunedì',
+        location: '',
+        province: '',
+        details: '',
+        hours: '08:00 - 13:00',
+        description: '',
+        googleMapsUrl: '',
+        imageUrl: ''
+    });
+    const [isSavingMarket, setIsSavingMarket] = useState(false);
+
+    const fetchMarkets = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/markets`);
+            if (res.ok) {
+                const data = await res.json();
+                setMarkets(data);
+            }
+        } catch (error) {
+            console.error('Error fetching markets:', error);
+        }
+    };
+
     useEffect(() => {
         fetchPages();
+        fetchMarkets();
     }, [token]);
 
     const fetchPages = async () => {
@@ -165,6 +196,122 @@ export const PageManager = () => {
             console.error('Error fetching pages:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleResetMarketForm = () => {
+        setIsEditingMarket(false);
+        setSelectedMarketId(null);
+        setMarketFormData({
+            dayNum: 1,
+            dayName: 'Lunedì',
+            location: '',
+            province: 'LC',
+            details: '',
+            hours: '08:00 - 13:00',
+            description: '',
+            googleMapsUrl: '',
+            imageUrl: ''
+        });
+    };
+
+    const handleOpenMarketEdit = (market: any) => {
+        setIsEditingMarket(true);
+        setSelectedMarketId(market.id);
+        setMarketFormData({
+            dayNum: market.dayNum,
+            dayName: market.dayName,
+            location: market.location,
+            province: market.province,
+            details: market.details,
+            hours: market.hours,
+            description: market.description || '',
+            googleMapsUrl: market.googleMapsUrl || '',
+            imageUrl: market.imageUrl || ''
+        });
+    };
+
+    const handleSaveMarket = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingMarket(true);
+        const url = isEditingMarket
+            ? `${API_URL}/api/admin/markets/${selectedMarketId}`
+            : `${API_URL}/api/admin/markets`;
+        const method = isEditingMarket ? 'PUT' : 'POST';
+
+        const dayNames = ['', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+        const payload = {
+            ...marketFormData,
+            dayName: dayNames[marketFormData.dayNum] || 'Lunedì'
+        };
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                fetchMarkets();
+                handleResetMarketForm();
+            } else {
+                alert('Errore durante il salvataggio del mercato');
+            }
+        } catch (error) {
+            console.error('Error saving market:', error);
+        } finally {
+            setIsSavingMarket(false);
+        }
+    };
+
+    const handleDeleteMarket = async (id: number) => {
+        if (!window.confirm('Sei sicuro di voler eliminare questo mercato?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admin/markets/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                fetchMarkets();
+                if (selectedMarketId === id) {
+                    handleResetMarketForm();
+                }
+            } else {
+                alert('Errore durante l\'eliminazione del mercato');
+            }
+        } catch (error) {
+            console.error('Error deleting market:', error);
+        }
+    };
+
+    const handleMarketImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setMarketFormData(prev => ({
+                    ...prev,
+                    imageUrl: `${API_URL}${data.url}`
+                }));
+            } else {
+                alert('Errore nel caricamento della foto del mercato');
+            }
+        } catch (error) {
+            console.error('Upload market image error:', error);
         }
     };
 
@@ -361,13 +508,22 @@ export const PageManager = () => {
                     <h2 className="text-2xl font-bold text-nature-900">Pagine Statiche CMS</h2>
                     <p className="text-gray-500 text-sm">Costruisci e gestisci pagine tramite blocchi modulari.</p>
                 </div>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="bg-nature-600 hover:bg-nature-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm"
-                >
-                    <Plus size={20} />
-                    <span>Nuova Pagina</span>
-                </button>
+                <div className="flex flex-wrap gap-2.5">
+                    <button
+                        onClick={() => setIsMarketsModalOpen(true)}
+                        className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-250 px-5 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
+                    >
+                        <Icons.MapPin size={20} />
+                        <span>📍 Mercati Itineranti</span>
+                    </button>
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="bg-nature-600 hover:bg-nature-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm"
+                    >
+                        <Plus size={20} />
+                        <span>Nuova Pagina</span>
+                    </button>
+                </div>
             </div>
 
             {isLoading ? (
@@ -1112,6 +1268,229 @@ export const PageManager = () => {
                             >
                                 {isEditing ? 'Salva Modifiche' : 'Crea Pagina'}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Markets Manager Modal */}
+            {isMarketsModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-emerald-50">
+                            <div>
+                                <h2 className="text-xl font-black text-emerald-950 flex items-center gap-2">
+                                    <Icons.MapPin size={22} className="text-emerald-700 animate-bounce" /> Gestione Mercati Itineranti
+                                </h2>
+                                <p className="text-xs text-emerald-800/80 font-bold">Aggiungi, modifica o rimuovi i comuni serviti itineranti di Ortofrutta Butti.</p>
+                            </div>
+                            <button
+                                onClick={() => { setIsMarketsModalOpen(false); handleResetMarketForm(); }}
+                                className="w-10 h-10 rounded-full bg-white/50 text-emerald-950 flex items-center justify-center hover:bg-white hover:shadow-sm transition-all cursor-pointer"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content Area (Split Screen) */}
+                        <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-2">
+                            {/* Left Panel: Current Markets List */}
+                            <div className="p-6 overflow-y-auto border-r border-gray-100 space-y-4">
+                                <h3 className="font-black text-sm text-gray-400 uppercase tracking-wider">Mercati Attivi ({markets.length})</h3>
+                                <div className="space-y-2.5">
+                                    {markets.map(market => (
+                                        <div
+                                            key={market.id}
+                                            onClick={() => handleOpenMarketEdit(market)}
+                                            className={`p-4 rounded-2xl border-2 text-left cursor-pointer transition-all flex items-start justify-between gap-3 relative group overflow-hidden ${
+                                                selectedMarketId === market.id
+                                                    ? 'border-emerald-600 bg-emerald-50/50 shadow-sm font-black'
+                                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <div className="flex gap-3">
+                                                {market.imageUrl && (
+                                                    <div className="w-12 h-12 rounded-xl bg-gray-55 overflow-hidden shrink-0 border border-gray-150 flex items-center justify-center">
+                                                        <img src={sanitizeImageUrl(market.imageUrl)} alt={market.location} className="w-full h-full object-cover" />
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="font-black text-sm text-gray-900 flex items-center gap-1.5">
+                                                        <span>{market.location}</span>
+                                                        <span className="text-[10px] text-gray-400 font-bold bg-gray-100 px-1.5 py-0.5 rounded">{market.province}</span>
+                                                    </div>
+                                                    <span className="text-xs text-gray-400 font-bold">{market.dayName} • {market.hours}</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteMarket(market.id);
+                                                }}
+                                                className="p-1.5 text-red-500 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 rounded-lg transition-all"
+                                                title="Elimina mercato"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Right Panel: Edit / Create Form */}
+                            <div className="p-6 overflow-y-auto bg-gray-50/50">
+                                <form onSubmit={handleSaveMarket} className="space-y-4">
+                                    <h3 className="font-black text-sm text-gray-400 uppercase tracking-wider">
+                                        {isEditingMarket ? 'Modifica Mercato' : 'Aggiungi Nuovo Mercato'}
+                                    </h3>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Giorno della Settimana</label>
+                                        <select
+                                            className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-gray-900"
+                                            value={marketFormData.dayNum}
+                                            onChange={e => setMarketFormData({ ...marketFormData, dayNum: parseInt(e.target.value, 10) })}
+                                        >
+                                            <option value={1}>Lunedì</option>
+                                            <option value={2}>Martedì</option>
+                                            <option value={3}>Mercoledì</option>
+                                            <option value={4}>Giovedì</option>
+                                            <option value={5}>Venerdì</option>
+                                            <option value={6}>Sabato</option>
+                                            <option value={7}>Domenica</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Comune</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                placeholder="es. Magreglio"
+                                                className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-gray-900"
+                                                value={marketFormData.location}
+                                                onChange={e => setMarketFormData({ ...marketFormData, location: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Provincia</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                maxLength={2}
+                                                placeholder="es. LC"
+                                                className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-gray-900 uppercase"
+                                                value={marketFormData.province}
+                                                onChange={e => setMarketFormData({ ...marketFormData, province: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Dettagli / Indirizzo Posizionamento</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            placeholder="es. Piazza Roma / Centro"
+                                            className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-gray-900"
+                                            value={marketFormData.details}
+                                            onChange={e => setMarketFormData({ ...marketFormData, details: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Orari di Esposizione</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            placeholder="es. 08:00 - 13:00"
+                                            className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-gray-900"
+                                            value={marketFormData.hours}
+                                            onChange={e => setMarketFormData({ ...marketFormData, hours: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Google Maps Link</label>
+                                        <input
+                                            type="url"
+                                            placeholder="https://maps.google.com/?q=..."
+                                            className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-gray-900"
+                                            value={marketFormData.googleMapsUrl}
+                                            onChange={e => setMarketFormData({ ...marketFormData, googleMapsUrl: e.target.value })}
+                                        />
+                                    </div>
+
+                                    {/* Market Photo Upload Section */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Foto del Mercato</label>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleMarketImageUpload}
+                                                className="hidden"
+                                                id="market-photo-file"
+                                            />
+                                            <label
+                                                htmlFor="market-photo-file"
+                                                className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs cursor-pointer flex items-center gap-1.5"
+                                            >
+                                                <Icons.Upload size={14} /> Carica Foto
+                                            </label>
+                                            {marketFormData.imageUrl && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setMarketFormData(prev => ({ ...prev, imageUrl: '' }))}
+                                                    className="text-xs text-red-500 hover:underline font-bold"
+                                                >
+                                                    Rimuovi
+                                                </button>
+                                            )}
+                                        </div>
+                                        {marketFormData.imageUrl && (
+                                            <div className="mt-2.5 w-full h-32 rounded-2xl overflow-hidden border border-gray-200 bg-white">
+                                                <img src={sanitizeImageUrl(marketFormData.imageUrl)} alt="Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Descrizione del Mercato</label>
+                                        <textarea
+                                            required
+                                            rows={3}
+                                            placeholder="Descrivi brevemente il mercato, i nostri prodotti tipici esposti, etc..."
+                                            className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-xs font-bold text-gray-900"
+                                            value={marketFormData.description}
+                                            onChange={e => setMarketFormData({ ...marketFormData, description: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-2.5 pt-2">
+                                        <button
+                                            type="submit"
+                                            disabled={isSavingMarket}
+                                            className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-black rounded-xl text-xs shadow transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                                        >
+                                            <Check size={14} />
+                                            {isSavingMarket ? 'Salvataggio...' : (isEditingMarket ? 'Salva Modifiche' : 'Aggiungi')}
+                                        </button>
+                                        {isEditingMarket && (
+                                            <button
+                                                type="button"
+                                                onClick={handleResetMarketForm}
+                                                className="py-3 px-4 bg-gray-100 hover:bg-gray-250 text-gray-600 font-bold rounded-xl text-xs transition-all cursor-pointer"
+                                            >
+                                                Annulla
+                                            </button>
+                                        )}
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

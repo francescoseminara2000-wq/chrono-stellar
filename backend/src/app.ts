@@ -130,6 +130,14 @@ app.delete('/api/admin/pages/:id', authenticateToken, requireAdmin, (req, res) =
 // Public - Pages (CMS)
 app.get('/api/pages/:slug', (req, res) => pageController.getBySlug(req, res));
 
+// Itinerant Markets
+import { MarketController } from './controllers/MarketController';
+const marketController = new MarketController();
+app.get('/api/markets', (req, res) => marketController.list(req, res));
+app.post('/api/admin/markets', authenticateToken, requireAdmin, (req, res) => marketController.create(req, res));
+app.put('/api/admin/markets/:id', authenticateToken, requireAdmin, (req, res) => marketController.update(req, res));
+app.delete('/api/admin/markets/:id', authenticateToken, requireAdmin, (req, res) => marketController.delete(req, res));
+
 // Avatars
 // Imports moved to top
 app.get('/api/avatars', (req, res) => avatarController.list(req, res));
