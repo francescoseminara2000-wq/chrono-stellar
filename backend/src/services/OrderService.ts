@@ -3,7 +3,7 @@ import { WhatsAppService } from './WhatsAppService';
 import { PaymentStrategy } from '../domain/payment/PaymentStrategy';
 import { CashOnDeliveryStrategy } from '../infrastructure/payment/CodStrategy';
 import { RevolutPaymentStrategy } from '../infrastructure/payment/RevolutStrategy';
-import { PrismaClient, Prisma, OrderStatus, UnitType } from '@prisma/client';
+import { PrismaClient, Prisma, OrderStatus, UnitType, PaymentGateway, TransactionStatus } from '@prisma/client';
 
 export class OrderService {
     private paymentStrategies: Map<string, PaymentStrategy>;
@@ -174,7 +174,21 @@ export class OrderService {
                 });
             }
 
-            return newOrder;
+            // Initiate payment strategy and create Transaction record
+            const transactionPartial = await strategy.initiate(newOrder as any, Math.round(estimatedTotal));
+            const transaction = await tx.transaction.create({
+                data: {
+                    orderId: newOrder.id,
+                    amount: transactionPartial.amount || Math.round(estimatedTotal),
+                    currency: transactionPartial.currency || 'EUR',
+                    gateway: transactionPartial.gateway || PaymentGateway.COD,
+                    status: transactionPartial.status || TransactionStatus.PENDING,
+                    gatewayTxId: transactionPartial.gatewayTxId || `TX-${newOrder.id}-${Date.now()}`,
+                    metadata: (transactionPartial.metadata as any) || {}
+                }
+            });
+
+            return { ...newOrder, transaction };
         });
 
         // Trigger notifications (WhatsApp primary if server connected & phone present, with Email fallback)
