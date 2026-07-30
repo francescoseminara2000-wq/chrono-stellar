@@ -4,7 +4,6 @@ import { WhatsAppStatus } from '../../components/admin/WhatsAppStatus';
 import { NotificationCenter } from '../../components/admin/NotificationCenter';
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Toaster } from '../../components/ui/Toaster';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { useAppState } from '../../store/useAppState';
 
@@ -140,8 +139,6 @@ export const AdminLayout = () => {
                 </nav>
 
                 <div className={`p-6 border-t border-white/10 bg-black/20 backdrop-blur-md relative z-10 transition-all duration-300 ${isSidebarCollapsed ? 'px-3 pb-8' : ''}`}>
-                    <Toaster variant="inline" />
-
                     {isSidebarCollapsed ? (
                         <div className="relative flex flex-col items-center">
                             <button
