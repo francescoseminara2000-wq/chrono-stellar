@@ -1009,8 +1009,6 @@ export const OrderManager = () => {
                                                 const isPriceModified = currentUnitPrice !== (item.product.priceCents / 100);
                                                 const itemActualCost = currentQty * currentUnitPrice;
 
-                                                const isEditable = selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELLED';
-
                                                 return (
                                                     <div key={item.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl border transition-all gap-3 ${
                                                         isWeighed ? 'bg-emerald-50/40 border-emerald-200/80' : 'bg-gray-50/90 border-gray-200/80'
@@ -1063,8 +1061,8 @@ export const OrderManager = () => {
                                                                 </span>
                                                             </div>
 
-                                                            {/* Single Weighing Action Button */}
-                                                            {isEditable && (
+                                                            {/* Single Weighing Action Button (Visible ONLY when order is PENDING) */}
+                                                            {selectedOrder.status === 'PENDING' && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleOpenSingleItemWeighing(item)}
@@ -1200,10 +1198,24 @@ export const OrderManager = () => {
                                         </a>
                                     )}
 
-                                    {(selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED') && (
-                                        <button onClick={handleFulfill} className="px-4 py-3 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                            <Scale size={18} /> Conferma Pesatura & Prezzi
-                                        </button>
+                                    {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
+                                    {selectedOrder.status === 'PENDING' && (
+                                        selectedOrder.items.every(item => item.quantityFulfilled !== null && item.quantityFulfilled !== undefined) ? (
+                                            <button
+                                                onClick={() => handleUpdateStatus('WEIGHING_COMPLETED')}
+                                                className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer animate-in zoom-in-95"
+                                            >
+                                                <Scale size={18} /> Conferma Pesatura Generale
+                                            </button>
+                                        ) : (
+                                            <div className="px-3.5 py-2.5 bg-amber-50 text-amber-900 border border-amber-200/90 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90">
+                                                <span className="relative flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                                </span>
+                                                Pesa tutti i prodotti ({selectedOrder.items.filter(i => i.quantityFulfilled === null || i.quantityFulfilled === undefined).length} rimanenti)
+                                            </div>
+                                        )
                                     )}
 
                                     {selectedOrder.status === 'WEIGHING_COMPLETED' && (
