@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Clock, ExternalLink, ArrowRight, Store, Navigation } from 'lucide-react';
+import { MapPin, Clock, ExternalLink, ArrowRight, Store, Navigation, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -127,49 +127,129 @@ export const Markets: React.FC = () => {
                             <div className="lg:col-span-1 space-y-4">
                                 <h3 className="text-lg font-black text-gray-900 px-1">🗓️ La Settimana dei Mercati</h3>
                                 
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {markets.map((market) => {
                                         const isActive = currentDay === market.dayNum;
                                         const isToday = todayDayNum === market.dayNum;
 
                                         return (
-                                            <button
+                                            <div
                                                 key={market.dayNum}
-                                                onClick={() => setCurrentDay(market.dayNum)}
-                                                className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between gap-4 cursor-pointer relative overflow-hidden ${
+                                                className={`w-full rounded-2xl border-2 transition-all flex flex-col bg-white overflow-hidden ${
                                                     isActive
-                                                        ? 'border-emerald-600 bg-white shadow-md'
-                                                        : 'border-transparent bg-white/60 hover:bg-white hover:border-gray-200'
+                                                        ? 'border-emerald-600 shadow-md'
+                                                        : 'border-transparent shadow-sm hover:border-gray-250/50'
                                                 }`}
                                             >
-                                                {isToday && (
-                                                    <div className="absolute top-0 left-0 bottom-0 w-1 bg-emerald-550" />
-                                                )}
-                                                
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl font-black text-xs uppercase flex items-center justify-center border shrink-0 ${
-                                                        isActive
-                                                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                                            : 'bg-gray-50 border-gray-100 text-gray-400'
-                                                    }`}>
-                                                        {market.dayName.substring(0, 3)}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-black text-sm text-gray-900 flex items-center gap-1.5">
-                                                            <span>{market.location}</span>
-                                                            <span className="text-[10px] text-gray-400 font-bold bg-gray-100 px-1.5 py-0.5 rounded-md">{market.province}</span>
-                                                        </div>
-                                                        <span className="text-xs text-gray-400 font-bold block mt-0.5">{market.dayName}</span>
-                                                    </div>
-                                                </div>
-
-                                                <ArrowRight
-                                                    size={16}
-                                                    className={`transition-transform duration-300 ${
-                                                        isActive ? 'text-emerald-700 translate-x-1' : 'text-gray-400'
+                                                {/* Header Row (Accordion Trigger) */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentDay(market.dayNum)}
+                                                    className={`w-full text-left p-4 flex items-center justify-between gap-4 cursor-pointer relative ${
+                                                        isActive ? 'bg-emerald-50/10' : 'bg-white'
                                                     }`}
-                                                />
-                                            </button>
+                                                >
+                                                    {isToday && (
+                                                        <div className="absolute top-0 left-0 bottom-0 w-1 bg-emerald-550" />
+                                                    )}
+                                                    
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-xl font-black text-xs uppercase flex items-center justify-center border shrink-0 ${
+                                                            isActive
+                                                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                                                : 'bg-gray-50 border-gray-100 text-gray-400'
+                                                        }`}>
+                                                            {market.dayName.substring(0, 3)}
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-black text-sm text-gray-900 flex items-center gap-1.5">
+                                                                <span>{market.location}</span>
+                                                                <span className="text-[10px] text-gray-400 font-bold bg-gray-100 px-1.5 py-0.5 rounded-md">{market.province}</span>
+                                                            </div>
+                                                            <span className="text-xs text-gray-400 font-bold block mt-0.5">{market.dayName}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Arrow indicator (desktop) or Chevron indicator (mobile) */}
+                                                    <div className="flex items-center gap-1">
+                                                        {isToday && (
+                                                            <span className="lg:hidden px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md text-[9px] font-black uppercase mr-1">Oggi</span>
+                                                        )}
+                                                        <ChevronDown
+                                                            size={16}
+                                                            className={`lg:hidden transition-transform duration-300 ${
+                                                                isActive ? 'text-emerald-700 rotate-180' : 'text-gray-400'
+                                                            }`}
+                                                        />
+                                                        <ArrowRight
+                                                            size={16}
+                                                            className={`hidden lg:block transition-transform duration-300 ${
+                                                                isActive ? 'text-emerald-700 translate-x-1' : 'text-gray-400'
+                                                            }`}
+                                                        />
+                                                    </div>
+                                                </button>
+
+                                                {/* Mobile Inline Details (Accordion Content) */}
+                                                <AnimatePresence initial={false}>
+                                                    {isActive && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: "auto", opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                                                            className="lg:hidden border-t border-gray-100 overflow-hidden bg-gray-50/40"
+                                                        >
+                                                            {market.imageUrl && (
+                                                                <div className="w-full h-44 overflow-hidden relative">
+                                                                    <img
+                                                                        src={sanitizeImageUrl(market.imageUrl)}
+                                                                        alt={market.location}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                                                                </div>
+                                                            )}
+                                                            <div className="p-4 space-y-4">
+                                                                <div className="grid grid-cols-1 gap-2.5">
+                                                                    <div className="p-3 bg-white rounded-xl border border-gray-150/70 flex items-start gap-2.5">
+                                                                        <MapPin className="text-emerald-700 shrink-0 mt-0.5" size={16} />
+                                                                        <div>
+                                                                            <span className="text-[9px] font-bold text-gray-400 uppercase block">Posizionamento</span>
+                                                                            <span className="font-bold text-xs text-gray-900 block mt-0.5 leading-snug">{market.details}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="p-3 bg-white rounded-xl border border-gray-150/70 flex items-start gap-2.5">
+                                                                        <Clock className="text-emerald-700 shrink-0 mt-0.5" size={16} />
+                                                                        <div>
+                                                                            <span className="text-[9px] font-bold text-gray-400 uppercase block">Orari</span>
+                                                                            <span className="font-bold text-xs text-gray-900 block mt-0.5">{market.hours}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="space-y-1">
+                                                                    <span className="font-black text-[9px] uppercase tracking-wider text-gray-400 block">Descrizione</span>
+                                                                    <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                                                                        {market.description}
+                                                                    </p>
+                                                                </div>
+
+                                                                {market.googleMapsUrl && (
+                                                                    <a
+                                                                        href={market.googleMapsUrl}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="w-full py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black rounded-xl text-xs border border-emerald-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                                                    >
+                                                                        Apri in Google Maps <ExternalLink size={12} />
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -189,9 +269,9 @@ export const Markets: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Right Column: Detailed Animated Day card & Info */}
+                            {/* Right Column: Detailed Animated Day card (DESKTOP ONLY) */}
                             {activeMarket && (
-                                <div className="lg:col-span-2">
+                                <div className="hidden lg:block lg:col-span-2">
                                     <AnimatePresence mode="wait">
                                         <motion.div
                                             key={activeMarket.dayNum}
