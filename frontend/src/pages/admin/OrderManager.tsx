@@ -26,8 +26,6 @@ interface Order {
     scheduledTime?: string;
 }
 
-const ORDER_STATUSES = ['PENDING', 'WEIGHING_COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
-
 export const OrderManager = () => {
     const { token } = useAuthStore();
     const [orders, setOrders] = useState<Order[]>([]);
@@ -47,7 +45,7 @@ export const OrderManager = () => {
     const [editTime, setEditTime] = useState('');
     const [editNotes, setEditNotes] = useState('');
     const [isSavingEdits, setIsSavingEdits] = useState(false);
-    const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+    const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'customer'>('overview');
 
     useEffect(() => {
         if (selectedOrder) {
@@ -805,281 +803,308 @@ export const OrderManager = () => {
 
                             {/* Main content wrapper - flex layout */}
                             <div className="flex-1 p-3 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
-                                <div className="hidden lg:flex justify-between items-center mb-4 pb-2.5 border-b border-gray-100">
-                                    <div>
-                                        <div className="flex items-center gap-3">
-                                            <h2 className="text-2xl font-black text-gray-900 leading-none">Ordine #{selectedOrder.id}</h2>
-                                            {/* Payment Method Badge */}
-                                            {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
-                                                <span className="px-2.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
-                                                    💳 Revolut Pay
-                                                </span>
-                                            ) : (
-                                                <span className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
-                                                    💵 Alla Consegna
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-gray-400 text-xs mt-1.5">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                                {/* Desktop Header: Order ID + Status + Payment Method */}
+                                <div className="hidden lg:flex justify-between items-center mb-3 pb-2.5 border-b border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-2xl font-black text-gray-900 leading-none">Ordine #{selectedOrder.id}</h2>
+                                        {/* Payment Method Badge */}
+                                        {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
+                                            <span className="px-2.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
+                                                💳 Revolut Pay
+                                            </span>
+                                        ) : (
+                                            <span className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
+                                                💵 Alla Consegna
+                                            </span>
+                                        )}
                                     </div>
+
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Stato:</span>
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Stato Attuale:</span>
                                         <StatusBadge status={selectedOrder.status} />
                                     </div>
                                 </div>
 
-                                {/* Compact Status Steps */}
-                                {selectedOrder.status !== 'CANCELLED' && (
-                                    <div className="flex justify-between items-center gap-1 sm:gap-3 mb-3 p-2 bg-gray-50/90 rounded-2xl text-[10px] sm:text-xs font-bold text-gray-500 shrink-0 border border-gray-100">
-                                        {ORDER_STATUSES.map((status, index) => {
-                                            const currentIndex = ORDER_STATUSES.indexOf(selectedOrder.status);
-                                            const isPast = index < currentIndex;
-                                            const isCurrent = index === currentIndex;
-                                            const labels: Record<string, string> = {
-                                                PENDING: 'Ricevuto',
-                                                WEIGHING_COMPLETED: 'Pesato',
-                                                OUT_FOR_DELIVERY: 'Spedito',
-                                                DELIVERED: 'Concluso'
-                                            };
-                                            return (
-                                                <div key={status} className="flex items-center gap-1 sm:gap-1.5">
-                                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                                                        isCurrent ? 'bg-nature-600 text-white shadow-sm ring-2 ring-nature-400/40 animate-pulse' :
-                                                        isPast ? 'bg-nature-100 text-nature-700' : 'bg-gray-200 text-gray-400'
-                                                    }`}>
-                                                        {isPast ? '✓' : index + 1}
-                                                    </span>
-                                                    <span className={`text-[10px] md:text-xs ${
-                                                        isCurrent ? 'text-nature-950 font-black' : isPast ? 'text-gray-700 font-semibold' : 'text-gray-400'
-                                                    } ${isCurrent ? 'block' : 'hidden sm:block'}`}>
-                                                        {labels[status]}
-                                                    </span>
-                                                    {index < ORDER_STATUSES.length - 1 && <span className="text-gray-300 text-[10px]">→</span>}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-
-                                {/* Mobile Quick Customer Bar (Collapsible to save vertical space for items) */}
-                                <div className="lg:hidden mb-3 bg-nature-50/80 border border-nature-200/80 rounded-2xl p-2.5 shrink-0">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <div className="w-8 h-8 rounded-xl bg-nature-900 text-white font-black text-xs flex items-center justify-center shrink-0">
-                                                {(selectedOrder.customerName || selectedOrder.user?.name || 'C').charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="font-extrabold text-xs text-nature-900 truncate">
-                                                    {selectedOrder.customerName || selectedOrder.user?.name}
-                                                </p>
-                                                <p className="text-[10px] text-nature-700 truncate">
-                                                    📍 {selectedOrder.shippingAddress || 'Ritiro in negozio'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            {selectedOrder.customerPhone && (
-                                                <a href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
-                                                    className="bg-emerald-600 text-white p-2 rounded-xl hover:bg-emerald-700 shadow-sm flex items-center justify-center">
-                                                    <MessageCircle size={14} />
-                                                </a>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-                                                className="px-2.5 py-1.5 bg-white border border-nature-200 text-nature-800 font-extrabold text-[10px] rounded-xl shadow-xs"
-                                            >
-                                                {isInfoExpanded ? 'Riduci ▲' : 'Info ▼'}
-                                            </button>
-                                        </div>
-                                    </div>
+                                {/* TAB NAVIGATION HEADER */}
+                                <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-2xl mb-4 shrink-0 border border-gray-200/50">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('overview')}
+                                        className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                            activeTab === 'overview'
+                                                ? 'bg-white text-nature-950 shadow-sm border border-gray-200/60'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        }`}
+                                    >
+                                        <span>📋</span> Riepilogo
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('items')}
+                                        className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                            activeTab === 'items'
+                                                ? 'bg-white text-nature-950 shadow-sm border border-gray-200/60'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        }`}
+                                    >
+                                        <span>🛒</span> Prodotti ({selectedOrder.items.length})
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('customer')}
+                                        className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                            activeTab === 'customer'
+                                                ? 'bg-white text-nature-950 shadow-sm border border-gray-200/60'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        }`}
+                                    >
+                                        <span>👤</span> Cliente & Consegna
+                                    </button>
                                 </div>
 
-                                {/* Customer Info & Internal Notes Grid (Always expanded on LG desktop, collapsible on mobile) */}
-                                <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-4 shrink-0 relative z-30 ${isInfoExpanded ? 'block' : 'hidden lg:grid'}`}>
-                                    {/* Customer Info */}
-                                    <div className="bg-nature-50/60 p-3 lg:p-4 rounded-xl border border-nature-100/50 text-xs flex flex-col justify-between">
-                                        <div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-nature-600 block mb-1">Cliente</span>
-                                            <div className="flex justify-between items-start">
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="font-extrabold text-base text-nature-900 leading-tight truncate">{selectedOrder.customerName || selectedOrder.user?.name}</p>
-                                                    <p className="text-nature-700 mt-0.5 truncate">{selectedOrder.customerEmail || selectedOrder.user?.email}</p>
-                                                    {selectedOrder.shippingAddress && (
-                                                        <p className="text-nature-800 font-medium mt-1.5 truncate" title={selectedOrder.shippingAddress}>
-                                                            📍 {selectedOrder.shippingAddress}
-                                                        </p>
-                                                    )}
+                                {/* TAB 1: RIEPILOGO (OVERVIEW) */}
+                                {activeTab === 'overview' && (
+                                    <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
+                                        {/* Status & Payment Overview Card */}
+                                        <div className="bg-gradient-to-br from-nature-50/80 to-emerald-50/50 p-4 rounded-2xl border border-nature-200/70 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-gray-500">Stato Ordine</span>
+                                                <StatusBadge status={selectedOrder.status} />
+                                            </div>
+                                            <div className="flex items-center justify-between border-t border-nature-100 pt-2.5">
+                                                <span className="text-xs font-bold text-gray-500">Metodo Pagamento</span>
+                                                {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
+                                                    <span className="font-extrabold text-xs text-indigo-900 bg-indigo-100/90 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                                                        💳 Revolut Pay Online
+                                                    </span>
+                                                ) : (
+                                                    <span className="font-extrabold text-xs text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                                        💵 Contanti / POS alla Consegna
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center justify-between border-t border-nature-100 pt-2.5">
+                                                <span className="text-xs font-bold text-gray-500">Data Ricezione</span>
+                                                <span className="font-bold text-xs text-gray-800">{new Date(selectedOrder.createdAt).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between border-t border-nature-100 pt-2.5">
+                                                <span className="text-xs font-bold text-gray-500">Pianificazione</span>
+                                                <span className="font-bold text-xs text-blue-700">
+                                                    {editDate ? `${editDate.split('-').reverse().join('/')} ${editTime || ''}` : 'Non Programmato'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Total Summary Box */}
+                                        <div className="bg-nature-950 text-white p-4 rounded-2xl flex items-center justify-between shadow-md">
+                                            <div>
+                                                <span className="text-[10px] text-nature-300 font-extrabold uppercase tracking-wider block">Totale Ordine</span>
+                                                <span className="text-xl font-black">
+                                                    € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs font-bold text-nature-300 bg-nature-900 px-3 py-1.5 rounded-xl border border-nature-800">
+                                                {selectedOrder.items.length} Prodotti
+                                            </span>
+                                        </div>
+
+                                        {/* Customer Quick Summary */}
+                                        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="font-extrabold text-xs text-gray-900 flex items-center gap-1.5">
+                                                    👤 {selectedOrder.customerName || selectedOrder.user?.name}
                                                 </div>
                                                 {selectedOrder.customerPhone && (
                                                     <a href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
-                                                        className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors shadow-sm ml-2 flex items-center justify-center shrink-0">
-                                                        <MessageCircle size={16} />
+                                                        className="bg-emerald-600 text-white px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1 hover:bg-emerald-700 transition-all shadow-sm">
+                                                        <MessageCircle size={13} /> WhatsApp
+                                                    </a>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-600 font-medium">
+                                                📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
+                                            </p>
+                                            {selectedOrder.deliveryNotes && (
+                                                <p className="text-xs bg-amber-50 text-amber-900 p-2.5 rounded-xl border border-amber-200/80 font-medium">
+                                                    <strong>Note cliente:</strong> {selectedOrder.deliveryNotes}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* TAB 2: PRODOTTI ORDINATI (ITEMS) */}
+                                {activeTab === 'items' && (
+                                    <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/80 rounded-2xl p-3 lg:p-4 overflow-hidden animate-in fade-in duration-200">
+                                        <div className="grid grid-cols-12 gap-2 sm:gap-3 pb-2 mb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
+                                            <span className="col-span-5">Prodotto</span>
+                                            <span className="col-span-3 text-right">Richiesto</span>
+                                            <span className="col-span-4 text-right">Effettivo</span>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+                                            {selectedOrder.items.map(item => {
+                                                const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+                                                const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
+                                                const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
+
+                                                const rawFulfillment = fulfillmentData[item.id];
+                                                let itemActualQty = 0;
+                                                if (typeof rawFulfillment === 'number') {
+                                                    itemActualQty = rawFulfillment;
+                                                } else if (rawFulfillment === '') {
+                                                    itemActualQty = 0;
+                                                } else if (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined) {
+                                                    itemActualQty = Number(item.quantityFulfilled);
+                                                } else {
+                                                    itemActualQty = itemEstQtyKg;
+                                                }
+
+                                                const itemPriceCents = item.priceAtPurchase || item.product.priceCents;
+                                                const isPriceModified = item.priceAtPurchase && item.priceAtPurchase !== item.product.priceCents;
+                                                const itemActualCost = (itemPriceCents * itemActualQty) / 100;
+
+                                                return (
+                                                    <div key={item.id} className="grid grid-cols-12 gap-2 sm:gap-3 items-center py-2.5 px-3 bg-gray-50/60 hover:bg-gray-50 rounded-xl border border-gray-100 text-xs">
+                                                        {/* Product details */}
+                                                        <div className="col-span-5 min-w-0">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                <p className="font-extrabold text-gray-900 truncate" title={item.product.name}>{item.product.name}</p>
+                                                                {isPriceModified && (
+                                                                    <span className="text-[9px] font-extrabold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
+                                                                        Prezzo Modificato
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
+                                                                Unitario: € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Requested info */}
+                                                        <div className="col-span-3 text-right">
+                                                            <span className="font-semibold text-gray-600 block">
+                                                                {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-400 block mt-0.5">
+                                                                € {itemEstCost.toFixed(2)}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Actual info */}
+                                                        <div className="col-span-4 flex flex-col items-end text-right">
+                                                            {item.product.isVariableWeight && !item.quantityFulfilled ? (
+                                                                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px] uppercase tracking-wider block">
+                                                                    Da pesare
+                                                                </span>
+                                                            ) : (
+                                                                <span className="font-extrabold text-nature-900 block">
+                                                                    {item.quantityFulfilled ? `${item.quantityFulfilled} kg` : `${item.quantityOrdered} ${item.product.unitType.toLowerCase()}`}
+                                                                </span>
+                                                            )}
+                                                            <span className="text-[11px] font-black text-nature-700 block mt-0.5">
+                                                                € {itemActualCost.toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* TAB 3: CLIENTE & CONSEGNA (CUSTOMER & DELIVERY) */}
+                                {activeTab === 'customer' && (
+                                    <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
+                                        {/* Customer Details Card */}
+                                        <div className="bg-nature-50/70 p-4 rounded-2xl border border-nature-200/80 text-xs space-y-2.5">
+                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-nature-700 block">Dati Anagrafici & Contatto</span>
+                                            <div className="flex justify-between items-start">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-black text-base text-nature-950">{selectedOrder.customerName || selectedOrder.user?.name}</p>
+                                                    <p className="text-nature-700 mt-0.5 font-medium">{selectedOrder.customerEmail || selectedOrder.user?.email}</p>
+                                                    <p className="text-nature-800 font-bold mt-2">
+                                                        📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
+                                                    </p>
+                                                </div>
+                                                {selectedOrder.customerPhone && (
+                                                    <a href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
+                                                        className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm ml-2 flex items-center justify-center shrink-0">
+                                                        <MessageCircle size={18} />
                                                     </a>
                                                 )}
                                             </div>
                                         </div>
-                                        {selectedOrder.deliveryNotes && (
-                                            <div className="border-t border-nature-200/50 pt-2 mt-2 text-nature-600 truncate" title={selectedOrder.deliveryNotes}>
-                                                <strong>Note:</strong> {selectedOrder.deliveryNotes}
-                                            </div>
-                                        )}
-                                    </div>
 
-                                    {/* Appointment Scheduling */}
-                                    <div className="bg-blue-50/60 p-3 lg:p-4 rounded-xl border border-blue-100/50 text-xs flex flex-col justify-between">
-                                        <div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-1">Pianificazione Appuntamento</span>
-                                            <div className="mt-2 space-y-2">
-                                                <div className="bg-white p-2.5 rounded-lg border border-blue-100 flex items-center justify-between">
-                                                    <div>
-                                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Appuntamento</span>
-                                                        <span className="font-bold text-gray-800 text-xs">
-                                                            {editDate ? `${editDate.split('-').reverse().join('/')} ${editTime || ''}` : 'Non Programmato'}
-                                                        </span>
-                                                    </div>
+                                        {/* Appointment Scheduling Card */}
+                                        <div className="bg-blue-50/70 p-4 rounded-2xl border border-blue-200/80 text-xs space-y-2.5">
+                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 block">Pianificazione Consegna / Ritiro</span>
+                                            <div className="bg-white p-3 rounded-xl border border-blue-100 flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data e Fascia Oraria</span>
+                                                    <span className="font-extrabold text-gray-900 text-xs">
+                                                        {editDate ? `${editDate.split('-').reverse().join('/')} ${editTime || ''}` : 'Non Programmato'}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setTempModalDate(editDate);
+                                                        setTempModalTime(editTime);
+                                                        setIsScheduleModalOpen(true);
+                                                    }}
+                                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl transition-colors text-[10px] uppercase tracking-wide cursor-pointer shadow-sm"
+                                                >
+                                                    Pianifica
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Internal Notes Card */}
+                                        <div className="bg-yellow-50/70 p-4 rounded-2xl border border-yellow-200/80 text-xs space-y-2">
+                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-yellow-800 block">Note Interne Admin</span>
+                                            <textarea
+                                                className="w-full p-3 bg-white border border-yellow-300/80 rounded-xl text-xs focus:ring-2 focus:ring-yellow-400 outline-none resize-y min-h-[70px] text-gray-800 font-medium"
+                                                placeholder="Note ad uso esclusivo dello staff..."
+                                                value={editNotes}
+                                                onChange={(e) => setEditNotes(e.target.value)}
+                                            />
+                                        </div>
+
+                                        {/* Save Changes Button */}
+                                        {selectedOrder && (editDate !== (selectedOrder.scheduledDate || '') || editTime !== (selectedOrder.scheduledTime || '') || editNotes !== (selectedOrder.adminNotes || '')) && (
+                                            <div className="bg-nature-50 border border-nature-200 rounded-2xl p-3 flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shrink-0">
+                                                <span className="text-nature-900 text-xs font-bold flex items-center gap-2">
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nature-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-nature-500"></span>
+                                                    </span>
+                                                    Modifiche non salvate
+                                                </span>
+                                                <div className="flex items-center gap-2">
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            setTempModalDate(editDate);
-                                                            setTempModalTime(editTime);
-                                                            setIsScheduleModalOpen(true);
+                                                            setEditDate(selectedOrder.scheduledDate || '');
+                                                            setEditTime(selectedOrder.scheduledTime || '');
+                                                            setEditNotes(selectedOrder.adminNotes || '');
                                                         }}
-                                                        className="px-2.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-lg transition-colors text-[10px] uppercase tracking-wide cursor-pointer"
+                                                        className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-xl transition-all"
                                                     >
-                                                        Pianifica
+                                                        Annulla
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleSaveAllEdits}
+                                                        disabled={isSavingEdits}
+                                                        className="px-3 py-1.5 bg-nature-600 hover:bg-nature-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1"
+                                                    >
+                                                        {isSavingEdits ? 'Salvataggio...' : 'Salva Modifiche'}
                                                     </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Internal Notes */}
-                                    <div className="bg-yellow-50/60 p-3 lg:p-4 rounded-xl border border-yellow-100/50 text-xs flex flex-col">
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-700 block mb-1">Note Interne</span>
-                                        <textarea
-                                            className="w-full flex-1 p-2 bg-white border border-yellow-200 rounded-lg text-xs lg:text-sm focus:ring-1 focus:ring-yellow-400 outline-none resize-none min-h-[50px] lg:min-h-[64px]"
-                                            placeholder="Note interne..."
-                                            value={editNotes}
-                                            onChange={(e) => setEditNotes(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Unsaved Changes Banner */}
-                                {selectedOrder && (editDate !== (selectedOrder.scheduledDate || '') || editTime !== (selectedOrder.scheduledTime || '') || editNotes !== (selectedOrder.adminNotes || '')) && (
-                                    <div className="bg-nature-50 border border-nature-200 rounded-xl p-3 mb-4 flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shrink-0">
-                                        <div className="flex items-center gap-2 text-nature-800 text-xs font-bold">
-                                            <span className="relative flex h-2 w-2">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nature-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-nature-500"></span>
-                                            </span>
-                                            Ci sono modifiche non salvate
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setEditDate(selectedOrder.scheduledDate || '');
-                                                    setEditTime(selectedOrder.scheduledTime || '');
-                                                    setEditNotes(selectedOrder.adminNotes || '');
-                                                }}
-                                                className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-lg transition-all"
-                                            >
-                                                Annulla
-                                            </button>
-                                            <button
-                                                onClick={handleSaveAllEdits}
-                                                disabled={isSavingEdits}
-                                                className="px-3 py-1.5 bg-nature-600 hover:bg-nature-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1"
-                                            >
-                                                {isSavingEdits ? 'Salvataggio...' : 'Salva Modifiche'}
-                                            </button>
-                                        </div>
+                                        )}
                                     </div>
                                 )}
-
-                                {/* Order Items Table (Only scrollable child) */}
-                                <div className="flex-1 min-h-0 flex flex-col mb-4 bg-white border border-gray-100 rounded-xl p-3 lg:p-4 overflow-hidden">
-                                    <div className="grid grid-cols-12 gap-2 sm:gap-3 pb-2 mb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
-                                        <span className="col-span-5">Prodotto</span>
-                                        <span className="col-span-3 text-right">Richiesto</span>
-                                        <span className="col-span-4 text-right">Effettivo</span>
-                                    </div>
-                                    <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-                                        {selectedOrder.items.map(item => {
-                                            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
-                                            const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-                                            const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
-
-                                            const rawFulfillment = fulfillmentData[item.id];
-                                            let itemActualQty = 0;
-                                            if (typeof rawFulfillment === 'number') {
-                                                itemActualQty = rawFulfillment;
-                                            } else if (rawFulfillment === '') {
-                                                itemActualQty = 0;
-                                            } else if (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined) {
-                                                itemActualQty = Number(item.quantityFulfilled);
-                                            } else {
-                                                itemActualQty = itemEstQtyKg;
-                                            }
-
-                                            const itemPriceCents = item.priceAtPurchase || item.product.priceCents;
-                                            const isPriceModified = item.priceAtPurchase && item.priceAtPurchase !== item.product.priceCents;
-                                            const itemActualCost = (itemPriceCents * itemActualQty) / 100;
-
-                                            return (
-                                                <div key={item.id} className="grid grid-cols-12 gap-2 sm:gap-3 items-center py-2 px-2.5 sm:px-3 bg-gray-50/50 hover:bg-gray-50 rounded-lg border border-gray-100/50 text-xs">
-                                                    {/* Product details */}
-                                                    <div className="col-span-5 min-w-0">
-                                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                                            <p className="font-bold text-gray-900 truncate" title={item.product.name}>{item.product.name}</p>
-                                                            {isPriceModified && (
-                                                                <span className="text-[9px] font-extrabold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
-                                                                    Prezzo Modificato
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
-                                                            Unitario: € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                            {isPieceVariableWeight && <span className="block text-[9px] text-amber-600">(circa {item.product.stepAmount} kg/pz)</span>}
-                                                        </p>
-                                                    </div>
-
-                                                    {/* Requested info */}
-                                                    <div className="col-span-3 text-right">
-                                                        <span className="font-semibold text-gray-600 block">
-                                                            {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                            {isPieceVariableWeight && (
-                                                                <span className="text-[9px] text-gray-400 block font-normal">
-                                                                    (circa {itemEstQtyKg.toFixed(1)} kg)
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                        <span className="text-[10px] text-gray-400 block mt-0.5">
-                                                            € {itemEstCost.toFixed(2)}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Actual info */}
-                                                    <div className="col-span-4 flex flex-col items-end text-right">
-                                                        {item.product.isVariableWeight && !item.quantityFulfilled ? (
-                                                            <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px] uppercase tracking-wider block">
-                                                                Da pesare
-                                                            </span>
-                                                        ) : (
-                                                            <span className="font-extrabold text-nature-900 block">
-                                                                {item.quantityFulfilled ? `${item.quantityFulfilled} kg` : (isPieceVariableWeight ? `${itemEstQtyKg.toFixed(2)} kg` : `${item.quantityOrdered} ${item.product.unitType.toLowerCase()}`)}
-                                                            </span>
-                                                        )}
-                                                        <span className="text-[11px] font-black text-nature-700 block mt-0.5">
-                                                            € {itemActualCost.toFixed(2)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
                             </div>
 
                             {/* Action Footer (Sticky) */}
