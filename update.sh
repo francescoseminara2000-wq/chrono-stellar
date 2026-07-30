@@ -74,14 +74,23 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "${GREEN}Frontend compilato con successo.${NC}"
 
-# 4. Riavvio dei Servizi PM2
-echo -e "\n${BLUE}[4/5] Riavvio del server di backend tramite PM2...${NC}"
+# 4. Configurazione Nginx & Riavvio dei Servizi PM2
+echo -e "\n${BLUE}[4/5] Configurazione limiti Nginx e riavvio PM2...${NC}"
+if [ -f /etc/nginx/nginx.conf ]; then
+    if grep -q "client_max_body_size" /etc/nginx/nginx.conf; then
+        sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/nginx.conf
+    else
+        sudo sed -i '/http {/a \    client_max_body_size 50M;' /etc/nginx/nginx.conf
+    fi
+    sudo nginx -t > /dev/null 2>&1 && sudo systemctl reload nginx
+fi
+
 pm2 restart chrono-backend
 if [ $? -ne 0 ]; then
     echo -e "${RED}Impossibile riavviare PM2. Provo ad avviarlo per la prima volta...${NC}"
     pm2 start /var/www/chrono-stellar/backend/dist/server.js --name "chrono-backend"
 fi
-echo -e "${GREEN}Servizi PM2 riavviati con successo.${NC}"
+echo -e "${GREEN}Servizi PM2 e Nginx riavviati con successo.${NC}"
 
 # 5. Verifica Stato di Salute
 echo -e "\n${BLUE}[5/5] Verifica dello stato dell'applicazione...${NC}"
