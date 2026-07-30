@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, AlertTriangle, Scale, ShieldCheck, XCircle, MessageCircle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Scale, ShieldCheck, XCircle, MessageCircle, Phone } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -110,9 +110,6 @@ export const CustomerOrderApproval: React.FC = () => {
                                 <p className="text-xs font-bold text-emerald-300">Conferma Pesatura Ordine #{order.id}</p>
                             </div>
                         </div>
-                        <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-black border border-white/20 text-emerald-200">
-                            Pesatura Finale
-                        </span>
                     </div>
 
                     {/* Customer Greeting */}
@@ -144,7 +141,7 @@ export const CustomerOrderApproval: React.FC = () => {
                             <XCircle size={36} className="text-red-600 shrink-0" />
                             <div>
                                 <h3 className="font-black text-base">Variazione Contestata</h3>
-                                <p className="text-xs font-bold text-red-800 mt-0.5">Hai segnalato la variazione di prezzo. Puoi contattare il negozio direttamente via WhatsApp per informazioni.</p>
+                                <p className="text-xs font-bold text-red-800 mt-0.5">Hai segnalato la variazione di prezzo. Puoi contattare il negozio direttamente per informazioni.</p>
                             </div>
                         </div>
                     ) : (
@@ -228,31 +225,60 @@ export const CustomerOrderApproval: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Main Action Buttons */}
                     {!isApproved && !isRejected && (
-                        <div className="pt-4 space-y-3">
-                            <button
-                                type="button"
-                                disabled={submitting}
-                                onClick={() => handleAction('ACCEPT')}
-                                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-98 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-emerald-600/30"
-                            >
-                                <CheckCircle2 size={20} /> Conferma & Accetta Pesatura
-                            </button>
-
-                            {storeInfo.contactPhone && (
-                                <a
-                                    href={`https://wa.me/${storeInfo.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Ciao, vorrei chiarimenti in merito alla variazione di pesatura dell'ordine #${order.id}`)}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    onClick={() => handleAction('REJECT')}
-                                    className="w-full py-3.5 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-800 font-black text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        <div className="pt-2 space-y-2.5">
+                            {order.paymentMethod === 'REVOLUT' ? (
+                                <button
+                                    type="button"
+                                    disabled={submitting}
+                                    onClick={() => handleAction('ACCEPT')}
+                                    className="w-full py-4 bg-indigo-900 hover:bg-indigo-950 active:scale-98 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-indigo-900/30"
                                 >
-                                    <MessageCircle size={18} className="text-emerald-600" /> Contesta o Richiedi Info via WhatsApp
-                                </a>
+                                    <CheckCircle2 size={20} className="text-amber-400" /> 💳 Paga Online con Carta ed Approva (€ {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)})
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    disabled={submitting}
+                                    onClick={() => handleAction('ACCEPT')}
+                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-98 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-emerald-600/30"
+                                >
+                                    <CheckCircle2 size={20} /> Conferma & Accetta Pesatura
+                                </button>
                             )}
                         </div>
                     )}
+
+                    {/* Quick Contact Buttons (Phone Call + WhatsApp Chat) */}
+                    <div className="pt-2 space-y-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block text-center">Hai domande o vuoi modificare l'ordine?</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {storeInfo.contactPhone && (
+                                <a
+                                    href={`tel:${storeInfo.contactPhone.replace(/\s+/g, '')}`}
+                                    className="py-3 px-4 bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-900 font-black text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-gray-200/80 shadow-xs"
+                                >
+                                    <Phone size={16} className="text-emerald-700" /> Chiama Negozio
+                                </a>
+                            )}
+                            {storeInfo.contactPhone && (
+                                <a
+                                    href={`https://wa.me/${storeInfo.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Ciao, vorrei informazioni in merito all'ordine #${order.id}`)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={() => {
+                                        if (!isApproved && !isRejected) {
+                                            handleAction('REJECT');
+                                        }
+                                    }}
+                                    className="py-3 px-4 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-950 font-black text-xs rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-emerald-200 shadow-xs"
+                                >
+                                    <MessageCircle size={16} className="text-emerald-600" /> Scrivi su WhatsApp
+                                </a>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Customer Support Footer */}
                     <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] font-extrabold text-gray-400">

@@ -174,8 +174,28 @@ export class OrderService {
                 });
             }
 
+            // Check if cart has variable weight products
+            const hasVariableWeight = newOrder.items.some((item: any) => item.product.isVariableWeight);
+
             // Initiate payment strategy and create Transaction record
-            const transactionPartial = await strategy.initiate(newOrder as any, Math.round(estimatedTotal));
+            let transactionPartial: any = {};
+            if (hasVariableWeight && paymentMethod === 'REVOLUT') {
+                console.log(`[OrderService] Order #${newOrder.id} contains variable weight products. Deferring online payment until post-weighing.`);
+                transactionPartial = {
+                    orderId: newOrder.id,
+                    amount: Math.round(estimatedTotal),
+                    currency: 'EUR',
+                    gateway: PaymentGateway.REVOLUT,
+                    status: TransactionStatus.PENDING,
+                    gatewayTxId: `REV-DEF-${newOrder.id}-${Date.now()}`,
+                    metadata: {
+                        deferredPayment: true,
+                        hasVariableWeight: true
+                    }
+                };
+            } else {
+                transactionPartial = await strategy.initiate(newOrder as any, Math.round(estimatedTotal));
+            }
             
             let gatewayVal: any = paymentMethod === 'REVOLUT' ? 'REVOLUT' : 'COD';
 

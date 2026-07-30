@@ -976,7 +976,7 @@ export const OrderManager = () => {
                                 {activeTab === 'overview' && (
                                     <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
                                         {/* Customer Approval Status Box */}
-                                        {(selectedOrder as any).approvalStatus && (selectedOrder as any).approvalStatus !== 'NONE' && (
+                                        {(selectedOrder as any).approvalStatus && ['AWAITING_CUSTOMER_APPROVAL', 'CUSTOMER_APPROVED', 'CUSTOMER_REJECTED'].includes((selectedOrder as any).approvalStatus) && (
                                             <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm ${
                                                 (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL'
                                                     ? 'bg-amber-50 border-amber-300 text-amber-950'
@@ -1359,9 +1359,19 @@ export const OrderManager = () => {
                                     )}
 
                                     {selectedOrder.status === 'WEIGHING_COMPLETED' && (
-                                        <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                            <Truck size={18} /> Spedisci
-                                        </button>
+                                        (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
+                                            <div className="px-4 py-3 bg-amber-50 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90" title="Spedizione bloccata fino all'approvazione del cliente dal link WhatsApp/Email">
+                                                <span className="relative flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                                </span>
+                                                🔒 Spedisci Bloccato (In Attesa Approvazione Cliente)
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                                <Truck size={18} /> Spedisci
+                                            </button>
+                                        )
                                     )}
 
                                     {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
