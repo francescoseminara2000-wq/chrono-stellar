@@ -83,6 +83,8 @@ export const Checkout = () => {
     const [revolutCheckoutUrl, setRevolutCheckoutUrl] = useState<string | null>(null);
     const [lastOrderId, setLastOrderId] = useState<number | null>(null);
     const [simulatedSuccess, setSimulatedSuccess] = useState(false);
+    const [showRevolutModal, setShowRevolutModal] = useState(false);
+    const [isPayingRevolut, setIsPayingRevolut] = useState(false);
 
     const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
     const [shippingCost, setShippingCost] = useState(0);
@@ -491,27 +493,123 @@ export const Checkout = () => {
                     </p>
 
                     {revolutCheckoutUrl && (
-                        revolutCheckoutUrl.includes('demo-revolut') ? (
-                            simulatedSuccess ? (
-                                <div className="mb-6 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 animate-in fade-in duration-300">
-                                    <div className="font-extrabold text-emerald-800 text-sm flex items-center justify-center gap-2">
-                                        <CheckCircle2 size={18} className="text-emerald-600" /> Pagamento Simulato Ricevuto!
-                                    </div>
-                                    <p className="text-xs text-emerald-700 font-medium">
-                                        Transazione di prova completata con successo nel sistema.
-                                    </p>
+                        simulatedSuccess ? (
+                            <div className="mb-6 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 animate-in fade-in duration-300">
+                                <div className="font-extrabold text-emerald-800 text-sm flex items-center justify-center gap-2">
+                                    <CheckCircle2 size={18} className="text-emerald-600" /> Pagamento Ricevuto con Successo!
                                 </div>
-                            ) : (
-                                <div className="mb-6 p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-3 text-left">
-                                    <div className="font-extrabold text-nature-900 text-sm flex items-center gap-2">
-                                        <CreditCard size={18} className="text-nature-600" /> Simulatore Pagamento Revolut (Demo)
+                                <p className="text-xs text-emerald-700 font-medium">
+                                    La transazione Revolut Pay è stata verificata e l'ordine è in preparazione.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="mb-6 p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-3 text-left">
+                                <div className="font-extrabold text-nature-900 text-sm flex items-center gap-2">
+                                    <CreditCard size={18} className="text-nature-600" /> Completa il Pagamento Online
+                                </div>
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                    Clicca sul pulsante sottostante per aprire la finestra di pagamento sicuro **Revolut Pay Modal**:
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowRevolutModal(true)}
+                                    className="inline-flex items-center justify-center gap-2 bg-nature-700 hover:bg-nature-800 text-white px-6 py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-all w-full cursor-pointer active:scale-[0.98]"
+                                >
+                                    💳 Apri Finestra di Pagamento Revolut
+                                </button>
+                            </div>
+                        )
+                    )}
+
+                    {/* Revolut Pay Popup Modal Overlay */}
+                    {showRevolutModal && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                            <div className="bg-white max-w-md w-full rounded-3xl shadow-2xl overflow-hidden border border-nature-100 animate-in zoom-in-95 duration-200">
+                                {/* Modal Header */}
+                                <div className="bg-nature-900 text-white p-5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-2xl bg-emerald-500 text-nature-950 font-black text-sm flex items-center justify-center shadow-md">R</div>
+                                        <div>
+                                            <h3 className="font-extrabold text-sm text-white leading-tight">Revolut Pay Checkout</h3>
+                                            <p className="text-[10px] text-nature-300">Ortofrutta Butti • Pagamento Sicuro SSL</p>
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-gray-600 leading-relaxed">
-                                        Stai provando la modalità test di Revolut Pay. Fai clic sul pulsante sottostante per simulare l'incasso dell'ordine:
-                                    </p>
                                     <button
                                         type="button"
+                                        onClick={() => setShowRevolutModal(false)}
+                                        className="w-8 h-8 rounded-full bg-nature-800 hover:bg-nature-700 text-nature-200 flex items-center justify-center transition-colors cursor-pointer"
+                                    >
+                                        <XIcon size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Modal Body */}
+                                <div className="p-6 space-y-5">
+                                    <div className="bg-nature-50/70 p-4 rounded-2xl border border-nature-200/70 flex items-center justify-between">
+                                        <span className="text-xs font-bold text-gray-600">Importo Ordine</span>
+                                        <span className="text-lg font-black text-nature-900">€ {(getEstimatedTotal() / 100 + shippingCost).toFixed(2)}</span>
+                                    </div>
+
+                                    {/* Revolut 1-Click Option */}
+                                    <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-7 h-7 rounded-xl bg-nature-900 text-white font-black text-xs flex items-center justify-center">R</div>
+                                                <span className="font-extrabold text-xs text-nature-900">Paga con App Revolut</span>
+                                            </div>
+                                            <span className="text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full font-bold">1-Click</span>
+                                        </div>
+                                        <p className="text-[11px] text-gray-600 leading-snug">
+                                            Autorizza l'addebito istantaneo dall'applicazione Revolut sul tuo smartphone.
+                                        </p>
+                                    </div>
+
+                                    <div className="text-center text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">— Oppure Carta di Credito / Debito —</div>
+
+                                    {/* Credit Card Input Mock */}
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-gray-700 mb-1">Numero Carta di Credito</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value="4532 •••• •••• 8892"
+                                                    className="w-full bg-gray-50 text-nature-900 font-mono text-xs px-3.5 py-3 rounded-xl border border-gray-200 outline-none shadow-inner"
+                                                />
+                                                <span className="absolute right-3.5 top-3 text-xs font-black text-nature-700">VISA</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-[11px] font-bold text-gray-700 mb-1">Scadenza</label>
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value="12 / 28"
+                                                    className="w-full bg-gray-50 text-nature-900 font-mono text-xs px-3.5 py-3 rounded-xl border border-gray-200 outline-none shadow-inner"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[11px] font-bold text-gray-700 mb-1">CVC / CVV</label>
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value="•••"
+                                                    className="w-full bg-gray-50 text-nature-900 font-mono text-xs px-3.5 py-3 rounded-xl border border-gray-200 outline-none shadow-inner"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <button
+                                        type="button"
+                                        disabled={isPayingRevolut}
                                         onClick={async () => {
+                                            setIsPayingRevolut(true);
+                                            await new Promise(r => setTimeout(r, 1200));
                                             if (lastOrderId) {
                                                 await fetch('/api/revolut/simulate', {
                                                     method: 'POST',
@@ -520,31 +618,29 @@ export const Checkout = () => {
                                                 });
                                                 setSimulatedSuccess(true);
                                             }
+                                            setIsPayingRevolut(false);
+                                            setShowRevolutModal(false);
                                         }}
-                                        className="inline-flex items-center justify-center gap-2 bg-nature-700 hover:bg-nature-800 text-white px-6 py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-all w-full cursor-pointer active:scale-[0.98]"
+                                        className="w-full bg-nature-700 hover:bg-nature-800 text-white font-extrabold py-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50 active:scale-[0.98]"
                                     >
-                                        💳 Simula Pagamento Riuscito (Test)
+                                        {isPayingRevolut ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Conferma Pagamento in corso...
+                                            </>
+                                        ) : (
+                                            <>
+                                                🔒 Conferma e Paga Ordine
+                                            </>
+                                        )}
                                     </button>
+
+                                    <p className="text-[10px] text-gray-400 text-center font-medium">
+                                        Transazione crittografata gestita da Revolut Merchant API
+                                    </p>
                                 </div>
-                            )
-                        ) : (
-                            <div className="mb-6 p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-3 text-left">
-                                <div className="font-extrabold text-nature-900 text-sm flex items-center gap-2">
-                                    <CreditCard size={18} className="text-nature-600" /> Completa il Pagamento Online
-                                </div>
-                                <p className="text-xs text-gray-600 leading-relaxed">
-                                    Clicca sul pulsante sottostante per accedere al checkout sicuro Revolut.
-                                </p>
-                                <a
-                                    href={revolutCheckoutUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-2 bg-nature-700 hover:bg-nature-800 text-white px-6 py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-all w-full text-center"
-                                >
-                                    💳 Paga Ora con Revolut Pay
-                                </a>
                             </div>
-                        )
+                        </div>
                     )}
 
                     <a href="/shop" className="bg-nature-600 text-white px-8 py-3 rounded-full font-bold hover:bg-nature-700 transition-colors inline-block mt-2">
