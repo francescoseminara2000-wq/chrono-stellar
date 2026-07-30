@@ -47,6 +47,7 @@ export const OrderManager = () => {
     const [editTime, setEditTime] = useState('');
     const [editNotes, setEditNotes] = useState('');
     const [isSavingEdits, setIsSavingEdits] = useState(false);
+    const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
     useEffect(() => {
         if (selectedOrder) {
@@ -792,18 +793,33 @@ export const OrderManager = () => {
                     {selectedOrder ? (
                         <div className="bg-white lg:rounded-2xl lg:shadow-xl lg:border lg:border-nature-100 flex flex-col overflow-hidden h-full relative">
                             {/* Mobile Back Header */}
-                            <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-900 text-white shrink-0">
-                                <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 p-1.5 bg-nature-800 rounded-lg hover:bg-nature-700">
-                                    <X size={20} /> <span className="text-sm font-bold">Chiudi Dettaglio</span>
+                            <div className="lg:hidden p-3.5 border-b border-gray-100 flex items-center justify-between bg-nature-900 text-white shrink-0 shadow-md">
+                                <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-nature-800 rounded-xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-bold">
+                                    <X size={18} /> Chiudi
                                 </button>
-                                <span className="font-bold">Ordine #{selectedOrder.id}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-extrabold text-sm">Ordine #{selectedOrder.id}</span>
+                                    <StatusBadge status={selectedOrder.status} />
+                                </div>
                             </div>
 
-                             {/* Main content wrapper - flex layout, no scroll */}
-                             <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
+                            {/* Main content wrapper - flex layout */}
+                            <div className="flex-1 p-3 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
                                 <div className="hidden lg:flex justify-between items-center mb-4 pb-2.5 border-b border-gray-100">
                                     <div>
-                                        <h2 className="text-2xl font-black text-gray-900 leading-none">Ordine #{selectedOrder.id}</h2>
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-2xl font-black text-gray-900 leading-none">Ordine #{selectedOrder.id}</h2>
+                                            {/* Payment Method Badge */}
+                                            {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
+                                                <span className="px-2.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
+                                                    💳 Revolut Pay
+                                                </span>
+                                            ) : (
+                                                <span className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
+                                                    💵 Alla Consegna
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-gray-400 text-xs mt-1.5">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -814,7 +830,7 @@ export const OrderManager = () => {
 
                                 {/* Compact Status Steps */}
                                 {selectedOrder.status !== 'CANCELLED' && (
-                                    <div className="flex justify-between items-center gap-1.5 sm:gap-3 mb-4 p-2 bg-gray-50 rounded-xl text-[10px] sm:text-xs font-bold text-gray-500 shrink-0">
+                                    <div className="flex justify-between items-center gap-1 sm:gap-3 mb-3 p-2 bg-gray-50/90 rounded-2xl text-[10px] sm:text-xs font-bold text-gray-500 shrink-0 border border-gray-100">
                                         {ORDER_STATUSES.map((status, index) => {
                                             const currentIndex = ORDER_STATUSES.indexOf(selectedOrder.status);
                                             const isPast = index < currentIndex;
@@ -826,9 +842,9 @@ export const OrderManager = () => {
                                                 DELIVERED: 'Concluso'
                                             };
                                             return (
-                                                <div key={status} className="flex items-center gap-1.5">
-                                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                                                        isCurrent ? 'bg-nature-600 text-white animate-pulse' :
+                                                <div key={status} className="flex items-center gap-1 sm:gap-1.5">
+                                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                                                        isCurrent ? 'bg-nature-600 text-white shadow-sm ring-2 ring-nature-400/40 animate-pulse' :
                                                         isPast ? 'bg-nature-100 text-nature-700' : 'bg-gray-200 text-gray-400'
                                                     }`}>
                                                         {isPast ? '✓' : index + 1}
@@ -838,15 +854,49 @@ export const OrderManager = () => {
                                                     } ${isCurrent ? 'block' : 'hidden sm:block'}`}>
                                                         {labels[status]}
                                                     </span>
-                                                    {index < ORDER_STATUSES.length - 1 && <span className="text-gray-300">→</span>}
+                                                    {index < ORDER_STATUSES.length - 1 && <span className="text-gray-300 text-[10px]">→</span>}
                                                 </div>
                                             );
                                         })}
                                     </div>
                                 )}
 
-                                {/* Customer Info & Internal Notes */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-4 shrink-0 relative z-30">
+                                {/* Mobile Quick Customer Bar (Collapsible to save vertical space for items) */}
+                                <div className="lg:hidden mb-3 bg-nature-50/80 border border-nature-200/80 rounded-2xl p-2.5 shrink-0">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className="w-8 h-8 rounded-xl bg-nature-900 text-white font-black text-xs flex items-center justify-center shrink-0">
+                                                {(selectedOrder.customerName || selectedOrder.user?.name || 'C').charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="font-extrabold text-xs text-nature-900 truncate">
+                                                    {selectedOrder.customerName || selectedOrder.user?.name}
+                                                </p>
+                                                <p className="text-[10px] text-nature-700 truncate">
+                                                    📍 {selectedOrder.shippingAddress || 'Ritiro in negozio'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                            {selectedOrder.customerPhone && (
+                                                <a href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
+                                                    className="bg-emerald-600 text-white p-2 rounded-xl hover:bg-emerald-700 shadow-sm flex items-center justify-center">
+                                                    <MessageCircle size={14} />
+                                                </a>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+                                                className="px-2.5 py-1.5 bg-white border border-nature-200 text-nature-800 font-extrabold text-[10px] rounded-xl shadow-xs"
+                                            >
+                                                {isInfoExpanded ? 'Riduci ▲' : 'Info ▼'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Customer Info & Internal Notes Grid (Always expanded on LG desktop, collapsible on mobile) */}
+                                <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-4 shrink-0 relative z-30 ${isInfoExpanded ? 'block' : 'hidden lg:grid'}`}>
                                     {/* Customer Info */}
                                     <div className="bg-nature-50/60 p-3 lg:p-4 rounded-xl border border-nature-100/50 text-xs flex flex-col justify-between">
                                         <div>
