@@ -178,9 +178,6 @@ export class OrderService {
             const transactionPartial = await strategy.initiate(newOrder as any, Math.round(estimatedTotal));
             
             let gatewayVal: any = paymentMethod === 'REVOLUT' ? 'REVOLUT' : 'COD';
-            if (transactionPartial?.gateway && (transactionPartial.gateway as string) !== '') {
-                gatewayVal = transactionPartial.gateway;
-            }
 
             const transaction = await tx.transaction.create({
                 data: {

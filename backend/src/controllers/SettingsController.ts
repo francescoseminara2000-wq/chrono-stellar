@@ -8,7 +8,8 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN deliveryTimeSlots TEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN revolutApiKey TEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN revolutEnvironment VARCHAR(255) DEFAULT 'sandbox'`,
-            `ALTER TABLE StoreSettings ADD COLUMN revolutEnabled TINYINT(1) DEFAULT 0`
+            `ALTER TABLE StoreSettings ADD COLUMN revolutEnabled TINYINT(1) DEFAULT 0`,
+            `ALTER TABLE Transaction MODIFY COLUMN gateway VARCHAR(255) DEFAULT 'COD'`
         ];
 
         for (const statement of sqlStatements) {
