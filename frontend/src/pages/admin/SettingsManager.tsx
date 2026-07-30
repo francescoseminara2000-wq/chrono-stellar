@@ -172,12 +172,14 @@ export const SettingsManager = () => {
             if (res.ok) {
                 const result = await res.json();
                 setFormData(prev => ({ ...prev, logoUrl: result.url }));
-                addToast('Logo caricato con successo!', 'success');
+                addToast('🖼️ Logo caricato con successo! Ricordati di cliccare su "Salva Impostazioni" per applicare le modifiche.', 'success', 6000);
             } else {
-                addToast('Errore durante il caricamento del logo.', 'error');
+                const errorData = await res.json().catch(() => ({}));
+                addToast(`Errore caricamento logo: ${errorData.error || 'Errore durante il caricamento'}`, 'error');
             }
         } catch (err) {
-            addToast('Errore di connessione al server.', 'error');
+            console.error('Logo upload error:', err);
+            addToast('Errore di connessione durante il caricamento del logo.', 'error');
         } finally {
             setIsUploadingLogo(false);
             e.target.value = '';
