@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -95,7 +95,7 @@ export const OrderManager = () => {
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
     const [showSearch, setShowSearch] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
-    const { addToast } = useToastStore();
+    const { addToast, addRichToast } = useToastStore();
     const API_URL = '';
 
     const toggleSelectAll = () => {
@@ -239,6 +239,8 @@ export const OrderManager = () => {
         }
     }, []);
 
+    const prevOrdersRef = useRef<Order[]>([]);
+
     const fetchOrders = (isSilent = false) => {
         fetch(`${API_URL}/api/admin/orders`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -248,7 +250,48 @@ export const OrderManager = () => {
                 return res.json();
             })
             .then(data => {
+                if (prevOrdersRef.current.length > 0 && isSilent) {
+                    // Check for NEW orders
+                    const newOrders = data.filter((o: any) => !prevOrdersRef.current.some((old: any) => old.id === o.id));
+                    newOrders.forEach((newOrd: any) => {
+                        const nameStr = newOrd.customerName || newOrd.user?.name || 'Cliente';
+                        const totalStr = ((newOrd.finalTotal || newOrd.estimatedTotal) / 100).toFixed(2);
+                        const methodStr = newOrd.deliveryMethod === 'DELIVERY' ? '🚚 Domicilio' : '🏪 Ritiro';
+                        addRichToast(
+                            `🛒 Nuovo Ordine Ricevuto #${newOrd.id}`,
+                            `Cliente: ${nameStr}\nTotale: € ${totalStr} • ${methodStr}`,
+                            'info',
+                            8000
+                        );
+                    });
+
+                    // Check for CUSTOMER APPROVAL / REJECTION status changes
+                    data.forEach((freshOrd: any) => {
+                        const oldOrd: any = prevOrdersRef.current.find((o: any) => o.id === freshOrd.id);
+                        if (oldOrd && oldOrd.approvalStatus !== freshOrd.approvalStatus) {
+                            const nameStr = freshOrd.customerName || freshOrd.user?.name || 'Cliente';
+                            if (freshOrd.approvalStatus === 'CUSTOMER_APPROVED') {
+                                addRichToast(
+                                    `✅ Pesatura Approvata!`,
+                                    `L'ordine #${freshOrd.id} (${nameStr}) è stato confermato dal cliente via WhatsApp/Email!`,
+                                    'success',
+                                    8000
+                                );
+                            } else if (freshOrd.approvalStatus === 'CUSTOMER_REJECTED') {
+                                addRichToast(
+                                    `❌ Pesatura Contestata!`,
+                                    `L'ordine #${freshOrd.id} (${nameStr}) ha richiesto assistenza per la variazione del peso.`,
+                                    'warning',
+                                    8000
+                                );
+                            }
+                        }
+                    });
+                }
+
+                prevOrdersRef.current = data;
                 setOrders(data);
+
                 if (selectedOrder) {
                     const freshSelected = data.find((o: any) => o.id === selectedOrder.id);
                     if (freshSelected) {
