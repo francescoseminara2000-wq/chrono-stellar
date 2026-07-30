@@ -163,8 +163,10 @@ export class OrderController {
                 return res.status(404).json({ error: 'Ordine non trovato' });
             }
 
-            if (order.approvalToken && token && order.approvalToken !== token) {
-                return res.status(403).json({ error: 'Token di autorizzazione non valido' });
+            if (order.approvalToken && token) {
+                if (String(order.approvalToken).trim() !== String(token).trim()) {
+                    return res.status(403).json({ error: 'Token di autorizzazione non valido' });
+                }
             }
 
             const storeSettings: any = await prisma.storeSettings.findFirst();
@@ -220,8 +222,10 @@ export class OrderController {
                 return res.status(404).json({ error: 'Ordine non trovato' });
             }
 
-            if (order.approvalToken && token && order.approvalToken !== token) {
-                return res.status(403).json({ error: 'Token di autorizzazione non valido' });
+            if (order.approvalToken && token) {
+                if (String(order.approvalToken).trim() !== String(token).trim()) {
+                    return res.status(403).json({ error: 'Token di autorizzazione non valido' });
+                }
             }
 
             if (action === 'ACCEPT') {
