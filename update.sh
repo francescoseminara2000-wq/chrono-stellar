@@ -40,10 +40,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Applicazione migrazioni del database..."
-npx prisma migrate deploy
+echo "Applicazione modifiche del database..."
+npx prisma db push --accept-data-loss
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Errore durante l'applicazione delle migrazioni Prisma.${NC}"
+    echo -e "${RED}Errore durante l'applicazione delle modifiche al database con Prisma.${NC}"
     exit 1
 fi
 
