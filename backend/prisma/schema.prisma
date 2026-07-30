@@ -49,6 +49,9 @@ model Order {
   longitude       Float?
   scheduledDate   String?
   scheduledTime   String?
+  approvalToken   String?
+  approvalStatus  String?              @default("NONE")
+  customerApprovedAt DateTime?
   user            User?                @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
   items           OrderItem[]
   transaction     Transaction[]
@@ -155,6 +158,7 @@ model StoreSettings {
   revolutApiKey            String?  @db.Text
   revolutEnvironment       String?  @default("sandbox")
   revolutEnabled           Boolean  @default(false)
+  weighingTolerancePercent Int      @default(10)
 }
 
 model Transaction {
