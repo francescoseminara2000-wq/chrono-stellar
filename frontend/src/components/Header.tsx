@@ -197,7 +197,7 @@ export const Header = () => {
     }, [window.location.pathname]);
 
     return (
-        <header className={`bg-white/80 backdrop-blur-md sticky top-0 z-[100] transition-all duration-500 border-b border-gray-100 ${isScrolled ? 'py-1 shadow-md' : 'py-4 shadow-sm'}`}>
+        <header className={`bg-white/80 backdrop-blur-md sticky top-0 ${isMenuOpen ? 'z-[150]' : 'z-[100]'} transition-all duration-500 border-b border-gray-100 ${isScrolled ? 'py-1 shadow-md' : 'py-4 shadow-sm'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
                     {/* Logo */}
