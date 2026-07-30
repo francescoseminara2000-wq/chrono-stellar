@@ -51,7 +51,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => (
             {children}
         </main>
         <Footer />
-        <Toaster />
     </div>
 );
 
@@ -135,6 +134,7 @@ function App() {
                     </Route>
                 </Route>
             </Routes>
+            <Toaster />
         </Router>
     );
 }
