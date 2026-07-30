@@ -900,33 +900,17 @@ export const OrderManager = () => {
                                                 </span>
                                             </div>
                                         </div>
-
-                                        {/* Total Summary Box (High visibility card) */}
-                                        <div className="bg-nature-950 text-white p-5 rounded-2xl flex items-center justify-between shadow-xl ring-1 ring-nature-900">
-                                            <div>
-                                                <span className="text-xs text-nature-300 font-black uppercase tracking-wider block">Totale Ordine {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
-                                                <span className="text-2xl sm:text-3xl font-black tracking-tight">
-                                                    € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
-                                                </span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-xs font-extrabold text-nature-200 bg-nature-900/90 px-3.5 py-2 rounded-xl border border-nature-800 block shadow-inner">
-                                                    📦 {selectedOrder.items.length} Prodotti
-                                                </span>
-                                            </div>
-                                        </div>
                                     </div>
                                 )}
 
                                 {/* TAB 2: PRODOTTI ORDINATI (ITEMS) */}
                                 {activeTab === 'items' && (
                                     <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/90 rounded-2xl p-4 overflow-hidden shadow-sm animate-in fade-in duration-200">
-                                        <div className="grid grid-cols-12 gap-3 pb-2.5 mb-2.5 border-b border-gray-100 text-xs font-black text-gray-400 uppercase tracking-wider shrink-0">
-                                            <span className="col-span-5 sm:col-span-6">Prodotto</span>
-                                            <span className="col-span-3 sm:col-span-3 text-right">Richiesto</span>
-                                            <span className="col-span-4 sm:col-span-3 text-right">Effettivo</span>
+                                        <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 shrink-0">
+                                            <span className="text-xs font-black text-gray-400 uppercase tracking-wider">Elenco Prodotti ({selectedOrder.items.length})</span>
+                                            <span className="text-xs font-bold text-gray-500">Stima / Consuntivo a Peso</span>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 custom-scrollbar">
+                                        <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
                                             {selectedOrder.items.map(item => {
                                                 const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                                 const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
@@ -949,46 +933,62 @@ export const OrderManager = () => {
                                                 const itemActualCost = (itemPriceCents * itemActualQty) / 100;
 
                                                 return (
-                                                    <div key={item.id} className="grid grid-cols-12 gap-3 items-center p-3.5 bg-gray-50/80 hover:bg-gray-100/70 rounded-2xl border border-gray-200/60 transition-colors">
-                                                        {/* Product details */}
-                                                        <div className="col-span-5 sm:col-span-6 min-w-0">
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <p className="font-black text-sm text-gray-900 truncate" title={item.product.name}>{item.product.name}</p>
-                                                                {isPriceModified && (
-                                                                    <span className="text-[10px] font-black text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200 shrink-0">
-                                                                        Prezzo Modificato
-                                                                    </span>
+                                                    <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 sm:p-4 bg-gradient-to-r from-gray-50/90 to-emerald-50/30 hover:from-gray-100 hover:to-emerald-100/40 rounded-2xl border border-gray-200/70 shadow-xs transition-all gap-3">
+                                                        {/* Image + Product Details */}
+                                                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                                            {/* Product Image Thumbnail */}
+                                                            <div className="w-14 h-14 rounded-2xl bg-white border border-gray-200/90 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                                                                {item.product.imageUrl ? (
+                                                                    <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <span className="text-2xl select-none">🍏</span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-xs text-gray-500 font-bold mt-1">
-                                                                € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                            </p>
+
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <p className="font-black text-sm text-gray-900 leading-snug truncate" title={item.product.name}>{item.product.name}</p>
+                                                                    {isPriceModified && (
+                                                                        <span className="text-[10px] font-black text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200 shrink-0">
+                                                                            Prezzo Modificato
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs text-gray-500 font-bold mt-1">
+                                                                    € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                                </p>
+                                                            </div>
                                                         </div>
 
-                                                        {/* Requested info */}
-                                                        <div className="col-span-3 sm:col-span-3 text-right">
-                                                            <span className="font-bold text-xs text-gray-700 block">
-                                                                {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                            </span>
-                                                            <span className="text-xs text-gray-400 block mt-0.5 font-semibold">
-                                                                € {itemEstCost.toFixed(2)}
-                                                            </span>
-                                                        </div>
+                                                        {/* Requested & Fulfilled Badges */}
+                                                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200/60 shrink-0">
+                                                            {/* Requested info */}
+                                                            <div className="bg-white px-3 py-2 rounded-xl border border-gray-200/70 text-right min-w-[90px]">
+                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Richiesto</span>
+                                                                <span className="font-black text-xs text-gray-800 block mt-0.5">
+                                                                    {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                                                </span>
+                                                                <span className="text-[10px] text-gray-500 font-bold block">
+                                                                    € {itemEstCost.toFixed(2)}
+                                                                </span>
+                                                            </div>
 
-                                                        {/* Actual info */}
-                                                        <div className="col-span-4 sm:col-span-3 flex flex-col items-end text-right">
-                                                            {item.product.isVariableWeight && !item.quantityFulfilled ? (
-                                                                <span className="font-black text-amber-800 bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-200 text-xs uppercase tracking-wider block shadow-xs">
-                                                                    ⚖️ Da pesare
+                                                            {/* Fulfilled / Actual info */}
+                                                            <div className="bg-emerald-50/90 px-3 py-2 rounded-xl border border-emerald-200/80 text-right min-w-[100px]">
+                                                                <span className="text-[9px] font-black text-emerald-800 uppercase tracking-wider block">Effettivo</span>
+                                                                {item.product.isVariableWeight && !item.quantityFulfilled ? (
+                                                                    <span className="font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px] uppercase tracking-wider block mt-0.5">
+                                                                        ⚖️ Da pesare
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="font-black text-xs text-emerald-950 block mt-0.5">
+                                                                        {item.quantityFulfilled ? `${item.quantityFulfilled} kg` : `${item.quantityOrdered} ${item.product.unitType.toLowerCase()}`}
+                                                                    </span>
+                                                                )}
+                                                                <span className="text-[11px] font-black text-emerald-700 block">
+                                                                    € {itemActualCost.toFixed(2)}
                                                                 </span>
-                                                            ) : (
-                                                                <span className="font-black text-sm text-nature-950 block">
-                                                                    {item.quantityFulfilled ? `${item.quantityFulfilled} kg` : `${item.quantityOrdered} ${item.product.unitType.toLowerCase()}`}
-                                                                </span>
-                                                            )}
-                                                            <span className="text-xs font-black text-nature-700 block mt-0.5">
-                                                                € {itemActualCost.toFixed(2)}
-                                                            </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 );
@@ -1004,16 +1004,6 @@ export const OrderManager = () => {
                                         <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 text-xs space-y-3 shadow-xs">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs font-black uppercase tracking-wider text-emerald-900 block">👤 Dati Anagrafici & Contatto</span>
-                                                {selectedOrder.customerPhone && (
-                                                    <a
-                                                        href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                                                    >
-                                                        <MessageCircle size={16} /> Apri WhatsApp
-                                                    </a>
-                                                )}
                                             </div>
                                             <div className="space-y-1.5">
                                                 <p className="font-black text-lg text-emerald-950">{selectedOrder.customerName || selectedOrder.user?.name}</p>
@@ -1109,8 +1099,21 @@ export const OrderManager = () => {
                                 </div>
 
                                 <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
+                                    {/* WhatsApp Button: Fixed inside action bar on the left of Pesatura & Prezzi */}
+                                    {selectedOrder.customerPhone && (
+                                        <a
+                                            href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                                            title="Apri Chat WhatsApp col Cliente"
+                                        >
+                                            <MessageCircle size={18} /> WhatsApp
+                                        </a>
+                                    )}
+
                                     {(selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED') && (
-                                        <button onClick={handleOpenWeighingModal} className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                        <button onClick={handleOpenWeighingModal} className="px-4 py-3 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
                                             <Scale size={18} /> Pesatura & Prezzi
                                         </button>
                                     )}
@@ -1122,7 +1125,7 @@ export const OrderManager = () => {
                                     )}
 
                                     {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
-                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
                                             <CheckCircle size={18} /> Concludi
                                         </button>
                                     )}
