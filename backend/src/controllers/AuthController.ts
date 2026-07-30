@@ -9,7 +9,7 @@ export class AuthController {
 
     async register(req: Request, res: Response) {
         try {
-            const { email, password, name, phone, street, civic, city, zipCode, notificationPreference } = req.body;
+            const { email, password, name, phone, street, civic, city, zipCode, avatar, notificationPreference } = req.body;
 
             if (!email || !password) {
                 return res.status(400).json({ error: 'Email and password are required' });
@@ -17,7 +17,7 @@ export class AuthController {
 
             const existingUser = await prisma.user.findUnique({ where: { email } });
             if (existingUser) {
-                return res.status(400).json({ error: 'User already exists' });
+                return res.status(400).json({ error: 'Un account con questa email esiste già.' });
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -39,6 +39,7 @@ export class AuthController {
                         civic,
                         city,
                         zipCode,
+                        avatar: avatar || null,
                         notificationPreference: validPreference,
                         role: 'CUSTOMER',
                         isEmailVerified: false,
