@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAppState } from '../store/useAppState';
-import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock, CreditCard } from 'lucide-react';
+import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -493,21 +493,21 @@ export const Checkout = () => {
                     {revolutCheckoutUrl && (
                         revolutCheckoutUrl.includes('demo-revolut') ? (
                             simulatedSuccess ? (
-                                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl text-center space-y-2 animate-in fade-in duration-300">
-                                    <div className="font-extrabold text-green-700 text-sm flex items-center justify-center gap-2">
-                                        ✓ Pagamento Simulato Ricevuto!
+                                <div className="mb-6 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 animate-in fade-in duration-300">
+                                    <div className="font-extrabold text-emerald-800 text-sm flex items-center justify-center gap-2">
+                                        <CheckCircle2 size={18} className="text-emerald-600" /> Pagamento Simulato Ricevuto!
                                     </div>
-                                    <p className="text-xs text-green-600">
-                                        Transazione completata con successo nella modalità demo.
+                                    <p className="text-xs text-emerald-700 font-medium">
+                                        Transazione di prova completata con successo nel sistema.
                                     </p>
                                 </div>
                             ) : (
-                                <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-3">
-                                    <div className="font-bold text-indigo-900 text-sm flex items-center justify-center gap-2">
-                                        🧪 Simulatore Pagamento Revolut (Demo)
+                                <div className="mb-6 p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-3 text-left">
+                                    <div className="font-extrabold text-nature-900 text-sm flex items-center gap-2">
+                                        <CreditCard size={18} className="text-nature-600" /> Simulatore Pagamento Revolut (Demo)
                                     </div>
-                                    <p className="text-xs text-indigo-700">
-                                        Stai provando la modalità demo senza account Revolut collegato. Fai clic sotto per simulare un pagamento riuscito:
+                                    <p className="text-xs text-gray-600 leading-relaxed">
+                                        Stai provando la modalità test di Revolut Pay. Fai clic sul pulsante sottostante per simulare l'incasso dell'ordine:
                                     </p>
                                     <button
                                         type="button"
@@ -521,25 +521,25 @@ export const Checkout = () => {
                                                 setSimulatedSuccess(true);
                                             }
                                         }}
-                                        className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-extrabold text-sm shadow-md transition-all w-full cursor-pointer"
+                                        className="inline-flex items-center justify-center gap-2 bg-nature-700 hover:bg-nature-800 text-white px-6 py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-all w-full cursor-pointer active:scale-[0.98]"
                                     >
-                                        💳 Simula Pagamento Riuscito (Demo)
+                                        💳 Simula Pagamento Riuscito (Test)
                                     </button>
                                 </div>
                             )
                         ) : (
-                            <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-3">
-                                <div className="font-bold text-indigo-900 text-sm flex items-center justify-center gap-2">
-                                    <CreditCard size={18} /> Completa il Pagamento Online
+                            <div className="mb-6 p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-3 text-left">
+                                <div className="font-extrabold text-nature-900 text-sm flex items-center gap-2">
+                                    <CreditCard size={18} className="text-nature-600" /> Completa il Pagamento Online
                                 </div>
-                                <p className="text-xs text-indigo-700">
+                                <p className="text-xs text-gray-600 leading-relaxed">
                                     Clicca sul pulsante sottostante per accedere al checkout sicuro Revolut.
                                 </p>
                                 <a
                                     href={revolutCheckoutUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-extrabold text-sm shadow-md transition-all w-full"
+                                    className="inline-flex items-center justify-center gap-2 bg-nature-700 hover:bg-nature-800 text-white px-6 py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-all w-full text-center"
                                 >
                                     💳 Paga Ora con Revolut Pay
                                 </a>
@@ -1059,70 +1059,73 @@ export const Checkout = () => {
 
                                                         {/* Revolut Compilation / Form Preview Widget */}
                                                         {paymentMethod === 'REVOLUT' && (
-                                                            <div className="mt-3 p-4 bg-slate-900 text-white rounded-2xl border border-indigo-500/30 space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-300 shadow-xl">
-                                                                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                                                            <div className="mt-3 p-5 bg-gradient-to-br from-emerald-50/70 via-white to-nature-50/40 text-nature-950 rounded-3xl border border-nature-200 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm">
+                                                                <div className="flex items-center justify-between border-b border-nature-100 pb-3">
                                                                     <div className="flex items-center gap-2">
-                                                                        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center font-black text-xs text-white">R</div>
-                                                                        <span className="font-extrabold text-xs tracking-wide">Revolut Pay Checkout</span>
+                                                                        <div className="w-7 h-7 rounded-xl bg-nature-900 flex items-center justify-center font-black text-xs text-white shadow-sm">R</div>
+                                                                        <div>
+                                                                            <span className="font-extrabold text-xs text-nature-950 block">Revolut Pay Checkout</span>
+                                                                            <span className="text-[10px] text-gray-500">Carta di Credito o App Revolut</span>
+                                                                        </div>
                                                                     </div>
-                                                                    <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">
-                                                                        🔒 Connessione Crittografata 256-bit
+                                                                    <span className="text-[10px] bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full font-extrabold flex items-center gap-1">
+                                                                        🔒 SSL 256-bit
                                                                     </span>
                                                                 </div>
 
                                                                 {/* Revolut Pay 1-Click Button */}
-                                                                <div className="p-3 bg-black/60 rounded-xl border border-slate-800 flex items-center justify-between cursor-pointer hover:border-indigo-500 transition-colors">
-                                                                    <div className="flex items-center gap-2.5">
-                                                                        <div className="w-8 h-8 rounded-full bg-white text-black font-black text-sm flex items-center justify-center shadow">R</div>
+                                                                <div className="p-3.5 bg-white rounded-2xl border border-nature-200/90 flex items-center justify-between shadow-sm hover:border-nature-500 hover:bg-nature-50/50 transition-all cursor-pointer group">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-8 rounded-xl bg-nature-950 text-white font-black text-xs flex items-center justify-center shadow">R</div>
                                                                         <div>
-                                                                            <div className="font-extrabold text-xs text-white">Paga con Revolut Pay</div>
-                                                                            <div className="text-[10px] text-gray-400">1-click dall'app Revolut</div>
+                                                                            <div className="font-extrabold text-xs text-nature-900 group-hover:text-nature-600 transition-colors">Paga con Revolut Pay</div>
+                                                                            <div className="text-[10px] text-gray-500">1-click dall'app Revolut</div>
                                                                         </div>
                                                                     </div>
-                                                                    <span className="text-xs text-indigo-400 font-bold">Paga Subito →</span>
+                                                                    <span className="text-xs text-nature-700 font-extrabold group-hover:translate-x-1 transition-transform">Paga Subito →</span>
                                                                 </div>
 
-                                                                <div className="text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider">— Oppure inserisci i dati della carta —</div>
+                                                                <div className="text-center text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">— Oppure inserisci i dati della carta —</div>
 
                                                                 {/* Card Input Form Fields */}
-                                                                <div className="space-y-2.5">
+                                                                <div className="space-y-3">
                                                                     <div>
-                                                                        <label className="block text-[10px] text-gray-400 font-bold mb-1">Numero Carta</label>
+                                                                        <label className="block text-[11px] font-bold text-gray-700 mb-1">Numero Carta</label>
                                                                         <div className="relative">
                                                                             <input
                                                                                 type="text"
                                                                                 readOnly
                                                                                 value="4532 •••• •••• 8892"
-                                                                                className="w-full bg-slate-800 text-white font-mono text-xs px-3 py-2.5 rounded-xl border border-slate-700 outline-none"
+                                                                                className="w-full bg-white text-nature-900 font-mono text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none shadow-inner"
                                                                             />
-                                                                            <span className="absolute right-3 top-2.5 text-xs font-bold text-indigo-400">VISA</span>
+                                                                            <span className="absolute right-3.5 top-2.5 text-xs font-black text-nature-700">VISA</span>
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                    <div className="grid grid-cols-2 gap-3">
                                                                         <div>
-                                                                            <label className="block text-[10px] text-gray-400 font-bold mb-1">Scadenza</label>
+                                                                            <label className="block text-[11px] font-bold text-gray-700 mb-1">Scadenza</label>
                                                                             <input
                                                                                 type="text"
                                                                                 readOnly
                                                                                 value="12 / 28"
-                                                                                className="w-full bg-slate-800 text-white font-mono text-xs px-3 py-2.5 rounded-xl border border-slate-700 outline-none"
+                                                                                className="w-full bg-white text-nature-900 font-mono text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none shadow-inner"
                                                                             />
                                                                         </div>
                                                                         <div>
-                                                                            <label className="block text-[10px] text-gray-400 font-bold mb-1">CVC / CVV</label>
+                                                                            <label className="block text-[11px] font-bold text-gray-700 mb-1">CVC / CVV</label>
                                                                             <input
                                                                                 type="text"
                                                                                 readOnly
                                                                                 value="•••"
-                                                                                className="w-full bg-slate-800 text-white font-mono text-xs px-3 py-2.5 rounded-xl border border-slate-700 outline-none"
+                                                                                className="w-full bg-white text-nature-900 font-mono text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none shadow-inner"
                                                                             />
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
-                                                                <div className="text-[10px] text-indigo-300/80 bg-indigo-950/50 p-2 rounded-lg border border-indigo-900/50 text-center font-medium">
-                                                                    🧪 In modalità <strong>Sandbox / Demo</strong> la carta verrà verificata senza addebiti reali.
+                                                                <div className="text-[11px] text-emerald-800 bg-emerald-100/60 p-3 rounded-xl border border-emerald-200/80 text-center font-semibold">
+                                                                    🧪 Modalità <strong>Sandbox / Test</strong> attiva per simulare il pagamento senza addebiti reali.
                                                                 </div>
                                                             </div>
                                                         )}
