@@ -76,13 +76,18 @@ echo -e "${GREEN}Frontend compilato con successo.${NC}"
 
 # 4. Configurazione Nginx & Riavvio dei Servizi PM2
 echo -e "\n${BLUE}[4/5] Configurazione limiti Nginx e riavvio PM2...${NC}"
-if [ -f /etc/nginx/nginx.conf ]; then
-    if grep -q "client_max_body_size" /etc/nginx/nginx.conf; then
-        sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/nginx.conf
-    else
-        sudo sed -i '/http {/a \    client_max_body_size 50M;' /etc/nginx/nginx.conf
+if [ -d /etc/nginx ]; then
+    if [ -f /etc/nginx/nginx.conf ]; then
+        if grep -q "client_max_body_size" /etc/nginx/nginx.conf; then
+            sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/nginx.conf
+        else
+            sudo sed -i '/http {/a \    client_max_body_size 50M;' /etc/nginx/nginx.conf
+        fi
     fi
-    sudo nginx -t > /dev/null 2>&1 && sudo systemctl reload nginx
+    sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/conf.d/*.conf 2>/dev/null || true
+    sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/sites-available/* 2>/dev/null || true
+    sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/sites-enabled/* 2>/dev/null || true
+    sudo nginx -t && sudo systemctl reload nginx
 fi
 
 pm2 restart chrono-backend
