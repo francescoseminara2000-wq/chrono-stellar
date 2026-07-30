@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, LogOut, Package, Users, Menu, X, Settings, FileText, Map as MapIcon, Maximize, Minimize } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, LogOut, Package, Users, Menu, X, Settings, FileText, Map as MapIcon, Maximize, Minimize, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WhatsAppStatus } from '../../components/admin/WhatsAppStatus';
 import { NotificationCenter } from '../../components/admin/NotificationCenter';
 import React, { useState, useEffect } from 'react';
@@ -82,30 +82,26 @@ export const AdminLayout = () => {
                 {/* Decorative glow */}
                 <div className="absolute top-0 right-0 w-48 h-48 bg-nature-500 rounded-full blur-[80px] opacity-20 pointer-events-none transition-all duration-300"></div>
 
-                <div className={`p-6 ${isSidebarCollapsed ? 'lg:p-8' : 'lg:px-5 lg:py-8'} hidden lg:flex items-center ${isSidebarCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'} border-b border-white/5 relative z-20 transition-all duration-300`}>
-                    <div className="flex items-center gap-3.5">
-                        <div className="w-14 h-14 flex items-center justify-center shrink-0">
+                <div className={`p-4 lg:px-4 lg:py-6 hidden lg:flex items-center ${isSidebarCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'} border-b border-white/5 relative z-20 transition-all duration-300`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 flex items-center justify-center shrink-0">
                             <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain filter drop-shadow-md hover:scale-105 transition-transform" />
                         </div>
                         {!isSidebarCollapsed && (
-                            <div className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap">
-                                <h1 className="font-sans font-black text-xl text-white tracking-tight leading-tight">Amministrazione</h1>
-                                <p className="text-nature-400/90 text-[10px] uppercase tracking-[0.2em] font-bold mt-0.5">Gestione Negozio</p>
+                            <div className="animate-in fade-in slide-in-from-left-2 duration-300 min-w-0 pr-1">
+                                <h1 className="font-sans font-black text-lg text-white tracking-tight leading-tight truncate">Amministrazione</h1>
+                                <p className="text-nature-400/90 text-[9px] uppercase tracking-[0.18em] font-bold mt-0.5">Gestione Negozio</p>
                             </div>
                         )}
                     </div>
 
-                    {/* Clean Collapse Toggle inside header */}
+                    {/* Sleek Collapse Toggle Button with Chevron Icon */}
                     <button
                         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                        className="hidden lg:flex w-9 h-9 rounded-xl items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer shadow-sm border border-white/10 relative overflow-hidden group"
+                        className="hidden lg:flex w-8 h-8 rounded-xl items-center justify-center text-nature-300/80 hover:text-white bg-white/5 hover:bg-white/15 transition-all cursor-pointer shadow-xs border border-white/10 shrink-0"
                         title={isSidebarCollapsed ? "Espandi Menu" : "Comprimi Menu"}
                     >
-                        <div className="w-5 h-3.5 flex flex-col justify-between relative">
-                            <span className={`w-5 h-0.5 bg-current rounded-full transition-all duration-300 transform origin-center ${isSidebarCollapsed ? '' : 'rotate-45 translate-y-1.5'}`}></span>
-                            <span className={`w-5 h-0.5 bg-current rounded-full transition-all duration-300 ${isSidebarCollapsed ? 'opacity-100' : 'opacity-0'}`}></span>
-                            <span className={`w-5 h-0.5 bg-current rounded-full transition-all duration-300 transform origin-center ${isSidebarCollapsed ? '' : '-rotate-45 -translate-y-1.5'}`}></span>
-                        </div>
+                        {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                     </button>
                 </div>
 
