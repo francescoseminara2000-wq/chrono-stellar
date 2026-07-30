@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, LogOut, Package, Users, Menu, X, Settings, FileText, Map as MapIcon, Maximize, Minimize, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, LogOut, Package, Users, Menu, X, Settings, FileText, Map as MapIcon, Maximize, Minimize, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { WhatsAppStatus } from '../../components/admin/WhatsAppStatus';
 import { NotificationCenter } from '../../components/admin/NotificationCenter';
 import React, { useState, useEffect } from 'react';
@@ -38,6 +38,7 @@ export const AdminLayout = () => {
 
     const navLinks = [
         { path: '/admin', icon: <LayoutDashboard size={20} />, label: 'Panoramica' },
+        { path: '/admin/analytics', icon: <BarChart3 size={20} />, label: 'Statistiche Accessi' },
         { path: '/admin/orders', icon: <ShoppingBag size={20} />, label: 'Ordini' },
         { path: '/admin/logistics', icon: <MapIcon size={20} />, label: 'Logistica' },
         { path: '/admin/pages', icon: <FileText size={20} />, label: 'Pagine' },

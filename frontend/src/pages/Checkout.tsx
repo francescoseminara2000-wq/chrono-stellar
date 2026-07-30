@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 import { sanitizeImageUrl } from '../utils/imageUrl';
 import { SearchableSelect } from '../components/admin/SearchableSelect';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface CheckoutFormData {
     name: string;
@@ -28,10 +28,6 @@ export const Checkout = () => {
     const { settings } = useAppState();
 
     // Persisted states from localStorage
-    const [step, setStep] = useState<number>(() => {
-        const saved = localStorage.getItem('checkout_step');
-        return saved ? parseInt(saved, 10) : 1;
-    });
 
     const [deliveryMethod, setDeliveryMethod] = useState<'PICKUP' | 'DELIVERY'>(() => {
         const saved = localStorage.getItem('checkout_deliveryMethod');
@@ -92,9 +88,6 @@ export const Checkout = () => {
     const [availableDates, setAvailableDates] = useState<Array<{ date: string; label: string }>>([]);
 
     // Save states to localStorage
-    useEffect(() => {
-        localStorage.setItem('checkout_step', step.toString());
-    }, [step]);
 
     useEffect(() => {
         localStorage.setItem('checkout_paymentMethod', paymentMethod);
@@ -255,11 +248,10 @@ export const Checkout = () => {
         requested: number; available: number; unitType: string;
     }>>([]);
     const [showStockModal, setShowStockModal] = useState(false);
-    const [validating, setValidating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [validationError, setValidationError] = useState('');
 
     const checkStock = async (): Promise<boolean> => {
-        setValidating(true);
         try {
             const res = await fetch(`/api/products`);
             const available: any[] = await res.json();
@@ -273,11 +265,9 @@ export const Checkout = () => {
                     issues.push({ id: item.id, name: item.name, requested: item.quantity, available: stock.stockQuantity, unitType: item.unitType });
                 }
             }
-            setValidating(false);
             setStockIssues(issues);
             return issues.length === 0;
         } catch {
-            setValidating(false);
             return true;
         }
     };
@@ -294,58 +284,34 @@ export const Checkout = () => {
         setShowStockModal(false);
     };
 
-    const [validationError, setValidationError] = useState('');
-
-    const handleNextStep = () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         setValidationError('');
-        if (step === 1) {
-            if (deliveryMethod === 'DELIVERY') {
-                if (!formData.city) {
-                    setValidationError('Seleziona il comune di consegna.');
-                    return;
-                }
-            }
-            if (!selectedDate) {
-                setValidationError('Seleziona la data per la consegna/ritiro.');
+
+        if (deliveryMethod === 'DELIVERY') {
+            if (!formData.city) {
+                setValidationError('Seleziona il comune di consegna.');
                 return;
             }
-        } else if (step === 2) {
-            if (!formData.name.trim()) {
-                setValidationError('Inserisci il tuo nome e cognome.');
-                return;
-            }
-            if (!user && !formData.email.trim()) {
-                setValidationError('Inserisci il tuo indirizzo email.');
-                return;
-            }
-            if (!user && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-                setValidationError('Inserisci un indirizzo email valido.');
-                return;
-            }
-            if (!formData.phone.trim() || formData.phone.trim() === '+39') {
-                setValidationError('Inserisci il tuo numero di telefono.');
-                return;
-            }
-        } else if (step === 3 && deliveryMethod === 'DELIVERY') {
             if (!formData.street.trim()) {
                 setValidationError('Inserisci la via o piazza per la consegna.');
                 return;
             }
-            if (!formData.civic.trim()) {
-                setValidationError('Inserisci il numero civico.');
-                return;
-            }
         }
-        
-        setStep(step + 1);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Prevent submit on enter key if we are not on the last step
-        const totalSteps = deliveryMethod === 'DELIVERY' ? 4 : 3;
-        if (step < totalSteps) {
+        if (!selectedDate) {
+            setValidationError('Seleziona la data per la consegna o il ritiro.');
+            return;
+        }
+        if (!formData.name.trim()) {
+            setValidationError('Inserisci il tuo nome e cognome.');
+            return;
+        }
+        if (!user && !formData.email.trim()) {
+            setValidationError('Inserisci il tuo indirizzo email.');
+            return;
+        }
+        if (!formData.phone.trim() || formData.phone.trim() === '+39') {
+            setValidationError('Inserisci il tuo numero di telefono per i messaggi WhatsApp.');
             return;
         }
 
@@ -660,637 +626,319 @@ export const Checkout = () => {
         );
     }
 
-    const steps = [
-        { id: 1, label: 'Spedizione', desc: 'Metodo e Data' },
-        { id: 2, label: 'Contatti', desc: 'I tuoi dati' }
-    ];
-    if (deliveryMethod === 'DELIVERY') {
-        steps.push({ id: 3, label: 'Indirizzo', desc: 'Via e Mappa' });
-    }
-    const finalStepIndex = deliveryMethod === 'DELIVERY' ? 4 : 3;
-    steps.push({ id: finalStepIndex, label: 'Conferma', desc: 'Riepilogo' });
-
     return (
         <>
-            <div className="bg-gray-50 min-h-screen py-4 md:py-12">
+            <div className="bg-gradient-to-br from-nature-50 via-gray-50 to-emerald-50/30 min-h-screen py-6 md:py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <h1 className="font-script text-2xl md:text-5xl text-nature-900 mb-4 md:mb-8 text-center">Checkout</h1>
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <span className="text-emerald-700 font-mono text-xs font-black uppercase tracking-widest block mb-1">Cassa Veloce</span>
+                        <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight">Checkout Ordine</h1>
+                        <p className="text-gray-500 text-xs md:text-sm mt-1">Verifica i dati e conferma la spesa con un click</p>
+                    </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-                        {/* Form Wizard */}
-                        <div className="lg:col-span-2 bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        {/* Main Checkout Section (2 Columns width on Desktop) */}
+                        <div className="lg:col-span-2 space-y-6">
                             
-                            {/* Visual Progress Stepper */}
-                            <div className="mb-4 md:mb-8 border-b border-gray-100 pb-4 md:pb-6">
-                                <div className="flex flex-row justify-between items-center gap-2 overflow-x-auto py-1">
-                                    {steps.map((s, idx) => {
-                                        const isCompleted = s.id < step;
-                                        const isActive = s.id === step;
-                                        return (
-                                            <React.Fragment key={s.id}>
-                                                <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all duration-300 ${
-                                                        isCompleted
-                                                            ? 'bg-nature-600 border-nature-600 text-white shadow-sm'
-                                                            : isActive
-                                                                ? 'bg-white border-nature-600 text-nature-600 shadow-sm ring-4 ring-nature-50'
-                                                                : 'bg-white border-gray-200 text-gray-400'
-                                                    }`}>
-                                                        {isCompleted ? '✓' : s.id}
-                                                    </div>
-                                                    <div className="text-left leading-tight hidden sm:block">
-                                                        <span className={`block font-bold text-xs ${isActive || isCompleted ? 'text-nature-900' : 'text-gray-400'}`}>
-                                                            {s.label}
-                                                        </span>
-                                                        <span className="text-[9px] text-gray-400 font-medium whitespace-nowrap">{s.desc}</span>
-                                                    </div>
-                                                </div>
-                                                {idx < steps.length - 1 && (
-                                                    <div className={`h-0.5 flex-1 min-w-[20px] max-w-[80px] rounded transition-colors duration-300 ${
-                                                        s.id < step ? 'bg-nature-600' : 'bg-gray-200'
-                                                    }`} />
-                                                )}
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            {/* SECTION 1: Metodo di Ricezione & Data/Fascia Oraria */}
+                            <div className="bg-white p-5 md:p-7 rounded-3xl shadow-md border border-gray-100 space-y-5">
+                                <h3 className="font-black text-lg md:text-xl text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
+                                    <Store size={22} className="text-emerald-600" /> 1. Metodo di Ricezione & Data
+                                </h3>
 
-                            {!user && step === 1 && (
-                                <div className="mb-6 bg-blue-50 p-4 rounded-xl flex items-center justify-between">
-                                    <span className="text-blue-800 text-sm">Hai già un account?</span>
-                                    <Link to="/login" className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline">
-                                        <LogIn size={16} /> Accedi per velocizzare
-                                    </Link>
-                                </div>
-                            )}
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeliveryMethod('PICKUP')}
+                                        className={`p-4 md:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all cursor-pointer ${
+                                            deliveryMethod === 'PICKUP'
+                                                ? 'border-emerald-600 bg-emerald-50/80 text-emerald-950 shadow-sm ring-2 ring-emerald-600/20 font-black'
+                                                : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'
+                                        }`}
+                                    >
+                                        <Store className="w-8 h-8" />
+                                        <span className="font-black text-sm md:text-base">Ritiro in Negozio</span>
+                                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-md">GRATIS</span>
+                                    </button>
 
-                            <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between">
-                                <div className="flex-1">
-                                    <AnimatePresence mode="wait">
-                                        <motion.div
-                                            key={step}
-                                            initial={{ opacity: 0, x: 10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -10 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            {/* STEP 1: CONSEGNA & DATA */}
-                                            {step === 1 && (
-                                                <div className="space-y-4 md:space-y-6">
-                                                    <div>
-                                                        <h3 className="font-bold text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2 text-nature-900">
-                                                            <Store size={18} className="text-nature-500" /> Scegli il Metodo di Consegna
-                                                        </h3>
-                                                        <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setDeliveryMethod('PICKUP')}
-                                                                className={`p-3 md:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all duration-300 ${deliveryMethod === 'PICKUP' ? 'border-nature-500 bg-nature-50 text-nature-700 ring-2 ring-nature-500/10' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
-                                                            >
-                                                                <Store className="w-7 h-7 md:w-9 md:h-9" />
-                                                                <span className="font-bold text-sm md:text-base">Ritiro in Negozio</span>
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setDeliveryMethod('DELIVERY')}
-                                                                className={`p-3 md:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 md:gap-3 transition-all duration-300 ${deliveryMethod === 'DELIVERY' ? 'border-nature-500 bg-nature-50 text-nature-700 ring-2 ring-nature-500/10' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
-                                                            >
-                                                                <Truck className="w-7 h-7 md:w-9 md:h-9" />
-                                                                <span className="font-bold text-sm md:text-base">Consegna a Casa</span>
-                                                            </button>
-                                                        </div>
-
-                                                        {/* Delivery City selector */}
-                                                        {deliveryMethod === 'DELIVERY' && (
-                                                            <div className="mt-6 space-y-2">
-                                                                {user && (
-                                                                    <div className="mb-4 flex items-center gap-2 p-3 bg-nature-50/50 rounded-xl border border-nature-100">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            id="changeAddress"
-                                                                            checked={changeAddress}
-                                                                            onChange={(e) => {
-                                                                                const checked = e.target.checked;
-                                                                                setChangeAddress(checked);
-                                                                                if (!checked) {
-                                                                                    // Reset to profile address
-                                                                                    setFormData(prev => ({
-                                                                                        ...prev,
-                                                                                        street: user.street || '',
-                                                                                        civic: user.civic || '',
-                                                                                        city: user.city || '',
-                                                                                        zip: user.zipCode || ''
-                                                                                    }));
-                                                                                }
-                                                                            }}
-                                                                            className="w-4 h-4 text-nature-600 border-gray-300 rounded focus:ring-nature-500"
-                                                                        />
-                                                                        <label htmlFor="changeAddress" className="text-xs font-semibold text-nature-955 cursor-pointer">
-                                                                            Usa un indirizzo di consegna diverso da quello registrato
-                                                                        </label>
-                                                                    </div>
-                                                                )}
-
-                                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                                                                    Comune di Consegna
-                                                                </label>
-                                                                {user && !changeAddress ? (
-                                                                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-750 font-bold">
-                                                                        {formData.city || 'Nessun comune registrato nel profilo'}
-                                                                    </div>
-                                                                ) : (
-                                                                    <SearchableSelect
-                                                                         options={[
-                                                                             { value: '', label: 'Seleziona Comune' },
-                                                                             ...deliveryZones.map(zone => ({
-                                                                                 value: zone.city,
-                                                                                 label: `${zone.city} (+€${(zone.shippingCost / 100).toFixed(2)})`
-                                                                             }))
-                                                                         ]}
-                                                                         value={formData.city}
-                                                                         onChange={handleCityChange}
-                                                                         placeholder="Seleziona Comune"
-                                                                     />
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                        {/* Available Dates & Time Slots UI */}
-                                                        <div className="mt-4 md:mt-6 p-3 md:p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-4">
-                                                            {deliveryMethod === 'PICKUP' ? (
-                                                                <div className="space-y-2">
-                                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
-                                                                        <Clock size={12} className="text-nature-600" /> Data di Ritiro Richiesta
-                                                                    </label>
-                                                                    {availableDates.length === 0 ? (
-                                                                        <p className="text-sm text-red-500 font-bold">Nessun giorno di ritiro disponibile.</p>
-                                                                    ) : (
-                                                                        <SearchableSelect
-                                                                            options={availableDates.map(d => ({ value: d.date, label: d.label }))}
-                                                                            value={selectedDate}
-                                                                            onChange={setSelectedDate}
-                                                                            placeholder="Seleziona Data"
-                                                                            className="mt-1"
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                            ) : (
-                                                                <div>
-                                                                    {!formData.city ? (
-                                                                        <p className="text-sm text-gray-500 font-medium text-center py-2">Seleziona un comune per visualizzare le date di consegna disponibili.</p>
-                                                                    ) : (
-                                                                        <div className="space-y-2">
-                                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
-                                                                                <Clock size={12} className="text-nature-600" /> Data di Consegna Richiesta
-                                                                            </label>
-                                                                            {availableDates.length === 0 ? (
-                                                                                <p className="text-sm text-red-500 font-bold">Nessuna data di consegna disponibile per questo comune.</p>
-                                                                            ) : (
-                                                                                <SearchableSelect
-                                                                                    options={availableDates.map(d => ({ value: d.date, label: d.label }))}
-                                                                                    value={selectedDate}
-                                                                                    onChange={setSelectedDate}
-                                                                                    placeholder="Seleziona Data"
-                                                                                    className="mt-1"
-                                                                                />
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-
-                                                            {/* Time Slots Grid */}
-                                                            {selectedDate && availableDates.length > 0 && (
-                                                                <div className="pt-3 border-t border-gray-200/70 space-y-2.5">
-                                                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
-                                                                        <Clock size={12} className="text-nature-600" /> Fascia Oraria di {deliveryMethod === 'DELIVERY' ? 'Consegna' : 'Ritiro'}
-                                                                    </label>
-                                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                                                        {(settings?.deliveryTimeSlots || '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00')
-                                                                            .split(',')
-                                                                            .map(s => s.trim())
-                                                                            .filter(Boolean)
-                                                                            .map(slot => (
-                                                                                <button
-                                                                                    key={slot}
-                                                                                    type="button"
-                                                                                    onClick={() => setSelectedTimeSlot(slot)}
-                                                                                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                                                                                        selectedTimeSlot === slot
-                                                                                            ? 'bg-nature-900 text-white border-nature-900 shadow-md ring-2 ring-nature-600/30 font-black'
-                                                                                            : 'bg-white text-gray-800 border-gray-200 hover:border-nature-300 hover:bg-nature-50/50 font-bold'
-                                                                                    }`}
-                                                                                >
-                                                                                    <span className="text-xs">{slot}</span>
-                                                                                    <Clock size={12} className={selectedTimeSlot === slot ? 'text-amber-400' : 'text-gray-400'} />
-                                                                                </button>
-                                                                            ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* STEP 2: DATI PERSONALI */}
-                                            {step === 2 && (
-                                                <div className="space-y-4 md:space-y-6">
-                                                    <h3 className="font-bold text-base md:text-lg text-nature-900 flex items-center gap-2">
-                                                        <User size={18} className="text-nature-500" /> Informazioni di Contatto
-                                                    </h3>
-
-                                                    {user && (
-                                                        <div className="flex items-center gap-2 text-xs md:text-sm text-gray-500 bg-gray-50 p-2.5 md:p-3.5 rounded-xl border border-gray-100">
-                                                            <User size={14} className="text-nature-500" /> Loggato come <strong>{user.name}</strong> ({user.email})
-                                                        </div>
-                                                    )}
-
-                                                    <div className="space-y-3 md:space-y-4">
-                                                        <div>
-                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nome e Cognome</label>
-                                                            <input
-                                                                required
-                                                                type="text"
-                                                                placeholder="Mario Rossi"
-                                                                className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
-                                                                value={formData.name}
-                                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                            />
-                                                        </div>
-
-                                                        {!user && (
-                                                            <div>
-                                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Indirizzo Email</label>
-                                                                <input
-                                                                    required
-                                                                    type="email"
-                                                                    placeholder="mario.rossi@example.com"
-                                                                    className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
-                                                                    value={formData.email}
-                                                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                                />
-                                                            </div>
-                                                        )}
-
-                                                        <div>
-                                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Numero di Telefono</label>
-                                                            <input
-                                                                required
-                                                                type="tel"
-                                                                placeholder="+39 333 1234567"
-                                                                className="w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm"
-                                                                value={formData.phone}
-                                                                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                                            />
-                                                        </div>
-
-                                                        {!user && (
-                                                            <div className="flex items-start gap-2.5 p-3.5 bg-nature-50/50 rounded-2xl border border-nature-100 mt-4 text-left">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    id="registerUser"
-                                                                    checked={registerUser}
-                                                                    onChange={e => setRegisterUser(e.target.checked)}
-                                                                    className="mt-1 w-4 h-4 text-nature-600 border-gray-300 rounded focus:ring-nature-500"
-                                                                />
-                                                                <div>
-                                                                    <label htmlFor="registerUser" className="text-sm font-bold text-nature-955 cursor-pointer block">
-                                                                        Voglio registrarmi
-                                                                    </label>
-                                                                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                                                                        Riceverai un'email per impostare la password dopo aver completato l'ordine. Potrai seguire lo stato dei tuoi ordini.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* STEP 3: INDIRIZZO */}
-                                            {step === 3 && deliveryMethod === 'DELIVERY' && (
-                                                <div className="space-y-4 md:space-y-6">
-                                                    <h3 className="font-bold text-base md:text-lg text-nature-900 flex items-center gap-2">
-                                                        <Truck size={18} className="text-nature-500" /> Indirizzo di Spedizione
-                                                    </h3>
-
-                                                    {user && (
-                                                        <div className="flex items-center gap-2 p-3 bg-nature-50/50 rounded-xl border border-nature-100">
-                                                            <input
-                                                                type="checkbox"
-                                                                id="changeAddressStep3"
-                                                                checked={changeAddress}
-                                                                onChange={(e) => {
-                                                                    const checked = e.target.checked;
-                                                                    setChangeAddress(checked);
-                                                                    if (!checked) {
-                                                                        // Reset to profile address
-                                                                        setFormData(prev => ({
-                                                                            ...prev,
-                                                                            street: user.street || '',
-                                                                            civic: user.civic || '',
-                                                                            city: user.city || '',
-                                                                            zip: user.zipCode || ''
-                                                                        }));
-                                                                    }
-                                                                }}
-                                                                className="w-4 h-4 text-nature-600 border-gray-300 rounded focus:ring-nature-500"
-                                                            />
-                                                            <label htmlFor="changeAddressStep3" className="text-xs font-semibold text-nature-955 cursor-pointer">
-                                                                Modifica l'indirizzo per questo ordine rispetto a quello registrato
-                                                            </label>
-                                                        </div>
-                                                    )}
-
-                                                    <div className="space-y-3 md:space-y-4">
-                                                        <div className="grid grid-cols-3 gap-3 md:gap-4">
-                                                            <div className="col-span-2">
-                                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Via / Piazza</label>
-                                                                <input
-                                                                    required
-                                                                    type="text"
-                                                                    placeholder="Via Roma"
-                                                                    className={`w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm ${user && !changeAddress ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : ''}`}
-                                                                    readOnly={!!user && !changeAddress}
-                                                                    value={formData.street}
-                                                                    onChange={e => setFormData({ ...formData, street: e.target.value })}
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Civico</label>
-                                                                <input
-                                                                    required
-                                                                    type="text"
-                                                                    placeholder="12"
-                                                                    className={`w-full p-3 border md:p-3.5 border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow text-sm ${user && !changeAddress ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : ''}`}
-                                                                    readOnly={!!user && !changeAddress}
-                                                                    value={formData.civic}
-                                                                    onChange={e => setFormData({ ...formData, civic: e.target.value })}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div className="grid grid-cols-3 gap-3 md:gap-4">
-                                                            <div>
-                                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">CAP</label>
-                                                                <input
-                                                                    required
-                                                                    type="text"
-                                                                    className="w-full p-3 border md:p-3.5 border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed outline-none text-sm"
-                                                                    readOnly
-                                                                    value={formData.zip}
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-2">
-                                                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Comune</label>
-                                                                <input
-                                                                    required
-                                                                    type="text"
-                                                                    className="w-full p-3 border md:p-3.5 border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed outline-none text-sm"
-                                                                    readOnly
-                                                                    value={formData.city}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* STEP 4 (Step 3 if PICKUP): NOTE & CONFERMA */}
-                                            {((step === 4 && deliveryMethod === 'DELIVERY') || (step === 3 && deliveryMethod === 'PICKUP')) && (
-                                                <div className="space-y-4 md:space-y-6">
-                                                    <h3 className="font-bold text-base md:text-lg text-nature-900 flex items-center gap-2">
-                                                        <ShoppingBag size={18} className="text-nature-500" /> Riepilogo & Conferma Finale
-                                                    </h3>
-
-                                                    <div className="bg-gray-50 p-3.5 md:p-5 rounded-2xl border border-gray-100 space-y-2 md:space-y-3.5">
-                                                        <div className="flex justify-between text-xs md:text-sm">
-                                                            <span className="text-gray-500">Metodo:</span>
-                                                            <span className="font-bold text-nature-900">{deliveryMethod === 'DELIVERY' ? 'Spedizione' : 'Ritiro'}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-xs md:text-sm">
-                                                            <span className="text-gray-500">Cliente:</span>
-                                                            <span className="font-bold text-nature-900 truncate max-w-[180px]">{formData.name}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-xs md:text-sm">
-                                                            <span className="text-gray-500">Telefono:</span>
-                                                            <span className="font-bold text-nature-900">{formData.phone}</span>
-                                                        </div>
-                                                        {deliveryMethod === 'DELIVERY' && (
-                                                            <div className="flex justify-between text-xs md:text-sm">
-                                                                <span className="text-gray-500 shrink-0">Indirizzo:</span>
-                                                                <span className="font-bold text-nature-900 text-right truncate max-w-[180px]" title={`${formData.street}, ${formData.civic} - ${formData.zip} ${formData.city}`}>{formData.street}, {formData.civic}</span>
-                                                            </div>
-                                                        )}
-                                                        <div className="flex justify-between text-xs md:text-sm">
-                                                            <span className="text-gray-500">Data Richiesta:</span>
-                                                            <span className="font-bold text-nature-600">
-                                                                {availableDates.find(d => d.date === selectedDate)?.label || selectedDate}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex justify-between text-xs md:text-sm">
-                                                            <span className="text-gray-500">Fascia Oraria:</span>
-                                                            <span className="font-bold text-nature-700 bg-nature-100/70 px-2 py-0.5 rounded text-xs">
-                                                                {selectedTimeSlot}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Payment Method Selector */}
-                                                    <div className="space-y-2.5 pt-2">
-                                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none flex items-center gap-1.5">
-                                                            <CreditCard size={12} className="text-nature-600" /> Metodo di Pagamento
-                                                        </label>
-
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setPaymentMethod('COD')}
-                                                                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                                                                    paymentMethod === 'COD'
-                                                                        ? 'bg-nature-900 text-white border-nature-900 shadow-md ring-2 ring-nature-600/30'
-                                                                        : 'bg-white text-gray-800 border-gray-200 hover:border-nature-300'
-                                                                }`}
-                                                            >
-                                                                <div className={`p-2 rounded-xl shrink-0 ${paymentMethod === 'COD' ? 'bg-nature-800 text-amber-300' : 'bg-nature-50 text-nature-700'}`}>
-                                                                    💵
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-extrabold text-xs">Alla Consegna / Ritiro</div>
-                                                                    <div className={`text-[10px] ${paymentMethod === 'COD' ? 'text-nature-200' : 'text-gray-400'}`}>
-                                                                        Contanti o POS alla consegna
-                                                                    </div>
-                                                                </div>
-                                                            </button>
-
-                                                            {(settings?.revolutEnabled || settings?.revolutEnvironment === 'sandbox' || true) && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setPaymentMethod('REVOLUT')}
-                                                                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                                                                        paymentMethod === 'REVOLUT'
-                                                                            ? 'bg-indigo-900 text-white border-indigo-900 shadow-md ring-2 ring-indigo-600/30'
-                                                                            : 'bg-white text-gray-800 border-gray-200 hover:border-indigo-300'
-                                                                    }`}
-                                                                >
-                                                                    <div className={`p-2 rounded-xl shrink-0 ${paymentMethod === 'REVOLUT' ? 'bg-indigo-800 text-amber-300' : 'bg-indigo-50 text-indigo-700'}`}>
-                                                                        💳
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="font-extrabold text-xs flex items-center gap-1.5">
-                                                                            Revolut Pay / Carta
-                                                                            <span className="px-1.5 py-0.5 bg-indigo-500 text-white rounded text-[9px] font-black uppercase">
-                                                                                {settings?.revolutEnvironment === 'production' ? 'Online' : 'Test Sandbox'}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className={`text-[10px] ${paymentMethod === 'REVOLUT' ? 'text-indigo-200' : 'text-gray-400'}`}>
-                                                                            Pagamento sicuro Revolut Pay
-                                                                        </div>
-                                                                    </div>
-                                                                </button>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Revolut Compilation / Form Preview Widget */}
-                                                        {paymentMethod === 'REVOLUT' && (
-                                                            <div className="mt-3 p-5 bg-gradient-to-br from-emerald-50/70 via-white to-nature-50/40 text-nature-950 rounded-3xl border border-nature-200 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm">
-                                                                <div className="flex items-center justify-between border-b border-nature-100 pb-3">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-7 h-7 rounded-xl bg-nature-900 flex items-center justify-center font-black text-xs text-white shadow-sm">R</div>
-                                                                        <div>
-                                                                            <span className="font-extrabold text-xs text-nature-950 block">Revolut Pay Checkout</span>
-                                                                            <span className="text-[10px] text-gray-500">Carta di Credito o App Revolut</span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <span className="text-[10px] bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full font-extrabold flex items-center gap-1">
-                                                                        🔒 SSL 256-bit
-                                                                    </span>
-                                                                </div>
-
-                                                                {/* Revolut Pay 1-Click Button */}
-                                                                <div className="p-3.5 bg-white rounded-2xl border border-nature-200/90 flex items-center justify-between shadow-sm hover:border-nature-500 hover:bg-nature-50/50 transition-all cursor-pointer group">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-8 h-8 rounded-xl bg-nature-950 text-white font-black text-xs flex items-center justify-center shadow">R</div>
-                                                                        <div>
-                                                                            <div className="font-extrabold text-xs text-nature-900 group-hover:text-nature-600 transition-colors">Paga con Revolut Pay</div>
-                                                                            <div className="text-[10px] text-gray-500">1-click dall'app Revolut</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <span className="text-xs text-nature-700 font-extrabold group-hover:translate-x-1 transition-transform">Paga Subito →</span>
-                                                                </div>
-
-                                                                <div className="text-center text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">— Oppure inserisci i dati della carta —</div>
-
-                                                                {/* Card Input Form Fields */}
-                                                                <div className="space-y-3">
-                                                                    <div>
-                                                                        <label className="block text-[11px] font-bold text-gray-700 mb-1">Numero Carta</label>
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                type="text"
-                                                                                readOnly
-                                                                                value="4532 •••• •••• 8892"
-                                                                                className="w-full bg-white text-nature-900 font-mono text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none shadow-inner"
-                                                                            />
-                                                                            <span className="absolute right-3.5 top-2.5 text-xs font-black text-nature-700">VISA</span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="grid grid-cols-2 gap-3">
-                                                                        <div>
-                                                                            <label className="block text-[11px] font-bold text-gray-700 mb-1">Scadenza</label>
-                                                                            <input
-                                                                                type="text"
-                                                                                readOnly
-                                                                                value="12 / 28"
-                                                                                className="w-full bg-white text-nature-900 font-mono text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none shadow-inner"
-                                                                            />
-                                                                        </div>
-                                                                        <div>
-                                                                            <label className="block text-[11px] font-bold text-gray-700 mb-1">CVC / CVV</label>
-                                                                            <input
-                                                                                type="text"
-                                                                                readOnly
-                                                                                value="•••"
-                                                                                className="w-full bg-white text-nature-900 font-mono text-xs px-3.5 py-2.5 rounded-xl border border-gray-200 outline-none shadow-inner"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="text-[11px] text-emerald-800 bg-emerald-100/60 p-3 rounded-xl border border-emerald-200/80 text-center font-semibold">
-                                                                    🧪 Modalità <strong>Sandbox / Test</strong> attiva per simulare il pagamento senza addebiti reali.
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Note aggiuntive (opzionale)</label>
-                                                        <textarea
-                                                            placeholder="Note di orario, citofono o istruzioni speciali..."
-                                                            rows={3}
-                                                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-shadow resize-y text-xs md:text-sm"
-                                                            value={formData.notes}
-                                                            onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    </AnimatePresence>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeliveryMethod('DELIVERY')}
+                                        className={`p-4 md:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all cursor-pointer ${
+                                            deliveryMethod === 'DELIVERY'
+                                                ? 'border-emerald-600 bg-emerald-50/80 text-emerald-950 shadow-sm ring-2 ring-emerald-600/20 font-black'
+                                                : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'
+                                        }`}
+                                    >
+                                        <Truck className="w-8 h-8" />
+                                        <span className="font-black text-sm md:text-base">Consegna a Domicilio</span>
+                                        <span className="text-[10px] text-gray-500 font-bold">A casa tua</span>
+                                    </button>
                                 </div>
 
-                                {/* Validation Message Banner */}
-                                {validationError && (
-                                    <div className="mt-4 p-3.5 bg-red-50 text-red-600 text-sm font-semibold rounded-xl border border-red-100 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                                        <AlertTriangle size={16} className="shrink-0" />
-                                        <span>{validationError}</span>
+                                {/* Select City (If Delivery) */}
+                                {deliveryMethod === 'DELIVERY' && (
+                                    <div className="space-y-2 pt-2">
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">Comune di Consegna *</label>
+                                        {user && !changeAddress ? (
+                                            <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-900 font-bold flex items-center justify-between">
+                                                <span>📍 {formData.city || 'Nessun comune registrato'}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setChangeAddress(true)}
+                                                    className="text-xs text-emerald-700 font-black hover:underline cursor-pointer"
+                                                >
+                                                    Cambia
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <SearchableSelect
+                                                options={[
+                                                    { value: '', label: 'Seleziona Comune' },
+                                                    ...deliveryZones.map(zone => ({
+                                                        value: zone.city,
+                                                        label: `${zone.city} (+€${(zone.shippingCost / 100).toFixed(2)})`
+                                                    }))
+                                                ]}
+                                                value={formData.city}
+                                                onChange={handleCityChange}
+                                                placeholder="Seleziona Comune"
+                                            />
+                                        )}
                                     </div>
                                 )}
 
-                                {/* Navigation Action Bar */}
-                                <div className="flex justify-between items-center gap-3 mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-100">
-                                    {step > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => { setValidationError(''); setStep(step - 1); }}
-                                            className="px-4 py-2.5 md:px-6 md:py-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-600 rounded-xl font-bold text-xs md:text-sm transition-colors select-none"
-                                        >
-                                            ← Indietro
-                                        </button>
-                                    )}
-                                    
-                                    {step < finalStepIndex ? (
-                                        <button
-                                            key="btn-next"
-                                            type="button"
-                                            onClick={handleNextStep}
-                                            className="px-6 py-2.5 md:px-8 md:py-3 bg-nature-600 hover:bg-nature-700 text-white rounded-xl font-bold text-xs md:text-sm shadow-md hover:shadow-lg transition-colors ml-auto select-none"
-                                        >
-                                            Avanti →
-                                        </button>
-                                    ) : (
-                                        <button
-                                            key="btn-submit"
-                                            type="submit"
-                                            disabled={validating}
-                                            className="px-6 py-2.5 md:px-10 md:py-3.5 bg-nature-600 hover:bg-nature-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-black rounded-xl shadow-lg hover:shadow-xl text-xs md:text-base tracking-wide transition-all ml-auto select-none active:scale-[0.98]"
-                                        >
-                                            {validating ? 'Verifica scorte...' : 'Conferma Ordine ✓'}
-                                        </button>
+                                {/* Date & Time Slot Selection */}
+                                <div className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                            <Clock size={14} className="text-emerald-600" /> Data Richiesta per il {deliveryMethod === 'DELIVERY' ? 'Consegna' : 'Ritiro'} *
+                                        </label>
+                                        {availableDates.length === 0 ? (
+                                            <p className="text-xs text-amber-700 font-bold bg-amber-50 p-3 rounded-xl">
+                                                {deliveryMethod === 'DELIVERY' && !formData.city ? 'Seleziona un comune per vedere le date disponibili.' : 'Nessuna data disponibile.'}
+                                            </p>
+                                        ) : (
+                                            <SearchableSelect
+                                                options={availableDates.map(d => ({ value: d.date, label: d.label }))}
+                                                value={selectedDate}
+                                                onChange={setSelectedDate}
+                                                placeholder="Seleziona Data"
+                                            />
+                                        )}
+                                    </div>
+
+                                    {selectedDate && availableDates.length > 0 && (
+                                        <div className="pt-3 border-t border-gray-200/70 space-y-2">
+                                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                                                <Clock size={14} className="text-emerald-600" /> Fascia Oraria *
+                                            </label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                {(settings?.deliveryTimeSlots || '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00')
+                                                    .split(',')
+                                                    .map(s => s.trim())
+                                                    .filter(Boolean)
+                                                    .map(slot => (
+                                                        <button
+                                                            key={slot}
+                                                            type="button"
+                                                            onClick={() => setSelectedTimeSlot(slot)}
+                                                            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
+                                                                selectedTimeSlot === slot
+                                                                    ? 'bg-emerald-800 text-white border-emerald-800 shadow-sm font-black'
+                                                                    : 'bg-white text-gray-800 border-gray-200 hover:border-emerald-300 font-bold'
+                                                            }`}
+                                                        >
+                                                            <span className="text-xs">{slot}</span>
+                                                            <Clock size={12} className={selectedTimeSlot === slot ? 'text-emerald-300' : 'text-gray-400'} />
+                                                        </button>
+                                                    ))}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-                            </form>
+                            </div>
+
+                            {/* SECTION 2: Dati Cliente & Indirizzo */}
+                            <div className="bg-white p-5 md:p-7 rounded-3xl shadow-md border border-gray-100 space-y-4">
+                                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                                    <h3 className="font-black text-lg md:text-xl text-gray-900 flex items-center gap-2">
+                                        <User size={22} className="text-emerald-600" /> 2. Dati Cliente & Indirizzo
+                                    </h3>
+                                    {!user && (
+                                        <Link to="/login" className="text-xs text-emerald-700 font-black flex items-center gap-1 hover:underline">
+                                            <LogIn size={14} /> Accedi
+                                        </Link>
+                                    )}
+                                </div>
+
+                                {user && !changeAddress ? (
+                                    <div className="bg-emerald-50/60 border border-emerald-200/80 p-4 rounded-2xl space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
+                                                    {user.name ? user.name[0].toUpperCase() : 'U'}
+                                                </div>
+                                                <div>
+                                                    <span className="font-black text-gray-900 text-sm block">{user.name}</span>
+                                                    <span className="text-xs text-gray-500">{user.email} • {user.phone || formData.phone}</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setChangeAddress(true)}
+                                                className="text-xs bg-white text-emerald-800 border border-emerald-300 px-3 py-1.5 rounded-xl font-bold hover:bg-emerald-100 transition-all cursor-pointer"
+                                            >
+                                                Modifica Dati
+                                            </button>
+                                        </div>
+
+                                        {deliveryMethod === 'DELIVERY' && (
+                                            <div className="pt-2 border-t border-emerald-200/60 text-xs font-bold text-gray-700">
+                                                <span>🏠 Indirizzo: </span>
+                                                <span>{formData.street} {formData.civic}, {formData.zip} {formData.city}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Nome e Cognome *</label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    placeholder="Mario Rossi"
+                                                    className="w-full p-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm font-bold text-gray-900"
+                                                    value={formData.name}
+                                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cellulare / WhatsApp *</label>
+                                                <input
+                                                    required
+                                                    type="tel"
+                                                    placeholder="+39 340 0000000"
+                                                    className="w-full p-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm font-bold text-gray-900"
+                                                    value={formData.phone}
+                                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {!user && (
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Indirizzo Email *</label>
+                                                <input
+                                                    required
+                                                    type="email"
+                                                    placeholder="mario@example.com"
+                                                    className="w-full p-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm font-bold text-gray-900"
+                                                    value={formData.email}
+                                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {deliveryMethod === 'DELIVERY' && (
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Via / Piazza *</label>
+                                                    <input
+                                                        required
+                                                        type="text"
+                                                        placeholder="Via Roma"
+                                                        className="w-full p-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm font-bold text-gray-900"
+                                                        value={formData.street}
+                                                        onChange={e => setFormData({ ...formData, street: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Civico</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="15"
+                                                        className="w-full p-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm font-bold text-gray-900"
+                                                        value={formData.civic}
+                                                        onChange={e => setFormData({ ...formData, civic: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* SECTION 3: Metodo di Pagamento & Note */}
+                            <div className="bg-white p-5 md:p-7 rounded-3xl shadow-md border border-gray-100 space-y-4">
+                                <h3 className="font-black text-lg md:text-xl text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
+                                    <CreditCard size={22} className="text-emerald-600" /> 3. Metodo di Pagamento
+                                </h3>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod('COD')}
+                                        className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
+                                            paymentMethod === 'COD'
+                                                ? 'border-emerald-600 bg-emerald-50/80 text-emerald-950 shadow-sm ring-2 ring-emerald-600/20 font-black'
+                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <span className="text-2xl">💵</span>
+                                        <div>
+                                            <div className="font-black text-sm">Contanti / POS</div>
+                                            <div className="text-[11px] text-gray-500">Alla consegna o al ritiro bancario</div>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod('REVOLUT')}
+                                        className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center gap-3 ${
+                                            paymentMethod === 'REVOLUT'
+                                                ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 shadow-sm ring-2 ring-indigo-600/20 font-black'
+                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <span className="text-2xl">💳</span>
+                                        <div>
+                                            <div className="font-black text-sm">Revolut Pay / Carta</div>
+                                            <div className="text-[11px] text-gray-500">Pagamento digitale sicuro online</div>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <div className="pt-2">
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Note aggiuntive (Opzionale)</label>
+                                    <textarea
+                                        placeholder="Note di consegna, citofono o istruzioni speciali per il corriere..."
+                                        rows={2}
+                                        className="w-full p-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-xs sm:text-sm font-bold text-gray-900"
+                                        value={formData.notes}
+                                        onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                                    />
+                                </div>
+
+                                {validationError && (
+                                    <div className="p-4 bg-red-50 text-red-700 text-xs sm:text-sm font-bold rounded-2xl border border-red-200 flex items-center gap-2 animate-in fade-in duration-200">
+                                        <AlertTriangle size={18} className="shrink-0" />
+                                        <span>{validationError}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Order Sidebar Summary */}
-                        <div className="bg-white p-6 rounded-3xl shadow-sm h-fit border border-gray-100">
-                            <h3 className="font-script text-3xl text-nature-900 mb-6 pb-4 border-b border-gray-100">Il tuo Ordine</h3>
+                        {/* Order Sidebar Summary (Sticky 1 Column on Desktop) */}
+                        <div className="lg:col-span-1">
+                                <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 sticky top-24 space-y-6">
+                                    <h3 className="font-black text-xl text-gray-900 pb-3 border-b border-gray-100 flex items-center gap-2">
+                                        <ShoppingBag size={20} className="text-emerald-600" /> Il tuo Ordine ({items.length})
+                                    </h3>
 
-                            <div className="space-y-4 mb-6 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 {items.map(item => (
                                     <div key={item.id} className="flex gap-4 items-center p-1.5 rounded-xl">
                                         {/* Image */}
@@ -1343,12 +991,10 @@ export const Checkout = () => {
                                     </div>
                                 )}
 
-                                <p className="text-xs text-gray-400 mt-4 text-center">
-                                    Pagamento in contanti alla consegna o al ritiro
-                                </p>
                             </div>
                         </div>
                     </div>
+                </form>
                 </div>
             </div>
 

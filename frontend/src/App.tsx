@@ -33,9 +33,13 @@ import { useAppState } from './store/useAppState';
 import { getThemeColors } from './utils/themeHelper';
 import { sanitizeImageUrl } from './utils/imageUrl';
 
-// Scroll to top on route change
-const ScrollToTop = () => {
+import { AnalyticsDashboard } from './pages/admin/AnalyticsDashboard';
+import { useAnalyticsTracker } from './hooks/useAnalyticsTracker';
+
+// Scroll to top & track site analytics on route change
+const RouteTracker = () => {
     const { pathname } = useLocation();
+    useAnalyticsTracker();
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [pathname]);
@@ -44,7 +48,7 @@ const ScrollToTop = () => {
 
 const Layout = ({ children }: { children: React.ReactNode }) => (
     <div className="min-h-screen flex flex-col font-sans text-nature-900">
-        <ScrollToTop />
+        <RouteTracker />
         <AlertBanner />
         <Header />
         <main className="flex-1">
@@ -131,6 +135,7 @@ function App() {
                         <Route path="orders" element={<OrderManager />} />
                         <Route path="logistics" element={<DeliveryMap />} />
                         <Route path="customers" element={<CustomerManager />} />
+                        <Route path="analytics" element={<AnalyticsDashboard />} />
                     </Route>
                 </Route>
             </Routes>

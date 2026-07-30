@@ -103,6 +103,7 @@ model Product {
   categoryId        Int?
   category          Category?        @relation(fields: [categoryId], references: [id], map: "Product_categoryId_fkey")
   orderitem         OrderItem[]
+  siteVisits        SiteVisit[]
 
   @@index([categoryId], map: "Product_categoryId_idx")
 }
@@ -200,6 +201,7 @@ model User {
   notificationPreference NotificationPreference      @default(EMAIL)
   orders                 Order[]
   pushsubscription       PushSubscription[]
+  siteVisits             SiteVisit[]
 }
 
 enum OrderStatus {
@@ -256,3 +258,24 @@ model LogisticsClosure {
 
   @@unique([date, type, deliveryZoneId])
 }
+
+model SiteVisit {
+  id          Int      @id @default(autoincrement())
+  path        String
+  productId   Int?
+  userId      Int?
+  ip          String?
+  userAgent   String?  @db.Text
+  deviceType  String?  @default("DESKTOP")
+  referrer    String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([path])
+  @@index([productId])
+  @@index([userId])
+}
+
