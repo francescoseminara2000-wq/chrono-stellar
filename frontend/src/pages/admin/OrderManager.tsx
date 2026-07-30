@@ -52,10 +52,29 @@ export const OrderManager = () => {
             setEditDate(selectedOrder.scheduledDate || '');
             setEditTime(selectedOrder.scheduledTime || '');
             setEditNotes(selectedOrder.adminNotes || '');
+
+            const initialFulfillment: Record<number, number> = {};
+            const initialPrices: Record<number, number> = {};
+
+            selectedOrder.items.forEach(item => {
+                const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+                const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
+
+                initialFulfillment[item.id] = item.quantityFulfilled !== null && item.quantityFulfilled !== undefined
+                    ? Number(item.quantityFulfilled)
+                    : defaultQty;
+
+                initialPrices[item.id] = (item.priceAtPurchase || item.product.priceCents) / 100;
+            });
+
+            setFulfillmentData(initialFulfillment);
+            setFulfillmentPriceData(initialPrices);
         } else {
             setEditDate('');
             setEditTime('');
             setEditNotes('');
+            setFulfillmentData({});
+            setFulfillmentPriceData({});
         }
     }, [selectedOrder]);
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
@@ -234,21 +253,6 @@ export const OrderManager = () => {
         });
         setFulfillmentData(initialData);
         setFulfillmentPriceData(initialPriceData);
-    };
-
-    const handleOpenWeighingModal = () => {
-        if (!selectedOrder) return;
-        const resetQtyData: Record<number, number> = {};
-        const resetPriceData: Record<number, number> = {};
-        selectedOrder.items.forEach(item => {
-            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
-            const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-            resetQtyData[item.id] = Number(item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? item.quantityFulfilled : defaultQty);
-            resetPriceData[item.id] = Number((item.priceAtPurchase || item.product.priceCents) / 100);
-        });
-        setFulfillmentData(resetQtyData);
-        setFulfillmentPriceData(resetPriceData);
-        setIsWeighingOpen(true);
     };
 
     const handleFulfill = async () => {
@@ -907,8 +911,19 @@ export const OrderManager = () => {
                                 {activeTab === 'items' && (
                                     <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/90 rounded-2xl p-4 overflow-hidden shadow-sm animate-in fade-in duration-200">
                                         <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 shrink-0">
-                                            <span className="text-xs font-black text-gray-400 uppercase tracking-wider">Elenco Prodotti ({selectedOrder.items.length})</span>
-                                            <span className="text-xs font-bold text-gray-500">Stima / Consuntivo a Peso</span>
+                                            <div>
+                                                <span className="text-xs font-black text-gray-900 uppercase tracking-wider block">Elenco & Pesatura Prodotti ({selectedOrder.items.length})</span>
+                                                <span className="text-[11px] font-bold text-gray-500">Modifica quantità effettive e prezzi al kg in tempo reale</span>
+                                            </div>
+                                            {selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELLED' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleFulfill}
+                                                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer shrink-0"
+                                                >
+                                                    <Scale size={15} /> Conferma Pesatura
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
                                             {selectedOrder.items.map(item => {
@@ -916,24 +931,21 @@ export const OrderManager = () => {
                                                 const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
                                                 const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
 
-                                                const rawFulfillment = fulfillmentData[item.id];
-                                                let itemActualQty = 0;
-                                                if (typeof rawFulfillment === 'number') {
-                                                    itemActualQty = rawFulfillment;
-                                                } else if (rawFulfillment === '') {
-                                                    itemActualQty = 0;
-                                                } else if (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined) {
-                                                    itemActualQty = Number(item.quantityFulfilled);
-                                                } else {
-                                                    itemActualQty = itemEstQtyKg;
-                                                }
+                                                const currentQty = typeof fulfillmentData[item.id] === 'number'
+                                                    ? fulfillmentData[item.id]
+                                                    : (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? Number(item.quantityFulfilled) : itemEstQtyKg);
 
-                                                const itemPriceCents = item.priceAtPurchase || item.product.priceCents;
-                                                const isPriceModified = item.priceAtPurchase && item.priceAtPurchase !== item.product.priceCents;
-                                                const itemActualCost = (itemPriceCents * itemActualQty) / 100;
+                                                const currentUnitPrice = typeof fulfillmentPriceData[item.id] === 'number'
+                                                    ? fulfillmentPriceData[item.id]
+                                                    : ((item.priceAtPurchase || item.product.priceCents) / 100);
+
+                                                const isPriceModified = currentUnitPrice !== (item.product.priceCents / 100);
+                                                const itemActualCost = currentQty * currentUnitPrice;
+
+                                                const isEditable = selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELLED';
 
                                                 return (
-                                                    <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 sm:p-4 bg-gradient-to-r from-gray-50/90 to-emerald-50/30 hover:from-gray-100 hover:to-emerald-100/40 rounded-2xl border border-gray-200/70 shadow-xs transition-all gap-3">
+                                                    <div key={item.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-3.5 sm:p-4 bg-gradient-to-r from-gray-50/90 via-white to-emerald-50/30 hover:to-emerald-100/40 rounded-2xl border border-gray-200/80 shadow-xs transition-all gap-3">
                                                         {/* Image + Product Details */}
                                                         <div className="flex items-center gap-3.5 min-w-0 flex-1">
                                                             {/* Product Image Thumbnail */}
@@ -955,37 +967,51 @@ export const OrderManager = () => {
                                                                     )}
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 font-bold mt-1">
-                                                                    € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                                    Richiesto: <strong className="text-gray-800">{item.quantityOrdered} {item.product.unitType.toLowerCase()}</strong> (€ {itemEstCost.toFixed(2)})
                                                                 </p>
                                                             </div>
                                                         </div>
 
-                                                        {/* Requested & Fulfilled Badges */}
-                                                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200/60 shrink-0">
-                                                            {/* Requested info */}
-                                                            <div className="bg-white px-3 py-2 rounded-xl border border-gray-200/70 text-right min-w-[90px]">
-                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Richiesto</span>
-                                                                <span className="font-black text-xs text-gray-800 block mt-0.5">
-                                                                    {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                                </span>
-                                                                <span className="text-[10px] text-gray-500 font-bold block">
-                                                                    € {itemEstCost.toFixed(2)}
-                                                                </span>
+                                                        {/* In-Line Editing Controls for Weight & Unit Price */}
+                                                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-200/60 shrink-0 flex-wrap">
+                                                            {/* Unit Price Control */}
+                                                            <div className="bg-blue-50/70 p-2 rounded-xl border border-blue-200/80 flex flex-col text-right">
+                                                                <span className="text-[9px] font-black text-blue-800 uppercase tracking-wider block">Prezzo (€/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})</span>
+                                                                {isEditable ? (
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.10"
+                                                                        min="0"
+                                                                        value={fulfillmentPriceData[item.id] !== undefined ? fulfillmentPriceData[item.id] : currentUnitPrice}
+                                                                        onChange={(e) => setFulfillmentPriceData({ ...fulfillmentPriceData, [item.id]: e.target.value === '' ? ('' as any) : parseFloat(e.target.value) })}
+                                                                        className="w-20 px-2 py-1 bg-white border border-blue-300 rounded-lg text-xs font-black text-blue-950 text-right focus:ring-2 focus:ring-blue-400 outline-none mt-1 shadow-xs"
+                                                                    />
+                                                                ) : (
+                                                                    <span className="font-black text-xs text-blue-900 mt-1 block">€ {currentUnitPrice.toFixed(2)}</span>
+                                                                )}
                                                             </div>
 
-                                                            {/* Fulfilled / Actual info */}
-                                                            <div className="bg-emerald-50/90 px-3 py-2 rounded-xl border border-emerald-200/80 text-right min-w-[100px]">
-                                                                <span className="text-[9px] font-black text-emerald-800 uppercase tracking-wider block">Effettivo</span>
-                                                                {item.product.isVariableWeight && !item.quantityFulfilled ? (
-                                                                    <span className="font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px] uppercase tracking-wider block mt-0.5">
-                                                                        ⚖️ Da pesare
-                                                                    </span>
+                                                            {/* Fulfilled Weight/Qty Control */}
+                                                            <div className="bg-emerald-50/90 p-2 rounded-xl border border-emerald-200/90 flex flex-col text-right">
+                                                                <span className="text-[9px] font-black text-emerald-800 uppercase tracking-wider block">Effettivo ({isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})</span>
+                                                                {isEditable ? (
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.05"
+                                                                        min="0"
+                                                                        value={fulfillmentData[item.id] !== undefined ? fulfillmentData[item.id] : currentQty}
+                                                                        onChange={(e) => setFulfillmentData({ ...fulfillmentData, [item.id]: e.target.value === '' ? ('' as any) : parseFloat(e.target.value) })}
+                                                                        className="w-20 px-2 py-1 bg-white border border-emerald-300 rounded-lg text-xs font-black text-emerald-950 text-right focus:ring-2 focus:ring-emerald-400 outline-none mt-1 shadow-xs"
+                                                                    />
                                                                 ) : (
-                                                                    <span className="font-black text-xs text-emerald-950 block mt-0.5">
-                                                                        {item.quantityFulfilled ? `${item.quantityFulfilled} kg` : `${item.quantityOrdered} ${item.product.unitType.toLowerCase()}`}
-                                                                    </span>
+                                                                    <span className="font-black text-xs text-emerald-950 mt-1 block">{currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}</span>
                                                                 )}
-                                                                <span className="text-[11px] font-black text-emerald-700 block">
+                                                            </div>
+
+                                                            {/* Calculated Row Total */}
+                                                            <div className="bg-gray-900 text-white px-3 py-2.5 rounded-xl text-right min-w-[85px]">
+                                                                <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-wider block">Totale</span>
+                                                                <span className="text-xs font-black text-white block mt-0.5">
                                                                     € {itemActualCost.toFixed(2)}
                                                                 </span>
                                                             </div>
@@ -1113,8 +1139,8 @@ export const OrderManager = () => {
                                     )}
 
                                     {(selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED') && (
-                                        <button onClick={handleOpenWeighingModal} className="px-4 py-3 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                            <Scale size={18} /> Pesatura & Prezzi
+                                        <button onClick={handleFulfill} className="px-4 py-3 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                            <Scale size={18} /> Conferma Pesatura & Prezzi
                                         </button>
                                     )}
 
