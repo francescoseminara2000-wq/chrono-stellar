@@ -1001,12 +1001,27 @@ export const OrderManager = () => {
                                 {activeTab === 'customer' && (
                                     <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
                                         {/* Customer Details Card */}
-                                        <div className="bg-nature-50/90 p-5 rounded-2xl border border-nature-200/90 text-xs space-y-3 shadow-xs">
-                                            <span className="text-xs font-black uppercase tracking-wider text-nature-800 block">👤 Dati Anagrafici & Contatto</span>
+                                        <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 text-xs space-y-3 shadow-xs">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black uppercase tracking-wider text-emerald-900 block">👤 Dati Anagrafici & Contatto</span>
+                                                {selectedOrder.customerPhone && (
+                                                    <a
+                                                        href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                                                    >
+                                                        <MessageCircle size={16} /> Apri WhatsApp
+                                                    </a>
+                                                )}
+                                            </div>
                                             <div className="space-y-1.5">
-                                                <p className="font-black text-lg text-nature-950">{selectedOrder.customerName || selectedOrder.user?.name}</p>
-                                                <p className="text-nature-700 text-xs font-bold">{selectedOrder.customerEmail || selectedOrder.user?.email}</p>
-                                                <p className="text-nature-900 text-xs font-black pt-1">
+                                                <p className="font-black text-lg text-emerald-950">{selectedOrder.customerName || selectedOrder.user?.name}</p>
+                                                <p className="text-emerald-800 text-xs font-bold">{selectedOrder.customerEmail || selectedOrder.user?.email}</p>
+                                                {selectedOrder.customerPhone && (
+                                                    <p className="text-emerald-900 text-xs font-black">📞 {selectedOrder.customerPhone}</p>
+                                                )}
+                                                <p className="text-emerald-950 text-xs font-black pt-1">
                                                     📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
                                                 </p>
                                             </div>
@@ -1084,36 +1099,18 @@ export const OrderManager = () => {
                                 )}
                             </div>
 
-                            {/* Floating WhatsApp Action Button in Bottom Right */}
-                            {selectedOrder.customerPhone && (
-                                <a
-                                    href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="fixed lg:absolute bottom-20 sm:bottom-24 lg:bottom-20 right-6 z-40 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 border-2 border-white ring-4 ring-emerald-500/20 transition-all group cursor-pointer"
-                                    title="Apri Chat WhatsApp col Cliente"
-                                >
-                                    <MessageCircle size={22} className="group-hover:rotate-12 transition-transform" />
-                                    <span className="hidden sm:inline font-black text-xs tracking-wide pr-1">WhatsApp</span>
-                                    <span className="relative flex h-2.5 w-2.5 -ml-1">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-                                    </span>
-                                </a>
-                            )}
-
                             {/* Action Footer (Sticky) */}
-                            <div className="bg-white border-t border-gray-100 p-3.5 sm:p-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20">
-                                <div className="bg-nature-950 text-white px-4 py-2.5 rounded-2xl shadow-sm flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-nature-900">
-                                    <span className="text-[10px] text-nature-300 font-black uppercase tracking-wider">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
-                                    <span className="text-lg sm:text-xl font-black leading-none mt-0.5">
+                            <div className="bg-white border-t border-gray-200 p-3.5 sm:p-4 shadow-[0_-8px_25px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20">
+                                <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
+                                    <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
+                                    <span className="text-xl font-black text-white leading-none mt-1">
                                         € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
                                     </span>
                                 </div>
 
                                 <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
                                     {(selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED') && (
-                                        <button onClick={handleOpenWeighingModal} className="px-4 py-3 bg-nature-600 hover:bg-nature-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                        <button onClick={handleOpenWeighingModal} className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
                                             <Scale size={18} /> Pesatura & Prezzi
                                         </button>
                                     )}
@@ -1125,7 +1122,7 @@ export const OrderManager = () => {
                                     )}
 
                                     {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
-                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
                                             <CheckCircle size={18} /> Concludi
                                         </button>
                                     )}
