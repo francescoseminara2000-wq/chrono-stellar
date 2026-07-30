@@ -977,6 +977,9 @@ export const OrderManager = () => {
                                                 const isPriceModified = currentUnitPrice !== (item.product.priceCents / 100);
                                                 const itemActualCost = currentQty * currentUnitPrice;
 
+                                                const qtyDiff = Number((currentQty - itemEstQtyKg).toFixed(2));
+                                                const priceDiff = Number((itemActualCost - itemEstCost).toFixed(2));
+
                                                 return (
                                                     <div key={item.id} className={`group flex flex-col sm:flex-row items-stretch justify-between rounded-2xl sm:rounded-3xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md ${
                                                         isWeighed ? 'bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 border-emerald-300' : 'bg-white border-gray-200/90 hover:border-gray-300'
@@ -1028,38 +1031,58 @@ export const OrderManager = () => {
                                                             </div>
                                                         </div>
 
-                                                        {/* Right Part: Premium Metric Box with Strikethrough Comparison */}
+                                                        {/* Right Part: Premium Metric Box with Strikethrough & Trend Arrow Comparison */}
                                                         <div className="p-3.5 sm:p-4 flex items-center justify-between sm:justify-end gap-3.5 border-t sm:border-t-0 border-gray-100 bg-gray-50/50 sm:bg-transparent shrink-0">
-                                                            {/* Metric Box: Supermarket Strikethrough Comparison Style */}
-                                                            <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-200/90 shadow-sm text-right min-w-[145px] flex flex-col justify-center">
+                                                            {/* Metric Box: Supermarket Strikethrough Comparison + Trend Arrows */}
+                                                            <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-200/90 shadow-sm text-right min-w-[155px] flex flex-col justify-center">
                                                                 <span className="text-[10px] font-black uppercase tracking-wider block text-gray-400">
                                                                     {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
                                                                 </span>
 
                                                                 {isWeighed ? (
-                                                                    <div className="mt-1 space-y-0.5">
-                                                                        {/* Weight Comparison with Strikethrough */}
+                                                                    <div className="mt-1 space-y-1">
+                                                                        {/* Weight Comparison + Trend Arrow */}
                                                                         <div className="flex items-center justify-end gap-1.5 leading-none">
-                                                                            {currentQty !== itemEstQtyKg && (
-                                                                                <span className="line-through text-red-500 font-bold text-xs sm:text-sm" title="Quantità stmata iniziale">
+                                                                            {qtyDiff !== 0 && (
+                                                                                <span className="line-through text-red-500 font-bold text-xs sm:text-sm" title={`Richiesto inizialmente: ${itemEstQtyKg} kg`}>
                                                                                     {itemEstQtyKg} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
                                                                                 </span>
                                                                             )}
-                                                                            <span className="font-black text-sm sm:text-base text-emerald-950" title="Quantità effettiva pesata">
+                                                                            <span className="font-black text-sm sm:text-base text-gray-900" title="Quantità effettiva pesata">
                                                                                 {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
                                                                             </span>
+                                                                            {qtyDiff > 0 && (
+                                                                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-1 py-0.5 rounded-md border border-emerald-200 shrink-0" title={`Aumento peso (+${qtyDiff} kg)`}>
+                                                                                    ↑
+                                                                                </span>
+                                                                            )}
+                                                                            {qtyDiff < 0 && (
+                                                                                <span className="text-[10px] font-black text-amber-800 bg-amber-100 px-1 py-0.5 rounded-md border border-amber-200 shrink-0" title={`Calo peso (${qtyDiff} kg)`}>
+                                                                                    ↓
+                                                                                </span>
+                                                                            )}
                                                                         </div>
 
-                                                                        {/* Price Comparison with Strikethrough */}
+                                                                        {/* Price Comparison + Trend Arrow */}
                                                                         <div className="flex items-center justify-end gap-1.5 leading-none pt-0.5">
-                                                                            {itemActualCost !== itemEstCost && (
-                                                                                <span className="line-through text-red-400 font-bold text-[11px]" title="Costo stimato iniziale">
+                                                                            {priceDiff !== 0 && (
+                                                                                <span className="line-through text-red-400 font-bold text-[11px]" title={`Costo stimato iniziale: € ${itemEstCost.toFixed(2)}`}>
                                                                                     € {itemEstCost.toFixed(2)}
                                                                                 </span>
                                                                             )}
                                                                             <span className="font-black text-xs sm:text-sm text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200" title="Costo effettivo calcolato">
                                                                                 € {itemActualCost.toFixed(2)}
                                                                             </span>
+                                                                            {priceDiff > 0 && (
+                                                                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-1 py-0.5 rounded-md border border-emerald-200 shrink-0" title={`Aumento costo (+€ ${priceDiff.toFixed(2)})`}>
+                                                                                    ↑
+                                                                                </span>
+                                                                            )}
+                                                                            {priceDiff < 0 && (
+                                                                                <span className="text-[10px] font-black text-amber-800 bg-amber-100 px-1 py-0.5 rounded-md border border-amber-200 shrink-0" title={`Sconto/Calo costo (-€ ${Math.abs(priceDiff).toFixed(2)})`}>
+                                                                                    ↓
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 ) : (
