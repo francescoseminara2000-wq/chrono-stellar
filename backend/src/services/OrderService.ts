@@ -177,9 +177,9 @@ export class OrderService {
             // Initiate payment strategy and create Transaction record
             const transactionPartial = await strategy.initiate(newOrder as any, Math.round(estimatedTotal));
             
-            let gatewayVal = transactionPartial.gateway;
-            if (!gatewayVal || (gatewayVal as any) === '') {
-                gatewayVal = paymentMethod === 'REVOLUT' ? PaymentGateway.REVOLUT : PaymentGateway.COD;
+            let gatewayVal: any = paymentMethod === 'REVOLUT' ? 'REVOLUT' : 'COD';
+            if (transactionPartial?.gateway && (transactionPartial.gateway as string) !== '') {
+                gatewayVal = transactionPartial.gateway;
             }
 
             const transaction = await tx.transaction.create({
@@ -187,7 +187,7 @@ export class OrderService {
                     orderId: newOrder.id,
                     amount: transactionPartial.amount || Math.round(estimatedTotal),
                     currency: transactionPartial.currency || 'EUR',
-                    gateway: gatewayVal,
+                    gateway: gatewayVal as PaymentGateway,
                     status: transactionPartial.status || TransactionStatus.PENDING,
                     gatewayTxId: transactionPartial.gatewayTxId || `TX-${newOrder.id}-${Date.now()}`,
                     metadata: (transactionPartial.metadata as any) || {}
