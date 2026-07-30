@@ -317,11 +317,73 @@ export const OrderManager = () => {
 
     useEffect(() => {
         fetchOrders();
+
+        let eventSource: EventSource | null = null;
+        try {
+            eventSource = new EventSource(`${API_URL}/api/admin/events/stream`);
+
+            eventSource.addEventListener('order_created', (e: MessageEvent) => {
+                try {
+                    const newOrd = JSON.parse(e.data);
+                    const nameStr = newOrd.customerName || newOrd.user?.name || 'Cliente';
+                    const totalStr = ((newOrd.finalTotal || newOrd.estimatedTotal) / 100).toFixed(2);
+                    const methodStr = newOrd.deliveryMethod === 'DELIVERY' ? '🚚 Consegna a Domicilio' : '🏪 Ritiro in Negozio';
+                    const dateStr = newOrd.scheduledDate ? newOrd.scheduledDate.split('-').reverse().join('/') : 'In giornata';
+
+                    addRichToast(
+                        `⚡ [LIVE] Nuovo Ordine Ricevuto #${newOrd.id}`,
+                        `• Cliente: ${nameStr}\n• Importo: € ${totalStr}\n• Modalità: ${methodStr}\n• Data: ${dateStr}`,
+                        'info',
+                        10000
+                    );
+                    fetchOrders(true);
+                } catch (err) {
+                    console.error('SSE order_created parse error:', err);
+                }
+            });
+
+            eventSource.addEventListener('order_approval', (e: MessageEvent) => {
+                try {
+                    const freshOrd = JSON.parse(e.data);
+                    const nameStr = freshOrd.customerName || freshOrd.user?.name || 'Cliente';
+                    const totalStr = ((freshOrd.finalTotal || freshOrd.estimatedTotal) / 100).toFixed(2);
+
+                    if (freshOrd.approvalStatus === 'CUSTOMER_APPROVED') {
+                        addRichToast(
+                            `⚡ [LIVE] Pesatura Confermata dal Cliente!`,
+                            `• Ordine: #${freshOrd.id}\n• Cliente: ${nameStr}\n• Totale Pesato: € ${totalStr}\n• Il cliente ha appena accettato la variazione via WhatsApp/Email!`,
+                            'success',
+                            10000
+                        );
+                    } else if (freshOrd.approvalStatus === 'CUSTOMER_REJECTED') {
+                        addRichToast(
+                            `⚡ [LIVE] Contestazione Pesatura Cliente`,
+                            `• Ordine: #${freshOrd.id}\n• Cliente: ${nameStr}\n• Il cliente ha segnalato la variazione. Verificare la chat o contattarlo al telefono.`,
+                            'warning',
+                            10000
+                        );
+                    }
+                    fetchOrders(true);
+                } catch (err) {
+                    console.error('SSE order_approval parse error:', err);
+                }
+            });
+
+            eventSource.addEventListener('order_updated', () => {
+                fetchOrders(true);
+            });
+        } catch (sseErr) {
+            console.error('SSE connection error:', sseErr);
+        }
+
         const interval = setInterval(() => {
             fetchOrders(true);
-        }, 15000);
+        }, 10000);
 
-        return () => clearInterval(interval);
+        return () => {
+            if (eventSource) eventSource.close();
+            clearInterval(interval);
+        };
     }, [token]);
 
     const handleSelectOrder = (order: Order) => {

@@ -250,6 +250,14 @@ export class OrderController {
                     console.error('Notification creation failed:', e);
                 }
 
+                // Emit real-time SSE listener event for admin dashboard
+                try {
+                    const { orderEventBus } = require('../services/OrderEventBus');
+                    orderEventBus.emit('order:approval_changed', updated);
+                } catch (e) {
+                    console.error('Failed to emit order:approval_changed:', e);
+                }
+
                 return res.json({ message: 'Pesatura approvata con successo!', approvalStatus: 'CUSTOMER_APPROVED', order: updated });
             } else if (action === 'REJECT') {
                 const updated = await prisma.order.update({
@@ -269,6 +277,14 @@ export class OrderController {
                     });
                 } catch (e) {
                     console.error('Notification creation failed:', e);
+                }
+
+                // Emit real-time SSE listener event for admin dashboard
+                try {
+                    const { orderEventBus } = require('../services/OrderEventBus');
+                    orderEventBus.emit('order:approval_changed', updated);
+                } catch (e) {
+                    console.error('Failed to emit order:approval_changed:', e);
                 }
 
                 return res.json({ message: 'Richiesta di variazione contestata.', approvalStatus: 'CUSTOMER_REJECTED', order: updated });

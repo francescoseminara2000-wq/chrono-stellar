@@ -214,6 +214,14 @@ export class OrderService {
             return { ...newOrder, transaction };
         });
 
+        // Emit real-time SSE listener event for admin dashboard
+        try {
+            const { orderEventBus } = require('./OrderEventBus');
+            orderEventBus.emit('order:created', order);
+        } catch (e) {
+            console.error('[OrderService] Failed to emit order:created event:', e);
+        }
+
         // Trigger notifications (WhatsApp primary if server connected & phone present, with Email fallback)
         const whatsAppService = WhatsAppService.getInstance();
         const waStatus = whatsAppService.getStatus();

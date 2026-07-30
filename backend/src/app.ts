@@ -162,7 +162,45 @@ app.post('/api/auth/verify-reset-token', (req, res) => authController.verifyRese
 app.put('/api/auth/update', authenticateToken, (req, res) => authController.update(req, res));
 app.get('/api/auth/me', authenticateToken, (req, res) => authController.me(req, res));
 
-// Protected Admin Routes (Apply middleware later if desired, or keep open for MVP dev speed)
-// app.use('/api/admin', authenticateToken, requireAdmin); 
+import { orderEventBus } from './services/OrderEventBus';
+
+// SSE Real-Time Event Stream for Admin Listener
+app.get('/api/admin/events/stream', (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+    });
+
+    res.write(`data: ${JSON.stringify({ type: 'CONNECTED' })}\n\n`);
+
+    const handleCreated = (order: any) => {
+        res.write(`event: order_created\ndata: ${JSON.stringify(order)}\n\n`);
+    };
+
+    const handleApproval = (order: any) => {
+        res.write(`event: order_approval\ndata: ${JSON.stringify(order)}\n\n`);
+    };
+
+    const handleUpdated = (order: any) => {
+        res.write(`event: order_updated\ndata: ${JSON.stringify(order)}\n\n`);
+    };
+
+    orderEventBus.on('order:created', handleCreated);
+    orderEventBus.on('order:approval_changed', handleApproval);
+    orderEventBus.on('order:updated', handleUpdated);
+
+    const heartbeat = setInterval(() => {
+        res.write(': heartbeat\n\n');
+    }, 25000);
+
+    req.on('close', () => {
+        clearInterval(heartbeat);
+        orderEventBus.removeListener('order:created', handleCreated);
+        orderEventBus.removeListener('order:approval_changed', handleApproval);
+        orderEventBus.removeListener('order:updated', handleUpdated);
+    });
+});
 
 export default app;
