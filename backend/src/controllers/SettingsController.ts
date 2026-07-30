@@ -46,9 +46,9 @@ export class SettingsController {
                 settings = await prisma.storeSettings.create({
                     data: {
                         id: 1,
-                        siteName: 'Chrono Stellar',
+                        siteName: 'Ortofrutta Butti',
                         tagline: 'Freschezza quotidiana',
-                        contactEmail: 'info@chrono-stellar.it',
+                        contactEmail: 'info@ortofruttabutti.it',
                         contactPhone: '+39 0341 000 000',
                         contactAddress: 'Via Roma 1, Valmadrera (LC)',
                         openingHours: 'Lunedì - Sabato: 08:00 - 12:30 / 15:30 - 19:00',

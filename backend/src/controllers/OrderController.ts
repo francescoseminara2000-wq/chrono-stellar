@@ -194,7 +194,7 @@ export class OrderController {
                 diffPercent,
                 tolerancePercent: storeSettings?.weighingTolerancePercent ?? 10,
                 storeInfo: {
-                    siteName: storeSettings?.siteName || 'Chrono Stellar',
+                    siteName: storeSettings?.siteName || 'Ortofrutta Butti',
                     contactPhone: storeSettings?.contactPhone,
                     contactEmail: storeSettings?.contactEmail
                 }

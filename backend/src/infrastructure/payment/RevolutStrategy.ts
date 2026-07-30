@@ -40,7 +40,7 @@ export class RevolutPaymentStrategy implements PaymentStrategy {
                 currency: 'EUR',
                 capture_mode: 'AUTOMATIC',
                 merchant_order_ext_ref: String(order.id),
-                description: `Ordine #${order.id} - ${settings?.siteName || 'Chrono Stellar'}`,
+                description: `Ordine #${order.id} - ${settings?.siteName || 'Ortofrutta Butti'}`,
                 customer: {
                     email: order.customerEmail || undefined,
                     phone: order.customerPhone || undefined

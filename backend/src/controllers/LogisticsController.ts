@@ -321,7 +321,7 @@ export class LogisticsController {
                 if (updatedOrder.customerEmail) {
                     try {
                         const emailService = new EmailService();
-                        const emailSubject = `Programmazione Ordine #${updatedOrder.id} - Chrono Stellar`;
+                        const emailSubject = `Programmazione Ordine #${updatedOrder.id} - ${settings?.siteName || 'Ortofrutta Butti'}`;
                         const emailHtml = `
                             <p>Ciao ${customerName},</p>
                             <p>Ti informiamo che la consegna/ritiro del tuo ordine <strong>#${updatedOrder.id}</strong> è stata pianificata per il giorno:</p>
@@ -329,7 +329,7 @@ export class LogisticsController {
                                 <strong>Data:</strong> ${formattedDate}<br>
                                 <strong>Orario:</strong> ${scheduledTime || 'Da concordare'}
                             </div>
-                            <p>A presto,<br>Il Team di Chrono Stellar</p>
+                            <p>A presto,<br>Il Team di ${settings?.siteName || 'Ortofrutta Butti'}</p>
                         `;
                         await emailService.sendMail(updatedOrder.customerEmail, emailSubject, emailHtml);
                     } catch (emailError) {

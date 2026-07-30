@@ -20,8 +20,8 @@ export class EmailService {
 
     public async sendMail(to: string, subject: string, html: string, settings?: any) {
         try {
-            const fromName = settings?.siteName || 'Chrono Stellar';
-            const fromEmail = settings?.contactEmail || 'noreply@chronostellar.com';
+            const fromName = settings?.siteName || 'Ortofrutta Butti';
+            const fromEmail = settings?.contactEmail || 'noreply@ortofruttabutti.it';
 
             const info = await this.transporter.sendMail({
                 from: process.env.SMTP_FROM || `"${fromName}" <${fromEmail}>`,
@@ -42,8 +42,8 @@ export class EmailService {
     }
 
     private getEmailTemplate(title: string, content: string, settings?: any) {
-        const siteName = settings?.siteName || 'Chrono Stellar';
-        const contactEmail = settings?.contactEmail || 'support@chronostellar.com';
+        const siteName = settings?.siteName || 'Ortofrutta Butti';
+        const contactEmail = settings?.contactEmail || 'support@ortofruttabutti.it';
         
         const logoUrl = settings?.logoUrl
             ? (settings.logoUrl.startsWith('http') ? settings.logoUrl : `${process.env.FRONTEND_URL || 'http://localhost:5173'}${settings.logoUrl}`)

@@ -219,7 +219,7 @@ export const Header = () => {
                                         {settings.siteName.substring(settings.siteName.indexOf(' ') + 1)}
                                     </>
                                 ) : (
-                                    <><span className="text-nature-600">Chrono</span> Stellar</>
+                                    <><span className="text-nature-600">Ortofrutta</span> Butti</>
                                 )}
                             </h1>
                             <p className={`text-nature-500 font-sans tracking-[0.2em] uppercase font-bold transition-all duration-500 ${isScrolled ? 'text-[8px]' : 'text-[10px] md:text-xs'}`}>

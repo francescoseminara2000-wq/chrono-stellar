@@ -130,7 +130,7 @@ model PushSubscription {
 
 model StoreSettings {
   id                       Int      @id @default(autoincrement())
-  siteName                 String   @default("Chrono Stellar")
+  siteName                 String   @default("Ortofrutta Butti")
   tagline                  String   @default("Freschezza quotidiana")
   contactEmail             String?
   contactPhone             String?
