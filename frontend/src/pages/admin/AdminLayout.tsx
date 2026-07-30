@@ -53,11 +53,12 @@ export const AdminLayout = () => {
             {/* Mobile Header (Pulp & Solid) */}
             <div className="lg:hidden bg-nature-900 text-white p-4 flex justify-between items-center sticky top-0 z-50 border-b border-white/5 shadow-md">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-white/20">
-                        <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt={`${settings?.siteName || 'Admin'} Logo`} className="w-full h-full object-contain p-1" />
+                    <div className="w-11 h-11 flex items-center justify-center shrink-0">
+                        <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain filter drop-shadow-md" />
                     </div>
                     <div>
-                        <h1 className="font-script text-2xl leading-none text-white drop-shadow-sm">{settings?.siteName ? `${settings.siteName} Admin` : 'Admin'}</h1>
+                        <h1 className="font-sans font-black text-lg leading-none text-white tracking-tight">Amministrazione</h1>
+                        <p className="text-nature-400/80 text-[9px] uppercase tracking-[0.18em] font-bold mt-0.5">Gestione Negozio</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -82,14 +83,14 @@ export const AdminLayout = () => {
                 <div className="absolute top-0 right-0 w-48 h-48 bg-nature-500 rounded-full blur-[80px] opacity-20 pointer-events-none transition-all duration-300"></div>
 
                 <div className={`p-6 ${isSidebarCollapsed ? 'lg:p-8' : 'lg:px-5 lg:py-8'} hidden lg:flex items-center ${isSidebarCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'} border-b border-white/5 relative z-20 transition-all duration-300`}>
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center overflow-hidden shadow-lg shadow-nature-500/30 shrink-0">
-                            <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt={`${settings?.siteName || 'Admin'} Logo`} className="w-full h-full object-contain p-1" />
+                    <div className="flex items-center gap-3.5">
+                        <div className="w-14 h-14 flex items-center justify-center shrink-0">
+                            <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain filter drop-shadow-md hover:scale-105 transition-transform" />
                         </div>
                         {!isSidebarCollapsed && (
                             <div className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap">
-                                <h1 className="font-script text-3xl mb-0.5 text-white tracking-wide">{settings?.siteName ? `${settings.siteName.split(' ')[0]} Admin` : 'Admin'}</h1>
-                                <p className="text-nature-400/80 text-[10px] uppercase tracking-[0.2em] font-bold">Gestione Negozio</p>
+                                <h1 className="font-sans font-black text-xl text-white tracking-tight leading-tight">Amministrazione</h1>
+                                <p className="text-nature-400/90 text-[10px] uppercase tracking-[0.2em] font-bold mt-0.5">Gestione Negozio</p>
                             </div>
                         )}
                     </div>
