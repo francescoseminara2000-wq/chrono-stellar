@@ -978,69 +978,78 @@ export const OrderManager = () => {
                                                 const itemActualCost = currentQty * currentUnitPrice;
 
                                                 return (
-                                                    <div key={item.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all gap-4 ${
-                                                        isWeighed ? 'bg-emerald-50/50 border-emerald-200 shadow-xs' : 'bg-gray-50/90 border-gray-200/90'
+                                                    <div key={item.id} className={`group flex flex-col sm:flex-row items-stretch justify-between rounded-2xl sm:rounded-3xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md ${
+                                                        isWeighed ? 'bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 border-emerald-300' : 'bg-white border-gray-200/90 hover:border-gray-300'
                                                     }`}>
-                                                        {/* Image + Product Details */}
-                                                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                                                            {/* Product Image Thumbnail */}
-                                                            <div className="w-16 h-16 rounded-2xl bg-white border border-gray-200/90 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                                                        {/* Left Part: Full-bleed Integrated Image + Details */}
+                                                        <div className="flex items-stretch gap-4 flex-1 min-w-0">
+                                                            {/* Full-bleed Integrated Thumbnail Image */}
+                                                            <div className="w-24 sm:w-28 min-h-[96px] bg-gray-100 shrink-0 overflow-hidden relative flex items-center justify-center border-r border-gray-200/60">
                                                                 {item.product.imageUrl ? (
-                                                                    <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                                                                    <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                                 ) : (
-                                                                    <span className="text-3xl select-none">🍏</span>
+                                                                    <span className="text-4xl select-none">🍏</span>
                                                                 )}
-                                                            </div>
-
-                                                            <div className="min-w-0 space-y-1">
-                                                                <div className="flex items-center gap-2 flex-wrap">
-                                                                    <p className="font-black text-base text-gray-900 leading-snug truncate" title={item.product.name}>{item.product.name}</p>
-                                                                    
-                                                                    {/* Icon-Only Status Badges for maximum visual clarity */}
+                                                                {/* Status Icon Badge overlay on image */}
+                                                                <div className="absolute top-2 left-2 shadow-sm">
                                                                     {isWeighed ? (
-                                                                        <span className="p-1.5 bg-emerald-100 text-emerald-800 rounded-xl border border-emerald-200 shrink-0 text-sm shadow-xs cursor-help" title="Prodotto Pesato e Confermato">
-                                                                            ✅
+                                                                        <span className="w-7 h-7 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-white" title="Prodotto Pesato">
+                                                                            ✓
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="p-1.5 bg-amber-100 text-amber-800 rounded-xl border border-amber-200 shrink-0 text-sm shadow-xs cursor-help" title="Prodotto da Pesare">
+                                                                        <span className="w-7 h-7 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-white" title="Da Pesare">
                                                                             ⚖️
                                                                         </span>
                                                                     )}
+                                                                </div>
+                                                            </div>
 
+                                                            {/* Product Details Content */}
+                                                            <div className="py-3.5 pr-2 flex flex-col justify-center min-w-0 space-y-1.5 flex-1">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <h4 className="font-black text-base sm:text-lg text-gray-900 leading-snug truncate" title={item.product.name}>
+                                                                        {item.product.name}
+                                                                    </h4>
                                                                     {isPriceModified && (
-                                                                        <span className="p-1.5 bg-indigo-100 text-indigo-800 rounded-xl border border-indigo-200 shrink-0 text-sm shadow-xs cursor-help" title="Prezzo Modificato">
-                                                                            🏷️
+                                                                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-black rounded-full border border-indigo-200 uppercase tracking-wider shrink-0">
+                                                                            Prezzo Modificato
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <p className="text-xs sm:text-sm text-gray-600 font-bold">
-                                                                    Richiesto: <strong className="text-gray-900 font-black">{item.quantityOrdered} {item.product.unitType.toLowerCase()}</strong> (€ {itemEstCost.toFixed(2)})
-                                                                </p>
+                                                                
+                                                                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-gray-600 font-bold flex-wrap">
+                                                                    <span className="bg-gray-100/90 px-2.5 py-1 rounded-xl text-gray-800 font-black border border-gray-200/80">
+                                                                        Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                                                    </span>
+                                                                    <span className="text-gray-500 font-extrabold">
+                                                                        (Stima: € {itemEstCost.toFixed(2)})
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
 
-                                                        {/* Quantity, Cost & Action Button */}
-                                                        <div className="flex items-center justify-between sm:justify-end gap-3.5 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-200/60 shrink-0">
-                                                            {/* Fulfilled Weight & Cost Box */}
-                                                            <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-200/90 text-right min-w-[110px] shadow-xs">
-                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Effettivo</span>
-                                                                <span className="font-black text-sm text-gray-900 block mt-0.5">
+                                                        {/* Right Part: Premium Metric Box & Action Button */}
+                                                        <div className="p-3.5 sm:p-4 flex items-center justify-between sm:justify-end gap-3.5 border-t sm:border-t-0 border-gray-100 bg-gray-50/50 sm:bg-transparent shrink-0">
+                                                            {/* Metric Box: Effettivo & Costo */}
+                                                            <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-200/90 shadow-sm text-right min-w-[120px] flex flex-col justify-center">
+                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Effettivo Pesato</span>
+                                                                <span className="font-black text-sm sm:text-base text-gray-900 block leading-tight mt-0.5">
                                                                     {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
                                                                 </span>
-                                                                <span className="text-xs font-black text-emerald-700 block">
+                                                                <span className="text-xs font-black text-emerald-600 block mt-0.5">
                                                                     € {itemActualCost.toFixed(2)}
                                                                 </span>
                                                             </div>
 
-                                                            {/* Single Weighing Action Button (Visible in PENDING status) */}
+                                                            {/* Action Button (Visible in PENDING status) */}
                                                             {selectedOrder.status === 'PENDING' && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleOpenSingleItemWeighing(item)}
-                                                                    className={`px-4 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
+                                                                    className={`px-4 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-sm shrink-0 ${
                                                                         isWeighed
                                                                             ? 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-300'
-                                                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
+                                                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 shadow-emerald-200'
                                                                     }`}
                                                                 >
                                                                     {isWeighed ? <span className="flex items-center gap-1.5"><Scale size={16} /> Modifica</span> : <span className="flex items-center gap-1.5"><Scale size={16} /> Pesa Prodotto</span>}
