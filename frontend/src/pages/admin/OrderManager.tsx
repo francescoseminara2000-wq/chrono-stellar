@@ -791,74 +791,74 @@ export const OrderManager = () => {
                     {selectedOrder ? (
                         <div className="bg-white lg:rounded-2xl lg:shadow-xl lg:border lg:border-nature-100 flex flex-col overflow-hidden h-full relative">
                             {/* Mobile Back Header */}
-                            <div className="lg:hidden p-3.5 border-b border-gray-100 flex items-center justify-between bg-nature-900 text-white shrink-0 shadow-md">
-                                <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-nature-800 rounded-xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-bold">
-                                    <X size={18} /> Chiudi
+                            <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-950 text-white shrink-0 shadow-lg">
+                                <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 px-3 py-2 bg-nature-800/90 rounded-2xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-black shadow-inner">
+                                    <X size={20} /> Chiudi
                                 </button>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-extrabold text-sm">Ordine #{selectedOrder.id}</span>
+                                <div className="flex items-center gap-2.5">
+                                    <span className="font-black text-base tracking-wide">Ordine #{selectedOrder.id}</span>
                                     <StatusBadge status={selectedOrder.status} />
                                 </div>
                             </div>
 
                             {/* Main content wrapper - flex layout */}
-                            <div className="flex-1 p-3 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
+                            <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
                                 {/* Desktop Header: Order ID + Status + Payment Method */}
-                                <div className="hidden lg:flex justify-between items-center mb-3 pb-2.5 border-b border-gray-100">
+                                <div className="hidden lg:flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
                                     <div className="flex items-center gap-3">
-                                        <h2 className="text-2xl font-black text-gray-900 leading-none">Ordine #{selectedOrder.id}</h2>
+                                        <h2 className="text-3xl font-black text-gray-900 leading-none tracking-tight">Ordine #{selectedOrder.id}</h2>
                                         {/* Payment Method Badge */}
                                         {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
-                                            <span className="px-2.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
-                                                💳 Revolut Pay
+                                            <span className="px-3.5 py-1.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                                💳 Revolut Pay Online
                                             </span>
                                         ) : (
-                                            <span className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-black text-xs flex items-center gap-1 shadow-sm">
-                                                💵 Alla Consegna
+                                            <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-950 border border-emerald-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                                💵 Contanti / POS alla Consegna
                                             </span>
                                         )}
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Stato Attuale:</span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs font-black text-gray-400 uppercase tracking-wider">Stato Attuale:</span>
                                         <StatusBadge status={selectedOrder.status} />
                                     </div>
                                 </div>
 
-                                {/* TAB NAVIGATION HEADER */}
-                                <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-2xl mb-4 shrink-0 border border-gray-200/50">
+                                {/* TAB NAVIGATION HEADER (Generous sizing & crisp styling) */}
+                                <div className="flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-2xl mb-5 shrink-0 border border-gray-200/70 shadow-inner">
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab('overview')}
-                                        className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
                                             activeTab === 'overview'
-                                                ? 'bg-white text-nature-950 shadow-sm border border-gray-200/60'
-                                                : 'text-gray-500 hover:text-gray-800'
+                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                                         }`}
                                     >
-                                        <span>📋</span> Riepilogo
+                                        <span className="text-base">📋</span> Riepilogo
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab('items')}
-                                        className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
                                             activeTab === 'items'
-                                                ? 'bg-white text-nature-950 shadow-sm border border-gray-200/60'
-                                                : 'text-gray-500 hover:text-gray-800'
+                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                                         }`}
                                     >
-                                        <span>🛒</span> Prodotti ({selectedOrder.items.length})
+                                        <span className="text-base">🛒</span> Prodotti ({selectedOrder.items.length})
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab('customer')}
-                                        className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
                                             activeTab === 'customer'
-                                                ? 'bg-white text-nature-950 shadow-sm border border-gray-200/60'
-                                                : 'text-gray-500 hover:text-gray-800'
+                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                                         }`}
                                     >
-                                        <span>👤</span> Cliente & Consegna
+                                        <span className="text-base">👤</span> Cliente & Consegna
                                     </button>
                                 </div>
 
@@ -866,67 +866,69 @@ export const OrderManager = () => {
                                 {activeTab === 'overview' && (
                                     <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
                                         {/* Status & Payment Overview Card */}
-                                        <div className="bg-gradient-to-br from-nature-50/80 to-emerald-50/50 p-4 rounded-2xl border border-nature-200/70 space-y-3">
+                                        <div className="bg-gradient-to-br from-nature-50/90 via-emerald-50/40 to-white p-5 rounded-2xl border border-nature-200/80 shadow-sm space-y-3.5">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs font-bold text-gray-500">Stato Ordine</span>
+                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Stato Attuale</span>
                                                 <StatusBadge status={selectedOrder.status} />
                                             </div>
-                                            <div className="flex items-center justify-between border-t border-nature-100 pt-2.5">
-                                                <span className="text-xs font-bold text-gray-500">Metodo Pagamento</span>
+                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
+                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Pagamento</span>
                                                 {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
-                                                    <span className="font-extrabold text-xs text-indigo-900 bg-indigo-100/90 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                                                    <span className="font-black text-xs text-indigo-900 bg-indigo-100 px-3 py-1 rounded-full border border-indigo-200 shadow-xs">
                                                         💳 Revolut Pay Online
                                                     </span>
                                                 ) : (
-                                                    <span className="font-extrabold text-xs text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                                    <span className="font-black text-xs text-emerald-950 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-200 shadow-xs">
                                                         💵 Contanti / POS alla Consegna
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="flex items-center justify-between border-t border-nature-100 pt-2.5">
-                                                <span className="text-xs font-bold text-gray-500">Data Ricezione</span>
-                                                <span className="font-bold text-xs text-gray-800">{new Date(selectedOrder.createdAt).toLocaleString()}</span>
+                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
+                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Modalità Ordine</span>
+                                                <span className="font-black text-xs text-nature-900 bg-nature-100/80 px-3 py-1 rounded-full border border-nature-200">
+                                                    {selectedOrder.deliveryMethod === 'DELIVERY' ? '🚚 Consegna a Domicilio' : '🏪 Ritiro in Negozio'}
+                                                </span>
                                             </div>
-                                            <div className="flex items-center justify-between border-t border-nature-100 pt-2.5">
-                                                <span className="text-xs font-bold text-gray-500">Pianificazione</span>
-                                                <span className="font-bold text-xs text-blue-700">
-                                                    {editDate ? `${editDate.split('-').reverse().join('/')} ${editTime || ''}` : 'Non Programmato'}
+                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
+                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Data Ricezione</span>
+                                                <span className="font-black text-sm text-gray-800">{new Date(selectedOrder.createdAt).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
+                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Fascia Oraria Pianificata</span>
+                                                <span className="font-black text-sm text-blue-700">
+                                                    {editDate ? `🗓️ ${editDate.split('-').reverse().join('/')} ${editTime ? `(${editTime})` : ''}` : 'Non Programmato'}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {/* Total Summary Box */}
-                                        <div className="bg-nature-950 text-white p-4 rounded-2xl flex items-center justify-between shadow-md">
+                                        {/* Total Summary Box (High visibility card) */}
+                                        <div className="bg-nature-950 text-white p-5 rounded-2xl flex items-center justify-between shadow-xl ring-1 ring-nature-900">
                                             <div>
-                                                <span className="text-[10px] text-nature-300 font-extrabold uppercase tracking-wider block">Totale Ordine</span>
-                                                <span className="text-xl font-black">
+                                                <span className="text-xs text-nature-300 font-black uppercase tracking-wider block">Totale Ordine {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
+                                                <span className="text-2xl sm:text-3xl font-black tracking-tight">
                                                     € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
                                                 </span>
                                             </div>
-                                            <span className="text-xs font-bold text-nature-300 bg-nature-900 px-3 py-1.5 rounded-xl border border-nature-800">
-                                                {selectedOrder.items.length} Prodotti
-                                            </span>
+                                            <div className="text-right">
+                                                <span className="text-xs font-extrabold text-nature-200 bg-nature-900/90 px-3.5 py-2 rounded-xl border border-nature-800 block shadow-inner">
+                                                    📦 {selectedOrder.items.length} Prodotti
+                                                </span>
+                                            </div>
                                         </div>
 
                                         {/* Customer Quick Summary */}
-                                        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 space-y-2">
+                                        <div className="bg-white p-5 rounded-2xl border border-gray-200/90 shadow-sm space-y-2.5">
                                             <div className="flex items-center justify-between">
-                                                <div className="font-extrabold text-xs text-gray-900 flex items-center gap-1.5">
+                                                <div className="font-black text-sm text-gray-900 flex items-center gap-2">
                                                     👤 {selectedOrder.customerName || selectedOrder.user?.name}
                                                 </div>
-                                                {selectedOrder.customerPhone && (
-                                                    <a href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
-                                                        className="bg-emerald-600 text-white px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1 hover:bg-emerald-700 transition-all shadow-sm">
-                                                        <MessageCircle size={13} /> WhatsApp
-                                                    </a>
-                                                )}
                                             </div>
-                                            <p className="text-xs text-gray-600 font-medium">
+                                            <p className="text-xs text-gray-600 font-bold">
                                                 📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
                                             </p>
                                             {selectedOrder.deliveryNotes && (
-                                                <p className="text-xs bg-amber-50 text-amber-900 p-2.5 rounded-xl border border-amber-200/80 font-medium">
-                                                    <strong>Note cliente:</strong> {selectedOrder.deliveryNotes}
+                                                <p className="text-xs bg-amber-50 text-amber-950 p-3 rounded-xl border border-amber-200 font-bold leading-relaxed">
+                                                    <strong>Note del cliente:</strong> {selectedOrder.deliveryNotes}
                                                 </p>
                                             )}
                                         </div>
@@ -935,13 +937,13 @@ export const OrderManager = () => {
 
                                 {/* TAB 2: PRODOTTI ORDINATI (ITEMS) */}
                                 {activeTab === 'items' && (
-                                    <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/80 rounded-2xl p-3 lg:p-4 overflow-hidden animate-in fade-in duration-200">
-                                        <div className="grid grid-cols-12 gap-2 sm:gap-3 pb-2 mb-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
-                                            <span className="col-span-5">Prodotto</span>
-                                            <span className="col-span-3 text-right">Richiesto</span>
-                                            <span className="col-span-4 text-right">Effettivo</span>
+                                    <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/90 rounded-2xl p-4 overflow-hidden shadow-sm animate-in fade-in duration-200">
+                                        <div className="grid grid-cols-12 gap-3 pb-2.5 mb-2.5 border-b border-gray-100 text-xs font-black text-gray-400 uppercase tracking-wider shrink-0">
+                                            <span className="col-span-5 sm:col-span-6">Prodotto</span>
+                                            <span className="col-span-3 sm:col-span-3 text-right">Richiesto</span>
+                                            <span className="col-span-4 sm:col-span-3 text-right">Effettivo</span>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+                                        <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 custom-scrollbar">
                                             {selectedOrder.items.map(item => {
                                                 const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                                 const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
@@ -964,44 +966,44 @@ export const OrderManager = () => {
                                                 const itemActualCost = (itemPriceCents * itemActualQty) / 100;
 
                                                 return (
-                                                    <div key={item.id} className="grid grid-cols-12 gap-2 sm:gap-3 items-center py-2.5 px-3 bg-gray-50/60 hover:bg-gray-50 rounded-xl border border-gray-100 text-xs">
+                                                    <div key={item.id} className="grid grid-cols-12 gap-3 items-center p-3.5 bg-gray-50/80 hover:bg-gray-100/70 rounded-2xl border border-gray-200/60 transition-colors">
                                                         {/* Product details */}
-                                                        <div className="col-span-5 min-w-0">
-                                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                                <p className="font-extrabold text-gray-900 truncate" title={item.product.name}>{item.product.name}</p>
+                                                        <div className="col-span-5 sm:col-span-6 min-w-0">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <p className="font-black text-sm text-gray-900 truncate" title={item.product.name}>{item.product.name}</p>
                                                                 {isPriceModified && (
-                                                                    <span className="text-[9px] font-extrabold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
+                                                                    <span className="text-[10px] font-black text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200 shrink-0">
                                                                         Prezzo Modificato
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
-                                                                Unitario: € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                            <p className="text-xs text-gray-500 font-bold mt-1">
+                                                                € {(itemPriceCents / 100).toFixed(2)} / {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
                                                             </p>
                                                         </div>
 
                                                         {/* Requested info */}
-                                                        <div className="col-span-3 text-right">
-                                                            <span className="font-semibold text-gray-600 block">
+                                                        <div className="col-span-3 sm:col-span-3 text-right">
+                                                            <span className="font-bold text-xs text-gray-700 block">
                                                                 {item.quantityOrdered} {item.product.unitType.toLowerCase()}
                                                             </span>
-                                                            <span className="text-[10px] text-gray-400 block mt-0.5">
+                                                            <span className="text-xs text-gray-400 block mt-0.5 font-semibold">
                                                                 € {itemEstCost.toFixed(2)}
                                                             </span>
                                                         </div>
 
                                                         {/* Actual info */}
-                                                        <div className="col-span-4 flex flex-col items-end text-right">
+                                                        <div className="col-span-4 sm:col-span-3 flex flex-col items-end text-right">
                                                             {item.product.isVariableWeight && !item.quantityFulfilled ? (
-                                                                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px] uppercase tracking-wider block">
-                                                                    Da pesare
+                                                                <span className="font-black text-amber-800 bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-200 text-xs uppercase tracking-wider block shadow-xs">
+                                                                    ⚖️ Da pesare
                                                                 </span>
                                                             ) : (
-                                                                <span className="font-extrabold text-nature-900 block">
+                                                                <span className="font-black text-sm text-nature-950 block">
                                                                     {item.quantityFulfilled ? `${item.quantityFulfilled} kg` : `${item.quantityOrdered} ${item.product.unitType.toLowerCase()}`}
                                                                 </span>
                                                             )}
-                                                            <span className="text-[11px] font-black text-nature-700 block mt-0.5">
+                                                            <span className="text-xs font-black text-nature-700 block mt-0.5">
                                                                 € {itemActualCost.toFixed(2)}
                                                             </span>
                                                         </div>
@@ -1016,32 +1018,24 @@ export const OrderManager = () => {
                                 {activeTab === 'customer' && (
                                     <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
                                         {/* Customer Details Card */}
-                                        <div className="bg-nature-50/70 p-4 rounded-2xl border border-nature-200/80 text-xs space-y-2.5">
-                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-nature-700 block">Dati Anagrafici & Contatto</span>
-                                            <div className="flex justify-between items-start">
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="font-black text-base text-nature-950">{selectedOrder.customerName || selectedOrder.user?.name}</p>
-                                                    <p className="text-nature-700 mt-0.5 font-medium">{selectedOrder.customerEmail || selectedOrder.user?.email}</p>
-                                                    <p className="text-nature-800 font-bold mt-2">
-                                                        📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
-                                                    </p>
-                                                </div>
-                                                {selectedOrder.customerPhone && (
-                                                    <a href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
-                                                        className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm ml-2 flex items-center justify-center shrink-0">
-                                                        <MessageCircle size={18} />
-                                                    </a>
-                                                )}
+                                        <div className="bg-nature-50/90 p-5 rounded-2xl border border-nature-200/90 text-xs space-y-3 shadow-xs">
+                                            <span className="text-xs font-black uppercase tracking-wider text-nature-800 block">👤 Dati Anagrafici & Contatto</span>
+                                            <div className="space-y-1.5">
+                                                <p className="font-black text-lg text-nature-950">{selectedOrder.customerName || selectedOrder.user?.name}</p>
+                                                <p className="text-nature-700 text-xs font-bold">{selectedOrder.customerEmail || selectedOrder.user?.email}</p>
+                                                <p className="text-nature-900 text-xs font-black pt-1">
+                                                    📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
+                                                </p>
                                             </div>
                                         </div>
 
                                         {/* Appointment Scheduling Card */}
-                                        <div className="bg-blue-50/70 p-4 rounded-2xl border border-blue-200/80 text-xs space-y-2.5">
-                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 block">Pianificazione Consegna / Ritiro</span>
-                                            <div className="bg-white p-3 rounded-xl border border-blue-100 flex items-center justify-between">
+                                        <div className="bg-blue-50/90 p-5 rounded-2xl border border-blue-200/90 text-xs space-y-3 shadow-xs">
+                                            <span className="text-xs font-black uppercase tracking-wider text-blue-800 block">🗓️ Pianificazione Consegna / Ritiro</span>
+                                            <div className="bg-white p-3.5 rounded-2xl border border-blue-100 flex items-center justify-between shadow-xs">
                                                 <div>
-                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Data e Fascia Oraria</span>
-                                                    <span className="font-extrabold text-gray-900 text-xs">
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Data e Fascia Oraria</span>
+                                                    <span className="font-black text-gray-900 text-sm">
                                                         {editDate ? `${editDate.split('-').reverse().join('/')} ${editTime || ''}` : 'Non Programmato'}
                                                     </span>
                                                 </div>
@@ -1052,7 +1046,7 @@ export const OrderManager = () => {
                                                         setTempModalTime(editTime);
                                                         setIsScheduleModalOpen(true);
                                                     }}
-                                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl transition-colors text-[10px] uppercase tracking-wide cursor-pointer shadow-sm"
+                                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black rounded-xl transition-all text-xs uppercase tracking-wide cursor-pointer shadow-sm"
                                                 >
                                                     Pianifica
                                                 </button>
@@ -1060,10 +1054,10 @@ export const OrderManager = () => {
                                         </div>
 
                                         {/* Internal Notes Card */}
-                                        <div className="bg-yellow-50/70 p-4 rounded-2xl border border-yellow-200/80 text-xs space-y-2">
-                                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-yellow-800 block">Note Interne Admin</span>
+                                        <div className="bg-yellow-50/90 p-5 rounded-2xl border border-yellow-200/90 text-xs space-y-2.5 shadow-xs">
+                                            <span className="text-xs font-black uppercase tracking-wider text-yellow-900 block">📝 Note Interne Admin</span>
                                             <textarea
-                                                className="w-full p-3 bg-white border border-yellow-300/80 rounded-xl text-xs focus:ring-2 focus:ring-yellow-400 outline-none resize-y min-h-[70px] text-gray-800 font-medium"
+                                                className="w-full p-3.5 bg-white border border-yellow-300 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-yellow-400 outline-none resize-y min-h-[85px] text-gray-800 font-bold leading-relaxed"
                                                 placeholder="Note ad uso esclusivo dello staff..."
                                                 value={editNotes}
                                                 onChange={(e) => setEditNotes(e.target.value)}
@@ -1072,11 +1066,11 @@ export const OrderManager = () => {
 
                                         {/* Save Changes Button */}
                                         {selectedOrder && (editDate !== (selectedOrder.scheduledDate || '') || editTime !== (selectedOrder.scheduledTime || '') || editNotes !== (selectedOrder.adminNotes || '')) && (
-                                            <div className="bg-nature-50 border border-nature-200 rounded-2xl p-3 flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shrink-0">
-                                                <span className="text-nature-900 text-xs font-bold flex items-center gap-2">
-                                                    <span className="relative flex h-2 w-2">
+                                            <div className="bg-nature-50 border border-nature-200 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shrink-0 shadow-md">
+                                                <span className="text-nature-900 text-xs font-black flex items-center gap-2">
+                                                    <span className="relative flex h-2.5 w-2.5">
                                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nature-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-nature-500"></span>
+                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-nature-500"></span>
                                                     </span>
                                                     Modifiche non salvate
                                                 </span>
@@ -1088,7 +1082,7 @@ export const OrderManager = () => {
                                                             setEditTime(selectedOrder.scheduledTime || '');
                                                             setEditNotes(selectedOrder.adminNotes || '');
                                                         }}
-                                                        className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-xl transition-all"
+                                                        className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-black text-xs rounded-xl transition-all"
                                                     >
                                                         Annulla
                                                     </button>
@@ -1096,7 +1090,7 @@ export const OrderManager = () => {
                                                         type="button"
                                                         onClick={handleSaveAllEdits}
                                                         disabled={isSavingEdits}
-                                                        className="px-3 py-1.5 bg-nature-600 hover:bg-nature-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1"
+                                                        className="px-4 py-2 bg-nature-600 hover:bg-nature-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-sm transition-all flex items-center gap-1"
                                                     >
                                                         {isSavingEdits ? 'Salvataggio...' : 'Salva Modifiche'}
                                                     </button>
@@ -1106,6 +1100,24 @@ export const OrderManager = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Floating WhatsApp Action Button in Bottom Right */}
+                            {selectedOrder.customerPhone && (
+                                <a
+                                    href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="fixed lg:absolute bottom-20 sm:bottom-24 lg:bottom-20 right-6 z-40 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white p-3.5 rounded-full shadow-2xl flex items-center gap-2 border-2 border-white ring-4 ring-emerald-500/20 transition-all group cursor-pointer"
+                                    title="Apri Chat WhatsApp col Cliente"
+                                >
+                                    <MessageCircle size={22} className="group-hover:rotate-12 transition-transform" />
+                                    <span className="hidden sm:inline font-black text-xs tracking-wide pr-1">WhatsApp</span>
+                                    <span className="relative flex h-2.5 w-2.5 -ml-1">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-200 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                                    </span>
+                                </a>
+                            )}
 
                             {/* Action Footer (Sticky) */}
                             <div className="bg-white border-t border-gray-100 p-3 lg:p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20">
