@@ -940,92 +940,120 @@ export const OrderManager = () => {
                             <div
                                 key={order.id}
                                 onClick={() => handleSelectOrder(order)}
-                                className={`bg-white p-2.5 lg:p-5 rounded-xl lg:rounded-2xl shadow-sm border cursor-pointer transition-all flex items-center gap-3 ${selectedOrder?.id === order.id ? 'border-nature-500 ring-2 ring-nature-500 bg-nature-50/30' : 'border-gray-100 hover:border-nature-200'
-                                    }`}
+                                className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col gap-3 ${
+                                    selectedOrder?.id === order.id
+                                        ? 'bg-gradient-to-br from-emerald-50/70 via-white to-gray-50/50 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
+                                        : 'bg-white border-gray-200/90 hover:border-emerald-300 hover:shadow-md'
+                                }`}
                             >
                                 {/* Checkbox for multiple selection */}
                                 {isMultiSelectActive && (
                                     <div 
                                         onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
-                                        className="shrink-0 flex items-center justify-center p-1.5 hover:bg-gray-100 rounded-lg transition-colors animate-in zoom-in-50 duration-200"
+                                        className="absolute top-3 left-3 z-10 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                                     >
                                         <input
                                             type="checkbox"
                                             checked={selectedIds.includes(order.id)}
                                             readOnly
-                                            className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
+                                            className="w-4.5 h-4.5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer pointer-events-none"
                                         />
                                     </div>
                                 )}
 
-                                <div className="flex-1 min-w-0">
-                                    {/* Mobile view: single line compact row */}
-                                    <div className="lg:hidden flex items-center justify-between w-full gap-2">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <div className="w-8 h-8 bg-nature-100 rounded flex items-center justify-center text-nature-700 font-black text-xs shrink-0">
-                                                #{order.id}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <h3 className="font-bold text-gray-900 leading-tight text-sm truncate" title={order.customerName || order.user?.name || 'Cliente'}>
-                                                    {order.customerName || order.user?.name || 'Cliente'}
-                                                </h3>
-                                                <p className="text-[10px] text-gray-400 leading-none mt-0.5">
-                                                    {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
-                                                </p>
-                                                {order.scheduledDate && (
-                                                    <p className="text-[9px] text-blue-600 font-bold mt-0.5">
-                                                        Pianificato: {order.scheduledDate.split('-').reverse().join('/')}{order.scheduledTime ? (order.scheduledTime.includes('-') ? ` • Fascia: ${order.scheduledTime}` : ` alle ${order.scheduledTime}`) : ''}
-                                                    </p>
-                                                )}
-                                            </div>
+                                {/* Header Row: ID + Customer Name + Timestamp + Status Badge */}
+                                <div className="flex items-start justify-between gap-2.5">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 bg-emerald-100/80 text-emerald-900 border border-emerald-200/80 rounded-xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
+                                            #{order.id}
                                         </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <span className="text-gray-400 shrink-0">
-                                                {order.deliveryMethod === 'DELIVERY' ? <Truck size={14} /> : <Scale size={14} />}
-                                            </span>
-                                            <StatusBadge status={order.status} isCompact />
-                                            <div className="text-right shrink-0">
-                                                <span className="text-sm font-black text-nature-900 block">
-                                                    € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
-                                                </span>
-                                            </div>
+                                        <div className="min-w-0">
+                                            <h3 className="font-black text-gray-900 text-base leading-tight truncate" title={order.customerName || order.user?.name || 'Cliente'}>
+                                                {order.customerName || order.user?.name || 'Cliente'}
+                                            </h3>
+                                            <p className="text-[11px] text-gray-400 font-bold mt-0.5">
+                                                {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                                            </p>
                                         </div>
                                     </div>
 
-                                    {/* Desktop view: standard two-row layout */}
-                                    <div className="hidden lg:block w-full">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-nature-100 rounded-xl flex items-center justify-center text-nature-700 font-black text-base">
-                                                    #{order.id}
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-bold text-gray-900 leading-tight text-base">{order.customerName || order.user?.name || 'Cliente'}</h3>
-                                                    <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
-                                                    {order.scheduledDate && (
-                                                        <p className="text-xs text-blue-600 font-bold mt-1">
-                                                            Pianificato: {order.scheduledDate.split('-').reverse().join('/')}{order.scheduledTime ? (order.scheduledTime.includes('-') ? ` • Fascia: ${order.scheduledTime}` : ` alle ${order.scheduledTime}`) : ''}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <StatusBadge status={order.status} />
-                                        </div>
+                                    <div className="shrink-0">
+                                        <StatusBadge status={order.status} />
+                                    </div>
+                                </div>
 
-                                        <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-3">
-                                            <div className="flex gap-2">
-                                                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-gray-100 px-2 py-1 rounded-md text-gray-600">
-                                                    {order.deliveryMethod === 'DELIVERY' ? <Truck size={11} /> : <Scale size={11} />}
-                                                    {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro'}
-                                                </span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-xl font-black text-nature-900">
-                                                    € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
-                                                </span>
-                                                {!order.finalTotal && <span className="text-[10px] text-gray-400 block -mt-1 uppercase tracking-wider">Stimato</span>}
-                                            </div>
-                                        </div>
+                                {/* Middle Row: Scheduled Slot Pill */}
+                                {order.scheduledDate && (
+                                    <div className="bg-indigo-50/80 border border-indigo-100 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs text-indigo-950 font-bold">
+                                        <span className="flex items-center gap-1.5">
+                                            <Calendar size={13} className="text-indigo-600 shrink-0" />
+                                            <span>Pianificato: <strong>{order.scheduledDate.split('-').reverse().join('/')}</strong></span>
+                                        </span>
+                                        {order.scheduledTime && (
+                                            <span className="text-[11px] text-indigo-700 bg-white px-2 py-0.5 rounded-md border border-indigo-200 shadow-2xs font-bold">
+                                                {order.scheduledTime.includes('-') ? `Fascia: ${order.scheduledTime}` : `alle ${order.scheduledTime}`}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Customer Weight Approval Status Pill (AT-A-GLANCE CRITICAL TAG) */}
+                                {((order as any).approvalStatus || (order.status === 'WEIGHING_COMPLETED' || order.status === 'WEIGNING_COMPLETED')) && (
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        {(order as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
+                                            <span className="px-2.5 py-1 bg-amber-100 text-amber-950 border border-amber-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs animate-pulse">
+                                                ⏳ In Attesa Approvazione Pesatura Cliente
+                                            </span>
+                                        )}
+                                        {(order as any).approvalStatus === 'CUSTOMER_APPROVED' && (
+                                            <span className="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
+                                                ✅ Pesatura Approvata dal Cliente
+                                            </span>
+                                        )}
+                                        {(order as any).approvalStatus === 'CUSTOMER_REJECTED' && (
+                                            <span className="px-2.5 py-1 bg-rose-100 text-rose-950 border border-rose-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
+                                                ❌ Pesatura Contestata dal Cliente
+                                            </span>
+                                        )}
+                                        {(order as any).approvalStatus === 'AUTO_APPROVED' && (
+                                            <span className="px-2.5 py-1 bg-sky-100 text-sky-950 border border-sky-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
+                                                ⚡ Tolleranza Pesatura OK (≤ 10%)
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Footer Row: Shipping Method Badge + Payment Tag + Total Price */}
+                                <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-0.5">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        {/* Delivery vs Pickup */}
+                                        <span className="flex items-center gap-1 text-[11px] font-bold bg-gray-100/90 text-gray-700 px-2.5 py-1 rounded-lg border border-gray-200/80">
+                                            {order.deliveryMethod === 'DELIVERY' ? <Truck size={12} className="text-emerald-600" /> : <Scale size={12} className="text-amber-600" />}
+                                            {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro in Negozio'}
+                                        </span>
+
+                                        {/* Payment Method */}
+                                        {((order as any).transactions?.[0]?.gateway === 'REVOLUT' || (order as any).paymentMethod === 'REVOLUT') ? (
+                                            <span className="text-[10px] font-black bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-md border border-indigo-200">
+                                                💳 Online
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] font-black bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-200">
+                                                💵 Contanti / POS
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Total Price */}
+                                    <div className="text-right">
+                                        <span className="text-lg font-black text-gray-900 leading-none block">
+                                            € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
+                                        </span>
+                                        {!order.finalTotal && (
+                                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mt-0.5">
+                                                Stimato
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
