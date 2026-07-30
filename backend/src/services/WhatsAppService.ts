@@ -17,14 +17,48 @@ export class WhatsAppService {
         this.setupExitHandlers();
     }
 
+    private cleanChromiumLocks() {
+        try {
+            const authPath = path.join(process.cwd(), '.wwebjs_auth');
+            if (fs.existsSync(authPath)) {
+                const findAndDeleteLocks = (dir: string) => {
+                    try {
+                        const files = fs.readdirSync(dir);
+                        for (const file of files) {
+                            const fullPath = path.join(dir, file);
+                            const stat = fs.statSync(fullPath);
+                            if (stat.isDirectory()) {
+                                findAndDeleteLocks(fullPath);
+                            } else if (file.includes('SingletonLock') || file.includes('SingletonCookie') || file.includes('SingletonSocket')) {
+                                try {
+                                    fs.unlinkSync(fullPath);
+                                    console.log(`[WhatsApp] Removed stale Chromium lock file: ${file}`);
+                                } catch (e) {}
+                            }
+                        }
+                    } catch (e) {}
+                };
+                findAndDeleteLocks(authPath);
+            }
+        } catch (err) {
+            console.error('[WhatsApp] Error cleaning Chromium locks:', err);
+        }
+    }
+
     private createClient() {
         if (this.pingInterval) {
             clearInterval(this.pingInterval);
             this.pingInterval = null;
         }
 
+        // Clean stale Chromium SingletonLocks before initializing Puppeteer
+        this.cleanChromiumLocks();
+
         this.client = new Client({
-            authStrategy: new LocalAuth(),
+            authStrategy: new LocalAuth({
+                clientId: 'chrono-session',
+                dataPath: path.join(process.cwd(), '.wwebjs_auth')
+            }),
             webVersionCache: {
                 type: 'remote',
                 remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1018944829-alpha.html'
