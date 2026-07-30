@@ -1022,23 +1022,56 @@ export const OrderManager = () => {
                                                                         Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
                                                                     </span>
                                                                     <span className="text-gray-500 font-extrabold">
-                                                                        (Stima: € {itemEstCost.toFixed(2)})
+                                                                        (Prezzo base: € {(item.product.priceCents / 100).toFixed(2)}/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})
                                                                     </span>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        {/* Right Part: Premium Metric Box & Action Button */}
+                                                        {/* Right Part: Premium Metric Box with Strikethrough Comparison */}
                                                         <div className="p-3.5 sm:p-4 flex items-center justify-between sm:justify-end gap-3.5 border-t sm:border-t-0 border-gray-100 bg-gray-50/50 sm:bg-transparent shrink-0">
-                                                            {/* Metric Box: Effettivo & Costo */}
-                                                            <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-200/90 shadow-sm text-right min-w-[120px] flex flex-col justify-center">
-                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Effettivo Pesato</span>
-                                                                <span className="font-black text-sm sm:text-base text-gray-900 block leading-tight mt-0.5">
-                                                                    {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                            {/* Metric Box: Supermarket Strikethrough Comparison Style */}
+                                                            <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-200/90 shadow-sm text-right min-w-[145px] flex flex-col justify-center">
+                                                                <span className="text-[10px] font-black uppercase tracking-wider block text-gray-400">
+                                                                    {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
                                                                 </span>
-                                                                <span className="text-xs font-black text-emerald-600 block mt-0.5">
-                                                                    € {itemActualCost.toFixed(2)}
-                                                                </span>
+
+                                                                {isWeighed ? (
+                                                                    <div className="mt-1 space-y-0.5">
+                                                                        {/* Weight Comparison with Strikethrough */}
+                                                                        <div className="flex items-center justify-end gap-1.5 leading-none">
+                                                                            {currentQty !== itemEstQtyKg && (
+                                                                                <span className="line-through text-red-500 font-bold text-xs sm:text-sm" title="Quantità stmata iniziale">
+                                                                                    {itemEstQtyKg} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                                                </span>
+                                                                            )}
+                                                                            <span className="font-black text-sm sm:text-base text-emerald-950" title="Quantità effettiva pesata">
+                                                                                {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                                            </span>
+                                                                        </div>
+
+                                                                        {/* Price Comparison with Strikethrough */}
+                                                                        <div className="flex items-center justify-end gap-1.5 leading-none pt-0.5">
+                                                                            {itemActualCost !== itemEstCost && (
+                                                                                <span className="line-through text-red-400 font-bold text-[11px]" title="Costo stimato iniziale">
+                                                                                    € {itemEstCost.toFixed(2)}
+                                                                                </span>
+                                                                            )}
+                                                                            <span className="font-black text-xs sm:text-sm text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200" title="Costo effettivo calcolato">
+                                                                                € {itemActualCost.toFixed(2)}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="mt-1">
+                                                                        <span className="font-black text-sm sm:text-base text-gray-800 block leading-tight">
+                                                                            {itemEstQtyKg} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                                        </span>
+                                                                        <span className="text-xs font-bold text-gray-500 block mt-0.5">
+                                                                            ~ € {itemEstCost.toFixed(2)}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
                                                             </div>
 
                                                             {/* Action Button (Visible in PENDING status) */}
