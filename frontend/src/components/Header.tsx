@@ -311,87 +311,143 @@ export const Header = () => {
                 </div>
             </div>
 
-            {/* Mobile Menu Overlay */}
+            {/* Mobile Fullscreen Glassmorphism Navigation Drawer */}
             <AnimatePresence>
                 {isMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 overflow-hidden shadow-lg absolute w-full left-0 z-40"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="md:hidden fixed inset-0 z-[120] bg-gradient-to-br from-nature-950 via-emerald-950 to-nature-900 text-white backdrop-blur-2xl p-6 flex flex-col justify-between overflow-y-auto"
                     >
-                        <div className="px-6 py-8 space-y-6">
-                            {/* Main Links */}
-                            <div className="space-y-4">
-                                <Link to="/" className="block text-xl font-bold text-nature-900 hover:text-nature-600 transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
-                                <Link to="/shop" className="block text-xl font-bold text-nature-900 hover:text-nature-600 transition-colors" onClick={() => setIsMenuOpen(false)}>Nostri Prodotti</Link>
-                                <Link to="/cart" className="block text-xl font-bold text-nature-900 hover:text-nature-600 transition-colors" onClick={() => setIsMenuOpen(false)}>
-                                    Carrello <span className="text-nature-500 text-lg">({itemCount})</span>
-                                </Link>
+                        {/* Drawer Header */}
+                        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-white/10 p-1 flex items-center justify-center border border-white/10">
+                                    <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain" />
+                                </div>
+                                <div>
+                                    <span className="font-black text-base text-white block leading-none">{settings?.siteName || 'Ortofrutta'}</span>
+                                    <span className="text-[10px] text-emerald-400 font-bold tracking-widest uppercase">Menu Principale</span>
+                                </div>
                             </div>
+                            <button
+                                onClick={() => setIsMenuOpen(false)}
+                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-90"
+                            >
+                                <X size={22} />
+                            </button>
+                        </div>
 
-                            <div className="border-t border-gray-100 pt-6"></div>
+                        {/* Navigation Links Grid */}
+                        <div className="py-6 space-y-3 flex-1 overflow-y-auto">
+                            <Link
+                                to="/"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                            >
+                                <span className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-xl">🏠</span>
+                                <span>Home</span>
+                            </Link>
 
-                            {/* Auth Links */}
+                            <Link
+                                to="/shop"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                            >
+                                <span className="p-2.5 bg-amber-500/20 text-amber-300 rounded-xl">🍏</span>
+                                <span>Catalogo Ortofrutta</span>
+                            </Link>
+
+                            <Link
+                                to="/cart"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <span className="p-2.5 bg-purple-500/20 text-purple-300 rounded-xl">🛒</span>
+                                    <span>Il Tuo Carrello</span>
+                                </div>
+                                {itemCount > 0 && (
+                                    <span className="px-3 py-1 bg-emerald-500 text-white font-black text-xs rounded-full">
+                                        {itemCount} {itemCount === 1 ? 'art.' : 'art.'}
+                                    </span>
+                                )}
+                            </Link>
+
+                            {user && (
+                                <>
+                                    <Link
+                                        to="/orders"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                    >
+                                        <span className="p-2.5 bg-blue-500/20 text-blue-300 rounded-xl">📦</span>
+                                        <span>I Miei Ordini</span>
+                                    </Link>
+
+                                    <Link
+                                        to="/profile"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                    >
+                                        <span className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-xl">👤</span>
+                                        <span>Il Mio Profilo</span>
+                                    </Link>
+
+                                    {user.role === 'ADMIN' && (
+                                        <Link
+                                            to="/admin"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center gap-4 p-4 rounded-2xl bg-blue-600/30 hover:bg-blue-600/40 border border-blue-500/40 transition-all font-black text-lg text-blue-200"
+                                        >
+                                            <span className="p-2.5 bg-blue-500 text-white rounded-xl">⚙️</span>
+                                            <span>Dashboard Admin</span>
+                                        </Link>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Drawer Bottom User Card / Auth */}
+                        <div className="pt-4 border-t border-white/10">
                             {user ? (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 mb-6 bg-nature-50 p-4 rounded-xl">
-                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-nature-600 overflow-hidden">
+                                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-11 h-11 rounded-2xl bg-emerald-800 border border-white/20 overflow-hidden shrink-0 flex items-center justify-center">
                                             {user.avatar ? (
-                                                <img
-                                                    src={sanitizeImageUrl(user.avatar)}
-                                                    alt={user.name || 'User'}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                                             ) : (
-                                                <UserIcon size={20} />
+                                                <UserIcon size={20} className="text-white" />
                                             )}
                                         </div>
                                         <div>
-                                            <p className="text-sm text-nature-500 font-medium">Ciao,</p>
-                                            <p className="text-lg font-bold text-nature-900">{user.name}</p>
+                                            <span className="font-black text-sm text-white block">{user.name}</span>
+                                            <span className="text-xs text-emerald-300/80">{user.email}</span>
                                         </div>
                                     </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <Link to="/profile" className="flex flex-col items-center justify-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-nature-50 transition-colors" onClick={() => setIsMenuOpen(false)}>
-                                            <UserIcon size={20} className="text-nature-600" />
-                                            <span className="text-sm font-medium text-gray-700">Profilo</span>
-                                        </Link>
-                                        <Link to="/orders" className="flex flex-col items-center justify-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-nature-50 transition-colors" onClick={() => setIsMenuOpen(false)}>
-                                            <Package size={20} className="text-nature-600" />
-                                            <span className="text-sm font-medium text-gray-700">Ordini</span>
-                                        </Link>
-                                        <button
-                                            onClick={handleTogglePush}
-                                            disabled={pushEnabled || isPushLoading}
-                                            className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl transition-colors ${pushEnabled ? 'bg-green-50 text-green-700' : 'bg-gray-50 hover:bg-nature-50'}`}
-                                        >
-                                            {pushEnabled ? <Bell size={20} /> : <BellOff size={20} className="text-gray-400" />}
-                                            <span className="text-sm font-medium">{pushEnabled ? 'Notifiche ok' : isPushLoading ? 'Attivazione...' : 'Push'}</span>
-                                        </button>
-                                        {user.role === 'ADMIN' && (
-                                            <Link to="/admin" className="col-span-2 flex items-center justify-center gap-2 p-4 bg-blue-50 text-blue-700 rounded-xl font-bold" onClick={() => setIsMenuOpen(false)}>
-                                                <Settings size={20} /> Dashboard Admin
-                                            </Link>
-                                        )}
-                                    </div>
-
                                     <button
                                         onClick={() => { logout(); setIsMenuOpen(false); }}
-                                        className="w-full flex items-center justify-center gap-2 mt-4 py-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors"
+                                        className="p-2.5 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all cursor-pointer font-bold text-xs"
                                     >
-                                        <LogOut size={20} /> Esci
+                                        Esci
                                     </button>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    <p className="text-gray-400 text-sm mb-2 text-center">Accedi per gestire i tuoi ordini</p>
-                                    <Link to="/login" className="block w-full text-center py-3 border border-nature-200 rounded-xl text-nature-900 font-bold hover:bg-nature-50 transition-colors" onClick={() => setIsMenuOpen(false)}>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Link
+                                        to="/login"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="py-3.5 text-center bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl border border-white/10 transition-all"
+                                    >
                                         Accedi
                                     </Link>
-                                    <Link to="/register" className="block w-full text-center py-3 bg-nature-900 text-white rounded-xl font-bold shadow-lg hover:bg-nature-800 transition-colors" onClick={() => setIsMenuOpen(false)}>
+                                    <Link
+                                        to="/register"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="py-3.5 text-center bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg transition-all"
+                                    >
                                         Registrati
                                     </Link>
                                 </div>
@@ -400,6 +456,6 @@ export const Header = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </header >
+        </header>
     );
 };

@@ -99,14 +99,17 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[70] p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] max-w-md mx-auto"
+                        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[32px] z-[70] p-5 sm:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] max-w-md mx-auto max-h-[92vh] flex flex-col justify-between overflow-y-auto border-t border-gray-100"
                     >
-                        <div className="flex justify-between items-center mb-6">
+                        {/* Mobile Pull Handle Pill */}
+                        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-3 shrink-0" />
+
+                        <div className="flex justify-between items-center mb-4 shrink-0">
                             <div>
-                                <h3 className="text-xl font-bold text-nature-900">{productName}</h3>
-                                <p className="text-sm text-gray-500">Seleziona la quantità desiderata</p>
+                                <h3 className="text-lg sm:text-xl font-black text-nature-900">{productName}</h3>
+                                <p className="text-xs text-gray-500 font-bold">Seleziona la quantità in kg desiderata</p>
                             </div>
-                            <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                            <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors cursor-pointer shrink-0">
                                 <X size={20} className="text-gray-600" />
                             </button>
                         </div>
