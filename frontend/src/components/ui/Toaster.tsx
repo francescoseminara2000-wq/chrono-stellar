@@ -20,12 +20,12 @@ export const Toaster = ({ variant = 'fixed' }: { variant?: 'fixed' | 'inline' })
     const { toasts, removeToast } = useToastStore();
 
     const containerStyles = variant === 'fixed'
-        ? "fixed bottom-24 md:bottom-8 right-4 md:right-8 z-[9999] flex flex-col gap-3 max-w-md w-full pointer-events-none"
+        ? "fixed top-6 right-4 sm:right-6 z-[99999] flex flex-col gap-3 max-w-sm w-full pointer-events-none"
         : "relative mb-4 z-20 flex flex-col gap-2 w-full pointer-events-none";
 
     const itemStyles = variant === 'fixed'
-        ? "animate-in fade-in slide-in-from-right-4"
-        : "animate-in fade-in slide-in-from-left-4";
+        ? "animate-in fade-in slide-in-from-right-8 duration-300"
+        : "animate-in fade-in slide-in-from-top-2";
 
     return (
         <div className={containerStyles}>

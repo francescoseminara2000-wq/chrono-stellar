@@ -94,6 +94,9 @@ export const CustomerOrderApproval: React.FC = () => {
     const isIncreased = diffPercent > 0;
     const isApproved = approvedStatus === 'CUSTOMER_APPROVED';
     const isRejected = approvedStatus === 'CUSTOMER_REJECTED';
+    const isWithinTolerance = Math.abs(diffPercent) <= tolerancePercent;
+    const isAutoApproved = approvedStatus === 'AUTO_APPROVED' || (isWithinTolerance && approvedStatus !== 'AWAITING_CUSTOMER_APPROVAL');
+    const requiresCustomerAction = approvedStatus === 'AWAITING_CUSTOMER_APPROVAL' && !isApproved && !isRejected;
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-emerald-950 via-gray-900 to-gray-950 text-gray-900 p-4 sm:p-6 flex flex-col items-center justify-center">
@@ -134,6 +137,14 @@ export const CustomerOrderApproval: React.FC = () => {
                             <div>
                                 <h3 className="font-black text-base">Pesatura Approvata!</h3>
                                 <p className="text-xs font-bold text-emerald-800 mt-0.5">Hai confermato con successo l'ordine #{order.id}. Il negozio procederà con la consegna.</p>
+                            </div>
+                        </div>
+                    ) : isAutoApproved ? (
+                        <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-3xl text-emerald-950 flex items-center gap-4 animate-in zoom-in-95">
+                            <CheckCircle2 size={36} className="text-emerald-600 shrink-0" />
+                            <div>
+                                <h3 className="font-black text-base">Pesatura Conforme (Entro la Soglia ±{tolerancePercent}%)</h3>
+                                <p className="text-xs font-bold text-emerald-800 mt-0.5">La variazione rientra nella soglia di tolleranza. L'ordine è già stato registrato ed è in fase di preparazione.</p>
                             </div>
                         </div>
                     ) : isRejected ? (
@@ -225,8 +236,8 @@ export const CustomerOrderApproval: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Main Action Buttons */}
-                    {!isApproved && !isRejected && (
+                    {/* Main Action Buttons: ONLY shown when explicitly awaiting customer action */}
+                    {requiresCustomerAction && (
                         <div className="pt-2 space-y-2.5">
                             {order.paymentMethod === 'REVOLUT' ? (
                                 <button
