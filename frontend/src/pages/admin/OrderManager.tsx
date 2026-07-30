@@ -239,7 +239,7 @@ export const OrderManager = () => {
         }
     }, []);
 
-    const fetchOrders = () => {
+    const fetchOrders = (isSilent = false) => {
         fetch(`${API_URL}/api/admin/orders`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -249,12 +249,35 @@ export const OrderManager = () => {
             })
             .then(data => {
                 setOrders(data);
+                if (selectedOrder) {
+                    const freshSelected = data.find((o: any) => o.id === selectedOrder.id);
+                    if (freshSelected) {
+                        if (
+                            freshSelected.status !== selectedOrder.status ||
+                            (freshSelected as any).approvalStatus !== (selectedOrder as any).approvalStatus ||
+                            (freshSelected as any).customerApprovedAt !== (selectedOrder as any).customerApprovedAt
+                        ) {
+                            setSelectedOrder(freshSelected);
+                        }
+                    }
+                }
             })
             .catch(err => {
                 console.error('Fetch error:', err);
-                addToast('Impossibile caricare gli ordini.', 'error');
+                if (!isSilent) {
+                    addToast('Impossibile caricare gli ordini.', 'error');
+                }
             });
     };
+
+    useEffect(() => {
+        fetchOrders();
+        const interval = setInterval(() => {
+            fetchOrders(true);
+        }, 15000);
+
+        return () => clearInterval(interval);
+    }, [token]);
 
     const handleSelectOrder = (order: Order) => {
         setSelectedOrder(order);
@@ -392,6 +415,24 @@ export const OrderManager = () => {
         } catch (err) {
             console.error(err);
             addToast('Errore di connessione al server.', 'error');
+        }
+    };
+
+    const handleResendApproval = async (orderId: number) => {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/orders/${orderId}/resend-approval`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                addToast('📲 Sollecito inviato con successo via WhatsApp al cliente!', 'success');
+            } else {
+                const errData = await res.json();
+                addToast(`Errore: ${errData.error || 'Invio fallito'}`, 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            addToast('Errore durante l\'invio del sollecito.', 'error');
         }
     };
 
@@ -599,7 +640,23 @@ export const OrderManager = () => {
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
                     <div>
                         <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestione Ordini</h1>
-                        <p className="text-gray-500 text-sm mt-1 font-medium">Gestisci le pesature e monitora lo stato delle consegne.</p>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            <p className="text-gray-500 text-sm font-medium">Gestisci le pesature e monitora lo stato delle consegne.</p>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-xs" title="Aggiornamento automatico attivo ogni 15 secondi">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Live Sync (15s)
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    fetchOrders(false);
+                                    addToast('Ordini aggiornati con successo!', 'success');
+                                }}
+                                className="text-xs font-black text-gray-600 hover:text-emerald-700 transition-colors cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-xs"
+                            >
+                                🔄 Aggiorna Ora
+                            </button>
+                        </div>
                     </div>
 
                     {/* Mobile Toolbar Toggle Buttons */}
@@ -918,6 +975,47 @@ export const OrderManager = () => {
                                 {/* TAB 1: RIEPILOGO (OVERVIEW) */}
                                 {activeTab === 'overview' && (
                                     <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
+                                        {/* Customer Approval Status Box */}
+                                        {(selectedOrder as any).approvalStatus && (selectedOrder as any).approvalStatus !== 'NONE' && (
+                                            <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm ${
+                                                (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL'
+                                                    ? 'bg-amber-50 border-amber-300 text-amber-950'
+                                                    : (selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED'
+                                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                                                    : 'bg-red-50 border-red-300 text-red-950'
+                                            }`}>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-2xl shrink-0">
+                                                        {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && '⏳'}
+                                                        {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && '✅'}
+                                                        {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && '❌'}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-sm leading-snug">
+                                                            {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'In Attesa Approvazione Pesatura Cliente'}
+                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && 'Pesatura Approvata dal Cliente'}
+                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Pesatura Contestata dal Cliente'}
+                                                        </h4>
+                                                        <p className="text-xs font-bold opacity-80 mt-0.5">
+                                                            {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'La variazione supera la soglia di tolleranza. In attesa che il cliente confermi dal link WhatsApp.'}
+                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && `Confermata il ${(selectedOrder as any).customerApprovedAt ? new Date((selectedOrder as any).customerApprovedAt).toLocaleString('it-IT') : 'recente'}.`}
+                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Il cliente ha richiesto assistenza o contestato la variazione.'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleResendApproval(selectedOrder.id)}
+                                                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
+                                                    >
+                                                        📲 Sollecita WhatsApp
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+
                                         {/* Status & Payment Overview Card */}
                                         <div className="bg-gradient-to-br from-nature-50/90 via-emerald-50/40 to-white p-5 rounded-2xl border border-nature-200/80 shadow-sm space-y-3.5">
                                             <div className="flex items-center justify-between">

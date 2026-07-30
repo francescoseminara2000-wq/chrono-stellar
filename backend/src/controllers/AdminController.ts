@@ -71,6 +71,43 @@ export class AdminController {
         }
     }
 
+    async resendApproval(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const order: any = await prisma.order.findUnique({
+                where: { id: Number(id) },
+                include: {
+                    user: true,
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            });
+
+            if (!order) {
+                return res.status(404).json({ error: 'Ordine non trovato' });
+            }
+
+            if (!order.approvalToken) {
+                const crypto = require('crypto');
+                order.approvalToken = crypto.randomBytes(16).toString('hex');
+                await prisma.order.update({
+                    where: { id: Number(id) },
+                    data: { approvalToken: order.approvalToken }
+                });
+            }
+
+            await notifyClientOfStatusUpdate(order, 'WEIGHING_COMPLETED');
+
+            res.json({ message: 'Sollecito inviato con successo al cliente!' });
+        } catch (error: any) {
+            console.error('[AdminController] Resend approval error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
     async updateStatus(req: Request, res: Response) {
         console.log('[AdminController] updateStatus request:', req.params, req.body);
         try {
