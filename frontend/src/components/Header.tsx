@@ -233,6 +233,7 @@ export const Header = () => {
                         <div className="flex items-center gap-8">
                             <NavLink to="/">Home</NavLink>
                             <NavLink to="/shop">Nostri Prodotti</NavLink>
+                            <NavLink to="/mercati">I Nostri Mercati</NavLink>
                         </div>
 
                         {/* User Actions Pill */}
@@ -358,6 +359,15 @@ export const Header = () => {
                             >
                                 <span className="p-2.5 bg-amber-500/20 text-amber-300 rounded-xl">🍏</span>
                                 <span>Catalogo Ortofrutta</span>
+                            </Link>
+
+                            <Link
+                                to="/mercati"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                            >
+                                <span className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-xl">📍</span>
+                                <span>I Nostri Mercati</span>
                             </Link>
 
                             <Link
