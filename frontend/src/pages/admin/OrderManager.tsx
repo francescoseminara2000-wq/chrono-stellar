@@ -336,14 +336,9 @@ export const OrderManager = () => {
                 setSelectedOrder(updatedOrder);
 
                 if (responseData.requiresApproval) {
-                    addToast(`⚠️ Variazione del ${responseData.diffPercent}% (superiore alla tolleranza del ${responseData.tolerance}%). Generato link di approvazione cliente!`, 'info');
-                    const approvalUrl = `${window.location.origin}/conferma-pesatura/${updatedOrder.id}?token=${updatedOrder.approvalToken}`;
-                    if (updatedOrder.customerPhone) {
-                        const waMsg = `Ciao ${updatedOrder.customerName || ''}, abbiamo completato la pesatura del tuo ordine #${updatedOrder.id}.\nIl totale ha subito una variazione del ${responseData.diffPercent}%.\n\nPer verificare il dettaglio ed approvare la pesatura, clicca sul link qui sotto:\n${approvalUrl}`;
-                        window.open(`https://wa.me/${updatedOrder.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(waMsg)}`, '_blank');
-                    }
+                    addToast(`⚠️ Variazione del ${responseData.diffPercent}% (superiore alla tolleranza del ${responseData.tolerance}%). Inviata notifica automatica al cliente con link di approvazione!`, 'info');
                 } else {
-                    addToast('Pesatura e variazioni di prezzo confermate!', 'success');
+                    addToast('Pesatura e variazioni salvate! Notifica automatica inviata al cliente.', 'success');
                 }
             } else {
                 const errorData = await res.json();

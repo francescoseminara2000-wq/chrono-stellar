@@ -246,6 +246,12 @@ export class WhatsAppService {
             .replace(/\[indirizzo\]/g, order.shippingAddress || 'Ritiro in negozio')
             .replace(/\[note\]/g, order.deliveryNotes || '');
 
+        if (order.approvalToken && (order.approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' || order.requiresApproval)) {
+            const domain = process.env.PUBLIC_URL || 'https://ortofruttabutti.it';
+            const approvalUrl = `${domain}/conferma-pesatura/${order.id}?token=${order.approvalToken}`;
+            message += `\n\n⚠️ *Variazione Pesatura da Approvare*\nPer verificare il dettaglio della pesatura ed approvare il tuo ordine, clicca sul link qui sotto:\n🔗 ${approvalUrl}`;
+        }
+
         // Add Footer
         message += `\n\n_${settings?.siteName || 'Ortofrutta'}_`;
 
