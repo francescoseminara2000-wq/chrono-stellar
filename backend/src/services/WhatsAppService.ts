@@ -8,6 +8,8 @@ export class WhatsAppService {
     private client!: Client;
     private qrCode: string | null = null;
     private isReady: boolean = false;
+    private pingInterval: any = null;
+    private isReconnecting: boolean = false;
     private static instance: WhatsAppService;
 
     private constructor() {
@@ -16,10 +18,29 @@ export class WhatsAppService {
     }
 
     private createClient() {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+
         this.client = new Client({
             authStrategy: new LocalAuth(),
+            webVersionCache: {
+                type: 'remote',
+                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1018944829-alpha.html'
+            },
             puppeteer: {
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--disable-background-timer-throttling',
+                    '--disable-backgrounding-occluded-windows',
+                    '--disable-renderer-backgrounding',
+                    '--no-first-run',
+                    '--no-zygote'
+                ],
                 headless: true
             }
         });
@@ -31,6 +52,11 @@ export class WhatsAppService {
         console.log('[WhatsApp] Resetting WhatsApp connection and session...');
         this.isReady = false;
         this.qrCode = null;
+
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
 
         try {
             if (this.client) {
@@ -60,6 +86,7 @@ export class WhatsAppService {
     private setupExitHandlers() {
         const cleanExit = async () => {
             console.log('[WhatsApp] Clean shutdown of WhatsApp client...');
+            if (this.pingInterval) clearInterval(this.pingInterval);
             try {
                 await this.client.destroy();
             } catch (err) {
@@ -85,6 +112,42 @@ export class WhatsAppService {
         return WhatsAppService.instance;
     }
 
+    private startHeartbeat() {
+        if (this.pingInterval) clearInterval(this.pingInterval);
+        this.pingInterval = setInterval(async () => {
+            if (this.isReady && this.client && !this.isReconnecting) {
+                try {
+                    const state = await this.client.getState();
+                    if (state !== 'CONNECTED') {
+                        console.warn(`[WhatsApp Heartbeat] Disconnection detected (state: ${state}). Triggering reconnect...`);
+                        this.reconnect();
+                    }
+                } catch (err) {
+                    console.warn('[WhatsApp Heartbeat] Connection check failed. Triggering reconnect...', err);
+                    this.reconnect();
+                }
+            }
+        }, 45000);
+    }
+
+    private async reconnect() {
+        if (this.isReconnecting) return;
+        this.isReconnecting = true;
+        this.isReady = false;
+        console.log('[WhatsApp] Initiating clean reconnect...');
+
+        try {
+            if (this.client) {
+                await this.client.destroy().catch(() => {});
+            }
+        } catch (e) {}
+
+        setTimeout(() => {
+            this.createClient();
+            this.isReconnecting = false;
+        }, 3000);
+    }
+
     private initialize() {
         this.client.on('qr', async (qr) => {
             console.log('WhatsApp QR generated');
@@ -97,9 +160,10 @@ export class WhatsAppService {
         });
 
         this.client.on('ready', () => {
-            console.log('WhatsApp Client is ready!');
+            console.log('WhatsApp Client is ready and connected!');
             this.isReady = true;
             this.qrCode = null;
+            this.startHeartbeat();
         });
 
         this.client.on('authenticated', () => {
@@ -112,9 +176,9 @@ export class WhatsAppService {
         });
 
         this.client.on('disconnected', (reason) => {
-            console.log('WhatsApp Client was logged out', reason);
+            console.log('[WhatsApp] Client disconnected:', reason);
             this.isReady = false;
-            this.client.initialize();
+            this.reconnect();
         });
 
         this.client.initialize().catch(err => {
@@ -246,10 +310,15 @@ export class WhatsAppService {
             .replace(/\[indirizzo\]/g, order.shippingAddress || 'Ritiro in negozio')
             .replace(/\[note\]/g, order.deliveryNotes || '');
 
-        if (order.approvalToken && (order.approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' || order.requiresApproval)) {
+        if (order.approvalToken) {
             const domain = process.env.PUBLIC_URL || 'https://ortofruttabutti.it';
             const approvalUrl = `${domain}/conferma-pesatura/${order.id}?token=${order.approvalToken}`;
-            message += `\n\n⚠️ *Variazione Pesatura da Approvare*\nPer verificare il dettaglio della pesatura ed approvare il tuo ordine, clicca sul link qui sotto:\n🔗 ${approvalUrl}`;
+
+            if (order.approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' || order.requiresApproval) {
+                message += `\n\n⚠️ *Variazione Pesatura da Approvare*\nPer verificare il dettaglio della pesatura ed approvare il tuo ordine, clicca sul link qui sotto:\n🔗 ${approvalUrl}`;
+            } else {
+                message += `\n\n🔍 *Dettaglio Pesatura Online*\nPer verificare la pesatura ed il dettaglio dei prodotti pesati, clicca sul link qui sotto:\n🔗 ${approvalUrl}`;
+            }
         }
 
         // Add Footer

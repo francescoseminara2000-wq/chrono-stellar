@@ -71,7 +71,8 @@ export class AdminService {
             const requiresApproval = diffPercent > tolerance;
 
             const crypto = require('crypto');
-            const approvalToken = requiresApproval ? crypto.randomBytes(16).toString('hex') : null;
+            const tokenToUse = (order as any).approvalToken || crypto.randomBytes(16).toString('hex');
+            const approvalStatus = requiresApproval ? 'AWAITING_CUSTOMER_APPROVAL' : 'AUTO_APPROVED';
 
             // Update Order
             const updatedOrder = await tx.order.update({
@@ -79,8 +80,8 @@ export class AdminService {
                 data: {
                     status: OrderStatus.WEIGHING_COMPLETED,
                     finalTotal: roundedFinal,
-                    approvalToken: approvalToken || (order as any).approvalToken || crypto.randomBytes(16).toString('hex'),
-                    approvalStatus: requiresApproval ? 'AWAITING_CUSTOMER_APPROVAL' : 'AUTO_APPROVED',
+                    approvalToken: tokenToUse,
+                    approvalStatus: approvalStatus,
                 } as any,
                 include: {
                     user: true,
