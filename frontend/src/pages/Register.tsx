@@ -3,18 +3,6 @@ import { Link } from 'react-router-dom';
 import { User, Mail, Lock, Phone, MapPin, Building, Eye, EyeOff, CheckCircle2, ArrowRight, ArrowLeft, ShieldCheck, Sparkles, Check, Bell } from 'lucide-react';
 import { sanitizeImageUrl } from '../utils/imageUrl';
 
-const AVATAR_OPTIONS = [
-    { id: 'apple', label: 'Mela', icon: '🍎' },
-    { id: 'orange', label: 'Arancia', icon: '🍊' },
-    { id: 'avocado', label: 'Avocado', icon: '🥑' },
-    { id: 'carrot', label: 'Carota', icon: '🥕' },
-    { id: 'strawberry', label: 'Fragola', icon: '🍓' },
-    { id: 'lemon', label: 'Limone', icon: '🍋' },
-    { id: 'peach', label: 'Pesca', icon: '🍑' },
-    { id: 'grapes', label: 'Uva', icon: '🍇' },
-    { id: 'cherries', label: 'Ciliegie', icon: '🍒' },
-];
-
 export const Register = () => {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +19,7 @@ export const Register = () => {
         civic: '',
         city: 'Valmadrera',
         zipCode: '23868',
-        avatar: '🍎',
+        avatar: '',
         notificationPreference: 'WHATSAPP',
         acceptTerms: true
     });
@@ -40,12 +28,20 @@ export const Register = () => {
     const [successMessage, setSuccessMessage] = useState('');
 
     const [serverAvatars, setServerAvatars] = useState<string[]>([]);
+    const [isLoadingAvatars, setIsLoadingAvatars] = useState(true);
 
     useEffect(() => {
+        setIsLoadingAvatars(true);
         fetch('/api/avatars')
             .then(res => res.ok ? res.json() : [])
-            .then(data => setServerAvatars(data))
-            .catch(() => {});
+            .then(data => {
+                setServerAvatars(data);
+                if (data.length > 0 && !formData.avatar) {
+                    setFormData(prev => ({ ...prev, avatar: data[0] }));
+                }
+            })
+            .catch(() => {})
+            .finally(() => setIsLoadingAvatars(false));
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -113,11 +109,11 @@ export const Register = () => {
     if (successMessage) {
         return (
             <div className="min-h-screen bg-nature-50 flex items-center justify-center p-4">
-                <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-2xl w-full max-w-lg text-center border border-emerald-100 animate-in zoom-in-95 duration-300">
+                <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-2xl w-full max-w-lg text-center border border-emerald-100 animate-in zoom-in-95 duration-300">
                     <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                         <CheckCircle2 className="w-10 h-10" />
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Account Creato! 🎉</h2>
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-3 tracking-tight">Account Creato! 🎉</h2>
                     <p className="text-gray-600 text-sm leading-relaxed mb-8">{successMessage}</p>
                     <Link to="/login" className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-black py-4 px-8 rounded-2xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 active:scale-98">
                         Accedi Ora <ArrowRight size={18} />
@@ -128,23 +124,23 @@ export const Register = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-nature-50 via-gray-50 to-emerald-50/40 flex items-center justify-center p-4 sm:p-6 py-12">
+        <div className="min-h-screen bg-gradient-to-br from-nature-50 via-gray-50 to-emerald-50/40 flex items-center justify-center p-3 sm:p-6 py-8 sm:py-12">
             <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-xl overflow-hidden relative">
                 {/* Header Banner */}
-                <div className="bg-gradient-to-r from-emerald-800 via-nature-900 to-emerald-950 p-6 sm:p-8 text-white relative">
+                <div className="bg-gradient-to-r from-emerald-800 via-nature-900 to-emerald-950 p-5 sm:p-8 text-white relative">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-emerald-400 font-mono text-xs font-bold uppercase tracking-widest block mb-1">Passo {step} di 3</span>
-                            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Crea il tuo Account</h1>
+                            <h1 className="text-xl sm:text-3xl font-black tracking-tight">Crea il tuo Account</h1>
                             <p className="text-nature-200 text-xs sm:text-sm mt-1">Registrati per ordinare velocemente e tracciare la spesa pesata</p>
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-emerald-400 font-bold border border-white/10 shrink-0">
-                            <Sparkles size={24} />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-emerald-400 font-bold border border-white/10 shrink-0">
+                            <Sparkles size={22} />
                         </div>
                     </div>
 
                     {/* Stepper Indicator */}
-                    <div className="flex gap-2 mt-6">
+                    <div className="flex gap-2 mt-5">
                         {[1, 2, 3].map((s) => (
                             <div
                                 key={s}
@@ -156,7 +152,7 @@ export const Register = () => {
                     </div>
                 </div>
 
-                <div className="p-6 sm:p-8">
+                <div className="p-5 sm:p-8">
                     {error && (
                         <div className="bg-red-50 text-red-700 p-4 rounded-2xl mb-6 text-xs sm:text-sm font-bold border border-red-200 flex items-center gap-3 animate-in fade-in duration-200">
                             <span className="text-lg">⚠️</span>
@@ -167,7 +163,7 @@ export const Register = () => {
                     {/* STEP 1: Personal Details & Security */}
                     {step === 1 && (
                         <div className="space-y-5 animate-in fade-in duration-300">
-                            <h3 className="font-black text-gray-900 text-lg flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <h3 className="font-black text-gray-900 text-base sm:text-lg flex items-center gap-2 border-b border-gray-100 pb-3">
                                 <User size={20} className="text-emerald-600" /> Credenziali e Contatti
                             </h3>
 
@@ -297,15 +293,15 @@ export const Register = () => {
                         </div>
                     )}
 
-                    {/* STEP 2: Pre-filled Delivery Address & Preferences */}
+                    {/* STEP 2: Pre-filled Delivery Address & Redesigned Notification Cards */}
                     {step === 2 && (
                         <div className="space-y-5 animate-in fade-in duration-300">
-                            <h3 className="font-black text-gray-900 text-lg flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <h3 className="font-black text-gray-900 text-base sm:text-lg flex items-center gap-2 border-b border-gray-100 pb-3">
                                 <MapPin size={20} className="text-emerald-600" /> Indirizzo di Consegna Preferito
                             </h3>
                             <p className="text-xs text-gray-500">I tuoi futuri ordini verranno precompilati in 1-click senza dover digitare nulla alla cassa!</p>
 
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-3 gap-3 sm:gap-4">
                                 <div className="col-span-2">
                                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Via / Piazza *</label>
                                     <div className="relative">
@@ -335,7 +331,7 @@ export const Register = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Comune *</label>
                                     <div className="relative">
@@ -365,35 +361,72 @@ export const Register = () => {
                                 </div>
                             </div>
 
-                            {/* WhatsApp Notification Preference */}
-                            <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/80 space-y-2">
-                                <label className="block text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-                                    <Bell size={16} className="text-emerald-700" /> Notifiche Ordini & Pesatura
+                            {/* Ultra-Premium Redesigned Notification Selection Cards */}
+                            <div className="pt-2">
+                                <label className="block text-xs font-black text-gray-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                    <Bell size={16} className="text-emerald-600" /> Preferenza Notifiche Spesa & Pesatura
                                 </label>
-                                <p className="text-xs text-emerald-900/90 leading-relaxed">Come desideri ricevere l'aggiornamento pesatura ed il tracciamento della tua spesa?</p>
-                                <div className="flex items-center gap-4 pt-1">
-                                    <label className="flex items-center gap-2 cursor-pointer text-xs font-black text-gray-800">
-                                        <input
-                                            type="radio"
-                                            name="notificationPreference"
-                                            value="WHATSAPP"
-                                            checked={formData.notificationPreference === 'WHATSAPP'}
-                                            onChange={handleChange}
-                                            className="text-emerald-600 focus:ring-emerald-500"
-                                        />
-                                        💬 WhatsApp & Email (Consigliato)
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-600">
-                                        <input
-                                            type="radio"
-                                            name="notificationPreference"
-                                            value="EMAIL"
-                                            checked={formData.notificationPreference === 'EMAIL'}
-                                            onChange={handleChange}
-                                            className="text-emerald-600 focus:ring-emerald-500"
-                                        />
-                                        ✉️ Solo Email
-                                    </label>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {/* WhatsApp & Email Card */}
+                                    <div
+                                        onClick={() => setFormData({ ...formData, notificationPreference: 'WHATSAPP' })}
+                                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between ${
+                                            formData.notificationPreference === 'WHATSAPP'
+                                                ? 'border-emerald-600 bg-gradient-to-br from-emerald-50/80 to-white shadow-md ring-2 ring-emerald-600/20'
+                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
+                                                    💬
+                                                </div>
+                                                <div>
+                                                    <span className="font-black text-gray-900 text-sm block leading-tight">WhatsApp e Email</span>
+                                                    <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded-md inline-block mt-0.5">CONSIGLIATO</span>
+                                                </div>
+                                            </div>
+                                            {formData.notificationPreference === 'WHATSAPP' && (
+                                                <div className="w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center shrink-0">
+                                                    <Check size={12} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-gray-500 leading-relaxed mt-2.5">
+                                            Ricevi l'esito della pesatura ed i link di tracciamento direttamente sul tuo WhatsApp.
+                                        </p>
+                                    </div>
+
+                                    {/* Email Only Card */}
+                                    <div
+                                        onClick={() => setFormData({ ...formData, notificationPreference: 'EMAIL' })}
+                                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between ${
+                                            formData.notificationPreference === 'EMAIL'
+                                                ? 'border-emerald-600 bg-gradient-to-br from-emerald-50/80 to-white shadow-md ring-2 ring-emerald-600/20'
+                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-800 flex items-center justify-center font-black">
+                                                    ✉️
+                                                </div>
+                                                <div>
+                                                    <span className="font-black text-gray-900 text-sm block leading-tight">Solo Email</span>
+                                                    <span className="text-[10px] font-bold text-gray-500">Standard</span>
+                                                </div>
+                                            </div>
+                                            {formData.notificationPreference === 'EMAIL' && (
+                                                <div className="w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center shrink-0">
+                                                    <Check size={12} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-gray-500 leading-relaxed mt-2.5">
+                                            Ricevi le conferme d'ordine e la pesatura esclusivamente via email.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -416,52 +449,47 @@ export const Register = () => {
                         </div>
                     )}
 
-                    {/* STEP 3: Choose Avatar & Complete */}
+                    {/* STEP 3: Choose Avatar (Strictly Admin Avatars Only) & Complete */}
                     {step === 3 && (
                         <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in duration-300">
-                            <h3 className="font-black text-gray-900 text-lg flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <h3 className="font-black text-gray-900 text-base sm:text-lg flex items-center gap-2 border-b border-gray-100 pb-3">
                                 <Sparkles size={20} className="text-emerald-600" /> Scegli il tuo Avatar Profilo
                             </h3>
-                            <p className="text-xs text-gray-500">Seleziona un'icona simpatica per personalizzare il tuo account e la tua spesa!</p>
+                            <p className="text-xs text-gray-500">Seleziona uno degli avatar disponibili per personalizzare il tuo account!</p>
 
-                            {/* Avatar Grid */}
-                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                                {AVATAR_OPTIONS.map((av) => (
-                                    <button
-                                        key={av.id}
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, avatar: av.icon })}
-                                        className={`p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer relative ${
-                                            formData.avatar === av.icon
-                                                ? 'border-emerald-600 bg-emerald-50 scale-105 shadow-md ring-2 ring-emerald-600/20'
-                                                : 'border-gray-200/80 bg-white hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <span className="text-3xl">{av.icon}</span>
-                                        <span className="text-[10px] font-bold text-gray-700">{av.label}</span>
-                                        {formData.avatar === av.icon && (
-                                            <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-emerald-600 text-white rounded-full flex items-center justify-center">
-                                                <Check size={10} />
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
-
-                                {serverAvatars.map((avPath) => (
-                                    <button
-                                        key={avPath}
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, avatar: avPath })}
-                                        className={`p-2 rounded-2xl border-2 transition-all flex items-center justify-center cursor-pointer relative overflow-hidden h-20 ${
-                                            formData.avatar === avPath
-                                                ? 'border-emerald-600 bg-emerald-50 scale-105 shadow-md'
-                                                : 'border-gray-200/80 bg-white hover:border-gray-300'
-                                        }`}
-                                    >
-                                        <img src={sanitizeImageUrl(avPath)} alt="Avatar" className="w-full h-full object-cover rounded-xl" />
-                                    </button>
-                                ))}
-                            </div>
+                            {/* Avatar Grid (Only Admin Uploaded Avatars) */}
+                            {isLoadingAvatars ? (
+                                <div className="py-8 text-center text-gray-400 text-xs font-bold flex items-center justify-center gap-2">
+                                    <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
+                                    Caricamento avatar in corso...
+                                </div>
+                            ) : serverAvatars.length > 0 ? (
+                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-56 overflow-y-auto p-1">
+                                    {serverAvatars.map((avPath) => (
+                                        <button
+                                            key={avPath}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, avatar: avPath })}
+                                            className={`p-2 rounded-2xl border-2 transition-all flex items-center justify-center cursor-pointer relative overflow-hidden h-24 ${
+                                                formData.avatar === avPath
+                                                    ? 'border-emerald-600 bg-emerald-50 scale-105 shadow-md ring-2 ring-emerald-600/20'
+                                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <img src={sanitizeImageUrl(avPath)} alt="Avatar" className="w-full h-full object-cover rounded-xl" />
+                                            {formData.avatar === avPath && (
+                                                <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-xs">
+                                                    <Check size={12} />
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-gray-50 rounded-2xl text-center text-xs font-bold text-gray-500">
+                                    Nessun avatar disponibile al momento. Puoi procedere senza selezionarne uno.
+                                </div>
+                            )}
 
                             {/* Terms Checkbox */}
                             <div className="pt-2 border-t border-gray-100">
@@ -476,18 +504,19 @@ export const Register = () => {
                                 </label>
                             </div>
 
-                            <div className="flex items-center gap-3 pt-2">
+                            {/* Mobile Responsive Action Buttons */}
+                            <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-2">
                                 <button
                                     type="button"
                                     onClick={() => setStep(2)}
-                                    className="py-4 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                    className="w-full sm:w-auto py-3.5 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     <ArrowLeft size={18} /> Indietro
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || !formData.acceptTerms}
-                                    className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black rounded-2xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer active:scale-98 text-base"
+                                    className="w-full sm:flex-1 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black rounded-2xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer active:scale-98 text-sm sm:text-base"
                                 >
                                     {isSubmitting ? (
                                         <span className="flex items-center gap-2">
@@ -505,7 +534,7 @@ export const Register = () => {
                     )}
 
                     {/* Footer Login Link */}
-                    <div className="mt-8 text-center pt-4 border-t border-gray-100">
+                    <div className="mt-6 text-center pt-4 border-t border-gray-100">
                         <p className="text-xs text-gray-500 font-bold">
                             Hai già un account?{' '}
                             <Link to="/login" className="text-emerald-700 font-black hover:underline">
