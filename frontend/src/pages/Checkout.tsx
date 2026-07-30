@@ -921,6 +921,15 @@ export const Checkout = () => {
                                         onChange={e => setFormData({ ...formData, notes: e.target.value })}
                                     />
                                 </div>
+                                <div className="pt-3">
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 text-base md:text-lg tracking-wide transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmitting ? 'Invio Ordine in corso...' : `🛒 Conferma e Invia Ordine • € ${(total / 100).toFixed(2)}`}
+                                    </button>
+                                </div>
 
                                 {validationError && (
                                     <div className="p-4 bg-red-50 text-red-700 text-xs sm:text-sm font-bold rounded-2xl border border-red-200 flex items-center gap-2 animate-in fade-in duration-200">
@@ -991,12 +1000,20 @@ export const Checkout = () => {
                                     </div>
                                 )}
 
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 text-base transition-all active:scale-[0.98] cursor-pointer mt-4"
+                                >
+                                    {isSubmitting ? 'Invio Ordine...' : `Conferma Ordine • € ${(total / 100).toFixed(2)}`}
+                                </button>
+
                             </div>
                         </div>
                     </div>
                 </form>
-                </div>
             </div>
+        </div>
 
             {/* Stock Warning Modal */}
             {showStockModal && (
