@@ -915,23 +915,6 @@ export const OrderManager = () => {
                                                 </span>
                                             </div>
                                         </div>
-
-                                        {/* Customer Quick Summary */}
-                                        <div className="bg-white p-5 rounded-2xl border border-gray-200/90 shadow-sm space-y-2.5">
-                                            <div className="flex items-center justify-between">
-                                                <div className="font-black text-sm text-gray-900 flex items-center gap-2">
-                                                    👤 {selectedOrder.customerName || selectedOrder.user?.name}
-                                                </div>
-                                            </div>
-                                            <p className="text-xs text-gray-600 font-bold">
-                                                📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
-                                            </p>
-                                            {selectedOrder.deliveryNotes && (
-                                                <p className="text-xs bg-amber-50 text-amber-950 p-3 rounded-xl border border-amber-200 font-bold leading-relaxed">
-                                                    <strong>Note del cliente:</strong> {selectedOrder.deliveryNotes}
-                                                </p>
-                                            )}
-                                        </div>
                                     </div>
                                 )}
 
@@ -1120,41 +1103,46 @@ export const OrderManager = () => {
                             )}
 
                             {/* Action Footer (Sticky) */}
-                            <div className="bg-white border-t border-gray-100 p-3 lg:p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20">
-                                <div className="bg-nature-900 text-white px-4 py-2 sm:py-2.5 rounded-xl shadow-sm flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[130px] shrink-0">
-                                    <span className="text-[10px] text-nature-300 font-bold uppercase tracking-wider">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
-                                    <span className="text-base sm:text-lg font-black leading-none mt-0 sm:mt-1">
+                            <div className="bg-white border-t border-gray-100 p-3.5 sm:p-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20">
+                                <div className="bg-nature-950 text-white px-4 py-2.5 rounded-2xl shadow-sm flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-nature-900">
+                                    <span className="text-[10px] text-nature-300 font-black uppercase tracking-wider">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
+                                    <span className="text-lg sm:text-xl font-black leading-none mt-0.5">
                                         € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto">
+                                <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
                                     {(selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED') && (
-                                        <button onClick={handleOpenWeighingModal} className="px-3 py-2.5 sm:px-4 sm:py-2.5 bg-nature-600 hover:bg-nature-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-initial">
-                                            <Scale size={16} /> Pesatura e Prezzi
+                                        <button onClick={handleOpenWeighingModal} className="px-4 py-3 bg-nature-600 hover:bg-nature-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                            <Scale size={18} /> Pesatura & Prezzi
                                         </button>
                                     )}
 
                                     {selectedOrder.status === 'WEIGHING_COMPLETED' && (
-                                        <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-3 py-2.5 sm:px-4 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-initial">
-                                            <Truck size={16} /> Spedisci
+                                        <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                            <Truck size={18} /> Spedisci
                                         </button>
                                     )}
 
                                     {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
-                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-3 py-2.5 sm:px-4 sm:py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-initial">
-                                            <CheckCircle size={16} /> Concludi
+                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                            <CheckCircle size={18} /> Concludi
                                         </button>
                                     )}
 
+                                    {/* Annulla Ordine Button: Visible for non-cancelled & non-delivered orders */}
                                     {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
-                                        <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-2.5 py-2.5 text-red-500 font-bold hover:bg-red-50 text-[11px] sm:text-xs rounded-xl transition-colors shrink-0">
-                                            Annulla
+                                        <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                            <Ban size={16} /> Annulla
                                         </button>
                                     )}
-                                    <button onClick={() => handleDeleteOrder()} className="px-2.5 py-2.5 text-red-600 font-bold hover:bg-red-50 hover:text-red-700 text-[11px] sm:text-xs rounded-xl transition-colors shrink-0">
-                                        Elimina
-                                    </button>
+
+                                    {/* Elimina Ordine Button: Visible ONLY when order status is CANCELLED */}
+                                    {selectedOrder.status === 'CANCELLED' && (
+                                        <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                            <Trash2 size={18} /> Elimina Ordine
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
