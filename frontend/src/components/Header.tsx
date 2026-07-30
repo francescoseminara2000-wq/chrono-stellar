@@ -320,67 +320,67 @@ export const Header = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="md:hidden fixed inset-0 z-[120] bg-gradient-to-br from-nature-950 via-emerald-950 to-nature-900 text-white backdrop-blur-2xl p-6 flex flex-col justify-between overflow-y-auto"
+                        className="md:hidden fixed inset-0 z-[120] bg-nature-50/98 text-nature-950 backdrop-blur-2xl p-6 flex flex-col justify-between overflow-y-auto"
                     >
                         {/* Drawer Header */}
-                        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                        <div className="flex items-center justify-between border-b border-nature-200/40 pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-white/10 p-1 flex items-center justify-center border border-white/10">
+                                <div className="w-10 h-10 rounded-2xl bg-white p-1.5 flex items-center justify-center border border-nature-200/50 shadow-xs">
                                     <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain" />
                                 </div>
                                 <div>
-                                    <span className="font-black text-base text-white block leading-none">{settings?.siteName || 'Ortofrutta'}</span>
-                                    <span className="text-[10px] text-emerald-400 font-bold tracking-widest uppercase">Menu Principale</span>
+                                    <span className="font-black text-base text-nature-900 block leading-none">{settings?.siteName || 'Ortofrutta'}</span>
+                                    <span className="text-[10px] text-emerald-700 font-bold tracking-widest uppercase mt-0.5 block">Menu Principale</span>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setIsMenuOpen(false)}
-                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-90"
+                                className="w-10 h-10 rounded-full bg-nature-200/50 hover:bg-nature-200 text-nature-800 flex items-center justify-center transition-all cursor-pointer border border-nature-250/20 active:scale-90"
                             >
                                 <X size={22} />
                             </button>
                         </div>
 
                         {/* Navigation Links Grid */}
-                        <div className="py-6 space-y-3 flex-1 overflow-y-auto">
+                        <div className="py-6 space-y-3.5 flex-1 overflow-y-auto">
                             <Link
                                 to="/"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
                             >
-                                <span className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-xl">🏠</span>
+                                <span className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-base">🏠</span>
                                 <span>Home</span>
                             </Link>
 
                             <Link
                                 to="/shop"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
                             >
-                                <span className="p-2.5 bg-amber-500/20 text-amber-300 rounded-xl">🍏</span>
+                                <span className="p-2.5 bg-amber-55/60 text-amber-700 rounded-xl text-base">🍏</span>
                                 <span>Catalogo Ortofrutta</span>
                             </Link>
 
                             <Link
                                 to="/mercati"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
                             >
-                                <span className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-xl">📍</span>
+                                <span className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-base">📍</span>
                                 <span>I Nostri Mercati</span>
                             </Link>
 
                             <Link
                                 to="/cart"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                className="flex items-center justify-between p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
                             >
                                 <div className="flex items-center gap-4">
-                                    <span className="p-2.5 bg-purple-500/20 text-purple-300 rounded-xl">🛒</span>
+                                    <span className="p-2.5 bg-purple-50 text-purple-700 rounded-xl text-base">🛒</span>
                                     <span>Il Tuo Carrello</span>
                                 </div>
                                 {itemCount > 0 && (
-                                    <span className="px-3 py-1 bg-emerald-500 text-white font-black text-xs rounded-full">
+                                    <span className="px-3 py-1 bg-emerald-600 text-white font-black text-xs rounded-full shadow-xs">
                                         {itemCount} {itemCount === 1 ? 'art.' : 'art.'}
                                     </span>
                                 )}
@@ -391,18 +391,18 @@ export const Header = () => {
                                     <Link
                                         to="/orders"
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
                                     >
-                                        <span className="p-2.5 bg-blue-500/20 text-blue-300 rounded-xl">📦</span>
+                                        <span className="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-base">📦</span>
                                         <span>I Miei Ordini</span>
                                     </Link>
 
                                     <Link
                                         to="/profile"
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-black text-lg text-white"
+                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
                                     >
-                                        <span className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-xl">👤</span>
+                                        <span className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-base">👤</span>
                                         <span>Il Mio Profilo</span>
                                     </Link>
 
@@ -410,9 +410,9 @@ export const Header = () => {
                                         <Link
                                             to="/admin"
                                             onClick={() => setIsMenuOpen(false)}
-                                            className="flex items-center gap-4 p-4 rounded-2xl bg-blue-600/30 hover:bg-blue-600/40 border border-blue-500/40 transition-all font-black text-lg text-blue-200"
+                                            className="flex items-center gap-4 p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200/50 transition-all font-black text-lg text-blue-900 shadow-xs animate-pulse"
                                         >
-                                            <span className="p-2.5 bg-blue-500 text-white rounded-xl">⚙️</span>
+                                            <span className="p-2.5 bg-blue-100 text-blue-800 rounded-xl text-base">⚙️</span>
                                             <span>Dashboard Admin</span>
                                         </Link>
                                     )}
@@ -421,25 +421,25 @@ export const Header = () => {
                         </div>
 
                         {/* Drawer Bottom User Card / Auth */}
-                        <div className="pt-4 border-t border-white/10">
+                        <div className="pt-4 border-t border-nature-200/40">
                             {user ? (
-                                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                                <div className="p-4 rounded-2xl bg-white border border-nature-150/50 flex items-center justify-between shadow-xs">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-11 h-11 rounded-2xl bg-emerald-800 border border-white/20 overflow-hidden shrink-0 flex items-center justify-center">
+                                        <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-100 overflow-hidden shrink-0 flex items-center justify-center text-emerald-800">
                                             {user.avatar ? (
                                                 <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                                             ) : (
-                                                <UserIcon size={20} className="text-white" />
+                                                <UserIcon size={20} />
                                             )}
                                         </div>
                                         <div>
-                                            <span className="font-black text-sm text-white block">{user.name}</span>
-                                            <span className="text-xs text-emerald-300/80">{user.email}</span>
+                                            <span className="font-black text-sm text-nature-900 block">{user.name}</span>
+                                            <span className="text-xs text-gray-500">{user.email}</span>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => { logout(); setIsMenuOpen(false); }}
-                                        className="p-2.5 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all cursor-pointer font-bold text-xs"
+                                        className="p-2.5 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition-all cursor-pointer font-black text-xs border border-red-200/30"
                                     >
                                         Esci
                                     </button>
@@ -449,14 +449,14 @@ export const Header = () => {
                                     <Link
                                         to="/login"
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="py-3.5 text-center bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl border border-white/10 transition-all"
+                                        className="py-3.5 text-center bg-white hover:bg-gray-50 text-nature-900 font-black rounded-2xl border border-nature-200 shadow-xs transition-all"
                                     >
                                         Accedi
                                     </Link>
                                     <Link
                                         to="/register"
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="py-3.5 text-center bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg transition-all"
+                                        className="py-3.5 text-center bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-2xl shadow-md transition-all"
                                     >
                                         Registrati
                                     </Link>
