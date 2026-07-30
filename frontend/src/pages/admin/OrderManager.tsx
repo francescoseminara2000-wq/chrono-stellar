@@ -46,6 +46,7 @@ export const OrderManager = () => {
     const [editNotes, setEditNotes] = useState('');
     const [isSavingEdits, setIsSavingEdits] = useState(false);
     const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'customer'>('overview');
+    const [weighedItemIds, setWeighedItemIds] = useState<number[]>([]);
     const [weighingItemModal, setWeighingItemModal] = useState<{
         isOpen: boolean;
         item: any | null;
@@ -61,12 +62,18 @@ export const OrderManager = () => {
 
             const initialFulfillment: Record<number, number> = {};
             const initialPrices: Record<number, number> = {};
+            const initialWeighedIds: number[] = [];
 
             selectedOrder.items.forEach(item => {
                 const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                 const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
 
-                initialFulfillment[item.id] = item.quantityFulfilled !== null && item.quantityFulfilled !== undefined
+                const isAlreadyWeighed = item.quantityFulfilled !== null && item.quantityFulfilled !== undefined;
+                if (isAlreadyWeighed) {
+                    initialWeighedIds.push(item.id);
+                }
+
+                initialFulfillment[item.id] = isAlreadyWeighed
                     ? Number(item.quantityFulfilled)
                     : defaultQty;
 
@@ -75,12 +82,14 @@ export const OrderManager = () => {
 
             setFulfillmentData(initialFulfillment);
             setFulfillmentPriceData(initialPrices);
+            setWeighedItemIds(initialWeighedIds);
         } else {
             setEditDate('');
             setEditTime('');
             setEditNotes('');
             setFulfillmentData({});
             setFulfillmentPriceData({});
+            setWeighedItemIds([]);
         }
     }, [selectedOrder]);
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
@@ -275,59 +284,18 @@ export const OrderManager = () => {
         });
     };
 
-    const handleSaveSingleItemWeighing = async () => {
+    const handleSaveSingleItemWeighing = () => {
         if (!weighingItemModal.item || !selectedOrder) return;
         const itemId = weighingItemModal.item.id;
         const weightNum = parseFloat(String(weighingItemModal.tempWeight)) || 0;
         const priceNum = parseFloat(String(weighingItemModal.tempUnitPrice)) || 0;
 
-        const newFulfillmentData = { ...fulfillmentData, [itemId]: weightNum };
-        const newFulfillmentPriceData = { ...fulfillmentPriceData, [itemId]: priceNum };
-        setFulfillmentData(newFulfillmentData);
-        setFulfillmentPriceData(newFulfillmentPriceData);
+        setFulfillmentData(prev => ({ ...prev, [itemId]: weightNum }));
+        setFulfillmentPriceData(prev => ({ ...prev, [itemId]: priceNum }));
+        setWeighedItemIds(prev => Array.from(new Set([...prev, itemId])));
 
-        const itemsPayload = selectedOrder.items.map(item => {
-            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
-            const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-
-            const qty = item.id === itemId
-                ? weightNum
-                : (typeof newFulfillmentData[item.id] === 'number' ? newFulfillmentData[item.id] : (item.quantityFulfilled || defaultQty));
-
-            const priceEuro = item.id === itemId
-                ? priceNum
-                : (typeof newFulfillmentPriceData[item.id] === 'number' ? newFulfillmentPriceData[item.id] : ((item.priceAtPurchase || item.product.priceCents) / 100));
-
-            return {
-                orderItemId: item.id,
-                quantityFulfilled: Number(qty),
-                priceAtPurchase: Math.round(Number(priceEuro) * 100)
-            };
-        });
-
-        try {
-            const res = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}/fulfill`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ items: itemsPayload })
-            });
-
-            if (res.ok) {
-                const updatedOrder = await res.json();
-                setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
-                setSelectedOrder(updatedOrder);
-                addToast(`Pesatura confermata per ${weighingItemModal.item.product.name}!`, 'success');
-                setWeighingItemModal({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' });
-            } else {
-                addToast('Errore durante il salvataggio.', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            addToast('Errore di connessione.', 'error');
-        }
+        addToast(`Peso registrato per ${weighingItemModal.item.product.name}!`, 'info');
+        setWeighingItemModal({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' });
     };
 
     const handleFulfill = async () => {
@@ -984,23 +952,23 @@ export const OrderManager = () => {
 
                                 {/* TAB 2: PRODOTTI ORDINATI (ITEMS) */}
                                 {activeTab === 'items' && (
-                                    <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/90 rounded-2xl p-4 overflow-hidden shadow-sm animate-in fade-in duration-200">
-                                        <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 shrink-0">
+                                    <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/90 rounded-2xl p-4 sm:p-5 overflow-hidden shadow-sm animate-in fade-in duration-200">
+                                        <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-gray-100 shrink-0">
                                             <div>
-                                                <span className="text-xs font-black text-gray-900 uppercase tracking-wider block">Elenco Prodotti ({selectedOrder.items.length})</span>
-                                                <span className="text-[11px] font-bold text-gray-500">Stato pesatura e dettagli singolo articolo</span>
+                                                <span className="text-sm font-black text-gray-900 uppercase tracking-wider block">Elenco Prodotti Ordinati ({selectedOrder.items.length})</span>
+                                                <span className="text-xs font-bold text-gray-500">Stato pesatura e consuntivo articolo per articolo</span>
                                             </div>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+                                        <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 custom-scrollbar">
                                             {selectedOrder.items.map(item => {
                                                 const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                                                 const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
                                                 const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
 
-                                                const isWeighed = item.quantityFulfilled !== null && item.quantityFulfilled !== undefined;
+                                                const isWeighed = weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined);
                                                 const currentQty = typeof fulfillmentData[item.id] === 'number'
                                                     ? fulfillmentData[item.id]
-                                                    : (isWeighed ? Number(item.quantityFulfilled) : itemEstQtyKg);
+                                                    : (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? Number(item.quantityFulfilled) : itemEstQtyKg);
 
                                                 const currentUnitPrice = typeof fulfillmentPriceData[item.id] === 'number'
                                                     ? fulfillmentPriceData[item.id]
@@ -1010,69 +978,72 @@ export const OrderManager = () => {
                                                 const itemActualCost = currentQty * currentUnitPrice;
 
                                                 return (
-                                                    <div key={item.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl border transition-all gap-3 ${
-                                                        isWeighed ? 'bg-emerald-50/40 border-emerald-200/80' : 'bg-gray-50/90 border-gray-200/80'
+                                                    <div key={item.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all gap-4 ${
+                                                        isWeighed ? 'bg-emerald-50/50 border-emerald-200 shadow-xs' : 'bg-gray-50/90 border-gray-200/90'
                                                     }`}>
                                                         {/* Image + Product Details */}
-                                                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                                        <div className="flex items-center gap-4 min-w-0 flex-1">
                                                             {/* Product Image Thumbnail */}
-                                                            <div className="w-14 h-14 rounded-2xl bg-white border border-gray-200/90 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                                                            <div className="w-16 h-16 rounded-2xl bg-white border border-gray-200/90 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
                                                                 {item.product.imageUrl ? (
                                                                     <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
                                                                 ) : (
-                                                                    <span className="text-2xl select-none">🍏</span>
+                                                                    <span className="text-3xl select-none">🍏</span>
                                                                 )}
                                                             </div>
 
                                                             <div className="min-w-0 space-y-1">
                                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                                    <p className="font-black text-sm text-gray-900 leading-snug truncate" title={item.product.name}>{item.product.name}</p>
+                                                                    <p className="font-black text-base text-gray-900 leading-snug truncate" title={item.product.name}>{item.product.name}</p>
+                                                                    
+                                                                    {/* Icon-Only Status Badges for maximum visual clarity */}
                                                                     {isWeighed ? (
-                                                                        <span className="text-[10px] font-black text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200 shrink-0 flex items-center gap-1">
-                                                                            ✅ Pesato & Bloccato
+                                                                        <span className="p-1.5 bg-emerald-100 text-emerald-800 rounded-xl border border-emerald-200 shrink-0 text-sm shadow-xs cursor-help" title="Prodotto Pesato e Confermato">
+                                                                            ✅
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200 shrink-0 flex items-center gap-1">
-                                                                            ⚖️ Da Pesare
+                                                                        <span className="p-1.5 bg-amber-100 text-amber-800 rounded-xl border border-amber-200 shrink-0 text-sm shadow-xs cursor-help" title="Prodotto da Pesare">
+                                                                            ⚖️
                                                                         </span>
                                                                     )}
+
                                                                     {isPriceModified && (
-                                                                        <span className="text-[10px] font-black text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200 shrink-0">
-                                                                            Prezzo Modificato
+                                                                        <span className="p-1.5 bg-indigo-100 text-indigo-800 rounded-xl border border-indigo-200 shrink-0 text-sm shadow-xs cursor-help" title="Prezzo Modificato">
+                                                                            🏷️
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <p className="text-xs text-gray-500 font-bold">
-                                                                    Richiesto: <strong className="text-gray-800">{item.quantityOrdered} {item.product.unitType.toLowerCase()}</strong> (€ {itemEstCost.toFixed(2)})
+                                                                <p className="text-xs sm:text-sm text-gray-600 font-bold">
+                                                                    Richiesto: <strong className="text-gray-900 font-black">{item.quantityOrdered} {item.product.unitType.toLowerCase()}</strong> (€ {itemEstCost.toFixed(2)})
                                                                 </p>
                                                             </div>
                                                         </div>
 
                                                         {/* Quantity, Cost & Action Button */}
-                                                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200/60 shrink-0">
+                                                        <div className="flex items-center justify-between sm:justify-end gap-3.5 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-200/60 shrink-0">
                                                             {/* Fulfilled Weight & Cost Box */}
-                                                            <div className="bg-white px-3.5 py-2 rounded-xl border border-gray-200/80 text-right min-w-[100px]">
-                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Effettivo</span>
-                                                                <span className="font-black text-xs text-gray-900 block mt-0.5">
+                                                            <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-200/90 text-right min-w-[110px] shadow-xs">
+                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Effettivo</span>
+                                                                <span className="font-black text-sm text-gray-900 block mt-0.5">
                                                                     {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
                                                                 </span>
-                                                                <span className="text-[11px] font-black text-emerald-700 block">
+                                                                <span className="text-xs font-black text-emerald-700 block">
                                                                     € {itemActualCost.toFixed(2)}
                                                                 </span>
                                                             </div>
 
-                                                            {/* Single Weighing Action Button (Visible ONLY when order is PENDING) */}
+                                                            {/* Single Weighing Action Button (Visible in PENDING status) */}
                                                             {selectedOrder.status === 'PENDING' && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleOpenSingleItemWeighing(item)}
-                                                                    className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                                                                    className={`px-4 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
                                                                         isWeighed
-                                                                            ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                                                                            ? 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-300'
                                                                             : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
                                                                     }`}
                                                                 >
-                                                                    {isWeighed ? <span className="flex items-center gap-1"><Scale size={14} /> Modifica</span> : <span className="flex items-center gap-1"><Scale size={14} /> Pesa Prodotto</span>}
+                                                                    {isWeighed ? <span className="flex items-center gap-1.5"><Scale size={16} /> Modifica</span> : <span className="flex items-center gap-1.5"><Scale size={16} /> Pesa Prodotto</span>}
                                                                 </button>
                                                             )}
                                                         </div>
@@ -1200,12 +1171,12 @@ export const OrderManager = () => {
 
                                     {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
                                     {selectedOrder.status === 'PENDING' && (
-                                        selectedOrder.items.every(item => item.quantityFulfilled !== null && item.quantityFulfilled !== undefined) ? (
+                                        selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
                                             <button
-                                                onClick={() => handleUpdateStatus('WEIGHING_COMPLETED')}
+                                                onClick={handleFulfill}
                                                 className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer animate-in zoom-in-95"
                                             >
-                                                <Scale size={18} /> Conferma Pesatura Generale
+                                                <Scale size={18} /> Conferma Pesatura Generale & Notifica
                                             </button>
                                         ) : (
                                             <div className="px-3.5 py-2.5 bg-amber-50 text-amber-900 border border-amber-200/90 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90">
@@ -1213,7 +1184,7 @@ export const OrderManager = () => {
                                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                                                 </span>
-                                                Pesa tutti i prodotti ({selectedOrder.items.filter(i => i.quantityFulfilled === null || i.quantityFulfilled === undefined).length} rimanenti)
+                                                Pesa tutti i prodotti ({selectedOrder.items.filter(i => !weighedItemIds.includes(i.id) && i.quantityFulfilled === null).length} rimanenti)
                                             </div>
                                         )
                                     )}
