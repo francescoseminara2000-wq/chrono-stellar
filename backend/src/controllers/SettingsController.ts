@@ -9,6 +9,10 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN revolutApiKey TEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN revolutEnvironment VARCHAR(255) DEFAULT 'sandbox'`,
             `ALTER TABLE StoreSettings ADD COLUMN revolutEnabled TINYINT(1) DEFAULT 0`,
+            `ALTER TABLE StoreSettings ADD COLUMN weighingTolerancePercent INT DEFAULT 10`,
+            `ALTER TABLE Order ADD COLUMN approvalToken VARCHAR(255)`,
+            `ALTER TABLE Order ADD COLUMN approvalStatus VARCHAR(255) DEFAULT 'NONE'`,
+            `ALTER TABLE Order ADD COLUMN customerApprovedAt DATETIME`,
             `ALTER TABLE Transaction MODIFY COLUMN gateway VARCHAR(255) DEFAULT 'COD'`
         ];
 
@@ -139,7 +143,8 @@ export class SettingsController {
                 deliveryTimeSlots,
                 revolutApiKey,
                 revolutEnvironment,
-                revolutEnabled
+                revolutEnabled,
+                weighingTolerancePercent
             } = req.body;
 
             const updateData: any = {
@@ -179,6 +184,9 @@ export class SettingsController {
             }
             if (revolutEnabled !== undefined) {
                 updateData.revolutEnabled = Boolean(revolutEnabled);
+            }
+            if (weighingTolerancePercent !== undefined) {
+                updateData.weighingTolerancePercent = Number(weighingTolerancePercent);
             }
 
             const updatedSettings = await prisma.storeSettings.update({

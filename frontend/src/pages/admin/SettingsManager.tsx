@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import {
     Save, Globe, Phone, MapPin, Megaphone,
     MessageSquare, User as UserIcon, Upload, Trash2,
-    Plus, Edit2, X, Tag, CreditCard
+    Plus, Edit2, X, Tag, CreditCard, Scale
 } from 'lucide-react';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
@@ -20,12 +20,12 @@ const TemplateField = ({ label, field, value, tags, onInsertTag, onChange, texta
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <label className="text-sm font-bold text-gray-700">{label}</label>
             <div className="flex flex-wrap gap-1">
-                {tags.map((tag: any) => (
+                {tags.map((tag: string) => (
                     <button
                         key={tag}
                         type="button"
-                        onClick={() => onInsertTag(field, `[${tag}]`)}
-                        className="px-2 py-1 text-[10px] uppercase font-bold bg-nature-50 text-nature-600 border border-nature-200 rounded-md hover:bg-nature-100 transition-colors"
+                        onClick={() => onInsertTag(field, tag)}
+                        className="px-2 py-1 text-[11px] bg-nature-50 hover:bg-nature-100 text-nature-800 rounded font-mono transition-colors"
                     >
                         +{tag}
                     </button>
@@ -67,7 +67,8 @@ export const SettingsManager = () => {
         deliveryTimeSlots: '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00',
         revolutApiKey: '',
         revolutEnvironment: 'sandbox',
-        revolutEnabled: false
+        revolutEnabled: false,
+        weighingTolerancePercent: 10
     });
 
     const refs = {
@@ -150,7 +151,8 @@ export const SettingsManager = () => {
                 deliveryTimeSlots: data.deliveryTimeSlots || '09:00 - 11:00, 11:00 - 13:00, 15:00 - 17:00, 17:00 - 19:00',
                 revolutApiKey: data.revolutApiKey || '',
                 revolutEnvironment: data.revolutEnvironment || 'sandbox',
-                revolutEnabled: Boolean(data.revolutEnabled)
+                revolutEnabled: Boolean(data.revolutEnabled),
+                weighingTolerancePercent: data.weighingTolerancePercent !== undefined ? data.weighingTolerancePercent : 10
             });
         }
     };
@@ -618,6 +620,32 @@ export const SettingsManager = () => {
                                     initialLng={formData.longitude || undefined}
                                     onLocationSelect={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
                                 />
+                            </div>
+                        </div>
+
+                        {/* Weighing Tolerance Setting */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-emerald-100">
+                            <h3 className="text-xl font-bold mb-2 flex items-center gap-2 text-emerald-700">
+                                <Scale size={20} /> Tolleranza Variazione Pesatura & Approvazione Cliente
+                            </h3>
+                            <p className="text-xs text-gray-500 mb-4">
+                                Percentuale massima di variazione del prezzo complessivo pesato oltre la quale verrà inviato un link al cliente per l'approvazione manuale su WhatsApp / Email.
+                            </p>
+
+                            <div className="flex items-center gap-4 max-w-xs">
+                                <div className="relative flex-1">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="1"
+                                        value={formData.weighingTolerancePercent}
+                                        onChange={e => setFormData({ ...formData, weighingTolerancePercent: Number(e.target.value) })}
+                                        className="w-full px-4 py-3 border border-emerald-300 rounded-xl text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-gray-400 text-sm">%</span>
+                                </div>
+                                <span className="text-xs font-bold text-gray-600">Default: 10%</span>
                             </div>
                         </div>
 

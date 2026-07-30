@@ -62,13 +62,26 @@ export class AdminService {
                 finalTotal += order.shippingCost;
             }
 
+            const estTotal = order.estimatedTotal || 1;
+            const roundedFinal = Math.round(finalTotal);
+            const diffPercent = Math.abs((roundedFinal - estTotal) / estTotal) * 100;
+
+            const settings = await tx.storeSettings.findFirst();
+            const tolerance = (settings as any)?.weighingTolerancePercent ?? 10;
+            const requiresApproval = diffPercent > tolerance;
+
+            const crypto = require('crypto');
+            const approvalToken = requiresApproval ? crypto.randomBytes(16).toString('hex') : null;
+
             // Update Order
             const updatedOrder = await tx.order.update({
                 where: { id: orderId },
                 data: {
                     status: OrderStatus.WEIGHING_COMPLETED,
-                    finalTotal: Math.round(finalTotal),
-                },
+                    finalTotal: roundedFinal,
+                    approvalToken: approvalToken || (order as any).approvalToken || crypto.randomBytes(16).toString('hex'),
+                    approvalStatus: requiresApproval ? 'AWAITING_CUSTOMER_APPROVAL' : 'AUTO_APPROVED',
+                } as any,
                 include: {
                     user: true,
                     items: {
@@ -79,7 +92,12 @@ export class AdminService {
                 }
             });
 
-            return updatedOrder;
+            return {
+                ...updatedOrder,
+                requiresApproval,
+                diffPercent: Number(diffPercent.toFixed(1)),
+                tolerance
+            };
         });
     }
 

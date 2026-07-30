@@ -54,6 +54,10 @@ app.get('/api/orders/my-orders', authenticateToken, (req, res) => orderControlle
 app.post('/api/orders/:id/cancel', authenticateToken, (req, res) => orderController.cancel(req, res));
 app.get('/api/logistics/available-dates', (req, res) => logisticsController.getAvailableDates(req, res));
 
+// Customer Order Approval (Public)
+app.get('/api/public/orders/:id/approval', (req, res) => orderController.getPublicApprovalDetails(req, res));
+app.post('/api/public/orders/:id/approval', (req, res) => orderController.processCustomerApproval(req, res));
+
 // Admin
 app.get('/api/admin/products', authenticateToken, requireAdmin, (req, res) => productController.list(req, res));
 app.post('/api/admin/products', authenticateToken, requireAdmin, upload.single('image'), (req, res) => productController.create(req, res));

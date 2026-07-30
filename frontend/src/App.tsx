@@ -25,6 +25,7 @@ import { SettingsManager } from './pages/admin/SettingsManager';
 import { PageManager } from './pages/admin/PageManager';
 import { DeliveryMap } from './pages/admin/DeliveryMap';
 import { StaticPage } from './pages/StaticPage';
+import { CustomerOrderApproval } from './pages/CustomerOrderApproval';
 
 import { AlertBanner } from './components/AlertBanner';
 import { Toaster } from './components/ui/Toaster';
@@ -114,6 +115,9 @@ function App() {
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/pages/:slug" element={<StaticPage />} />
                 </Route>
+
+                {/* Standalone Customer Approval Page */}
+                <Route path="/conferma-pesatura/:id" element={<CustomerOrderApproval />} />
 
                 // ...
 

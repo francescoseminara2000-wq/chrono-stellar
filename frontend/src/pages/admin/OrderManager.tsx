@@ -330,10 +330,21 @@ export const OrderManager = () => {
             });
 
             if (res.ok) {
-                const updatedOrder = await res.json();
+                const responseData = await res.json();
+                const updatedOrder = responseData.id ? responseData : responseData.order;
                 setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
                 setSelectedOrder(updatedOrder);
-                addToast('Pesatura e variazioni di prezzo salvate!', 'success');
+
+                if (responseData.requiresApproval) {
+                    addToast(`⚠️ Variazione del ${responseData.diffPercent}% (superiore alla tolleranza del ${responseData.tolerance}%). Generato link di approvazione cliente!`, 'info');
+                    const approvalUrl = `${window.location.origin}/conferma-pesatura/${updatedOrder.id}?token=${updatedOrder.approvalToken}`;
+                    if (updatedOrder.customerPhone) {
+                        const waMsg = `Ciao ${updatedOrder.customerName || ''}, abbiamo completato la pesatura del tuo ordine #${updatedOrder.id}.\nIl totale ha subito una variazione del ${responseData.diffPercent}%.\n\nPer verificare il dettaglio ed approvare la pesatura, clicca sul link qui sotto:\n${approvalUrl}`;
+                        window.open(`https://wa.me/${updatedOrder.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(waMsg)}`, '_blank');
+                    }
+                } else {
+                    addToast('Pesatura e variazioni di prezzo confermate!', 'success');
+                }
             } else {
                 const errorData = await res.json();
                 console.error('Fulfillment error:', errorData);

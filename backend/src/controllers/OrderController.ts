@@ -138,4 +138,142 @@ export class OrderController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    async getPublicApprovalDetails(req: Request, res: Response) {
+        try {
+            const id = parseInt(req.params.id);
+            const token = req.query.token as string;
+
+            if (isNaN(id)) {
+                return res.status(400).json({ error: 'ID ordine non valido' });
+            }
+
+            const order: any = await prisma.order.findUnique({
+                where: { id },
+                include: {
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            });
+
+            if (!order) {
+                return res.status(404).json({ error: 'Ordine non trovato' });
+            }
+
+            if (order.approvalToken && token && order.approvalToken !== token) {
+                return res.status(403).json({ error: 'Token di autorizzazione non valido' });
+            }
+
+            const storeSettings: any = await prisma.storeSettings.findFirst();
+
+            const estTotal = order.estimatedTotal || 1;
+            const finalTotal = order.finalTotal || estTotal;
+            const diffPercent = Number((((finalTotal - estTotal) / estTotal) * 100).toFixed(1));
+
+            res.json({
+                order: {
+                    id: order.id,
+                    customerName: order.customerName,
+                    customerEmail: order.customerEmail,
+                    customerPhone: order.customerPhone,
+                    status: order.status,
+                    estimatedTotal: order.estimatedTotal,
+                    finalTotal: order.finalTotal,
+                    shippingCost: order.shippingCost,
+                    approvalStatus: order.approvalStatus || 'NONE',
+                    approvalToken: order.approvalToken,
+                    customerApprovedAt: order.customerApprovedAt,
+                    createdAt: order.createdAt,
+                    items: order.items
+                },
+                diffPercent,
+                tolerancePercent: storeSettings?.weighingTolerancePercent ?? 10,
+                storeInfo: {
+                    siteName: storeSettings?.siteName || 'Chrono Stellar',
+                    contactPhone: storeSettings?.contactPhone,
+                    contactEmail: storeSettings?.contactEmail
+                }
+            });
+        } catch (error: any) {
+            console.error('Error in getPublicApprovalDetails:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async processCustomerApproval(req: Request, res: Response) {
+        try {
+            const id = parseInt(req.params.id);
+            const { action, token } = req.body; // action: 'ACCEPT' | 'REJECT'
+
+            if (isNaN(id)) {
+                return res.status(400).json({ error: 'ID ordine non valido' });
+            }
+
+            const order: any = await prisma.order.findUnique({
+                where: { id }
+            });
+
+            if (!order) {
+                return res.status(404).json({ error: 'Ordine non trovato' });
+            }
+
+            if (order.approvalToken && token && order.approvalToken !== token) {
+                return res.status(403).json({ error: 'Token di autorizzazione non valido' });
+            }
+
+            if (action === 'ACCEPT') {
+                const updated = await prisma.order.update({
+                    where: { id },
+                    data: {
+                        approvalStatus: 'CUSTOMER_APPROVED',
+                        customerApprovedAt: new Date()
+                    } as any
+                });
+
+                // Notify admin via Notification
+                try {
+                    await prisma.notification.create({
+                        data: {
+                            type: 'APPROVAL_ACCEPTED',
+                            title: `Pesatura Approvata per Ordine #${id}`,
+                            message: `Il cliente ${order.customerName || ''} ha accettato la variazione di pesatura dell'ordine #${id}.`
+                        }
+                    });
+                } catch (e) {
+                    console.error('Notification creation failed:', e);
+                }
+
+                return res.json({ message: 'Pesatura approvata con successo!', approvalStatus: 'CUSTOMER_APPROVED', order: updated });
+            } else if (action === 'REJECT') {
+                const updated = await prisma.order.update({
+                    where: { id },
+                    data: {
+                        approvalStatus: 'CUSTOMER_REJECTED'
+                    } as any
+                });
+
+                try {
+                    await prisma.notification.create({
+                        data: {
+                            type: 'APPROVAL_REJECTED',
+                            title: `Pesatura Rifiutata per Ordine #${id}`,
+                            message: `Il cliente ${order.customerName || ''} ha contestato la variazione di pesatura dell'ordine #${id}.`
+                        }
+                    });
+                } catch (e) {
+                    console.error('Notification creation failed:', e);
+                }
+
+                return res.json({ message: 'Richiesta di variazione contestata.', approvalStatus: 'CUSTOMER_REJECTED', order: updated });
+            } else {
+                return res.status(400).json({ error: 'Azione non valida' });
+            }
+        } catch (error: any) {
+            console.error('Error in processCustomerApproval:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
