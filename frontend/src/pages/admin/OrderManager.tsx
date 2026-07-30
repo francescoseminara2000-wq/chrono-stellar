@@ -256,12 +256,13 @@ export const OrderManager = () => {
                     newOrders.forEach((newOrd: any) => {
                         const nameStr = newOrd.customerName || newOrd.user?.name || 'Cliente';
                         const totalStr = ((newOrd.finalTotal || newOrd.estimatedTotal) / 100).toFixed(2);
-                        const methodStr = newOrd.deliveryMethod === 'DELIVERY' ? '🚚 Domicilio' : '🏪 Ritiro';
+                        const methodStr = newOrd.deliveryMethod === 'DELIVERY' ? '🚚 Consegna a Domicilio' : '🏪 Ritiro in Negozio';
+                        const dateStr = newOrd.scheduledDate ? newOrd.scheduledDate.split('-').reverse().join('/') : 'In giornata';
                         addRichToast(
                             `🛒 Nuovo Ordine Ricevuto #${newOrd.id}`,
-                            `Cliente: ${nameStr}\nTotale: € ${totalStr} • ${methodStr}`,
+                            `• Cliente: ${nameStr}\n• Importo: € ${totalStr}\n• Modalità: ${methodStr}\n• Data: ${dateStr}`,
                             'info',
-                            8000
+                            9000
                         );
                     });
 
@@ -270,19 +271,20 @@ export const OrderManager = () => {
                         const oldOrd: any = prevOrdersRef.current.find((o: any) => o.id === freshOrd.id);
                         if (oldOrd && oldOrd.approvalStatus !== freshOrd.approvalStatus) {
                             const nameStr = freshOrd.customerName || freshOrd.user?.name || 'Cliente';
+                            const totalStr = ((freshOrd.finalTotal || freshOrd.estimatedTotal) / 100).toFixed(2);
                             if (freshOrd.approvalStatus === 'CUSTOMER_APPROVED') {
                                 addRichToast(
-                                    `✅ Pesatura Approvata!`,
-                                    `L'ordine #${freshOrd.id} (${nameStr}) è stato confermato dal cliente via WhatsApp/Email!`,
+                                    `✅ Pesatura Confermata dal Cliente!`,
+                                    `• Ordine: #${freshOrd.id}\n• Cliente: ${nameStr}\n• Totale Pesato: € ${totalStr}\n• Il cliente ha accettato la variazione via WhatsApp/Email!`,
                                     'success',
-                                    8000
+                                    9000
                                 );
                             } else if (freshOrd.approvalStatus === 'CUSTOMER_REJECTED') {
                                 addRichToast(
-                                    `❌ Pesatura Contestata!`,
-                                    `L'ordine #${freshOrd.id} (${nameStr}) ha richiesto assistenza per la variazione del peso.`,
+                                    `⚠️ Contestazione Pesatura Cliente`,
+                                    `• Ordine: #${freshOrd.id}\n• Cliente: ${nameStr}\n• Il cliente ha segnalato la variazione. Verificare la chat o contattarlo al telefono.`,
                                     'warning',
-                                    8000
+                                    9000
                                 );
                             }
                         }
@@ -402,9 +404,19 @@ export const OrderManager = () => {
                 setSelectedOrder(updatedOrder);
 
                 if (responseData.requiresApproval) {
-                    addToast(`⚠️ Variazione del ${responseData.diffPercent}% (superiore alla tolleranza del ${responseData.tolerance}%). Inviata notifica automatica al cliente con link di approvazione!`, 'info');
+                    addRichToast(
+                        `⚖️ Pesatura Salvata - Approvazione Richiesta`,
+                        `• Ordine: #${updatedOrder.id}\n• Cliente: ${updatedOrder.customerName || updatedOrder.user?.name || 'Cliente'}\n• Variazione: +${responseData.diffPercent}%\n• Inviato link di approvazione via WhatsApp!`,
+                        'warning',
+                        8000
+                    );
                 } else {
-                    addToast('Pesatura e variazioni salvate! Notifica automatica inviata al cliente.', 'success');
+                    addRichToast(
+                        `⚖️ Pesatura & Prezzi Salvati!`,
+                        `• Ordine: #${updatedOrder.id}\n• Cliente: ${updatedOrder.customerName || updatedOrder.user?.name || 'Cliente'}\n• Totale Finale: € ${((updatedOrder.finalTotal || updatedOrder.estimatedTotal) / 100).toFixed(2)}\n• Notifica di completamento pesatura inviata al cliente.`,
+                        'success',
+                        7000
+                    );
                 }
             } else {
                 const errorData = await res.json();
@@ -422,10 +434,9 @@ export const OrderManager = () => {
         if (status !== selectedOrder.status && !force) {
             const labels: Record<string, string> = {
                 PENDING: 'In Attesa',
-                WEIGNING_COMPLETED: 'Pesato', // Support typo matching if any
                 WEIGHING_COMPLETED: 'Pesato',
-                OUT_FOR_DELIVERY: 'In Consegna',
-                DELIVERED: 'Concluso',
+                OUT_FOR_DELIVERY: 'In Consegna (Spedito)',
+                DELIVERED: 'Concluso / Consegnato',
                 CANCELLED: 'Annullato'
             };
             setConfirmModal({
@@ -451,7 +462,21 @@ export const OrderManager = () => {
                 const updatedOrder = await res.json();
                 setOrders(orders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
                 setSelectedOrder(updatedOrder);
-                addToast('Stato ordine aggiornato!', 'success');
+
+                const statusLabels: Record<string, string> = {
+                    PENDING: 'In Attesa',
+                    WEIGHING_COMPLETED: 'Pesato (Pronto per spedizione)',
+                    OUT_FOR_DELIVERY: 'In Consegna (Spedito)',
+                    DELIVERED: 'Concluso / Consegnato',
+                    CANCELLED: 'Annullato'
+                };
+                const nameStr = updatedOrder.customerName || updatedOrder.user?.name || 'Cliente';
+                addRichToast(
+                    `📋 Stato Ordine #${updatedOrder.id} Aggiornato`,
+                    `• Cliente: ${nameStr}\n• Nuovo Stato: ${statusLabels[updatedOrder.status] || updatedOrder.status}\n• Modifica registrata ed in sync col sistema.`,
+                    'success',
+                    6000
+                );
             } else {
                 addToast('Errore durante l\'aggiornamento dello stato.', 'error');
             }
@@ -468,7 +493,14 @@ export const OrderManager = () => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                addToast('📲 Sollecito inviato con successo via WhatsApp al cliente!', 'success');
+                const targetOrd: any = orders.find(o => o.id === orderId) || selectedOrder;
+                const nameStr = targetOrd ? (targetOrd.customerName || targetOrd.user?.name || 'Cliente') : 'Cliente';
+                addRichToast(
+                    `📲 Sollecito WhatsApp Inviato!`,
+                    `• Ordine: #${orderId}\n• Destinatario: ${nameStr}\n• Link di approvazione pesatura reinviato con successo al cliente!`,
+                    'info',
+                    6000
+                );
             } else {
                 const errData = await res.json();
                 addToast(`Errore: ${errData.error || 'Invio fallito'}`, 'error');
