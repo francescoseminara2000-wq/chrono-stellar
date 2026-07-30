@@ -44,9 +44,10 @@ export const AnalyticsDashboard: React.FC = () => {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
+    const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
 
-    const fetchAnalytics = async () => {
-        setLoading(true);
+    const fetchAnalytics = async (isBackground = false) => {
+        if (!isBackground) setLoading(true);
         setError('');
         try {
             const res = await fetch(`/api/analytics/admin/overview?period=${period}`, {
@@ -56,15 +57,24 @@ export const AnalyticsDashboard: React.FC = () => {
             const json = await res.json();
             setData(json);
         } catch (err: any) {
-            setError(err.message || 'Errore nel caricamento dei dati');
+            if (!isBackground) setError(err.message || 'Errore nel caricamento dei dati');
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchAnalytics();
     }, [period, token]);
+
+    // Live 5-second auto refresh interval
+    useEffect(() => {
+        if (!autoRefresh) return;
+        const interval = setInterval(() => {
+            fetchAnalytics(true);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [autoRefresh, period, token]);
 
     const maxVisitsInTrend = data?.trendData?.length
         ? Math.max(...data.trendData.map(d => d.visits), 1)
@@ -110,9 +120,22 @@ export const AnalyticsDashboard: React.FC = () => {
                     </div>
 
                     <button
-                        onClick={fetchAnalytics}
+                        onClick={() => setAutoRefresh(!autoRefresh)}
+                        className={`px-3 py-2 rounded-2xl border text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                            autoRefresh
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-xs'
+                                : 'bg-gray-100 text-gray-500 border-gray-200'
+                        }`}
+                        title="Attiva/Disattiva aggiornamento in tempo reale ogni 5 sec"
+                    >
+                        <span className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-emerald-500 animate-ping' : 'bg-gray-400'}`} />
+                        <span>{autoRefresh ? '⚡ Live (5s)' : 'Pausa Live'}</span>
+                    </button>
+
+                    <button
+                        onClick={() => fetchAnalytics(false)}
                         className="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl transition-colors cursor-pointer"
-                        title="Aggiorna dati"
+                        title="Aggiorna dati manuale"
                     >
                         <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                     </button>

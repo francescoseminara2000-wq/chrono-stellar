@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { trackProductVisit } from '../hooks/useAnalyticsTracker';
 import { useParams, Link } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, Star, Truck, ShieldCheck } from 'lucide-react';
@@ -57,6 +58,9 @@ export const ProductDetail = () => {
             .then((data: Product[]) => {
                 const found = data.find(p => p.id === Number(id));
                 setProduct(found || null);
+                if (found) {
+                    trackProductVisit(found.id, `/shop/${found.id}`);
+                }
 
                 // Mock related products (just take first 3 that aren't this one)
                 setRelatedProducts(data.filter(p => p.id !== Number(id)).slice(0, 4));

@@ -2,6 +2,24 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 
+/**
+ * Explicit helper to log product views instantly from modals or detail pages
+ */
+export const trackProductVisit = (productId: number, pathName?: string) => {
+    if (!productId) return;
+    fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            path: pathName || `/shop/${productId}`,
+            productId,
+            deviceType: /mobile|android|iphone|ipad|phone/i.test(navigator.userAgent) ? 'MOBILE' : 'DESKTOP'
+        })
+    }).catch(() => {
+        // silent ignore
+    });
+};
+
 export const useAnalyticsTracker = () => {
     const location = useLocation();
     const { user } = useAuthStore();
@@ -14,9 +32,9 @@ export const useAnalyticsTracker = () => {
         if (lastTrackedPath.current === currentPath) return;
         lastTrackedPath.current = currentPath;
 
-        // Check if viewing a specific product (e.g., /product/12 or ?product=12)
+        // Check if viewing a specific product (e.g., /shop/:id or ?product=:id)
         let productId: number | null = null;
-        const matchProductPath = location.pathname.match(/\/product\/(\d+)/);
+        const matchProductPath = location.pathname.match(/\/shop\/(\d+)/);
         if (matchProductPath) {
             productId = parseInt(matchProductPath[1], 10);
         } else {
