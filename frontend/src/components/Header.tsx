@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 
 import { useAuthStore } from '../store/useAuthStore';
-import { ChevronDown, Package, User as UserIcon, LogOut, Settings, Bell, BellOff, Home, Apple, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronRight, Package, User as UserIcon, LogOut, Settings, Bell, BellOff, Home, Apple, MapPin } from 'lucide-react';
 import { subscribeToPushNotifications, checkPushSubscription } from '../services/pushNotification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -312,199 +312,230 @@ export const Header = () => {
                 </div>
             </div>
 
-            {/* Mobile Fullscreen Glassmorphism Navigation Drawer */}
+            {/* Mobile Fullscreen Navigation Drawer */}
             <AnimatePresence>
                 {isMenuOpen && (
-                    <>
-                        {/* Dark Shaded Backdrop with Blur */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            onClick={() => setIsMenuOpen(false)}
-                            className="md:hidden fixed inset-0 z-[119] bg-black/45 backdrop-blur-md"
-                        />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 0.2 }}
+                        className="md:hidden fixed inset-0 z-[120] w-full h-full bg-white text-gray-900 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto shadow-2xl"
+                    >
+                        {/* Drawer Header with Store Logo & RED Close Button */}
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-2xl bg-white p-1 shadow-sm border border-gray-150 flex items-center justify-center shrink-0">
+                                    <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain" />
+                                </div>
+                                <div>
+                                    <span className="font-black text-lg text-gray-900 block leading-tight">{settings?.siteName || 'Ortofrutta'}</span>
+                                    <span className="text-[10px] text-emerald-700 font-black tracking-widest uppercase block">Menu Navigazione</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsMenuOpen(false)}
+                                className="w-10 h-10 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center transition-all cursor-pointer border border-red-200/80 active:scale-90 shadow-xs"
+                                title="Chiudi Menu"
+                            >
+                                <X size={22} className="text-red-600" />
+                            </button>
+                        </div>
 
-                        {/* Sliding Glass Drawer Panel */}
-                        <motion.div
-                            initial={{ x: '100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 26, stiffness: 240 }}
-                            className="md:hidden fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm z-[120] bg-white/95 backdrop-blur-2xl text-nature-950 p-5 flex flex-col justify-between overflow-y-auto shadow-2xl border-l border-emerald-100/60"
-                        >
-                            {/* Drawer Header with Store Logo */}
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-3.5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-11 h-11 rounded-2xl bg-white p-1 shadow-sm border border-gray-150 flex items-center justify-center shrink-0">
-                                        <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain" />
+                        {/* 4 General Navigation Links - Single Column Remade UI */}
+                        <div className="py-5 flex-1 overflow-y-auto space-y-3">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block px-1">
+                                Esplora lo Store
+                            </span>
+
+                            <Link
+                                to="/"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/70 hover:bg-emerald-50/60 border border-gray-150 hover:border-emerald-200 transition-all group shadow-2xs"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                        <Home size={22} />
                                     </div>
                                     <div>
-                                        <span className="font-black text-base text-gray-900 block leading-tight">{settings?.siteName || 'Ortofrutta'}</span>
-                                        <span className="text-[10px] text-emerald-600 font-black tracking-widest uppercase block">Menu Navigazione</span>
+                                        <span className="font-black text-base text-gray-900 block">Home Page</span>
+                                        <span className="text-xs text-gray-400 font-medium block">Esplora le offerte e le novità</span>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="w-9 h-9 rounded-2xl bg-gray-100/80 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-all cursor-pointer border border-gray-200/50 active:scale-90 shadow-xs"
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
+                                <ChevronRight size={20} className="text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
+                            </Link>
 
-                            {/* Navigation Links Compact 2-Column Grid */}
-                            <div className="py-4 flex-1 overflow-y-auto space-y-4">
-                                <div className="grid grid-cols-2 gap-2.5">
-                                    {/* Home Tile */}
-                                    <Link
-                                        to="/"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-150/70 hover:border-emerald-200 transition-all font-black text-xs sm:text-sm text-gray-900 shadow-xs group"
-                                    >
-                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0 mb-3 group-hover:scale-105 transition-transform">
-                                            <Home size={18} />
-                                        </div>
-                                        <span>Home</span>
-                                    </Link>
-
-                                    {/* Catalogo Tile */}
-                                    <Link
-                                        to="/shop"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-150/70 hover:border-emerald-200 transition-all font-black text-xs sm:text-sm text-gray-900 shadow-xs group"
-                                    >
-                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shrink-0 mb-3 group-hover:scale-105 transition-transform">
-                                            <Apple size={18} />
-                                        </div>
-                                        <span>Catalogo</span>
-                                    </Link>
-
-                                    {/* Mercati Tile */}
-                                    <Link
-                                        to="/mercati"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-150/70 hover:border-emerald-200 transition-all font-black text-xs sm:text-sm text-gray-900 shadow-xs group"
-                                    >
-                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-sm shrink-0 mb-3 group-hover:scale-105 transition-transform">
-                                            <MapPin size={18} />
-                                        </div>
-                                        <span>I Mercati</span>
-                                    </Link>
-
-                                    {/* Carrello Tile */}
-                                    <Link
-                                        to="/cart"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="relative flex flex-col items-start justify-between p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-150/70 hover:border-emerald-200 transition-all font-black text-xs sm:text-sm text-gray-900 shadow-xs group"
-                                    >
-                                        {itemCount > 0 && (
-                                            <span className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-emerald-600 text-white font-black text-[10px] rounded-full shadow-xs">
-                                                {itemCount}
-                                            </span>
-                                        )}
-                                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0 mb-3 group-hover:scale-105 transition-transform">
-                                            <ShoppingBasket size={18} />
-                                        </div>
-                                        <span>Carrello</span>
-                                    </Link>
+                            <Link
+                                to="/shop"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/70 hover:bg-amber-50/60 border border-gray-150 hover:border-amber-200 transition-all group shadow-2xs"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                        <Apple size={22} />
+                                    </div>
+                                    <div>
+                                        <span className="font-black text-base text-gray-900 block">Catalogo Ortofrutta</span>
+                                        <span className="text-xs text-gray-400 font-medium block">Frutta e verdura di stagione a km 0</span>
+                                    </div>
                                 </div>
-                            </div>
+                                <ChevronRight size={20} className="text-gray-400 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
+                            </Link>
 
-                            {/* Interactive User Profile Card / Auth Section */}
-                            <div className="pt-3 border-t border-gray-150/80 space-y-2">
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block px-0.5">
-                                    Area Utente
-                                </span>
+                            <Link
+                                to="/mercati"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/70 hover:bg-rose-50/60 border border-gray-150 hover:border-rose-200 transition-all group shadow-2xs"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                        <MapPin size={22} />
+                                    </div>
+                                    <div>
+                                        <span className="font-black text-base text-gray-900 block">I Nostri Mercati</span>
+                                        <span className="text-xs text-gray-400 font-medium block">Scopri dove trovarci in settimana</span>
+                                    </div>
+                                </div>
+                                <ChevronRight size={20} className="text-gray-400 group-hover:text-red-600 group-hover:translate-x-1 transition-all" />
+                            </Link>
 
-                                {user ? (
-                                    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 border border-emerald-150/80 shadow-xs space-y-3">
-                                        {/* User Info Header */}
-                                        <div className="flex items-center justify-between gap-2.5 pb-2.5 border-b border-emerald-100/60">
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <div className="w-9 h-9 rounded-xl bg-white border border-emerald-200 overflow-hidden shrink-0 flex items-center justify-center text-emerald-800 shadow-2xs">
-                                                    {user.avatar ? (
-                                                        <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <UserIcon size={18} />
-                                                    )}
+                            <Link
+                                to="/cart"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/70 hover:bg-purple-50/60 border border-gray-150 hover:border-purple-200 transition-all group shadow-2xs"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                        <ShoppingBasket size={22} />
+                                    </div>
+                                    <div>
+                                        <span className="font-black text-base text-gray-900 block flex items-center gap-2">
+                                            Il Tuo Carrello
+                                            {itemCount > 0 && (
+                                                <span className="px-2.5 py-0.5 bg-emerald-600 text-white font-black text-xs rounded-full shadow-2xs">
+                                                    {itemCount} {itemCount === 1 ? 'art.' : 'art.'}
+                                                </span>
+                                            )}
+                                        </span>
+                                        <span className="text-xs text-gray-400 font-medium block">Controlla i prodotti selezionati</span>
+                                    </div>
+                                </div>
+                                <ChevronRight size={20} className="text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                            </Link>
+                        </div>
+
+                        {/* Enlarged Prominent Interactive User Box */}
+                        <div className="pt-4 border-t border-gray-150 space-y-3">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block px-1">
+                                Area Riservata Utente
+                            </span>
+
+                            {user ? (
+                                <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/60 border border-emerald-200/80 shadow-sm space-y-4">
+                                    {/* User Header */}
+                                    <div className="flex items-center justify-between gap-3 pb-3 border-b border-emerald-100">
+                                        <div className="flex items-center gap-3.5 min-w-0">
+                                            <div className="w-12 h-12 rounded-2xl bg-white border-2 border-emerald-300 overflow-hidden shrink-0 flex items-center justify-center text-emerald-800 shadow-sm">
+                                                {user.avatar ? (
+                                                    <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <UserIcon size={24} />
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <span className="font-black text-base text-gray-900 block truncate">{user.name}</span>
+                                                <span className="text-xs text-gray-500 font-medium truncate block">{user.email}</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => { logout(); setIsMenuOpen(false); }}
+                                            className="px-3.5 py-2 text-red-600 hover:text-red-700 bg-white hover:bg-red-50 rounded-xl transition-all cursor-pointer font-black text-xs border border-red-200 shadow-2xs shrink-0 flex items-center gap-1.5"
+                                            title="Disconnetti"
+                                        >
+                                            <LogOut size={15} />
+                                            <span>Esci</span>
+                                        </button>
+                                    </div>
+
+                                    {/* User Action Cards */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                        <Link
+                                            to="/orders"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center justify-between p-3.5 rounded-2xl bg-white hover:bg-blue-50/80 border border-gray-200/80 hover:border-blue-300 transition-all font-black text-sm text-gray-900 shadow-2xs group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                                    <Package size={18} />
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <span className="font-black text-xs sm:text-sm text-gray-900 block truncate">{user.name}</span>
-                                                    <span className="text-[10px] text-gray-500 truncate block font-medium">{user.email}</span>
+                                                <div className="flex flex-col">
+                                                    <span>I Miei Ordini</span>
+                                                    <span className="text-[10px] text-gray-400 font-medium">Storico & stato</span>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => { logout(); setIsMenuOpen(false); }}
-                                                className="p-2 text-red-600 hover:text-red-700 bg-white hover:bg-red-50 rounded-xl transition-all cursor-pointer font-black text-xs border border-red-100 shadow-2xs shrink-0 flex items-center gap-1"
-                                                title="Esci"
-                                            >
-                                                <LogOut size={14} />
-                                            </button>
-                                        </div>
+                                            <ChevronRight size={16} className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                                        </Link>
 
-                                        {/* Interactive User Quick Actions */}
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <Link
-                                                to="/orders"
-                                                onClick={() => setIsMenuOpen(false)}
-                                                className="flex items-center gap-2 p-2.5 rounded-xl bg-white hover:bg-blue-50/60 border border-gray-150 hover:border-blue-200 transition-all font-black text-xs text-gray-800 shadow-2xs group"
-                                            >
-                                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                                                    <Package size={14} />
+                                        <Link
+                                            to="/profile"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center justify-between p-3.5 rounded-2xl bg-white hover:bg-teal-50/80 border border-gray-200/80 hover:border-teal-300 transition-all font-black text-sm text-gray-900 shadow-2xs group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                                    <UserIcon size={18} />
                                                 </div>
-                                                <span className="truncate">I Miei Ordini</span>
-                                            </Link>
-
-                                            <Link
-                                                to="/profile"
-                                                onClick={() => setIsMenuOpen(false)}
-                                                className="flex items-center gap-2 p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-150 hover:border-teal-200 transition-all font-black text-xs text-gray-800 shadow-2xs group"
-                                            >
-                                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                                                    <UserIcon size={14} />
+                                                <div className="flex flex-col">
+                                                    <span>Il Mio Profilo</span>
+                                                    <span className="text-[10px] text-gray-400 font-medium">Dati personali</span>
                                                 </div>
-                                                <span className="truncate">Il Mio Profilo</span>
-                                            </Link>
+                                            </div>
+                                            <ChevronRight size={16} className="text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
+                                        </Link>
 
-                                            {user.role === 'ADMIN' && (
-                                                <Link
-                                                    to="/admin"
-                                                    onClick={() => setIsMenuOpen(false)}
-                                                    className="col-span-2 flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 transition-all font-black text-xs text-blue-950 shadow-2xs group"
-                                                >
-                                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-800 to-blue-900 text-white flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                                                        <Settings size={14} />
+                                        {user.role === 'ADMIN' && (
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="sm:col-span-2 flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-250 transition-all font-black text-sm text-blue-950 shadow-2xs group"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-800 to-blue-900 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                                        <Settings size={18} />
                                                     </div>
-                                                    <span>Dashboard Admin</span>
-                                                </Link>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-150/70 space-y-2.5">
-                                        <p className="text-xs text-gray-500 font-medium">Accedi per accedere al tuo profilo e verificare i tuoi ordini.</p>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <Link
-                                                to="/login"
-                                                onClick={() => setIsMenuOpen(false)}
-                                                className="py-2.5 text-center bg-white hover:bg-gray-100 text-gray-900 font-black rounded-xl border border-gray-200 shadow-2xs transition-all text-xs"
-                                            >
-                                                Accedi
+                                                    <div className="flex flex-col">
+                                                        <span>Dashboard Admin</span>
+                                                        <span className="text-[10px] text-blue-600 font-medium">Gestione negozio & ordini</span>
+                                                    </div>
+                                                </div>
+                                                <ChevronRight size={16} className="text-blue-500 group-hover:translate-x-0.5 transition-all" />
                                             </Link>
-                                            <Link
-                                                to="/register"
-                                                onClick={() => setIsMenuOpen(false)}
-                                                className="py-2.5 text-center bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 text-white font-black rounded-xl shadow-xs transition-all text-xs"
-                                            >
-                                                Registrati
-                                            </Link>
-                                        </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    </>
+                                </div>
+                            ) : (
+                                <div className="p-5 rounded-3xl bg-gray-50 border border-gray-200/80 space-y-3">
+                                    <p className="text-xs text-gray-600 font-medium">Accedi al tuo account per visualizzare lo storico ordini e gestire il profilo.</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Link
+                                            to="/login"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="py-3 text-center bg-white hover:bg-gray-100 text-gray-900 font-black rounded-2xl border border-gray-200 shadow-2xs transition-all text-xs"
+                                        >
+                                            Accedi
+                                        </Link>
+                                        <Link
+                                            to="/register"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="py-3 text-center bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 text-white font-black rounded-2xl shadow-xs transition-all text-xs"
+                                        >
+                                            Registrati
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </header>
