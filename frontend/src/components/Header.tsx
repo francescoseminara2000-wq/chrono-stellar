@@ -354,7 +354,7 @@ export const Header = () => {
                             </div>
 
                             {/* Navigation Links Compact 2-Column Grid */}
-                            <div className="py-4 flex-1 overflow-y-auto">
+                            <div className="py-4 flex-1 overflow-y-auto space-y-4">
                                 <div className="grid grid-cols-2 gap-2.5">
                                     {/* Home Tile */}
                                     <Link
@@ -408,91 +408,98 @@ export const Header = () => {
                                         </div>
                                         <span>Carrello</span>
                                     </Link>
+                                </div>
+                            </div>
 
-                                    {user && (
-                                        <>
-                                            {/* Ordini Tile */}
+                            {/* Interactive User Profile Card / Auth Section */}
+                            <div className="pt-3 border-t border-gray-150/80 space-y-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block px-0.5">
+                                    Area Utente
+                                </span>
+
+                                {user ? (
+                                    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 border border-emerald-150/80 shadow-xs space-y-3">
+                                        {/* User Info Header */}
+                                        <div className="flex items-center justify-between gap-2.5 pb-2.5 border-b border-emerald-100/60">
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className="w-9 h-9 rounded-xl bg-white border border-emerald-200 overflow-hidden shrink-0 flex items-center justify-center text-emerald-800 shadow-2xs">
+                                                    {user.avatar ? (
+                                                        <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <UserIcon size={18} />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <span className="font-black text-xs sm:text-sm text-gray-900 block truncate">{user.name}</span>
+                                                    <span className="text-[10px] text-gray-500 truncate block font-medium">{user.email}</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => { logout(); setIsMenuOpen(false); }}
+                                                className="p-2 text-red-600 hover:text-red-700 bg-white hover:bg-red-50 rounded-xl transition-all cursor-pointer font-black text-xs border border-red-100 shadow-2xs shrink-0 flex items-center gap-1"
+                                                title="Esci"
+                                            >
+                                                <LogOut size={14} />
+                                            </button>
+                                        </div>
+
+                                        {/* Interactive User Quick Actions */}
+                                        <div className="grid grid-cols-2 gap-2">
                                             <Link
                                                 to="/orders"
                                                 onClick={() => setIsMenuOpen(false)}
-                                                className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-150/70 hover:border-emerald-200 transition-all font-black text-xs sm:text-sm text-gray-900 shadow-xs group"
+                                                className="flex items-center gap-2 p-2.5 rounded-xl bg-white hover:bg-blue-50/60 border border-gray-150 hover:border-blue-200 transition-all font-black text-xs text-gray-800 shadow-2xs group"
                                             >
-                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center shadow-sm shrink-0 mb-3 group-hover:scale-105 transition-transform">
-                                                    <Package size={18} />
+                                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+                                                    <Package size={14} />
                                                 </div>
-                                                <span>I Miei Ordini</span>
+                                                <span className="truncate">I Miei Ordini</span>
                                             </Link>
 
-                                            {/* Profilo Tile */}
                                             <Link
                                                 to="/profile"
                                                 onClick={() => setIsMenuOpen(false)}
-                                                className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-150/70 hover:border-emerald-200 transition-all font-black text-xs sm:text-sm text-gray-900 shadow-xs group"
+                                                className="flex items-center gap-2 p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-150 hover:border-teal-200 transition-all font-black text-xs text-gray-800 shadow-2xs group"
                                             >
-                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0 mb-3 group-hover:scale-105 transition-transform">
-                                                    <UserIcon size={18} />
+                                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+                                                    <UserIcon size={14} />
                                                 </div>
-                                                <span>Il Mio Profilo</span>
+                                                <span className="truncate">Il Mio Profilo</span>
                                             </Link>
 
-                                            {/* Admin Dashboard Tile (Full width) */}
                                             {user.role === 'ADMIN' && (
                                                 <Link
                                                     to="/admin"
                                                     onClick={() => setIsMenuOpen(false)}
-                                                    className="col-span-2 flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 transition-all font-black text-xs sm:text-sm text-blue-950 shadow-xs group mt-1"
+                                                    className="col-span-2 flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 transition-all font-black text-xs text-blue-950 shadow-2xs group"
                                                 >
-                                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-800 to-blue-900 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                                                        <Settings size={18} />
+                                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-800 to-blue-900 text-white flex items-center justify-center shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
+                                                        <Settings size={14} />
                                                     </div>
                                                     <span>Dashboard Admin</span>
                                                 </Link>
                                             )}
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Drawer Bottom User Card / Auth */}
-                            <div className="pt-4 border-t border-gray-100">
-                                {user ? (
-                                    <div className="p-3.5 rounded-2xl bg-emerald-50/40 border border-emerald-100/80 flex items-center justify-between shadow-xs">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-11 h-11 rounded-2xl bg-white border border-emerald-200 overflow-hidden shrink-0 flex items-center justify-center text-emerald-800 shadow-xs">
-                                                {user.avatar ? (
-                                                    <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <UserIcon size={20} />
-                                                )}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <span className="font-black text-sm text-gray-900 block truncate">{user.name}</span>
-                                                <span className="text-xs text-gray-500 truncate block">{user.email}</span>
-                                            </div>
                                         </div>
-                                        <button
-                                            onClick={() => { logout(); setIsMenuOpen(false); }}
-                                            className="p-2.5 text-red-600 hover:text-red-700 bg-white hover:bg-red-50 rounded-xl transition-all cursor-pointer font-black text-xs border border-red-100 shadow-xs shrink-0"
-                                        >
-                                            Esci
-                                        </button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <Link
-                                            to="/login"
-                                            onClick={() => setIsMenuOpen(false)}
-                                            className="py-3.5 text-center bg-gray-50 hover:bg-gray-100 text-gray-900 font-black rounded-2xl border border-gray-200 shadow-xs transition-all text-sm"
-                                        >
-                                            Accedi
-                                        </Link>
-                                        <Link
-                                            to="/register"
-                                            onClick={() => setIsMenuOpen(false)}
-                                            className="py-3.5 text-center bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-black rounded-2xl shadow-md transition-all text-sm"
-                                        >
-                                            Registrati
-                                        </Link>
+                                    <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-150/70 space-y-2.5">
+                                        <p className="text-xs text-gray-500 font-medium">Accedi per accedere al tuo profilo e verificare i tuoi ordini.</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Link
+                                                to="/login"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="py-2.5 text-center bg-white hover:bg-gray-100 text-gray-900 font-black rounded-xl border border-gray-200 shadow-2xs transition-all text-xs"
+                                            >
+                                                Accedi
+                                            </Link>
+                                            <Link
+                                                to="/register"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="py-2.5 text-center bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 text-white font-black rounded-xl shadow-xs transition-all text-xs"
+                                            >
+                                                Registrati
+                                            </Link>
+                                        </div>
                                     </div>
                                 )}
                             </div>
