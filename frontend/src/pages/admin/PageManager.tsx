@@ -796,21 +796,24 @@ export const PageManager = () => {
                                                         {block.type === 'hero' && (
                                                             <div className="space-y-4">
                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                    <input type="text" placeholder="Titolo" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-nature-500/20" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                    <input type="text" placeholder="Sottotitolo" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-nature-500/20" value={block.data.subtitle || ''} onChange={e => updateBlockData(block.id, { subtitle: e.target.value })} />
-                                                                    <input type="text" placeholder="Testo Bottone (opzionale)" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-nature-500/20" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} />
-                                                                    <input type="text" placeholder="Link Bottone (es. /shop)" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-nature-500/20" value={block.data.ctaLink || ''} onChange={e => updateBlockData(block.id, { ctaLink: e.target.value })} />
+                                                                    <input type="text" placeholder="Badge Superiore (es. Freschezza Quotidiana)" className="w-full px-3 py-2 border rounded-lg text-sm font-bold" value={block.data.badgeText || ''} onChange={e => updateBlockData(block.id, { badgeText: e.target.value })} />
+                                                                    <input type="text" placeholder="Titolo Principale (es. Il Nostro Raccolto)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
+                                                                    <textarea rows={2} placeholder="Sottotitolo / Descrizione (opzionale)" className="w-full md:col-span-2 px-3 py-2 border rounded-lg text-sm" value={block.data.subtitle || ''} onChange={e => updateBlockData(block.id, { subtitle: e.target.value })} />
+                                                                    <input type="text" placeholder="Testo Bottone Principale (es. Scopri il Catalogo)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} />
+                                                                    <input type="text" placeholder="Link Bottone Principale (es. /shop)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.ctaLink || ''} onChange={e => updateBlockData(block.id, { ctaLink: e.target.value })} />
+                                                                    <input type="text" placeholder="Testo Secondo Bottone (es. I Nostri Mercati)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.secondaryCtaText || ''} onChange={e => updateBlockData(block.id, { secondaryCtaText: e.target.value })} />
+                                                                    <input type="text" placeholder="Link Secondo Bottone (es. /mercati)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.secondaryCtaLink || ''} onChange={e => updateBlockData(block.id, { secondaryCtaLink: e.target.value })} />
                                                                 </div>
                                                                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-4">
                                                                     <div className="flex-1">
-                                                                        <label className="block text-xs font-bold text-gray-700 mb-1">Immagine di Sfondo</label>
+                                                                        <label className="block text-xs font-bold text-gray-700 mb-1">Immagine di Sfondo (Upload)</label>
                                                                         <input type="file" accept="image/*" onChange={(e) => {
                                                                             if (e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, 'backgroundImage');
                                                                         }} className="text-sm w-full" />
-                                                                        {block.data.backgroundImage && <p className="text-xs text-green-600 mt-1 truncate">Attualmente: {block.data.backgroundImage}</p>}
+                                                                        {block.data.backgroundImage && <p className="text-xs text-green-600 mt-1 truncate">Attualmente inserita: {block.data.backgroundImage}</p>}
                                                                     </div>
                                                                     {block.data.backgroundImage && (
-                                                                        <img src={sanitizeImageUrl(block.data.backgroundImage)} alt="Preview" className="w-16 h-16 object-cover rounded-lg shadow-sm" />
+                                                                        <img src={sanitizeImageUrl(block.data.backgroundImage)} alt="Preview" className="w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-200" />
                                                                     )}
                                                                 </div>
                                                             </div>

@@ -345,10 +345,11 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                 switch (block.type) {
                     case 'hero':
                         const heroHeight = block.data.paddingY === 'compact' 
-                            ? 'min-h-[40vh] md:min-h-[50vh] pt-16' 
-                            : (block.data.paddingY === 'large' ? 'min-h-[65vh] md:min-h-[80vh] pt-24' : 'min-h-[50vh] md:min-h-[65vh] pt-20');
+                            ? 'min-h-[42vh] md:min-h-[52vh] pt-14 pb-8' 
+                            : (block.data.paddingY === 'large' ? 'min-h-[70vh] md:min-h-[85vh] pt-20 pb-16' : 'min-h-[55vh] md:min-h-[70vh] pt-16 pb-12');
                         return (
-                            <AnimatedSection key={block.id} className={`relative z-10 ${heroHeight} flex items-center justify-center overflow-hidden bg-nature-900 group ${shouldOverlap ? '-mt-8 md:-mt-12 rounded-t-[3rem] shadow-[0_-15px_40px_rgba(0,0,0,0.03)]' : ''}`}>
+                            <AnimatedSection key={block.id} className={`relative z-10 ${heroHeight} flex items-center justify-center overflow-hidden bg-gradient-to-br from-nature-950 via-nature-900 to-emerald-950 group ${shouldOverlap ? '-mt-8 md:-mt-12 rounded-t-[3rem] shadow-[0_-15px_40px_rgba(0,0,0,0.03)]' : ''}`}>
+                                {/* Background Image with Zoom & Gradient Overlay */}
                                 <motion.div 
                                     initial={{ scale: 1.15 }}
                                     animate={{ scale: 1 }}
@@ -360,50 +361,76 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                                         alt="Hero Background"
                                         className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-[10s]"
                                     />
-                                    {/* Premium Gradient Overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-nature-900/90 via-nature-900/40 to-black/30"></div>
+                                    {/* Ultra Modern Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-nature-950 via-nature-900/65 to-black/40"></div>
+                                    <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/60"></div>
                                 </motion.div>
                                 
-                                <div className="relative z-20 text-center text-white px-4 max-w-5xl mx-auto w-full mb-8 md:mb-10">
+                                <div className="relative z-20 text-center text-white px-4 max-w-4xl mx-auto w-full my-auto flex flex-col items-center">
+                                    {/* Badge / Tagline */}
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.8, y: -20, filter: 'blur(5px)' }}
-                                        animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
-                                        transition={{ duration: 1, type: "spring", bounce: 0.5 }}
-                                        className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white text-nature-900 text-sm font-bold mb-8 shadow-xl tracking-wide uppercase"
+                                        initial={{ opacity: 0, scale: 0.8, y: -20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+                                        className="inline-flex items-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs sm:text-sm font-extrabold mb-4 sm:mb-6 shadow-xl tracking-wider uppercase"
                                     >
-                                        <Leaf size={16} className="text-fruit-500" />
-                                        {block.data.subtitle || settings?.tagline || 'Freschezza Quotidiana'}
+                                        <Leaf size={15} className="text-emerald-400 animate-pulse" />
+                                        <span>{block.data.badgeText || block.data.subtitle || settings?.tagline || 'Freschezza Quotidiana'}</span>
                                     </motion.div>
                                     
+                                    {/* Main Title */}
                                     <motion.h1
-                                        initial={{ opacity: 0, y: 50, filter: 'blur(10px)' }}
+                                        initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
                                         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                        transition={{ duration: 1.2, delay: 0.2, type: "spring", bounce: 0.3 }}
-                                        className="font-script text-7xl md:text-9xl mb-6 text-white leading-tight drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+                                        transition={{ duration: 1, delay: 0.1, type: "spring", bounce: 0.3 }}
+                                        className="font-script text-5xl sm:text-7xl md:text-8xl lg:text-9xl mb-3 sm:mb-5 text-white leading-[1.05] drop-shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
                                     >
                                         {block.data.title || 'Benvenuto'}
                                     </motion.h1>
 
-                                    {block.data.ctaText && block.data.ctaLink && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 30 }}
+                                    {/* Subtitle Paragraph */}
+                                    {block.data.subtitle && block.data.badgeText && (
+                                        <motion.p
+                                            initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 1, delay: 0.3 }}
-                                            className="mt-10"
+                                            transition={{ duration: 0.9, delay: 0.2 }}
+                                            className="text-sm sm:text-lg md:text-xl text-white/90 font-medium max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-8 drop-shadow-sm px-2"
                                         >
+                                            {block.data.subtitle}
+                                        </motion.p>
+                                    )}
+
+                                    {/* CTA Action Buttons */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.9, delay: 0.3 }}
+                                        className="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto mt-2"
+                                    >
+                                        {block.data.ctaText && block.data.ctaLink && (
                                             <Link
                                                 to={block.data.ctaLink}
-                                                className="inline-flex items-center gap-3 bg-[linear-gradient(90deg,#f97316,#ea580c)] text-white font-black py-5 px-12 rounded-full text-lg shadow-[0_10px_30px_rgba(234,88,12,0.4)] hover:shadow-[0_15px_40px_rgba(234,88,12,0.6)] hover:scale-105 hover:-translate-y-1 transition-all border border-transparent group"
+                                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black py-3.5 sm:py-4 px-8 sm:px-10 rounded-2xl text-sm sm:text-base shadow-xl shadow-emerald-950/50 hover:shadow-2xl hover:scale-105 transition-all group border border-emerald-400/30"
                                             >
-                                                {block.data.ctaText}
-                                                <ArrowRight strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
+                                                <span>{block.data.ctaText}</span>
+                                                <ArrowRight strokeWidth={2.5} size={18} className="group-hover:translate-x-1 transition-transform" />
                                             </Link>
-                                        </motion.div>
-                                    )}
+                                        )}
+
+                                        {block.data.secondaryCtaText && block.data.secondaryCtaLink && (
+                                            <Link
+                                                to={block.data.secondaryCtaLink}
+                                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 font-extrabold py-3.5 sm:py-4 px-6 sm:px-8 rounded-2xl text-sm sm:text-base transition-all hover:scale-105"
+                                            >
+                                                <span>{block.data.secondaryCtaText}</span>
+                                            </Link>
+                                        )}
+                                    </motion.div>
                                 </div>
-                                {/* Bottom Wave Decoration - Keeps z-10 to overlap next block */}
+
+                                {/* Bottom Wave Divider */}
                                 <div className={`absolute bottom-0 left-0 w-full overflow-hidden leading-none z-10 translate-y-[1px] ${nextBgColor} drop-shadow-[0_-5px_15px_rgba(0,0,0,0.05)]`}>
-                                    <svg className="relative block w-full h-[60px] md:h-[100px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                                    <svg className="relative block w-full h-[45px] sm:h-[70px] md:h-[95px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
                                         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C89.71,114.62,204.34,74.52,321.39,56.44Z" className="fill-current"></path>
                                     </svg>
                                 </div>
