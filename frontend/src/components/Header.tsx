@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 
 import { useAuthStore } from '../store/useAuthStore';
-import { ChevronDown, Package, User as UserIcon, LogOut, Settings, Bell, BellOff } from 'lucide-react';
+import { ChevronDown, Package, User as UserIcon, LogOut, Settings, Bell, BellOff, Home, Apple, MapPin } from 'lucide-react';
 import { subscribeToPushNotifications, checkPushSubscription } from '../services/pushNotification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -315,155 +315,203 @@ export const Header = () => {
             {/* Mobile Fullscreen Glassmorphism Navigation Drawer */}
             <AnimatePresence>
                 {isMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="md:hidden fixed inset-0 z-[120] bg-nature-50/98 text-nature-950 backdrop-blur-2xl p-6 flex flex-col justify-between overflow-y-auto"
-                    >
-                        {/* Drawer Header */}
-                        <div className="flex items-center justify-between border-b border-nature-200/40 pb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-white p-1.5 flex items-center justify-center border border-nature-200/50 shadow-xs">
-                                    <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain" />
+                    <>
+                        {/* Dark Shaded Backdrop with Blur */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="md:hidden fixed inset-0 z-[119] bg-black/45 backdrop-blur-md"
+                        />
+
+                        {/* Sliding Glass Drawer Panel */}
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 26, stiffness: 240 }}
+                            className="md:hidden fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm z-[120] bg-white/95 backdrop-blur-2xl text-nature-950 p-6 flex flex-col justify-between overflow-y-auto shadow-2xl border-l border-emerald-100/60"
+                        >
+                            {/* Drawer Header */}
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-2 shadow-md flex items-center justify-center">
+                                        <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain filter drop-shadow-sm brightness-0 invert" />
+                                    </div>
+                                    <div>
+                                        <span className="font-black text-base text-gray-900 block leading-tight">{settings?.siteName || 'Ortofrutta'}</span>
+                                        <span className="text-[10px] text-emerald-600 font-black tracking-widest uppercase block">Menu Navigation</span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span className="font-black text-base text-nature-900 block leading-none">{settings?.siteName || 'Ortofrutta'}</span>
-                                    <span className="text-[10px] text-emerald-700 font-bold tracking-widest uppercase mt-0.5 block">Menu Principale</span>
-                                </div>
+                                <button
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="w-10 h-10 rounded-2xl bg-gray-100/80 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-all cursor-pointer border border-gray-200/50 active:scale-90 shadow-xs"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => setIsMenuOpen(false)}
-                                className="w-10 h-10 rounded-full bg-nature-200/50 hover:bg-nature-200 text-nature-800 flex items-center justify-center transition-all cursor-pointer border border-nature-250/20 active:scale-90"
-                            >
-                                <X size={22} />
-                            </button>
-                        </div>
 
-                        {/* Navigation Links Grid */}
-                        <div className="py-6 space-y-3.5 flex-1 overflow-y-auto">
-                            <Link
-                                to="/"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
-                            >
-                                <span className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-base">🏠</span>
-                                <span>Home</span>
-                            </Link>
+                            {/* Navigation Links Grid */}
+                            <div className="py-6 space-y-3 flex-1 overflow-y-auto">
+                                <Link
+                                    to="/"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 transition-all font-black text-base text-gray-900 shadow-xs group"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                        <Home size={20} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span>Home</span>
+                                        <span className="text-[10px] text-gray-400 font-medium">Pagina principale</span>
+                                    </div>
+                                </Link>
 
-                            <Link
-                                to="/shop"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
-                            >
-                                <span className="p-2.5 bg-amber-55/60 text-amber-700 rounded-xl text-base">🍏</span>
-                                <span>Catalogo Ortofrutta</span>
-                            </Link>
+                                <Link
+                                    to="/shop"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 transition-all font-black text-base text-gray-900 shadow-xs group"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                        <Apple size={20} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span>Catalogo Ortofrutta</span>
+                                        <span className="text-[10px] text-gray-400 font-medium">Frutta e verdura fresca</span>
+                                    </div>
+                                </Link>
 
-                            <Link
-                                to="/mercati"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
-                            >
-                                <span className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-base">📍</span>
-                                <span>I Nostri Mercati</span>
-                            </Link>
+                                <Link
+                                    to="/mercati"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 transition-all font-black text-base text-gray-900 shadow-xs group"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                        <MapPin size={20} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span>I Nostri Mercati</span>
+                                        <span className="text-[10px] text-gray-400 font-medium">Tappe rionali della settimana</span>
+                                    </div>
+                                </Link>
 
-                            <Link
-                                to="/cart"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center justify-between p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <span className="p-2.5 bg-purple-50 text-purple-700 rounded-xl text-base">🛒</span>
-                                    <span>Il Tuo Carrello</span>
-                                </div>
-                                {itemCount > 0 && (
-                                    <span className="px-3 py-1 bg-emerald-600 text-white font-black text-xs rounded-full shadow-xs">
-                                        {itemCount} {itemCount === 1 ? 'art.' : 'art.'}
-                                    </span>
-                                )}
-                            </Link>
-
-                            {user && (
-                                <>
-                                    <Link
-                                        to="/orders"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
-                                    >
-                                        <span className="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-base">📦</span>
-                                        <span>I Miei Ordini</span>
-                                    </Link>
-
-                                    <Link
-                                        to="/profile"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center gap-4 p-4 rounded-2xl bg-white hover:bg-nature-50 border border-nature-150/40 transition-all font-black text-lg text-nature-900 shadow-xs"
-                                    >
-                                        <span className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-base">👤</span>
-                                        <span>Il Mio Profilo</span>
-                                    </Link>
-
-                                    {user.role === 'ADMIN' && (
-                                        <Link
-                                            to="/admin"
-                                            onClick={() => setIsMenuOpen(false)}
-                                            className="flex items-center gap-4 p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200/50 transition-all font-black text-lg text-blue-900 shadow-xs animate-pulse"
-                                        >
-                                            <span className="p-2.5 bg-blue-100 text-blue-800 rounded-xl text-base">⚙️</span>
-                                            <span>Dashboard Admin</span>
-                                        </Link>
-                                    )}
-                                </>
-                            )}
-                        </div>
-
-                        {/* Drawer Bottom User Card / Auth */}
-                        <div className="pt-4 border-t border-nature-200/40">
-                            {user ? (
-                                <div className="p-4 rounded-2xl bg-white border border-nature-150/50 flex items-center justify-between shadow-xs">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-100 overflow-hidden shrink-0 flex items-center justify-center text-emerald-800">
-                                            {user.avatar ? (
-                                                <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <UserIcon size={20} />
-                                            )}
+                                <Link
+                                    to="/cart"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center justify-between p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 transition-all font-black text-base text-gray-900 shadow-xs group"
+                                >
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                            <ShoppingBasket size={20} />
                                         </div>
-                                        <div>
-                                            <span className="font-black text-sm text-nature-900 block">{user.name}</span>
-                                            <span className="text-xs text-gray-500">{user.email}</span>
+                                        <div className="flex flex-col">
+                                            <span>Il Tuo Carrello</span>
+                                            <span className="text-[10px] text-gray-400 font-medium">Prodotti selezionati</span>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => { logout(); setIsMenuOpen(false); }}
-                                        className="p-2.5 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition-all cursor-pointer font-black text-xs border border-red-200/30"
-                                    >
-                                        Esci
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Link
-                                        to="/login"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="py-3.5 text-center bg-white hover:bg-gray-50 text-nature-900 font-black rounded-2xl border border-nature-200 shadow-xs transition-all"
-                                    >
-                                        Accedi
-                                    </Link>
-                                    <Link
-                                        to="/register"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="py-3.5 text-center bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-2xl shadow-md transition-all"
-                                    >
-                                        Registrati
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
+                                    {itemCount > 0 && (
+                                        <span className="px-3 py-1 bg-emerald-600 text-white font-black text-xs rounded-full shadow-xs">
+                                            {itemCount} {itemCount === 1 ? 'art.' : 'art.'}
+                                        </span>
+                                    )}
+                                </Link>
+
+                                {user && (
+                                    <>
+                                        <Link
+                                            to="/orders"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 transition-all font-black text-base text-gray-900 shadow-xs group"
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                                <Package size={20} />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span>I Miei Ordini</span>
+                                                <span className="text-[10px] text-gray-400 font-medium">Storico ed esito ordini</span>
+                                            </div>
+                                        </Link>
+
+                                        <Link
+                                            to="/profile"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 transition-all font-black text-base text-gray-900 shadow-xs group"
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                                <UserIcon size={20} />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span>Il Mio Profilo</span>
+                                                <span className="text-[10px] text-gray-400 font-medium">Gestione del tuo account</span>
+                                            </div>
+                                        </Link>
+
+                                        {user.role === 'ADMIN' && (
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 transition-all font-black text-base text-blue-950 shadow-xs group"
+                                            >
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-blue-900 text-white flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                                                    <Settings size={20} />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span>Dashboard Admin</span>
+                                                    <span className="text-[10px] text-blue-600 font-medium">Pannello di controllo</span>
+                                                </div>
+                                            </Link>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Drawer Bottom User Card / Auth */}
+                            <div className="pt-4 border-t border-gray-100">
+                                {user ? (
+                                    <div className="p-3.5 rounded-2xl bg-emerald-50/40 border border-emerald-100/80 flex items-center justify-between shadow-xs">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-11 h-11 rounded-2xl bg-white border border-emerald-200 overflow-hidden shrink-0 flex items-center justify-center text-emerald-800 shadow-xs">
+                                                {user.avatar ? (
+                                                    <img src={sanitizeImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <UserIcon size={20} />
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <span className="font-black text-sm text-gray-900 block truncate">{user.name}</span>
+                                                <span className="text-xs text-gray-500 truncate block">{user.email}</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => { logout(); setIsMenuOpen(false); }}
+                                            className="p-2.5 text-red-600 hover:text-red-700 bg-white hover:bg-red-50 rounded-xl transition-all cursor-pointer font-black text-xs border border-red-100 shadow-xs shrink-0"
+                                        >
+                                            Esci
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Link
+                                            to="/login"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="py-3.5 text-center bg-gray-50 hover:bg-gray-100 text-gray-900 font-black rounded-2xl border border-gray-200 shadow-xs transition-all text-sm"
+                                        >
+                                            Accedi
+                                        </Link>
+                                        <Link
+                                            to="/register"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="py-3.5 text-center bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-black rounded-2xl shadow-md transition-all text-sm"
+                                        >
+                                            Registrati
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </header>
