@@ -96,22 +96,22 @@ export const Shop = () => {
 
     return (
         <div className="bg-gray-50/50 min-h-screen pb-24">
-            {/* STICKY SEARCH & CONTROL BAR - Flush right under main header on mobile & desktop */}
-            <div className="sticky top-[52px] sm:top-[64px] md:top-[68px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs transition-all">
+            {/* STICKY SEARCH & CONTROL BAR - Soft emerald non-white container background, clean white inputs */}
+            <div className="sticky top-[52px] sm:top-[64px] md:top-[68px] z-30 bg-emerald-50/95 backdrop-blur-md border-b border-emerald-200/80 shadow-xs transition-all">
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2">
                     <div className="flex items-center gap-2">
-                        {/* Search Input - Fresh Emerald Tinted Background */}
+                        {/* Search Input - Clean White Card */}
                         <div className="relative flex-1 min-w-0">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-700/70" size={18} />
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
                                 type="text"
                                 placeholder="Cerca tra i prodotti..."
-                                className="w-full pl-10 pr-8 py-2.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-950 placeholder:text-emerald-700/60 font-bold focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none text-xs sm:text-sm"
+                                className="w-full pl-10 pr-8 py-2.5 rounded-2xl bg-white border border-emerald-200/70 text-gray-900 placeholder:text-gray-400 font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all outline-none text-xs sm:text-sm shadow-2xs"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-700/70 hover:text-emerald-900">
+                                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     <X size={16} />
                                 </button>
                             )}
@@ -120,9 +120,9 @@ export const Shop = () => {
                         {/* Dedicated Filter & Sort Icon Button */}
                         <button
                             onClick={() => setIsFilterModalOpen(true)}
-                            className={`relative p-2.5 rounded-2xl flex items-center justify-center transition-all cursor-pointer shrink-0 border ${isFilterActive
-                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                                : 'bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-800 border-emerald-200/80'
+                            className={`relative p-2.5 rounded-2xl flex items-center justify-center transition-all cursor-pointer shrink-0 border shadow-2xs ${isFilterActive
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : 'bg-white hover:bg-emerald-100/50 text-gray-700 border-emerald-200/70'
                                 }`}
                             title="Filtri e Ordinamento"
                         >
@@ -133,17 +133,17 @@ export const Shop = () => {
                         </button>
 
                         {/* View Mode Toggle Button */}
-                        <div className="flex items-center bg-emerald-50/80 p-1 rounded-2xl border border-emerald-200/80 shrink-0">
+                        <div className="flex items-center bg-white p-1 rounded-2xl border border-emerald-200/70 shrink-0 shadow-2xs">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-emerald-600 hover:text-emerald-900'}`}
+                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
                                 title="Vista a griglia"
                             >
                                 <LayoutGrid size={17} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-emerald-600 hover:text-emerald-900'}`}
+                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
                                 title="Vista a elenco"
                             >
                                 <List size={17} />
