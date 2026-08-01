@@ -125,6 +125,45 @@ const BLOCK_DEFINITIONS: Record<BlockType, { label: string; icon: any; descripti
     richText: { label: 'Testo Libero', icon: Icons.AlignLeft, description: 'Editor di testo puro.' }
 };
 
+const PageLinkSelector = ({
+    value,
+    onChange,
+    pages,
+    placeholder = "Seleziona Pagina Destinazione"
+}: {
+    value: string;
+    onChange: (val: string) => void;
+    pages: Page[];
+    placeholder?: string;
+}) => {
+    const linkOptions = [
+        { value: '/', label: '🏠 Home Page (/)' },
+        { value: '/shop', label: '🍎 Catalogo Ortofrutta (/shop)' },
+        { value: '/mercati', label: '📍 I Nostri Mercati (/mercati)' },
+        { value: '/cart', label: '🛒 Carrello Spesa (/cart)' },
+        { value: '/orders', label: '📦 I Miei Ordini (/orders)' },
+        { value: '/profile', label: '👤 Il Mio Profilo (/profile)' },
+        ...pages.map(p => ({
+            value: `/pages/${p.slug}`,
+            label: `📄 ${p.title} (/pages/${p.slug})`
+        }))
+    ];
+
+    if (value && !linkOptions.some(o => o.value === value)) {
+        linkOptions.unshift({ value, label: `🔗 URL: ${value}` });
+    }
+
+    return (
+        <SearchableSelect
+            options={linkOptions}
+            value={value || ''}
+            onChange={onChange}
+            placeholder={placeholder}
+            className="w-full text-sm"
+        />
+    );
+};
+
 export const PageManager = () => {
     const { token } = useAuthStore();
     const [pages, setPages] = useState<Page[]>([]);
@@ -800,9 +839,9 @@ export const PageManager = () => {
                                                                     <input type="text" placeholder="Titolo Principale (es. Il Nostro Raccolto)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
                                                                     <textarea rows={2} placeholder="Sottotitolo / Descrizione (opzionale)" className="w-full md:col-span-2 px-3 py-2 border rounded-lg text-sm" value={block.data.subtitle || ''} onChange={e => updateBlockData(block.id, { subtitle: e.target.value })} />
                                                                     <input type="text" placeholder="Testo Bottone Principale (es. Scopri il Catalogo)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} />
-                                                                    <input type="text" placeholder="Link Bottone Principale (es. /shop)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.ctaLink || ''} onChange={e => updateBlockData(block.id, { ctaLink: e.target.value })} />
+                                                                    <PageLinkSelector value={block.data.ctaLink || ''} onChange={val => updateBlockData(block.id, { ctaLink: val })} pages={pages} placeholder="Seleziona Pagina Bottone Principale" />
                                                                     <input type="text" placeholder="Testo Secondo Bottone (es. I Nostri Mercati)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.secondaryCtaText || ''} onChange={e => updateBlockData(block.id, { secondaryCtaText: e.target.value })} />
-                                                                    <input type="text" placeholder="Link Secondo Bottone (es. /mercati)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.secondaryCtaLink || ''} onChange={e => updateBlockData(block.id, { secondaryCtaLink: e.target.value })} />
+                                                                    <PageLinkSelector value={block.data.secondaryCtaLink || ''} onChange={val => updateBlockData(block.id, { secondaryCtaLink: val })} pages={pages} placeholder="Seleziona Pagina Secondo Bottone" />
                                                                 </div>
                                                                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-4">
                                                                     <div className="flex-1">
@@ -941,7 +980,7 @@ export const PageManager = () => {
                                                                 <input type="text" placeholder="Titolo" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
                                                                 <input type="text" placeholder="Sottotitolo" value={block.data.text || ''} onChange={e => updateBlockData(block.id, { text: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
                                                                 <input type="text" placeholder="Testo Bottone" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
-                                                                <input type="text" placeholder="Link Destinazione" value={block.data.ctaLink || ''} onChange={e => updateBlockData(block.id, { ctaLink: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
+                                                                <PageLinkSelector value={block.data.ctaLink || ''} onChange={val => updateBlockData(block.id, { ctaLink: val })} pages={pages} placeholder="Seleziona Pagina Destinazione" />
                                                                 <SearchableSelect
                                                                     options={[
                                                                         { value: 'fruit', label: 'Brand (Arancione)' },
@@ -1214,11 +1253,11 @@ export const PageManager = () => {
                                                                                     newC[cIdx].title = e.target.value;
                                                                                     updateBlockData(block.id, { categories: newC });
                                                                                 }} />
-                                                                                <input type="text" placeholder="Link Destinazione (es. /shop?category=frutta)" className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-nature-500/20" value={cat.link || ''} onChange={e => {
-                                                                                    const newC = [...block.data.categories];
-                                                                                    newC[cIdx].link = e.target.value;
-                                                                                    updateBlockData(block.id, { categories: newC });
-                                                                                }} />
+                                                                                <PageLinkSelector value={cat.link || ''} onChange={val => {
+                                                                                     const newC = [...block.data.categories];
+                                                                                     newC[cIdx].link = val;
+                                                                                     updateBlockData(block.id, { categories: newC });
+                                                                                 }} pages={pages} placeholder="Seleziona Pagina Destinazione" />
                                                                             </div>
                                                                         </div>
                                                                     ))}
@@ -1229,6 +1268,32 @@ export const PageManager = () => {
                                                                 </div>
                                                             </div>
                                                         )}
+
+                                                        {block.type === 'bannerPromo' && (
+                                                             <div className="space-y-4">
+                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                     <input type="text" placeholder="Badge Promozionale (es. PROMO DEL MESE)" className="w-full px-3 py-2 border rounded-lg text-sm font-bold" value={block.data.badge || ''} onChange={e => updateBlockData(block.id, { badge: e.target.value })} />
+                                                                     <input type="text" placeholder="Codice Sconto (es. BENVENUTO10)" className="w-full px-3 py-2 border rounded-lg text-sm font-mono uppercase" value={block.data.couponCode || ''} onChange={e => updateBlockData(block.id, { couponCode: e.target.value })} />
+                                                                     <input type="text" placeholder="Titolo Offerta" className="w-full md:col-span-2 px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
+                                                                     <textarea rows={2} placeholder="Descrizione o dettagli offerta..." className="w-full md:col-span-2 px-3 py-2 border rounded-lg text-sm" value={block.data.text || ''} onChange={e => updateBlockData(block.id, { text: e.target.value })} />
+                                                                     <input type="text" placeholder="Testo Bottone (es. Vai al Catalogo)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} />
+                                                                     <PageLinkSelector value={block.data.ctaLink || ''} onChange={val => updateBlockData(block.id, { ctaLink: val })} pages={pages} placeholder="Seleziona Pagina Promozione" />
+                                                                 </div>
+                                                             </div>
+                                                         )}
+
+                                                         {block.type === 'storeInfo' && (
+                                                             <div className="space-y-4">
+                                                                 <input type="text" placeholder="Titolo Sezione (es. La Nostra Sede)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
+                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                     <input type="text" placeholder="Indirizzo Completo" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.address || ''} onChange={e => updateBlockData(block.id, { address: e.target.value })} />
+                                                                     <input type="text" placeholder="Orari di Apertura" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.hours || ''} onChange={e => updateBlockData(block.id, { hours: e.target.value })} />
+                                                                     <input type="text" placeholder="Telefono Fisso" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.phone || ''} onChange={e => updateBlockData(block.id, { phone: e.target.value })} />
+                                                                     <input type="text" placeholder="Numero WhatsApp" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.whatsapp || ''} onChange={e => updateBlockData(block.id, { whatsapp: e.target.value })} />
+                                                                     <input type="url" placeholder="Link Google Maps (opzionale)" className="w-full md:col-span-2 px-3 py-2 border rounded-lg text-sm" value={block.data.googleMapsUrl || ''} onChange={e => updateBlockData(block.id, { googleMapsUrl: e.target.value })} />
+                                                                 </div>
+                                                             </div>
+                                                         )}
 
                                                             {/* common section style editor */}
                                                             <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
