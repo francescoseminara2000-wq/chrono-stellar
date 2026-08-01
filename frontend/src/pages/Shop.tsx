@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useCartStore } from '../store/useCartStore';
-import { Search, ArrowUp, ArrowDown, ArrowUpDown, X, LayoutGrid, List, Filter } from 'lucide-react';
+import { Search, X, LayoutGrid, List, SlidersHorizontal, Check, RotateCcw } from 'lucide-react';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
 import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Category {
     id: number;
@@ -36,7 +37,7 @@ export const Shop = () => {
     const [sortBy, setSortBy] = useState<string>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
     const { items, addItem, updateItemUnit } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
@@ -81,12 +82,8 @@ export const Shop = () => {
         fetchProducts();
     }, [fetchProducts]);
 
-    const SORT_OPTIONS = [
-        { key: 'name', label: 'A-Z' },
-        { key: 'price', label: 'Prezzo' },
-    ];
-
-    const selectedCategoryName = categories.find(c => c.id.toString() === filterCategory)?.name;
+    const isFilterActive = Boolean(filterCategory || sortBy !== 'name' || sortOrder !== 'asc');
+    const selectedCategoryObj = categories.find(c => c.id.toString() === filterCategory);
 
     if (loading) return (
         <div className="flex justify-center items-center h-screen bg-nature-50">
@@ -99,183 +96,90 @@ export const Shop = () => {
 
     return (
         <div className="bg-gray-50/50 min-h-screen pb-24">
-            {/* Compact Hero Header */}
-            <div className="bg-gradient-to-r from-nature-900 via-nature-850 to-emerald-950 text-white py-5 sm:py-7 relative overflow-hidden border-b border-nature-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex items-center justify-between">
+            {/* STICKY SEARCH & CONTROL BAR - Flush right under main header */}
+            <div className="sticky top-[52px] sm:top-[64px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs transition-all">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2">
+                    <div className="flex items-center gap-2">
+                        {/* Search Input - Maximum Width */}
+                        <div className="relative flex-1 min-w-0">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Cerca tra le primizie..."
+                                className="w-full pl-10 pr-8 py-2.5 rounded-2xl bg-gray-100/90 border border-transparent focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all outline-none text-xs sm:text-sm font-medium text-gray-800"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Dedicated Filter & Sort Icon Button */}
+                        <button
+                            onClick={() => setIsFilterModalOpen(true)}
+                            className={`relative p-2.5 rounded-2xl flex items-center justify-center transition-all cursor-pointer shrink-0 border ${isFilterActive
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200/70'
+                                }`}
+                            title="Filtri e Ordinamento"
+                        >
+                            <SlidersHorizontal size={18} />
+                            {isFilterActive && (
+                                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 border-2 border-white animate-pulse"></span>
+                            )}
+                        </button>
+
+                        {/* View Mode Toggle Button */}
+                        <div className="flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200/70 shrink-0">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
+                                title="Vista a griglia"
+                            >
+                                <LayoutGrid size={17} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
+                                title="Vista a elenco"
+                            >
+                                <List size={17} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Compact Intro Header */}
+            <div className="bg-gradient-to-r from-nature-900 via-nature-850 to-emerald-950 text-white py-4 sm:py-5 border-b border-nature-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                     <div>
-                        <h1 className="font-script text-3xl sm:text-5xl text-nature-100 leading-tight">Il Nostro Raccolto</h1>
-                        <p className="text-nature-200 text-xs sm:text-sm font-medium mt-0.5 max-w-lg">
-                            Frutta e verdura fresca di stagione, coltivata con cura e selezionata ogni giorno.
+                        <h1 className="font-script text-2xl sm:text-4xl text-nature-100 leading-tight">Il Nostro Raccolto</h1>
+                        <p className="text-nature-200 text-[11px] sm:text-xs font-medium mt-0.5">
+                            Frutta e verdura fresca di stagione selezionata ogni giorno per te.
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* STICKY SEARCH & FILTERS TOOLBAR */}
-            <div className="sticky top-[64px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs transition-all">
-                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5">
-                    <div className="flex items-center gap-2">
-                        {/* Search Input */}
-                        <div className="relative flex-1 min-w-0">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Cerca prodotti..."
-                                className="w-full pl-10 pr-8 py-2 rounded-xl bg-gray-100/90 border border-transparent focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all outline-none text-xs sm:text-sm font-medium text-gray-800"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                    <X size={15} />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Dedicated Category Filter Button */}
-                        {categories.length > 0 && (
-                            <button
-                                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all shrink-0 border ${filterCategory
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200'
-                                    }`}
-                            >
-                                <Filter size={15} />
-                                <span className="hidden xs:inline">{selectedCategoryName || 'Categorie'}</span>
-                                {filterCategory && (
-                                    <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                                )}
-                            </button>
-                        )}
-
-                        {/* Sort Toggle Button */}
-                        <div className="flex items-center gap-1 shrink-0 bg-gray-100 p-1 rounded-xl border border-gray-200">
-                            {SORT_OPTIONS.map(s => {
-                                const isActive = sortBy === s.key;
-                                return (
-                                    <button
-                                        key={s.key}
-                                        onClick={() => {
-                                            if (isActive) setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
-                                            else { setSortBy(s.key); setSortOrder('asc'); }
-                                        }}
-                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${isActive
-                                            ? 'bg-white text-gray-900 shadow-2xs'
-                                            : 'text-gray-500 hover:text-gray-800'
-                                            }`}
-                                    >
-                                        <span>{s.label}</span>
-                                        {isActive ? (
-                                            sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
-                                        ) : (
-                                            <ArrowUpDown size={12} className="opacity-40" />
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* View Mode Toggle (Grid vs List) */}
-                        <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
-                                title="Vista a griglia"
-                            >
-                                <LayoutGrid size={16} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
-                                title="Vista a elenco"
-                            >
-                                <List size={16} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Expandable Category Selection Drawer/Panel */}
-                    {isCategoryOpen && categories.length > 0 && (
-                        <div className="pt-3 border-t border-gray-150 mt-2.5 flex flex-wrap gap-1.5 animate-fadeIn">
-                            <button
-                                onClick={() => { setFilterCategory(''); setIsCategoryOpen(false); }}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${filterCategory === ''
-                                    ? 'bg-nature-900 text-white shadow-2xs'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
-                            >
-                                Tutte le categorie
-                            </button>
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => {
-                                        setFilterCategory(filterCategory === cat.id.toString() ? '' : cat.id.toString());
-                                        setIsCategoryOpen(false);
-                                    }}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all border ${filterCategory === cat.id.toString()
-                                        ? 'text-white border-transparent shadow-2xs'
-                                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                                        }`}
-                                    style={filterCategory === cat.id.toString()
-                                        ? { backgroundColor: cat.color }
-                                        : {}
-                                    }
-                                >
-                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: filterCategory === cat.id.toString() ? 'white' : cat.color }}></span>
-                                    {cat.name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-3">
-                {/* Horizontal Quick Category Pills Scroll */}
-                {categories.length > 0 && (
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
-                        <button
-                            onClick={() => setFilterCategory('')}
-                            className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all shrink-0 ${filterCategory === ''
-                                ? 'bg-nature-900 text-white shadow-2xs'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
-                                }`}
-                        >
-                            Tutti
-                        </button>
-                        {categories.map(cat => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setFilterCategory(filterCategory === cat.id.toString() ? '' : cat.id.toString())}
-                                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all shrink-0 border ${filterCategory === cat.id.toString()
-                                    ? 'text-white border-transparent shadow-2xs'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-                                    }`}
-                                style={filterCategory === cat.id.toString()
-                                    ? { backgroundColor: cat.color }
-                                    : {}
-                                }
-                            >
-                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: filterCategory === cat.id.toString() ? 'white' : cat.color }}></span>
-                                {cat.name}
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                {/* Active Filter Indicator */}
+                {/* Active Filters Bar (If filter is set) */}
                 {filterCategory && (
-                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 mb-4">
-                        <span className="text-xs font-bold text-emerald-800">
-                            Filtro attivo: <span className="font-black">{selectedCategoryName}</span>
-                        </span>
+                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-150 rounded-2xl px-3.5 py-2 mb-3.5 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: selectedCategoryObj?.color || '#10b981' }}></span>
+                            <span className="text-xs font-bold text-emerald-900">
+                                Categoria: <span className="font-black">{selectedCategoryObj?.name}</span>
+                            </span>
+                        </div>
                         <button
                             onClick={() => setFilterCategory('')}
-                            className="text-xs text-emerald-700 font-black hover:underline flex items-center gap-1"
+                            className="text-xs text-emerald-700 font-black hover:underline flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-emerald-200"
                         >
-                            Mostra tutti <X size={14} />
+                            Mostra tutti <X size={13} />
                         </button>
                     </div>
                 )}
@@ -312,6 +216,163 @@ export const Shop = () => {
                     </div>
                 )}
             </div>
+
+            {/* DEDICATED FILTER & SORT MODAL */}
+            <AnimatePresence>
+                {isFilterModalOpen && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsFilterModalOpen(false)}
+                            className="fixed inset-0 bg-black/45 backdrop-blur-sm z-[110]"
+                        />
+
+                        {/* Modal Panel */}
+                        <motion.div
+                            initial={{ y: '100%', opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: '100%', opacity: 0 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                            className="fixed bottom-0 inset-x-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md z-[111] bg-white rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[85vh] flex flex-col justify-between border border-gray-150"
+                        >
+                            <div>
+                                {/* Modal Header */}
+                                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                                            <SlidersHorizontal size={18} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-black text-lg text-gray-900 leading-tight">Filtri e Ordinamento</h3>
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Personalizza il raccolto</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsFilterModalOpen(false)}
+                                        className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-all cursor-pointer"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+
+                                {/* Category Section */}
+                                <div className="py-4 border-b border-gray-100 space-y-2.5">
+                                    <span className="text-xs font-black text-gray-400 uppercase tracking-wider block">
+                                        Filtra per Categoria
+                                    </span>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            onClick={() => setFilterCategory('')}
+                                            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border ${filterCategory === ''
+                                                ? 'bg-nature-900 text-white border-nature-900 shadow-2xs'
+                                                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            {filterCategory === '' && <Check size={14} />}
+                                            <span>Tutte le categorie</span>
+                                        </button>
+                                        {categories.map(cat => {
+                                            const isSelected = filterCategory === cat.id.toString();
+                                            return (
+                                                <button
+                                                    key={cat.id}
+                                                    onClick={() => setFilterCategory(isSelected ? '' : cat.id.toString())}
+                                                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 border ${isSelected
+                                                        ? 'text-white border-transparent shadow-2xs'
+                                                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    style={isSelected ? { backgroundColor: cat.color } : {}}
+                                                >
+                                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: isSelected ? 'white' : cat.color }}></span>
+                                                    <span>{cat.name}</span>
+                                                    {isSelected && <Check size={14} />}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Sorting Section */}
+                                <div className="py-4 space-y-2.5">
+                                    <span className="text-xs font-black text-gray-400 uppercase tracking-wider block">
+                                        Ordina I Prodotti
+                                    </span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => { setSortBy('name'); setSortOrder('asc'); }}
+                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'name' && sortOrder === 'asc'
+                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            <span className="text-xs block">Nome (A-Z)</span>
+                                            <span className="text-[10px] text-gray-400 font-normal">Alfabetico cresc.</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => { setSortBy('name'); setSortOrder('desc'); }}
+                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'name' && sortOrder === 'desc'
+                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            <span className="text-xs block">Nome (Z-A)</span>
+                                            <span className="text-[10px] text-gray-400 font-normal">Alfabetico decresc.</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => { setSortBy('price'); setSortOrder('asc'); }}
+                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'price' && sortOrder === 'asc'
+                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            <span className="text-xs block">Prezzo (€ ↑)</span>
+                                            <span className="text-[10px] text-gray-400 font-normal">Dal più economico</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => { setSortBy('price'); setSortOrder('desc'); }}
+                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'price' && sortOrder === 'desc'
+                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            <span className="text-xs block">Prezzo (€ ↓)</span>
+                                            <span className="text-[10px] text-gray-400 font-normal">Dal più caro</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Actions */}
+                            <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 mt-2">
+                                <button
+                                    onClick={() => {
+                                        setFilterCategory('');
+                                        setSortBy('name');
+                                        setSortOrder('asc');
+                                        setSearchTerm('');
+                                    }}
+                                    className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-xs transition-all flex items-center gap-1.5"
+                                >
+                                    <RotateCcw size={14} />
+                                    <span>Reset</span>
+                                </button>
+                                <button
+                                    onClick={() => setIsFilterModalOpen(false)}
+                                    className="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-all text-center"
+                                >
+                                    Applica Filtri
+                                </button>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Weight Selector Drawer */}
             <WeightSelectorDrawer
