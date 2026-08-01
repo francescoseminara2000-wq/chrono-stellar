@@ -98,7 +98,7 @@ interface Page {
     updatedAt: string;
 }
 
-export type BlockType = 'hero' | 'features' | 'richText' | 'imageText' | 'cta' | 'faq' | 'latestProducts' | 'testimonials' | 'imageGallery' | 'newsletter' | 'stats' | 'video' | 'categories';
+export type BlockType = 'hero' | 'features' | 'richText' | 'imageText' | 'cta' | 'faq' | 'latestProducts' | 'testimonials' | 'imageGallery' | 'newsletter' | 'stats' | 'video' | 'categories' | 'bannerPromo' | 'storeInfo';
 
 export interface Block {
     id: string;
@@ -108,6 +108,7 @@ export interface Block {
 
 const BLOCK_DEFINITIONS: Record<BlockType, { label: string; icon: any; description: string }> = {
     hero: { label: 'Hero / Copertina', icon: Icons.Image, description: 'Immagine grande a tutto schermo con testo centrale.' },
+    bannerPromo: { label: 'Banner Promozioni', icon: Icons.Megaphone, description: 'Banner promozionale in evidenza con codice sconto.' },
     features: { label: 'Vantaggi / Servizi', icon: Icons.Star, description: 'Griglia di punti di forza con icone.' },
     imageText: { label: 'Immagine & Testo', icon: Icons.LayoutTemplate, description: 'Classico layout affiancato.' },
     cta: { label: 'Call to Action', icon: Icons.MousePointerClick, description: 'Banner colorato con bottone.' },
@@ -119,6 +120,7 @@ const BLOCK_DEFINITIONS: Record<BlockType, { label: string; icon: any; descripti
     stats: { label: 'Statistiche', icon: Icons.BarChart, description: 'Numeri aziendali animati o in evidenza.' },
     video: { label: 'Video Embed', icon: Icons.Video, description: 'Sezione larga con player video YouTube/Vimeo.' },
     categories: { label: 'Griglia Categorie', icon: Icons.Grid, description: 'Box visivi per navigare nello store.' },
+    storeInfo: { label: 'Info Sede & Orari', icon: Icons.Store, description: 'Box con orari, indirizzo, contatti e Google Maps.' },
     richText: { label: 'Testo Libero', icon: Icons.AlignLeft, description: 'Editor di testo puro.' }
 };
 
@@ -420,6 +422,7 @@ export const PageManager = () => {
     const addBlock = (type: BlockType, insertIndex: number) => {
         const newBlock: Block = { id: Date.now().toString(), type, data: {} };
         if (type === 'hero') newBlock.data = { title: 'Titolo Hero', subtitle: 'Sottotitolo', ctaText: '', ctaLink: '', backgroundImage: '' };
+        if (type === 'bannerPromo') newBlock.data = { badge: 'PROMO DEL MESE', title: 'Sconto 10% sul primo ordine', text: 'Inserisci il codice BENVENUTO al checkout', ctaText: 'Vai al Catalogo', ctaLink: '/shop', couponCode: 'BENVENUTO' };
         if (type === 'features') newBlock.data = { title: 'I Nostri Vantaggi', features: [] };
         if (type === 'richText') newBlock.data = { content: '' };
         if (type === 'imageText') newBlock.data = { title: 'Titolo Sezione', content: 'Testo...', imageUrl: '', imagePosition: 'left' };
@@ -428,6 +431,11 @@ export const PageManager = () => {
         if (type === 'latestProducts') newBlock.data = { title: 'Ultimi Arrivi', count: 4 };
         if (type === 'testimonials') newBlock.data = { title: 'Dicono di noi', testimonials: [] };
         if (type === 'imageGallery') newBlock.data = { title: 'Galleria', images: [], layout: 'grid' };
+        if (type === 'newsletter') newBlock.data = { title: 'Iscriviti alla Newsletter', subtitle: 'Ricevi offerte esclusive e ricette di stagione' };
+        if (type === 'stats') newBlock.data = { title: 'I Nostri Numeri', stats: [] };
+        if (type === 'video') newBlock.data = { title: 'Guarda il Nostro Video', videoUrl: '' };
+        if (type === 'categories') newBlock.data = { title: 'Le Nostre Categorie', categories: [] };
+        if (type === 'storeInfo') newBlock.data = { title: 'La Nostra Sede', address: 'Via Papa Giovanni XXIII, Sirone (LC)', phone: '+39 0341 850123', whatsapp: '+393401234567', hours: 'Lun - Sab: 07:30 - 19:30' };
 
         const newBlocks = [...blocks];
         newBlocks.splice(insertIndex, 0, newBlock);

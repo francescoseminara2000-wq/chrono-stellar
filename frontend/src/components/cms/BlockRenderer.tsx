@@ -851,6 +851,113 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                             </AnimatedSection>
                         );
 
+                    case 'bannerPromo':
+                        const bpBgClass = getBgClass(block.data.bgColor, 'bg-gradient-to-r from-emerald-900 via-nature-900 to-emerald-950 text-white');
+                        const bpPadding = getPaddingClass(block.data.paddingY, 'py-12 md:py-16');
+                        return (
+                            <AnimatedSection key={block.id} className={`${bpPadding} ${bpBgClass} relative overflow-hidden ${overlapClasses}`}>
+                                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                                    <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-10 border border-white/20 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+                                        <div className="space-y-3 text-center md:text-left flex-1">
+                                            {block.data.badge && (
+                                                <span className="inline-block px-3.5 py-1 rounded-full bg-amber-400 text-nature-950 font-black text-xs uppercase tracking-wider shadow-sm">
+                                                    {block.data.badge}
+                                                </span>
+                                            )}
+                                            <h2 className="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
+                                                {block.data.title || 'Offerta Promozionale'}
+                                            </h2>
+                                            {block.data.text && (
+                                                <p className="text-white/85 text-sm sm:text-base max-w-xl">
+                                                    {block.data.text}
+                                                </p>
+                                            )}
+                                            {block.data.couponCode && (
+                                                <div className="pt-2">
+                                                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/20 border border-white/30 text-white font-mono font-bold text-sm">
+                                                        <span>Codice:</span>
+                                                        <span className="text-amber-300 font-extrabold tracking-widest">{block.data.couponCode}</span>
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {block.data.ctaText && block.data.ctaLink && (
+                                            <Link
+                                                to={block.data.ctaLink}
+                                                className="px-8 py-4 bg-amber-400 hover:bg-amber-300 text-nature-950 font-black rounded-2xl shadow-lg transition-all hover:scale-105 whitespace-nowrap text-sm sm:text-base shrink-0"
+                                            >
+                                                {block.data.ctaText}
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </AnimatedSection>
+                        );
+
+                    case 'storeInfo':
+                        const siBgClass = getBgClass(block.data.bgColor, 'bg-white');
+                        const siPadding = getPaddingClass(block.data.paddingY, 'py-12 md:py-16');
+                        const siIsDark = block.data.bgColor === 'theme' || block.data.bgColor === 'dark';
+                        return (
+                            <AnimatedSection key={block.id} className={`${siPadding} ${siBgClass} relative ${overlapClasses}`}>
+                                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                                    {block.data.title && (
+                                        <div className="text-center mb-10">
+                                            <h2 className={`font-script text-4xl md:text-5xl mb-3 ${getThemeTextColor(block.data.bgColor, 'title')}`}>{block.data.title}</h2>
+                                            <div className="w-20 h-1.5 bg-gradient-to-r from-fruit-400 to-yellow-400 mx-auto rounded-full"></div>
+                                        </div>
+                                    )}
+                                    <div className={`p-6 sm:p-8 rounded-3xl border shadow-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${siIsDark ? 'bg-white/10 border-white/20 text-white' : 'bg-nature-50/70 border-nature-150 text-gray-800'}`}>
+                                        <div className="space-y-4">
+                                            <div className="flex items-start gap-3">
+                                                <Icons.MapPin size={22} className="text-emerald-600 mt-1 shrink-0" />
+                                                <div>
+                                                    <h4 className="font-bold text-xs text-gray-500 uppercase tracking-wider">Indirizzo Sede</h4>
+                                                    <p className="font-bold text-base mt-0.5">{block.data.address || 'Via Papa Giovanni XXIII, Sirone (LC)'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-start gap-3">
+                                                <Icons.Clock size={22} className="text-emerald-600 mt-1 shrink-0" />
+                                                <div>
+                                                    <h4 className="font-bold text-xs text-gray-500 uppercase tracking-wider">Orari di Apertura</h4>
+                                                    <p className="font-bold text-sm mt-0.5">{block.data.hours || 'Lun - Sab: 07:30 - 19:30'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="flex items-start gap-3">
+                                                <Icons.Phone size={22} className="text-emerald-600 mt-1 shrink-0" />
+                                                <div>
+                                                    <h4 className="font-bold text-xs text-gray-500 uppercase tracking-wider">Contatti Telefoni</h4>
+                                                    <p className="font-bold text-sm mt-0.5">{block.data.phone || '+39 0341 850123'}</p>
+                                                    {block.data.whatsapp && (
+                                                        <a
+                                                            href={`https://wa.me/${block.data.whatsapp.replace(/[^0-9]/g, '')}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1.5 mt-2 text-xs font-black text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl transition-colors"
+                                                        >
+                                                            <Icons.MessageCircle size={14} /> Contatta su WhatsApp
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {block.data.googleMapsUrl && (
+                                                <a
+                                                    href={block.data.googleMapsUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-2 text-xs font-black text-white bg-nature-900 hover:bg-nature-800 px-4 py-2.5 rounded-xl transition-all shadow-xs"
+                                                >
+                                                    <Icons.Navigation size={14} /> Apri Mappa e Indicazioni
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </AnimatedSection>
+                        );
+
                     default:
                         return null;
                 }
