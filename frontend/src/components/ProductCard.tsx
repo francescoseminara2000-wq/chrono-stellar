@@ -21,9 +21,10 @@ interface ProductCardProps {
     product: Product;
     onWeightSelect: (product: Product) => void;
     onUnitSelect?: (product: Product) => void;
+    viewMode?: 'grid' | 'list';
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelect, onUnitSelect }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelect, onUnitSelect, viewMode = 'grid' }) => {
     const { items, addItem, updateQuantity, updateItemUnit } = useCartStore();
 
     const cartItem = items.find(i => i.id === product.id);
@@ -43,6 +44,130 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onWeightSelec
     };
 
     const quantity = getProductQuantity(product.id);
+
+    if (viewMode === 'list') {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="group relative bg-white rounded-2xl p-3 border border-gray-150 shadow-2xs hover:shadow-md transition-all duration-300 flex items-center gap-3 sm:gap-4"
+            >
+                {/* Image */}
+                <div className="relative w-20 h-20 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-gray-50 shrink-0">
+                    <Link to={`/shop/${product.id}`} className="block w-full h-full">
+                        {product.imageUrl ? (
+                            <img
+                                src={sanitizeImageUrl(product.imageUrl)}
+                                alt={product.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-nature-300 font-script text-3xl">
+                                {product.name[0]}
+                            </div>
+                        )}
+                    </Link>
+                    {quantity > 0 && (
+                        <span className="absolute top-1.5 right-1.5 bg-nature-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-md border border-white">
+                            {quantity}
+                        </span>
+                    )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                        {product.unitType === 'KG' && (
+                            <span className="bg-emerald-50 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded-md border border-emerald-100 flex items-center gap-0.5">
+                                <Scale size={9} /> AL KG
+                            </span>
+                        )}
+                        {product.isVariableWeight && (
+                            <span className="bg-amber-50 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded-md border border-amber-200">
+                                PESO VARIABILE
+                            </span>
+                        )}
+                    </div>
+
+                    <Link to={`/shop/${product.id}`}>
+                        <h3 className="text-sm sm:text-base font-black text-gray-900 group-hover:text-nature-700 transition-colors truncate">
+                            {product.name}
+                        </h3>
+                    </Link>
+
+                    <p className="text-xs text-gray-400 line-clamp-1 mt-0.5 font-medium hidden sm:block">
+                        {product.description || "Freschezza garantita."}
+                    </p>
+
+                    <div className="flex items-baseline gap-1 mt-1">
+                        <span className="text-base sm:text-lg font-black text-nature-900">
+                            €{(product.priceCents / 100).toFixed(2)}
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-gray-500 font-medium">
+                            /{product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'box' : product.unitType.toLowerCase())}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Action button */}
+                <div className="shrink-0 flex items-center justify-end pl-1">
+                    {selectedUnit === 'KG' ? (
+                        <button
+                            onClick={() => onWeightSelect(product)}
+                            className={`px-3 py-2 rounded-xl flex items-center gap-1.5 font-black text-xs transition-all shadow-2xs whitespace-nowrap ${quantity > 0
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                : 'bg-nature-900 text-white hover:bg-nature-800'
+                                }`}
+                        >
+                            {quantity > 0 ? (
+                                <>
+                                    <span>{quantity} kg</span>
+                                    <Check size={14} />
+                                </>
+                            ) : (
+                                <>
+                                    <Scale size={14} />
+                                    <span>Scegli</span>
+                                </>
+                            )}
+                        </button>
+                    ) : (
+                        quantity > 0 ? (
+                            <div className="flex items-center bg-gray-50 rounded-xl border border-gray-200 p-0.5 shadow-2xs">
+                                <button
+                                    onClick={() => updateQuantity(product.id, Math.max(0, quantity - 1))}
+                                    className="w-7 h-7 flex items-center justify-center text-gray-700 hover:bg-white rounded-lg transition-colors"
+                                >
+                                    <Minus size={12} strokeWidth={3} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onUnitSelect?.(product)}
+                                    className="w-7 text-center font-black text-xs text-gray-900"
+                                >
+                                    {quantity}
+                                </button>
+                                <button
+                                    onClick={() => updateQuantity(product.id, quantity + 1)}
+                                    className="w-7 h-7 flex items-center justify-center text-gray-700 hover:bg-white rounded-lg transition-colors"
+                                >
+                                    <Plus size={12} strokeWidth={3} />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
+                                className="w-9 h-9 bg-nature-900 text-white rounded-xl flex items-center justify-center hover:bg-nature-800 transition-all shadow-2xs"
+                            >
+                                <Plus size={18} strokeWidth={2.5} />
+                            </button>
+                        )
+                    )}
+                </div>
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div
