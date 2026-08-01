@@ -7,6 +7,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 import { SearchableSelect } from '../../components/admin/SearchableSelect';
+import { BlockRenderer } from '../../components/cms/BlockRenderer';
 
 
 // Register Custom Fonts
@@ -146,6 +147,7 @@ export const PageManager = () => {
     // Editor UI State
     const [expandedBlockId, setExpandedBlockId] = useState<string | null>(null);
     const [addingAtIndex, setAddingAtIndex] = useState<number | null>(null);
+    const [editorViewMode, setEditorViewMode] = useState<'editor' | 'preview'>('editor');
 
     const [error, setError] = useState('');
 
@@ -348,6 +350,7 @@ export const PageManager = () => {
         }
         setExpandedBlockId(null);
         setAddingAtIndex(null);
+        setEditorViewMode('editor');
         setIsModalOpen(true);
     };
 
@@ -590,59 +593,126 @@ export const PageManager = () => {
             {/* Modern Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-0 md:p-4">
-                    <div className="bg-white w-full h-full md:h-auto md:max-h-[95vh] md:max-w-4xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-5 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h3 className="text-xl font-bold text-gray-900">
-                                {isEditing ? 'Modifica Pagina' : 'Nuova Pagina'}
-                            </h3>
-                            <button onClick={handleCloseModal} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-                                <X size={20} />
-                            </button>
+                    <div className="bg-white w-full h-full md:h-auto md:max-h-[95vh] md:max-w-5xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-4 md:p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50/50">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-xl font-bold text-gray-900">
+                                    {isEditing ? 'Modifica Pagina' : 'Nuova Pagina'}
+                                </h3>
+                                {formData.title && (
+                                    <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                                        {formData.title}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* View Switcher Tabs (Edit Mode vs Smartphone Live Preview) */}
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center bg-gray-200/70 p-1 rounded-xl border border-gray-300/60">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditorViewMode('editor')}
+                                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${editorViewMode === 'editor'
+                                            ? 'bg-white text-gray-900 shadow-2xs'
+                                            : 'text-gray-600 hover:text-gray-900'
+                                            }`}
+                                    >
+                                        <Edit size={14} />
+                                        <span>Editor Blocchi</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditorViewMode('preview')}
+                                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${editorViewMode === 'preview'
+                                            ? 'bg-emerald-600 text-white shadow-2xs'
+                                            : 'text-gray-600 hover:text-gray-900'
+                                            }`}
+                                    >
+                                        <Icons.Smartphone size={14} />
+                                        <span>Anteprima Smartphone</span>
+                                    </button>
+                                </div>
+                                <button onClick={handleCloseModal} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-6 bg-gray-50/30">
-                            <form id="page-form" onSubmit={handleSubmit} className="space-y-8">
-                                {error && (
-                                    <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
-                                        {error}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 bg-gray-50/30">
+                            {editorViewMode === 'preview' ? (
+                                /* LIVE SMARTPHONE FRAME MOCKUP */
+                                <div className="py-6 flex flex-col items-center justify-center bg-gray-100/70 rounded-3xl border border-gray-200/80 min-h-[600px]">
+                                    <div className="text-center mb-4 space-y-1">
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wider">
+                                            <Icons.Smartphone size={14} /> Anteprima Mobile in Tempo Reale
+                                        </span>
+                                        <p className="text-xs text-gray-500 font-medium">Così la pagina apparirà sullo smartphone dei tuoi clienti</p>
                                     </div>
-                                )}
 
-                                {/* Meta Info */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700">Titolo Pagina <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 transition-colors"
-                                            placeholder="Es. Chi Siamo"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700">Slug (URL) <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.slug}
-                                            onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 transition-colors bg-gray-50"
-                                            placeholder="Es. chi-siamo"
-                                        />
-                                        <p className="text-xs text-gray-400 mt-1">L'indirizzo sarà: /pages/{formData.slug}</p>
+                                    {/* Smartphone Frame */}
+                                    <div className="w-[360px] sm:w-[380px] h-[670px] rounded-[48px] border-[12px] border-gray-900 bg-white shadow-2xl overflow-y-auto custom-scrollbar relative flex flex-col ring-1 ring-black/10">
+                                        {/* Notch Speaker */}
+                                        <div className="sticky top-0 z-50 bg-gray-900 h-6 w-full flex items-center justify-center rounded-b-2xl shrink-0">
+                                            <div className="w-16 h-3 bg-black rounded-full"></div>
+                                        </div>
+
+                                        {/* Page Content inside Mobile Browser Viewport */}
+                                        <div className="flex-1 bg-white">
+                                            {blocks.length > 0 ? (
+                                                <BlockRenderer content={JSON.stringify(blocks)} />
+                                            ) : (
+                                                <div className="text-center py-20 px-6 text-gray-400">
+                                                    <Icons.Layout size={40} className="mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm font-bold">Nessun blocco inserito.</p>
+                                                    <p className="text-xs">Torna all'editor per aggiungere blocchi alla pagina.</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
+                            ) : (
+                                <form id="page-form" onSubmit={handleSubmit} className="space-y-8">
+                                    {error && (
+                                        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
+                                            {error}
+                                        </div>
+                                    )}
 
-                                {/* Builder Area */}
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center px-1">
-                                        <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                                            <LayoutTemplate size={20} className="text-nature-500" />
-                                            Struttura Pagina
-                                        </h4>
+                                    {/* Meta Info */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700">Titolo Pagina <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 transition-colors"
+                                                placeholder="Es. Chi Siamo"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-gray-700">Slug (URL) <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={formData.slug}
+                                                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 transition-colors bg-gray-50"
+                                                placeholder="Es. chi-siamo"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-1">L'indirizzo sarà: /pages/{formData.slug}</p>
+                                        </div>
                                     </div>
+
+                                    {/* Builder Area */}
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center px-1">
+                                            <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                                <LayoutTemplate size={20} className="text-nature-500" />
+                                                Struttura Pagina
+                                            </h4>
+                                        </div>
 
                                     {blocks.length === 0 ? (
                                         <div className="space-y-4">
@@ -1259,7 +1329,8 @@ export const PageManager = () => {
                                     </div>
                                 </label>
                             </form>
-                        </div>
+                        )}
+                    </div>
 
                         <div className="p-5 md:p-6 border-t border-gray-100 flex flex-col md:flex-row justify-end gap-3 bg-white">
                             <button
