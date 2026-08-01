@@ -457,58 +457,40 @@ export const Header = () => {
                                         </button>
                                     </div>
 
-                                    {/* User Action Cards */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    {/* Compact User Action Options Grid */}
+                                    <div className="grid grid-cols-2 gap-2">
                                         <Link
                                             to="/orders"
                                             onClick={() => setIsMenuOpen(false)}
-                                            className="flex items-center justify-between p-3.5 rounded-2xl bg-white hover:bg-blue-50/80 border border-gray-200/80 hover:border-blue-300 transition-all font-black text-sm text-gray-900 shadow-2xs group"
+                                            className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white hover:bg-blue-50/80 border border-gray-200/80 hover:border-blue-300 transition-all font-black text-xs text-gray-900 shadow-2xs group"
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                                                    <Package size={18} />
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span>I Miei Ordini</span>
-                                                    <span className="text-[10px] text-gray-400 font-medium">Storico & stato</span>
-                                                </div>
+                                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                                <Package size={14} />
                                             </div>
-                                            <ChevronRight size={16} className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                                            <span className="truncate">I Miei Ordini</span>
                                         </Link>
 
                                         <Link
                                             to="/profile"
                                             onClick={() => setIsMenuOpen(false)}
-                                            className="flex items-center justify-between p-3.5 rounded-2xl bg-white hover:bg-teal-50/80 border border-gray-200/80 hover:border-teal-300 transition-all font-black text-sm text-gray-900 shadow-2xs group"
+                                            className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white hover:bg-teal-50/80 border border-gray-200/80 hover:border-teal-300 transition-all font-black text-xs text-gray-900 shadow-2xs group"
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                                                    <UserIcon size={18} />
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span>Il Mio Profilo</span>
-                                                    <span className="text-[10px] text-gray-400 font-medium">Dati personali</span>
-                                                </div>
+                                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                                <UserIcon size={14} />
                                             </div>
-                                            <ChevronRight size={16} className="text-gray-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
+                                            <span className="truncate">Il Mio Profilo</span>
                                         </Link>
 
                                         {user.role === 'ADMIN' && (
                                             <Link
                                                 to="/admin"
                                                 onClick={() => setIsMenuOpen(false)}
-                                                className="sm:col-span-2 flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-250 transition-all font-black text-sm text-blue-950 shadow-2xs group"
+                                                className="col-span-2 flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 transition-all font-black text-xs text-blue-950 shadow-2xs group"
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-800 to-blue-900 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                                                        <Settings size={18} />
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span>Dashboard Admin</span>
-                                                        <span className="text-[10px] text-blue-600 font-medium">Gestione negozio & ordini</span>
-                                                    </div>
+                                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-800 to-blue-900 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                                    <Settings size={14} />
                                                 </div>
-                                                <ChevronRight size={16} className="text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                                                <span>Dashboard Admin</span>
                                             </Link>
                                         )}
                                     </div>
