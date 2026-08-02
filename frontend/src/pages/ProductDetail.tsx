@@ -3,8 +3,8 @@ import { trackProductVisit } from '../hooks/useAnalyticsTracker';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { 
-    ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, Truck, 
-    ShieldCheck, Leaf, Info, Sparkles, Check, Share2, CornerDownRight
+    ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, 
+    Leaf, Info, Check, Share2, CornerDownRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
@@ -228,33 +228,6 @@ export const ProductDetail = () => {
                                     <Leaf size={15} className="text-emerald-600" /> Filiera Corta Garantita
                                 </span>
                                 <span className="text-gray-500 font-medium">Fresco di Giornata</span>
-                            </div>
-                        </div>
-
-                        {/* Value Props 3-Grid */}
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-white p-3.5 rounded-2xl border border-gray-150 shadow-2xs flex flex-col items-center text-center gap-1.5">
-                                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                                    <Sparkles size={18} />
-                                </div>
-                                <span className="text-xs font-extrabold text-gray-800">Alta Qualità</span>
-                                <span className="text-[10px] text-gray-500 font-medium">Selezionato a mano</span>
-                            </div>
-
-                            <div className="bg-white p-3.5 rounded-2xl border border-gray-150 shadow-2xs flex flex-col items-center text-center gap-1.5">
-                                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                                    <Truck size={18} />
-                                </div>
-                                <span className="text-xs font-extrabold text-gray-800">Consegna Fresca</span>
-                                <span className="text-[10px] text-gray-500 font-medium">A casa o al mercato</span>
-                            </div>
-
-                            <div className="bg-white p-3.5 rounded-2xl border border-gray-150 shadow-2xs flex flex-col items-center text-center gap-1.5">
-                                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                                    <ShieldCheck size={18} />
-                                </div>
-                                <span className="text-xs font-extrabold text-gray-800">Peso Corretto</span>
-                                <span className="text-[10px] text-gray-500 font-medium">Pesato al momento</span>
                             </div>
                         </div>
                     </motion.div>
