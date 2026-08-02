@@ -305,12 +305,16 @@ export class ProductController {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
     <meta name="description" content="${description}">
+    <link rel="canonical" href="${pageUrl}">
+    <meta http-equiv="refresh" content="0;url=${pageUrl}">
     <!-- Open Graph / WhatsApp / Facebook / Telegram -->
     <meta property="og:type" content="product">
     <meta property="og:url" content="${pageUrl}">
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${imageUrl}">
+    <meta property="og:image:secure_url" content="${imageUrl}">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="Ortofrutta Butti Sirone">
@@ -320,12 +324,13 @@ export class ProductController {
     <meta name="twitter:description" content="${description}">
     <meta name="twitter:image" content="${imageUrl}">
     <!-- Instant Client Redirect -->
-    <script>window.location.href = "${pageUrl}";</script>
+    <script>window.location.replace("${pageUrl}");</script>
 </head>
-<body>
+<body style="font-family: sans-serif; padding: 40px; text-align: center; background: #022c22; color: white;">
     <h1>${title}</h1>
     <p>${description}</p>
-    <img src="${imageUrl}" alt="${product.name}" />
+    <img src="${imageUrl}" alt="${product.name}" style="max-width: 400px; border-radius: 20px; margin: 20px 0;" />
+    <p><a href="${pageUrl}" style="color: #a7f3d0; font-weight: bold;">Clicca qui se non vieni reindirizzato automaticamente...</a></p>
 </body>
 </html>`;
 
