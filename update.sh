@@ -87,6 +87,16 @@ if [ -d /etc/nginx ]; then
     sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/conf.d/*.conf 2>/dev/null || true
     sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/sites-available/* 2>/dev/null || true
     sudo sed -i 's/client_max_body_size.*/client_max_body_size 50M;/' /etc/nginx/sites-enabled/* 2>/dev/null || true
+
+    # Configurazione proxy dinamico Open Graph per WhatsApp / Social Crawlers
+    NGINX_SITE=$(grep -l "location /" /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*.conf 2>/dev/null | head -n 1)
+    if [ -n "$NGINX_SITE" ]; then
+        if ! grep -q "og/products" "$NGINX_SITE"; then
+            echo "Aggiunta regola proxy Open Graph per WhatsApp a $NGINX_SITE..."
+            sudo sed -i '/location \//i \    location ~ ^/og/products/([0-9]+) {\n        proxy_pass http://127.0.0.1:5000;\n    }\n\n    location ~ ^/shop/([0-9]+)$ {\n        if ($http_user_agent ~* "WhatsApp|facebookexternalhit|TelegramBot|Twitterbot|LinkedInBot") {\n            proxy_pass http://127.0.0.1:5000/og/products/$1;\n            break;\n        }\n        try_files $uri $uri/ /index.html;\n    }\n' "$NGINX_SITE"
+        fi
+    fi
+
     sudo nginx -t && sudo systemctl reload nginx
 fi
 
