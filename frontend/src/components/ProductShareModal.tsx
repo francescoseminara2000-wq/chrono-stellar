@@ -38,8 +38,8 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
 
     if (!isOpen || !product) return null;
 
-    // Share link points to OG metadata endpoint so WhatsApp/Social crawlers get the exact product photo & price
-    const productUrl = `${window.location.origin}/og/products/${product.id}`;
+    // Share link points to API OG metadata endpoint so WhatsApp/Social crawlers get the exact product photo & price
+    const productUrl = `${window.location.origin}/api/og/products/${product.id}`;
     const formattedPrice = (product.priceCents / 100).toFixed(2);
     const shareMessage = `🍎 *${product.name}* a solo €${formattedPrice}/${product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}! Scopri la freschezza di giornata su Ortofrutta Butti: ${productUrl}`;
     const logoSrc = settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : '/logo.png';

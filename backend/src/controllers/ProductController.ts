@@ -281,8 +281,32 @@ export class ProductController {
                 where: { id: Number(id) }
             });
 
+            const host = (req.headers['x-forwarded-host'] || req.get('host') || 'ortofruttabutti.it').toString().split(':')[0];
+            const baseUrl = `https://${host}`;
+
             if (!product) {
-                return res.status(404).send('Prodotto non trovato');
+                const defaultTitle = 'Ortofrutta Butti Sirone - Frutta e Verdura Fresca';
+                const defaultDesc = 'Ordina online frutta e verdura fresca di stagione con consegna a domicilio o ritiro in negozio.';
+                const defaultImg = `${baseUrl}/logo.png`;
+                const defaultPageUrl = `${baseUrl}/shop`;
+
+                const fallbackHtml = `<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>${defaultTitle}</title>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Ortofrutta Butti">
+    <meta property="og:title" content="${defaultTitle}">
+    <meta property="og:description" content="${defaultDesc}">
+    <meta property="og:image" content="${defaultImg}">
+    <meta property="og:url" content="${defaultPageUrl}">
+    <script>window.location.replace("${defaultPageUrl}");</script>
+</head>
+<body><h1>${defaultTitle}</h1></body>
+</html>`;
+                res.setHeader('Content-Type', 'text/html');
+                return res.send(fallbackHtml);
             }
 
             const formattedPrice = (product.priceCents / 100).toFixed(2);
@@ -290,8 +314,6 @@ export class ProductController {
             const title = `${product.name} - €${formattedPrice}/${unitStr} | Ortofrutta Butti`;
             const description = product.description || `Scopri ${product.name} fresco di giornata su Ortofrutta Butti Sirone. Ordina online con consegna a domicilio o ritiro!`;
 
-            const host = (req.headers['x-forwarded-host'] || req.get('host') || 'ortofruttabutti.it').toString().split(':')[0];
-            const baseUrl = `https://${host}`;
             const imageUrl = product.imageUrl 
                 ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${baseUrl}${product.imageUrl.startsWith('/') ? '' : '/'}${product.imageUrl}`) 
                 : `${baseUrl}/logo.png`;
@@ -307,16 +329,14 @@ export class ProductController {
     <link rel="canonical" href="${pageUrl}">
     <meta http-equiv="refresh" content="0;url=${pageUrl}">
     <!-- Open Graph / WhatsApp / Facebook / Telegram -->
-    <meta property="og:type" content="product">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Ortofrutta Butti Sirone">
     <meta property="og:url" content="${pageUrl}">
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${imageUrl}">
     <meta property="og:image:secure_url" content="${imageUrl}">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:site_name" content="Ortofrutta Butti Sirone">
+    <meta property="og:image:alt" content="${product.name}">
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${title}">
