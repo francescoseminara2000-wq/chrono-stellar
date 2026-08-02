@@ -126,14 +126,14 @@ export const ProductDetail = () => {
     const formattedEstimatedTotal = (estimatedTotalCents / 100).toFixed(2);
 
     return (
-        <div className="bg-gradient-to-b from-nature-50/70 via-white to-nature-50/40 min-h-screen pb-32 pt-20 md:pt-28">
+        <div className="bg-gradient-to-b from-nature-50/70 via-white to-nature-50/40 min-h-screen pb-32">
             
-            {/* Sticky Navigation Bar */}
-            <div className="sticky top-[52px] sm:top-[64px] z-30 bg-white/80 backdrop-blur-md border-b border-gray-200/70 shadow-2xs transition-all">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between">
+            {/* Sticky Navigation Bar - Flush against main header */}
+            <div className="sticky top-[56px] sm:top-[60px] md:top-[64px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs transition-all">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-700 hover:text-emerald-700 bg-gray-100 hover:bg-emerald-50 px-3.5 py-1.5 rounded-xl transition-all"
+                        className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-700 hover:text-emerald-700 bg-gray-100 hover:bg-emerald-50 px-3.5 py-1.5 rounded-xl transition-all border border-gray-200/70"
                     >
                         <ArrowLeft size={16} />
                         <span>Torna al Raccolto</span>

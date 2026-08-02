@@ -97,7 +97,7 @@ export const Shop = () => {
     return (
         <div className="bg-gray-50/50 min-h-screen pb-24">
             {/* STICKY SEARCH & CONTROL BAR - Soft emerald non-white container background, clean white inputs */}
-            <div className="sticky top-[52px] sm:top-[64px] md:top-[68px] z-30 bg-emerald-50/95 backdrop-blur-md border-b border-emerald-200/80 shadow-xs transition-all">
+            <div className="sticky top-[56px] sm:top-[60px] md:top-[64px] z-30 bg-emerald-50/95 backdrop-blur-md border-b border-emerald-200/80 shadow-xs transition-all">
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2">
                     <div className="flex items-center gap-2">
                         {/* Search Input - Clean White Card */}
