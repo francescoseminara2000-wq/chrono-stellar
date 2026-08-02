@@ -66,6 +66,27 @@ export const ProductDetail = () => {
                 setProduct(found || null);
                 if (found) {
                     trackProductVisit(found.id, `/shop/${found.id}`);
+
+                    // Dynamically set page title & Open Graph tags for social sharing
+                    const formattedPrice = (found.priceCents / 100).toFixed(2);
+                    const unitStr = found.isVariableWeight ? 'kg' : (found.unitType === 'BOX' ? 'conf.' : 'pz');
+                    document.title = `${found.name} - €${formattedPrice}/${unitStr} | Ortofrutta Butti`;
+
+                    const updateMeta = (property: string, content: string) => {
+                        let tag = document.querySelector(`meta[property="${property}"]`);
+                        if (!tag) {
+                            tag = document.createElement('meta');
+                            tag.setAttribute('property', property);
+                            document.head.appendChild(tag);
+                        }
+                        tag.setAttribute('content', content);
+                    };
+
+                    updateMeta('og:title', `${found.name} - €${formattedPrice}/${unitStr} | Ortofrutta Butti`);
+                    updateMeta('og:description', found.description || `Scopri ${found.name} fresco di giornata su Ortofrutta Butti Sirone.`);
+                    if (found.imageUrl) {
+                        updateMeta('og:image', sanitizeImageUrl(found.imageUrl));
+                    }
                 }
 
                 // Filter related products

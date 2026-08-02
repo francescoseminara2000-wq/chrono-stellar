@@ -272,4 +272,68 @@ export class ProductController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    // Dynamic Open Graph HTML generator for WhatsApp / Facebook / Social Crawlers
+    async getOpenGraphProductHtml(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const product = await prisma.product.findUnique({
+                where: { id: Number(id) }
+            });
+
+            if (!product) {
+                return res.status(404).send('Prodotto non trovato');
+            }
+
+            const formattedPrice = (product.priceCents / 100).toFixed(2);
+            const unitStr = product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz');
+            const title = `${product.name} - €${formattedPrice}/${unitStr} | Ortofrutta Butti`;
+            const description = product.description || `Scopri ${product.name} fresco di giornata su Ortofrutta Butti Sirone. Ordina online con consegna a domicilio o ritiro!`;
+
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+            const host = req.headers['x-forwarded-host'] || req.get('host') || 'ortofruttabutti.it';
+            const baseUrl = `${protocol}://${host}`;
+            const imageUrl = product.imageUrl 
+                ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${baseUrl}${product.imageUrl.startsWith('/') ? '' : '/'}${product.imageUrl}`) 
+                : `${baseUrl}/logo.png`;
+            const pageUrl = `${baseUrl}/shop/${product.id}`;
+
+            const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <meta name="description" content="${description}">
+    <!-- Open Graph / WhatsApp / Facebook / Telegram -->
+    <meta property="og:type" content="product">
+    <meta property="og:url" content="${pageUrl}">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${imageUrl}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Ortofrutta Butti Sirone">
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${title}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${imageUrl}">
+    <!-- Instant Client Redirect -->
+    <script>window.location.href = "${pageUrl}";</script>
+</head>
+<body>
+    <h1>${title}</h1>
+    <p>${description}</p>
+    <img src="${imageUrl}" alt="${product.name}" />
+</body>
+</html>`;
+
+            res.setHeader('Content-Type', 'text/html');
+            return res.send(html);
+        } catch (error: any) {
+            console.error('[ProductController] OG generator error:', error);
+            return res.status(500).send('Error generating Open Graph metadata');
+        }
+    }
 }

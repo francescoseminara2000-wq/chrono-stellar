@@ -52,6 +52,8 @@ app.post('/api/webhooks/revolut', (req, res) => revolutController.handleWebhook(
 app.post('/api/revolut/simulate', (req, res) => revolutController.simulatePayment(req, res));
 // Public
 app.get('/api/products', (req, res) => productController.listPublic(req, res));
+app.get('/og/products/:id', (req, res) => productController.getOpenGraphProductHtml(req, res));
+app.get('/api/og/products/:id', (req, res) => productController.getOpenGraphProductHtml(req, res));
 app.get('/api/delivery-zones', (req, res) => deliveryZoneController.listActive(req, res)); // For checkout
 app.post('/api/orders', (req, res) => orderController.create(req, res));
 app.get('/api/orders/my-orders', authenticateToken, (req, res) => orderController.listMyOrders(req, res));
