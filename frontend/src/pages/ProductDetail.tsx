@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { trackProductVisit } from '../hooks/useAnalyticsTracker';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
-import { ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, Star, Truck, ShieldCheck } from 'lucide-react';
+import { 
+    ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, Truck, 
+    ShieldCheck, Leaf, Info, Sparkles, Check, Share2, CornerDownRight
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
 import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
@@ -24,23 +27,25 @@ interface Product {
 
 export const ProductDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [product, setProduct] = useState<Product | null>(null);
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const { items, addItem, updateQuantity, updateItemUnit } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
     const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
+    const [copiedLink, setCopiedLink] = useState(false);
 
-    const cartItem = items.find(i => i.id === Number(id));
-    const [selectedUnit, setSelectedUnit] = useState<'KG' | 'PZ' | 'BOX'>(
-        cartItem ? cartItem.unitType : 'KG'
-    );
+    const cartItem = product ? items.find(i => i.id === product.id) : null;
+    const [selectedUnit, setSelectedUnit] = useState<'KG' | 'PZ' | 'BOX'>('KG');
 
     useEffect(() => {
         if (product) {
             const cItem = items.find(i => i.id === product.id);
             if (cItem) {
                 setSelectedUnit(cItem.unitType);
+            } else {
+                setSelectedUnit(product.unitType);
             }
         }
     }, [items, product]);
@@ -51,7 +56,7 @@ export const ProductDetail = () => {
     };
 
     useEffect(() => {
-        window.scrollTo(0, 0); // Scroll to top on navigation
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setLoading(true);
         fetch(`/api/products`)
             .then(res => res.json())
@@ -62,8 +67,8 @@ export const ProductDetail = () => {
                     trackProductVisit(found.id, `/shop/${found.id}`);
                 }
 
-                // Mock related products (just take first 3 that aren't this one)
-                setRelatedProducts(data.filter(p => p.id !== Number(id)).slice(0, 4));
+                // Filter related products
+                setRelatedProducts(data.filter(p => p.id !== Number(id) && p.isAvailable).slice(0, 4));
                 setLoading(false);
             })
             .catch(err => {
@@ -72,135 +77,240 @@ export const ProductDetail = () => {
             });
     }, [id]);
 
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: product?.name || 'Ortofrutta Butti',
+                text: `Scopri ${product?.name} su Ortofrutta Butti!`,
+                url: window.location.href
+            }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            setCopiedLink(true);
+            setTimeout(() => setCopiedLink(false), 2000);
+        }
+    };
+
     if (loading) return (
-        <div className="flex justify-center items-center h-screen bg-nature-50">
-            <div className="animate-pulse flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-nature-200 border-t-nature-600 rounded-full animate-spin"></div>
+        <div className="flex flex-col justify-center items-center h-screen bg-nature-50/50">
+            <div className="relative">
+                <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+                <Leaf className="absolute inset-0 m-auto text-emerald-600 animate-pulse" size={24} />
             </div>
+            <p className="mt-4 font-bold text-emerald-900 text-sm tracking-wide">Caricamento prodotto...</p>
         </div>
     );
 
     if (!product) return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-nature-50 text-nature-900">
-            <h2 className="text-3xl font-script mb-4">Prodotto non trovato</h2>
-            <Link to="/shop" className="text-nature-600 font-bold hover:underline">Torna allo Shop</Link>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-nature-50/50 p-6 text-center">
+            <div className="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                <ShoppingBasket size={36} />
+            </div>
+            <h2 className="text-3xl font-script text-nature-950 mb-2">Prodotto non trovato</h2>
+            <p className="text-gray-500 mb-6 max-w-sm">Il prodotto che stai cercando potrebbe non essere più disponibile o essere stato rimosso.</p>
+            <Link to="/shop" className="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl shadow-md transition-all hover:scale-105">
+                Torna al Raccolto
+            </Link>
         </div>
     );
 
-    const quantity = getProductQuantity(product.id);
+    const currentQty = getProductQuantity(product.id);
+    const formattedPrice = (product.priceCents / 100).toFixed(2);
+    const estimatedWeightPerPiece = product.stepAmount > 0 ? product.stepAmount : 0.5;
+
+    // Calculate estimated total price for quantity selection
+    const estimatedTotalCents = selectedUnit === 'KG'
+        ? (currentQty > 0 ? currentQty * product.priceCents : product.priceCents)
+        : (currentQty > 0 ? Math.round(currentQty * estimatedWeightPerPiece * product.priceCents) : Math.round(1 * estimatedWeightPerPiece * product.priceCents));
+
+    const formattedEstimatedTotal = (estimatedTotalCents / 100).toFixed(2);
 
     return (
-        <div className="bg-nature-50/50 min-h-screen pb-20 pt-24 md:pt-32">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                {/* Navigation */}
-                <Link to="/shop" className="inline-flex items-center text-gray-500 hover:text-nature-700 mb-8 transition-colors font-medium group">
-                    <div className="bg-white p-2 rounded-full shadow-sm mr-3 group-hover:scale-110 transition-transform">
-                        <ArrowLeft size={18} />
-                    </div>
-                    Torna al Raccolto
-                </Link>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-
-                    {/* Left Column: Image Gallery */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="space-y-6"
+        <div className="bg-gradient-to-b from-nature-50/70 via-white to-nature-50/40 min-h-screen pb-32 pt-20 md:pt-28">
+            
+            {/* Sticky Navigation Bar */}
+            <div className="sticky top-[52px] sm:top-[64px] z-30 bg-white/80 backdrop-blur-md border-b border-gray-200/70 shadow-2xs transition-all">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-700 hover:text-emerald-700 bg-gray-100 hover:bg-emerald-50 px-3.5 py-1.5 rounded-xl transition-all"
                     >
-                        <div className="relative aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl bg-white border border-gray-100">
+                        <ArrowLeft size={16} />
+                        <span>Torna al Raccolto</span>
+                    </button>
+
+                    <div className="hidden md:flex items-center gap-3">
+                        <span className="font-bold text-gray-900 text-sm truncate max-w-xs">{product.name}</span>
+                        <span className="text-xs font-black text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg">
+                            €{formattedPrice} / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}
+                        </span>
+                    </div>
+
+                    <button
+                        onClick={handleShare}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-emerald-700 bg-gray-100 hover:bg-emerald-50 px-3 py-1.5 rounded-xl transition-all"
+                        title="Condividi prodotto"
+                    >
+                        <Share2 size={15} />
+                        <span className="hidden sm:inline">{copiedLink ? 'Copiato!' : 'Condividi'}</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+                {/* Main Product Showcase Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
+
+                    {/* Left Column: Image Showcase & Value Badges (5 cols on lg) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="lg:col-span-6 space-y-6"
+                    >
+                        <div className="relative aspect-[4/3] sm:aspect-square rounded-3xl overflow-hidden shadow-xl bg-white border border-gray-150 group">
                             {product.imageUrl ? (
                                 <img
                                     src={sanitizeImageUrl(product.imageUrl)}
                                     alt={product.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-nature-200 font-script text-9xl bg-nature-50">
-                                    {product.name[0]}
+                                <div className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl bg-gradient-to-br from-emerald-50 to-nature-100">
+                                    <span>{product.name[0]}</span>
                                 </div>
                             )}
 
-                            {/* Floating Badges */}
-                            <div className="absolute top-6 left-6 flex flex-col gap-3">
-                                {product.unitType === 'KG' && (
-                                    <span className="bg-white/95 backdrop-blur-md text-nature-800 text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                                        <Scale size={14} className="text-nature-600" /> VENDITA A PESO
+                            {/* Gradient Overlay for Top Badges */}
+                            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
+
+                            {/* Badges Overlay */}
+                            <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 pointer-events-none">
+                                <div className="flex flex-wrap gap-2">
+                                    {product.unitType === 'KG' && (
+                                        <span className="bg-white/95 backdrop-blur-md text-emerald-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-emerald-100">
+                                            <Scale size={13} className="text-emerald-600" /> PESO VARIABILE AL KG
+                                        </span>
+                                    )}
+                                    {product.unitType === 'PZ' && (
+                                        <span className="bg-white/95 backdrop-blur-md text-nature-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-nature-100">
+                                            <ShoppingBasket size={13} className="text-fruit-600" /> VENDITA A PEZZI
+                                        </span>
+                                    )}
+                                </div>
+
+                                {product.isAvailable ? (
+                                    <span className="bg-emerald-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1">
+                                        <Check size={12} strokeWidth={3} /> Disponibile
+                                    </span>
+                                ) : (
+                                    <span className="bg-red-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-md uppercase tracking-wider">
+                                        Esaurito
                                     </span>
                                 )}
-                                {product.isVariableWeight && (
-                                    <span className="bg-yellow-50/95 backdrop-blur-md text-yellow-800 text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-yellow-100">
-                                        PESO VARIABILE
-                                    </span>
-                                )}
+                            </div>
+
+                            <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-white/40 shadow-lg flex items-center justify-between text-xs font-bold text-nature-900">
+                                <span className="flex items-center gap-1.5">
+                                    <Leaf size={15} className="text-emerald-600" /> Filiera Corta Garantita
+                                </span>
+                                <span className="text-gray-500 font-medium">Fresco di Giornata</span>
                             </div>
                         </div>
 
-                        {/* Value Props Row */}
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center gap-2">
-                                <Star className="text-fruit-500 fill-fruit-500" size={20} />
-                                <span className="text-xs font-bold text-gray-600">Alta Qualità</span>
+                        {/* Value Props 3-Grid */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-white p-3.5 rounded-2xl border border-gray-150 shadow-2xs flex flex-col items-center text-center gap-1.5">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                                    <Sparkles size={18} />
+                                </div>
+                                <span className="text-xs font-extrabold text-gray-800">Alta Qualità</span>
+                                <span className="text-[10px] text-gray-500 font-medium">Selezionato a mano</span>
                             </div>
-                            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center gap-2">
-                                <Truck className="text-nature-600" size={20} />
-                                <span className="text-xs font-bold text-gray-600">Consegna Rapida</span>
+
+                            <div className="bg-white p-3.5 rounded-2xl border border-gray-150 shadow-2xs flex flex-col items-center text-center gap-1.5">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                                    <Truck size={18} />
+                                </div>
+                                <span className="text-xs font-extrabold text-gray-800">Consegna Fresca</span>
+                                <span className="text-[10px] text-gray-500 font-medium">A casa o al mercato</span>
                             </div>
-                            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center gap-2">
-                                <ShieldCheck className="text-nature-600" size={20} />
-                                <span className="text-xs font-bold text-gray-600">Garanzia Freschezza</span>
+
+                            <div className="bg-white p-3.5 rounded-2xl border border-gray-150 shadow-2xs flex flex-col items-center text-center gap-1.5">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                                    <ShieldCheck size={18} />
+                                </div>
+                                <span className="text-xs font-extrabold text-gray-800">Peso Corretto</span>
+                                <span className="text-[10px] text-gray-500 font-medium">Pesato al momento</span>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Right Column: Product Details */}
+                    {/* Right Column: Information & Purchase Box (7 cols on lg) */}
                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="flex flex-col h-full"
+                        className="lg:col-span-6 flex flex-col h-full"
                     >
-                        <div className="mb-2 flex items-center gap-2">
-                            <span className="text-nature-600 font-bold uppercase tracking-widest text-xs">Frutta di Stagione</span>
-                            <div className="h-px bg-nature-200 flex-grow"></div>
+                        {/* Subtitle / Category Pill */}
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="px-3 py-1 bg-emerald-100 text-emerald-900 font-extrabold rounded-full text-xs uppercase tracking-wider">
+                                Ortofrutta di Stagione
+                            </span>
+                            <span className="text-xs text-gray-400 font-medium">• Codice #{product.id}</span>
                         </div>
 
-                        <h1 className="font-script text-6xl md:text-7xl text-nature-900 mb-6 leading-tight">{product.name}</h1>
+                        {/* Title */}
+                        <h1 className="font-script text-4xl sm:text-6xl text-nature-950 mb-3 leading-tight">
+                            {product.name}
+                        </h1>
 
-                        <div className="flex flex-col gap-2 mb-8">
-                            <div className="flex items-end gap-3">
-                                <span className="text-4xl font-bold text-nature-900">
-                                    €{(product.priceCents / 100).toFixed(2)}
-                                </span>
-                                <span className="text-xl text-gray-500 font-medium mb-1">
-                                    / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
-                                </span>
+                        {/* Price Card Container */}
+                        <div className="bg-gradient-to-r from-emerald-900 via-nature-900 to-emerald-950 text-white p-5 rounded-3xl shadow-xl mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-emerald-800/40">
+                            <div>
+                                <span className="text-xs font-bold text-emerald-300 uppercase tracking-widest block mb-0.5">Prezzo di Listino</span>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                                        €{formattedPrice}
+                                    </span>
+                                    <span className="text-sm font-bold text-emerald-200">
+                                        / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
+                                    </span>
+                                </div>
                             </div>
+
                             {product.isVariableWeight && selectedUnit === 'PZ' && product.stepAmount > 0 && (
-                                <span className="text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl block w-fit">
-                                    Pezzo da circa {product.stepAmount} kg
-                                </span>
+                                <div className="bg-white/15 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/20 text-xs font-bold text-emerald-100 flex items-center gap-2">
+                                    <Info size={16} className="text-amber-300 shrink-0" />
+                                    <span>Pezzo da circa <strong className="text-white">{product.stepAmount} kg</strong></span>
+                                </div>
                             )}
                         </div>
 
-                        <p className="text-gray-600 text-lg leading-relaxed mb-8 border-l-4 border-nature-200 pl-6">
-                            {product.description || "Coltivato con cura dai nostri agricoltori di fiducia, selezionato a mano per garantirti la massima freschezza e un sapore autentico."}
-                        </p>
+                        {/* Product Description */}
+                        <div className="mb-6 bg-white p-5 rounded-3xl border border-gray-150 shadow-2xs">
+                            <h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2">
+                                <Leaf size={16} className="text-emerald-600" /> Descrizione del Prodotto
+                            </h3>
+                            <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                                {product.description || "Raccolto fresco selezionato a mano con cura. Garantiamo il massimo del sapore naturale ed autentico direttamente dai nostri produttori di fiducia."}
+                            </p>
+                        </div>
 
-                        {/* Tips Section */}
+                        {/* Expert Seasonal Advice Box */}
                         {product.seasonalTips && (
-                            <div className="bg-fruit-50/50 p-6 rounded-3xl border border-fruit-100 mb-10 relative">
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-white p-3 rounded-full text-fruit-600 shadow-sm border border-fruit-100 flex-shrink-0">
-                                        <ChefHat size={24} />
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50/60 p-5 rounded-3xl border border-amber-200/80 mb-6 relative overflow-hidden shadow-2xs">
+                                <div className="flex items-start gap-3.5 relative z-10">
+                                    <div className="bg-amber-500 text-white p-2.5 rounded-2xl shadow-md shrink-0">
+                                        <ChefHat size={22} />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-fruit-900 mb-2 font-display text-lg">
-                                            L'Esperto Consiglia
-                                        </h3>
-                                        <p className="text-fruit-800/80 italic text-base leading-relaxed">
+                                        <h4 className="font-extrabold text-amber-950 text-sm mb-1">
+                                            Consigli in Cucina & Conservazione
+                                        </h4>
+                                        <p className="text-amber-900/90 text-xs sm:text-sm italic leading-relaxed">
                                             "{product.seasonalTips}"
                                         </p>
                                     </div>
@@ -208,96 +318,113 @@ export const ProductDetail = () => {
                             </div>
                         )}
 
-                        <div className="mt-auto bg-white p-6 rounded-[2rem] shadow-xl border border-gray-100">
-                            {/* Unit Selector Tab for dual-unit items */}
+                        {/* Interactive Unit Switcher & Cart Action Box */}
+                        <div className="mt-auto bg-white p-5 sm:p-6 rounded-3xl border border-emerald-200/80 shadow-xl space-y-4">
+                            
+                            {/* Dual Unit Selector Switcher */}
                             {product.unitType === 'KG' && product.isVariableWeight && product.stepAmount > 0 && (
-                                <div className="flex bg-gray-100 p-0.5 rounded-xl mb-4 border border-gray-200/50 text-xs font-bold">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (cartItem) {
-                                                updateItemUnit(product.id, 'KG', 1);
-                                            } else {
-                                                setSelectedUnit('KG');
-                                            }
-                                        }}
-                                        className={`flex-1 py-2 rounded-lg transition-all text-center ${selectedUnit === 'KG' ? 'bg-white text-nature-950 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
-                                    >
-                                        Al kg
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (cartItem) {
-                                                updateItemUnit(product.id, 'PZ', 1);
-                                            } else {
-                                                setSelectedUnit('PZ');
-                                            }
-                                        }}
-                                        className={`flex-1 py-2 rounded-lg transition-all text-center ${selectedUnit === 'PZ' ? 'bg-white text-nature-950 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
-                                    >
-                                        A pezzi
-                                    </button>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                        Modalità d'Acquisto
+                                    </label>
+                                    <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200/80 text-xs font-bold">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (cartItem) {
+                                                    updateItemUnit(product.id, 'KG', 1);
+                                                } else {
+                                                    setSelectedUnit('KG');
+                                                }
+                                            }}
+                                            className={`flex-1 py-2.5 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${selectedUnit === 'KG' ? 'bg-emerald-700 text-white shadow-md font-extrabold' : 'text-gray-600 hover:text-gray-900'}`}
+                                        >
+                                            <Scale size={15} />
+                                            <span>Vendita al Kg</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (cartItem) {
+                                                    updateItemUnit(product.id, 'PZ', 1);
+                                                } else {
+                                                    setSelectedUnit('PZ');
+                                                }
+                                            }}
+                                            className={`flex-1 py-2.5 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${selectedUnit === 'PZ' ? 'bg-emerald-700 text-white shadow-md font-extrabold' : 'text-gray-600 hover:text-gray-900'}`}
+                                        >
+                                            <ShoppingBasket size={15} />
+                                            <span>Vendita a Pezzi</span>
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
-                            <div className="flex flex-col md:flex-row gap-4 items-stretch">
-                                {/* Controller Logic */}
+                            {/* Stepper / Action Controls */}
+                            <div className="space-y-3">
                                 {selectedUnit === 'KG' ? (
                                     <button
+                                        type="button"
                                         onClick={() => setSelectedProductForWeight(product)}
-                                        className="flex-1 bg-nature-900 hover:bg-nature-800 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-lg shadow-nature-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+                                        className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-between group"
                                     >
-                                        {quantity > 0 ? (
-                                            <>
-                                                <div className="flex flex-col items-start leading-none">
-                                                    <span className="text-[10px] opacity-70 uppercase tracking-wider">Modifica Peso</span>
-                                                    <span>{quantity} kg nel carrello</span>
-                                                </div>
-                                                <Scale size={24} className="ml-auto" />
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>Scegli Peso & Aggiungi</span>
-                                                <Scale size={24} />
-                                            </>
-                                        )}
+                                        <div className="flex items-center gap-2.5">
+                                            <Scale size={22} className="group-hover:rotate-12 transition-transform" />
+                                            <span>{currentQty > 0 ? `${currentQty} kg nel Carrello` : 'Scegli Peso & Aggiungi'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">
+                                            <span>€{formattedEstimatedTotal} stimati</span>
+                                            <CornerDownRight size={14} />
+                                        </div>
                                     </button>
                                 ) : (
-                                    // Unit Logic
-                                    quantity > 0 ? (
-                                        <div className="flex-1 flex items-center justify-between bg-nature-50 rounded-2xl p-2 border border-nature-200">
+                                    currentQty > 0 ? (
+                                        <div className="flex items-center justify-between bg-emerald-50 rounded-2xl p-2 border border-emerald-200 shadow-inner">
                                             <button
-                                                onClick={() => updateQuantity(product.id, Math.max(0, quantity - 1))}
-                                                className="w-14 h-14 bg-white rounded-xl shadow-sm text-nature-900 flex items-center justify-center hover:bg-white/80 transition-colors"
+                                                type="button"
+                                                onClick={() => updateQuantity(product.id, Math.max(0, currentQty - 1))}
+                                                className="w-12 h-12 bg-white rounded-xl shadow-md text-emerald-900 flex items-center justify-center hover:bg-emerald-100 transition-all active:scale-90"
                                             >
-                                                <Minus strokeWidth={3} />
+                                                <Minus strokeWidth={3} size={20} />
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setSelectedProductForUnit(product)}
-                                                className="w-12 text-center bg-transparent border-none focus:outline-none outline-none font-bold text-2xl text-nature-900 hover:text-nature-600 transition-colors py-2"
-                                                title="Modifica con tastiera"
+                                                className="flex flex-col items-center justify-center py-1 px-4 cursor-pointer"
                                             >
-                                                {quantity}
+                                                <span className="font-black text-2xl text-emerald-950 leading-none">{currentQty}</span>
+                                                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">pezzi nel carrello</span>
                                             </button>
                                             <button
-                                                onClick={() => updateQuantity(product.id, quantity + 1)}
-                                                className="w-14 h-14 bg-nature-900 rounded-xl shadow-md text-white flex items-center justify-center hover:bg-nature-800 transition-colors"
+                                                type="button"
+                                                onClick={() => updateQuantity(product.id, currentQty + 1)}
+                                                className="w-12 h-12 bg-emerald-800 rounded-xl shadow-md text-white flex items-center justify-center hover:bg-emerald-900 transition-all active:scale-90"
                                             >
-                                                <Plus strokeWidth={3} />
+                                                <Plus strokeWidth={3} size={20} />
                                             </button>
                                         </div>
                                     ) : (
                                         <button
+                                            type="button"
                                             onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
-                                            className="flex-1 bg-nature-900 hover:bg-nature-800 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-lg shadow-nature-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+                                            className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-between group"
                                         >
-                                            <ShoppingBasket />
-                                            Aggiungi al Carrello
+                                            <div className="flex items-center gap-2.5">
+                                                <ShoppingBasket size={22} className="group-hover:scale-110 transition-transform" />
+                                                <span>Aggiungi al Carrello</span>
+                                            </div>
+                                            <span className="text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">
+                                                €{formattedPrice}
+                                            </span>
                                         </button>
                                     )
                                 )}
+                            </div>
+
+                            {/* Weighing Reassurance Notice */}
+                            <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200/80 flex items-center gap-2.5 text-xs text-gray-600 font-medium">
+                                <Info size={16} className="text-emerald-600 shrink-0" />
+                                <span>Il peso esatto e l'importo finale vengono verificati alla pesatura prima della spedizione.</span>
                             </div>
                         </div>
 
@@ -305,69 +432,131 @@ export const ProductDetail = () => {
                 </div>
 
                 {/* Related Products Section */}
-                <div className="mt-24 md:mt-32 border-t border-gray-200 pt-16">
-                    <div className="flex items-end justify-between mb-12">
-                        <div>
-                            <h2 className="font-script text-5xl text-nature-900 mb-2">Potrebbe piacerti anche</h2>
-                            <p className="text-gray-500">Altri prodotti freschi scelti per te.</p>
+                {relatedProducts.length > 0 && (
+                    <div className="mt-20 md:mt-28 border-t border-gray-200/80 pt-12">
+                        <div className="flex items-end justify-between mb-8">
+                            <div>
+                                <span className="text-xs font-black uppercase tracking-widest text-emerald-700 block mb-1">
+                                    Consigliati per te
+                                </span>
+                                <h2 className="font-script text-4xl sm:text-5xl text-nature-950">
+                                    Potrebbe Piacerti Anche
+                                </h2>
+                            </div>
+                            <Link to="/shop" className="hidden md:inline-flex items-center gap-1.5 text-emerald-700 font-bold hover:text-emerald-800 transition-colors text-sm">
+                                <span>Vedi tutto il raccolto</span>
+                                <ArrowLeft size={16} className="rotate-180" />
+                            </Link>
                         </div>
-                        <Link to="/shop" className="hidden md:block text-nature-600 font-bold hover:underline">Vedi tutti &rarr;</Link>
-                    </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
-                        {relatedProducts.map(p => (
-                             <ProductCard
-                                 key={p.id}
-                                 product={p}
-                                 onWeightSelect={setSelectedProductForWeight}
-                                 onUnitSelect={setSelectedProductForUnit}
-                             />
-                         ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                            {relatedProducts.map(p => (
+                                <ProductCard
+                                    key={p.id}
+                                    product={p}
+                                    onWeightSelect={setSelectedProductForWeight}
+                                    onUnitSelect={setSelectedProductForUnit}
+                                />
+                            ))}
+                        </div>
                     </div>
-                    <div className="mt-8 text-center md:hidden">
-                        <Link to="/shop" className="text-nature-600 font-bold hover:underline">Vedi tutti &rarr;</Link>
-                    </div>
-                </div>
-
-                {/* Weight Drawer */}
-                <WeightSelectorDrawer
-                    isOpen={!!selectedProductForWeight}
-                    onClose={() => setSelectedProductForWeight(null)}
-                    productName={selectedProductForWeight?.name || ''}
-                    currentWeight={selectedProductForWeight ? getProductQuantity(selectedProductForWeight.id) : 0}
-                    unitPrice={selectedProductForWeight?.priceCents || 0}
-                    onConfirm={(weight) => {
-                        if (selectedProductForWeight) {
-                            if (getProductQuantity(selectedProductForWeight.id) === 0) {
-                                addItem({ ...selectedProductForWeight, unitType: 'KG' }, weight);
-                            } else {
-                                updateItemUnit(selectedProductForWeight.id, 'KG', weight);
-                            }
-                        }
-                    }}
-                />
-
-                {/* Unit Drawer */}
-                <QuantitySelectorDrawer
-                    isOpen={!!selectedProductForUnit}
-                    onClose={() => setSelectedProductForUnit(null)}
-                    productName={selectedProductForUnit?.name || ''}
-                    currentQty={selectedProductForUnit ? getProductQuantity(selectedProductForUnit.id) : 0}
-                    unitPrice={selectedProductForUnit?.priceCents || 0}
-                    unitType={selectedProductForUnit && selectedProductForUnit.unitType === 'KG' ? 'PZ' : (selectedProductForUnit?.unitType as any || 'PZ')}
-                    onConfirm={(qty) => {
-                        if (selectedProductForUnit) {
-                            const unit = selectedProductForUnit.unitType === 'KG' ? 'PZ' : selectedProductForUnit.unitType;
-                            if (getProductQuantity(selectedProductForUnit.id) === 0) {
-                                addItem({ ...selectedProductForUnit, unitType: unit }, qty);
-                            } else {
-                                updateItemUnit(selectedProductForUnit.id, unit, qty);
-                            }
-                        }
-                    }}
-                />
+                )}
 
             </div>
+
+            {/* Sticky Mobile Action Bar (Smartphone Bottom Bar) */}
+            <div className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Prezzo</span>
+                        <span className="text-xl font-black text-emerald-950 leading-tight">
+                            €{formattedPrice}
+                            <span className="text-xs font-normal text-gray-500"> / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}</span>
+                        </span>
+                    </div>
+
+                    <div className="flex-1">
+                        {selectedUnit === 'KG' ? (
+                            <button
+                                type="button"
+                                onClick={() => setSelectedProductForWeight(product)}
+                                className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
+                            >
+                                <Scale size={18} />
+                                <span>{currentQty > 0 ? `${currentQty} kg` : 'Scegli Peso'}</span>
+                            </button>
+                        ) : (
+                            currentQty > 0 ? (
+                                <div className="flex items-center justify-between bg-emerald-50 rounded-xl p-1 border border-emerald-200">
+                                    <button
+                                        type="button"
+                                        onClick={() => updateQuantity(product.id, Math.max(0, currentQty - 1))}
+                                        className="w-9 h-9 bg-white rounded-lg text-emerald-900 flex items-center justify-center shadow-xs"
+                                    >
+                                        <Minus size={16} strokeWidth={3} />
+                                    </button>
+                                    <span className="font-extrabold text-base text-emerald-950 px-2">{currentQty} pz</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => updateQuantity(product.id, currentQty + 1)}
+                                        className="w-9 h-9 bg-emerald-800 rounded-lg text-white flex items-center justify-center shadow-xs"
+                                    >
+                                        <Plus size={16} strokeWidth={3} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
+                                    className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
+                                >
+                                    <ShoppingBasket size={18} />
+                                    <span>Aggiungi</span>
+                                </button>
+                            )
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Weight Drawer */}
+            <WeightSelectorDrawer
+                isOpen={!!selectedProductForWeight}
+                onClose={() => setSelectedProductForWeight(null)}
+                productName={selectedProductForWeight?.name || ''}
+                currentWeight={selectedProductForWeight ? getProductQuantity(selectedProductForWeight.id) : 0}
+                unitPrice={selectedProductForWeight?.priceCents || 0}
+                onConfirm={(weight) => {
+                    if (selectedProductForWeight) {
+                        if (getProductQuantity(selectedProductForWeight.id) === 0) {
+                            addItem({ ...selectedProductForWeight, unitType: 'KG' }, weight);
+                        } else {
+                            updateItemUnit(selectedProductForWeight.id, 'KG', weight);
+                        }
+                    }
+                }}
+            />
+
+            {/* Unit Drawer */}
+            <QuantitySelectorDrawer
+                isOpen={!!selectedProductForUnit}
+                onClose={() => setSelectedProductForUnit(null)}
+                productName={selectedProductForUnit?.name || ''}
+                currentQty={selectedProductForUnit ? getProductQuantity(selectedProductForUnit.id) : 0}
+                unitPrice={selectedProductForUnit?.priceCents || 0}
+                unitType={selectedProductForUnit && selectedProductForUnit.unitType === 'KG' ? 'PZ' : (selectedProductForUnit?.unitType as any || 'PZ')}
+                onConfirm={(qty) => {
+                    if (selectedProductForUnit) {
+                        const unit = selectedProductForUnit.unitType === 'KG' ? 'PZ' : selectedProductForUnit.unitType;
+                        if (getProductQuantity(selectedProductForUnit.id) === 0) {
+                            addItem({ ...selectedProductForUnit, unitType: unit }, qty);
+                        } else {
+                            updateItemUnit(selectedProductForUnit.id, unit, qty);
+                        }
+                    }
+                }}
+            />
+
         </div>
     );
 };
