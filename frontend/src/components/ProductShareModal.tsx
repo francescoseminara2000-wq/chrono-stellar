@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { 
     X, Share2, Copy, Check, MessageCircle, Facebook, Send, Download, 
-    Leaf, Image as ImageIcon, Smartphone, Zap
+    ImageIcon, Smartphone, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sanitizeImageUrl } from '../utils/imageUrl';
+import { useAppState } from '../store/useAppState';
 
 interface Product {
     id: number;
@@ -29,7 +30,8 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
     onClose,
     product
 }) => {
-    const [activeTab, setActiveTab] = useState<'quick' | 'story'>('story'); // Default to story preview
+    const { settings } = useAppState();
+    const [activeTab, setActiveTab] = useState<'story' | 'quick'>('story'); // Default to story preview
     const [copied, setCopied] = useState(false);
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const storyCardRef = useRef<HTMLDivElement>(null);
@@ -39,6 +41,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
     const productUrl = window.location.href;
     const formattedPrice = (product.priceCents / 100).toFixed(2);
     const shareMessage = `🍎 *${product.name}* a solo €${formattedPrice}/${product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}! Scopri la freschezza di giornata su Ortofrutta Butti: ${productUrl}`;
+    const logoSrc = settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : '/logo.png';
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(productUrl);
@@ -70,8 +73,8 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
         }
     };
 
-    // Helper to generate vertical 9:16 story PNG File object
-    const generateStoryImageFile = (): Promise<File> => {
+    // Helper to generate minimal vertical 9:16 story PNG File object
+    const generateMinimalStoryImageFile = (): Promise<File> => {
         return new Promise((resolve, reject) => {
             const canvas = document.createElement('canvas');
             const width = 1080;
@@ -82,74 +85,78 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
 
             if (!ctx) return reject('Canvas context error');
 
-            // 1. Ultra Modern Dark Gradient Background
+            // 1. Ultra Modern Clean Dark Gradient Background
             const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
             bgGradient.addColorStop(0, '#064e3b');   // emerald-900
-            bgGradient.addColorStop(0.4, '#022c22'); // emerald-950
-            bgGradient.addColorStop(0.8, '#064e3b'); // emerald-900
-            bgGradient.addColorStop(1, '#022c22');   // emerald-950
+            bgGradient.addColorStop(0.5, '#022c22'); // emerald-950
+            bgGradient.addColorStop(1, '#064e3b');   // emerald-900
             ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, width, height);
 
-            // 2. Radial Glow Highlight Behind Image
-            const radialGlow = ctx.createRadialGradient(width / 2, 700, 50, width / 2, 700, 650);
-            radialGlow.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
-            radialGlow.addColorStop(0.7, 'rgba(16, 185, 129, 0.08)');
+            // 2. Soft Radial Glow Behind Product Image
+            const radialGlow = ctx.createRadialGradient(width / 2, 750, 50, width / 2, 750, 650);
+            radialGlow.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
             radialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = radialGlow;
             ctx.fillRect(0, 0, width, height);
 
-            // 3. Top Glassmorphic Pill Banner
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-            ctx.beginPath();
-            ctx.roundRect(140, 110, 800, 120, 60);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.lineWidth = 3;
-            ctx.stroke();
+            // Load Logo & Product Image
+            const logoImg = new Image();
+            logoImg.crossOrigin = 'anonymous';
+            const productImg = new Image();
+            productImg.crossOrigin = 'anonymous';
+            const productImgUrl = product.imageUrl ? sanitizeImageUrl(product.imageUrl) : '';
 
-            ctx.font = 'bold 44px Nunito, sans-serif';
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.fillText('🔥 PRODOTTO DI STAGIONE • ORTOFRUTTA BUTTI', width / 2, 185);
+            const drawCardContent = () => {
+                // Header: Logo + Shop Name "Ortofrutta Butti"
+                try {
+                    if (logoImg.complete && logoImg.naturalWidth !== 0) {
+                        ctx.drawImage(logoImg, width / 2 - 240, 110, 80, 80);
+                        ctx.font = 'bold 52px Nunito, sans-serif';
+                        ctx.fillStyle = '#ffffff';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(settings?.siteName || 'Ortofrutta Butti', width / 2 - 140, 168);
+                    } else {
+                        ctx.font = 'bold 54px Nunito, sans-serif';
+                        ctx.fillStyle = '#ffffff';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(settings?.siteName || 'Ortofrutta Butti', width / 2, 165);
+                    }
+                } catch {
+                    ctx.font = 'bold 54px Nunito, sans-serif';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Ortofrutta Butti', width / 2, 165);
+                }
 
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            const imgUrl = product.imageUrl ? sanitizeImageUrl(product.imageUrl) : '';
-
-            const drawRestOfCard = () => {
-                // 5. Title & Tagline Box
-                ctx.font = 'normal 96px "Dancing Script", Georgia, serif';
+                // Minimal Product Title below image
+                ctx.font = 'normal 100px "Dancing Script", Georgia, serif';
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-                ctx.shadowBlur = 25;
-                ctx.fillText(product.name, width / 2, 1340);
+                ctx.shadowBlur = 20;
+                ctx.fillText(product.name, width / 2, 1370);
                 ctx.shadowBlur = 0;
 
-                ctx.font = 'bold 36px Nunito, sans-serif';
-                ctx.fillStyle = '#a7f3d0';
-                ctx.fillText('FRESCHEZZA DI GIORNATA • RACCOLTO SIRONE (LC)', width / 2, 1420);
-
-                // 6. Price Tag Badge (Golden Amber Pill)
+                // Minimal Clear Price Tag Pill
                 const priceText = `€${formattedPrice} / ${product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}`;
                 ctx.fillStyle = '#fbbf24'; // amber-400
                 ctx.beginPath();
-                ctx.roundRect(width / 2 - 340, 1480, 680, 160, 80);
+                ctx.roundRect(width / 2 - 320, 1450, 640, 150, 75);
                 ctx.fill();
 
-                ctx.font = 'black 68px Nunito, sans-serif';
+                ctx.font = 'black 66px Nunito, sans-serif';
                 ctx.fillStyle = '#022c22';
-                ctx.fillText(priceText, width / 2, 1582);
+                ctx.fillText(priceText, width / 2, 1548);
 
-                // 7. Footer Prompt
-                ctx.font = 'bold 38px Nunito, sans-serif';
+                // Footer Prompt (Last sentence preserved)
+                ctx.font = 'bold 40px Nunito, sans-serif';
                 ctx.fillStyle = '#ffffff';
                 ctx.fillText('✨ Tocca o visita ortofruttabutti.it per ordinare', width / 2, 1780);
 
                 canvas.toBlob((blob) => {
                     if (blob) {
-                        const file = new File([blob], `storia-ortofrutta-${product.id}.png`, { type: 'image/png' });
+                        const file = new File([blob], `storia-${product.id}.png`, { type: 'image/png' });
                         resolve(file);
                     } else {
                         reject('Blob creation failed');
@@ -157,34 +164,34 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                 }, 'image/png');
             };
 
-            // 4. Draw Image or Placeholder Card
-            if (imgUrl) {
-                img.onload = () => {
+            const drawProductImage = () => {
+                if (productImgUrl && productImg.complete && productImg.naturalWidth !== 0) {
                     ctx.save();
                     ctx.beginPath();
-                    ctx.roundRect(140, 270, 800, 960, 60);
+                    ctx.roundRect(130, 260, 820, 980, 50);
                     ctx.clip();
-                    ctx.drawImage(img, 140, 270, 800, 960);
+                    ctx.drawImage(productImg, 130, 260, 820, 980);
                     ctx.restore();
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
                     ctx.lineWidth = 4;
                     ctx.stroke();
-                    drawRestOfCard();
-                };
-                img.onerror = () => {
+                } else {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
                     ctx.beginPath();
-                    ctx.roundRect(140, 270, 800, 960, 60);
+                    ctx.roundRect(130, 260, 820, 980, 50);
                     ctx.fill();
-                    drawRestOfCard();
-                };
-                img.src = imgUrl;
+                }
+                drawCardContent();
+            };
+
+            // Start preloading images
+            logoImg.src = logoSrc;
+            if (productImgUrl) {
+                productImg.onload = drawProductImage;
+                productImg.onerror = drawProductImage;
+                productImg.src = productImgUrl;
             } else {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.beginPath();
-                ctx.roundRect(140, 270, 800, 960, 60);
-                ctx.fill();
-                drawRestOfCard();
+                drawProductImage();
             }
         });
     };
@@ -193,7 +200,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
     const handleDirectSocialShare = async () => {
         setIsGeneratingImage(true);
         try {
-            const file = await generateStoryImageFile();
+            const file = await generateMinimalStoryImageFile();
 
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
@@ -221,7 +228,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
     const handleDownloadStoryCard = async () => {
         setIsGeneratingImage(true);
         try {
-            const file = await generateStoryImageFile();
+            const file = await generateMinimalStoryImageFile();
             const url = URL.createObjectURL(file);
             const a = document.createElement('a');
             a.href = url;
@@ -229,7 +236,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
             a.click();
             URL.revokeObjectURL(url);
         } catch (err) {
-            console.error("Error generating story card PNG", err);
+            console.error("Error generating minimal story card PNG", err);
         } finally {
             setIsGeneratingImage(false);
         }
@@ -274,7 +281,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                             }`}
                         >
                             <ImageIcon size={14} />
-                            <span>Card Storie (Instagram/TikTok)</span>
+                            <span>Card Storie (Minimal 9:16)</span>
                         </button>
 
                         <button
@@ -292,31 +299,37 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                     {/* Modal Body */}
                     <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1">
                         {activeTab === 'story' ? (
-                            /* VERTICAL 9:16 SOCIAL STORY CARD TAB */
+                            /* MINIMAL VERTICAL 9:16 SOCIAL STORY CARD TAB */
                             <div className="flex flex-col items-center justify-center space-y-4">
                                 <div className="text-center space-y-1">
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black uppercase tracking-wider">
                                         <Zap size={14} className="text-amber-500" /> Pronta per Storie & Reel
                                     </span>
-                                    <p className="text-xs text-gray-500 font-medium">Tocca per aprire direttamente su Instagram o TikTok</p>
+                                    <p className="text-xs text-gray-500 font-medium">Formato minimale pulito per Instagram e TikTok</p>
                                 </div>
 
-                                {/* Vertical Story Preview Box (9:16 Aspect Ratio) */}
+                                {/* Minimal Vertical Story Preview Box (9:16 Aspect Ratio) */}
                                 <div 
                                     ref={storyCardRef}
                                     className="w-[250px] sm:w-[270px] aspect-[9/16] rounded-3xl bg-gradient-to-b from-emerald-900 via-emerald-950 to-emerald-900 border-4 border-emerald-500/30 shadow-2xl p-4 flex flex-col justify-between items-center relative overflow-hidden text-center group"
                                 >
-                                    {/* Decorative Ambient Radial */}
+                                    {/* Ambient Glow */}
                                     <div className="absolute inset-0 bg-radial from-emerald-400/20 via-transparent to-transparent pointer-events-none"></div>
 
-                                    {/* Story Header */}
-                                    <div className="relative z-10 w-full bg-white/15 backdrop-blur-md py-1.5 px-3 rounded-full border border-white/20 text-[10px] font-black text-white tracking-wider uppercase flex items-center justify-center gap-1">
-                                        <Leaf size={11} className="text-emerald-400" />
-                                        <span>Ortofrutta Butti • Sirone</span>
+                                    {/* Minimal Header: Logo & Shop Name */}
+                                    <div className="relative z-10 w-full flex items-center justify-center gap-2 pt-1">
+                                        <img 
+                                            src={logoSrc} 
+                                            alt="Logo" 
+                                            className="w-7 h-7 object-contain drop-shadow-sm" 
+                                        />
+                                        <span className="font-extrabold text-sm text-white tracking-wide">
+                                            {settings?.siteName || 'Ortofrutta Butti'}
+                                        </span>
                                     </div>
 
                                     {/* Main Product Image Container */}
-                                    <div className="relative z-10 w-full h-[52%] rounded-2xl overflow-hidden shadow-xl bg-black/20 border border-white/20 my-2">
+                                    <div className="relative z-10 w-full h-[55%] rounded-2xl overflow-hidden shadow-xl bg-black/20 border border-white/20 my-2">
                                         {product.imageUrl ? (
                                             <img 
                                                 src={sanitizeImageUrl(product.imageUrl)} 
@@ -330,26 +343,23 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                                         )}
                                     </div>
 
-                                    {/* Story Text Info */}
-                                    <div className="relative z-10 w-full space-y-1">
+                                    {/* Minimal Product Title & Clear Price Tag */}
+                                    <div className="relative z-10 w-full space-y-2">
                                         <h4 className="font-script text-3xl sm:text-4xl text-white leading-tight drop-shadow-md">
                                             {product.name}
                                         </h4>
-                                        <p className="text-[10px] text-emerald-200 font-extrabold uppercase tracking-widest">
-                                            Freschezza di Giornata
-                                        </p>
 
                                         {/* Price Tag Pill */}
-                                        <div className="pt-1.5">
-                                            <span className="inline-block bg-amber-400 text-nature-950 font-black px-4 py-1 rounded-full text-xs shadow-lg">
+                                        <div>
+                                            <span className="inline-block bg-amber-400 text-nature-950 font-black px-4 py-1.5 rounded-full text-sm shadow-lg">
                                                 €{formattedPrice} / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}
                                             </span>
                                         </div>
                                     </div>
 
-                                    {/* Story Footer */}
+                                    {/* Story Footer (Last sentence preserved) */}
                                     <div className="relative z-10 pt-2 border-t border-white/10 w-full text-[10px] font-bold text-white/80">
-                                        ✨ Ordina online su ortofruttabutti.it
+                                        ✨ Tocca o visita ortofruttabutti.it per ordinare
                                     </div>
                                 </div>
 
