@@ -456,13 +456,15 @@ export const ProductDetail = () => {
             </div>
 
             {/* Sticky Mobile Action Bar (Smartphone Bottom Bar) */}
-            <div className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 shadow-2xl">
+            <div className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 p-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
                 <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Prezzo</span>
-                        <span className="text-xl font-black text-emerald-950 leading-tight">
-                            €{formattedPrice}
-                            <span className="text-xs font-normal text-gray-500"> / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}</span>
+                    <div className="flex flex-col shrink-0">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            {currentQty > 0 ? 'Totale Stimato' : 'Prezzo'}
+                        </span>
+                        <span className="text-lg sm:text-xl font-black text-emerald-950 leading-tight">
+                            €{currentQty > 0 ? formattedEstimatedTotal : formattedPrice}
+                            <span className="text-[11px] font-bold text-gray-500"> / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}</span>
                         </span>
                     </div>
 
@@ -471,26 +473,26 @@ export const ProductDetail = () => {
                             <button
                                 type="button"
                                 onClick={() => setSelectedProductForWeight(product)}
-                                className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
+                                className="w-full bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white py-3 px-4 rounded-xl font-black text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-transform"
                             >
                                 <Scale size={18} />
-                                <span>{currentQty > 0 ? `${currentQty} kg` : 'Scegli Peso'}</span>
+                                <span>{currentQty > 0 ? `${currentQty} kg nel carrello` : 'Scegli Peso & Aggiungi'}</span>
                             </button>
                         ) : (
                             currentQty > 0 ? (
-                                <div className="flex items-center justify-between bg-emerald-50 rounded-xl p-1 border border-emerald-200">
+                                <div className="flex items-center justify-between bg-emerald-50 rounded-xl p-1 border border-emerald-200 shadow-inner">
                                     <button
                                         type="button"
                                         onClick={() => updateQuantity(product.id, Math.max(0, currentQty - 1))}
-                                        className="w-9 h-9 bg-white rounded-lg text-emerald-900 flex items-center justify-center shadow-xs"
+                                        className="w-9 h-9 bg-white rounded-lg text-emerald-900 flex items-center justify-center shadow-2xs active:scale-90"
                                     >
                                         <Minus size={16} strokeWidth={3} />
                                     </button>
-                                    <span className="font-extrabold text-base text-emerald-950 px-2">{currentQty} pz</span>
+                                    <span className="font-black text-sm text-emerald-950 px-2">{currentQty} pz</span>
                                     <button
                                         type="button"
                                         onClick={() => updateQuantity(product.id, currentQty + 1)}
-                                        className="w-9 h-9 bg-emerald-800 rounded-lg text-white flex items-center justify-center shadow-xs"
+                                        className="w-9 h-9 bg-emerald-800 rounded-lg text-white flex items-center justify-center shadow-2xs active:scale-90"
                                     >
                                         <Plus size={16} strokeWidth={3} />
                                     </button>
@@ -499,10 +501,10 @@ export const ProductDetail = () => {
                                 <button
                                     type="button"
                                     onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
-                                    className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
+                                    className="w-full bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white py-3 px-4 rounded-xl font-black text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-transform"
                                 >
                                     <ShoppingBasket size={18} />
-                                    <span>Aggiungi</span>
+                                    <span>Aggiungi al Carrello</span>
                                 </button>
                             )
                         )}
