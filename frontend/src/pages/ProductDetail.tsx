@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
 import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
+import { ProductShareModal } from '../components/ProductShareModal';
 import { sanitizeImageUrl } from '../utils/imageUrl';
 
 interface Product {
@@ -34,7 +35,7 @@ export const ProductDetail = () => {
     const { items, addItem, updateQuantity, updateItemUnit } = useCartStore();
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
     const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
-    const [copiedLink, setCopiedLink] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     const cartItem = product ? items.find(i => i.id === product.id) : null;
     const [selectedUnit, setSelectedUnit] = useState<'KG' | 'PZ' | 'BOX'>('KG');
@@ -78,17 +79,7 @@ export const ProductDetail = () => {
     }, [id]);
 
     const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: product?.name || 'Ortofrutta Butti',
-                text: `Scopri ${product?.name} su Ortofrutta Butti!`,
-                url: window.location.href
-            }).catch(() => {});
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            setCopiedLink(true);
-            setTimeout(() => setCopiedLink(false), 2000);
-        }
+        setIsShareModalOpen(true);
     };
 
     if (loading) return (
@@ -152,7 +143,7 @@ export const ProductDetail = () => {
                         title="Condividi prodotto"
                     >
                         <Share2 size={15} />
-                        <span className="hidden sm:inline">{copiedLink ? 'Copiato!' : 'Condividi'}</span>
+                        <span className="hidden sm:inline">Condividi</span>
                     </button>
                 </div>
             </div>
@@ -556,6 +547,15 @@ export const ProductDetail = () => {
                     }
                 }}
             />
+
+            {/* Product Advanced Share Modal & Story Card Generator */}
+            {product && (
+                <ProductShareModal
+                    isOpen={isShareModalOpen}
+                    onClose={() => setIsShareModalOpen(false)}
+                    product={product}
+                />
+            )}
 
         </div>
     );
