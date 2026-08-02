@@ -245,28 +245,32 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
                 <motion.div 
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                    initial={{ opacity: 0, y: '100%' }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: '100%' }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                    className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh]"
                 >
+                    {/* Mobile Handle Pill */}
+                    <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-2.5 mb-1 sm:hidden"></div>
+
                     {/* Modal Header */}
-                    <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/60">
+                    <div className="p-3.5 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/60">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0">
                                 <Share2 size={18} />
                             </div>
-                            <div>
-                                <h3 className="font-extrabold text-gray-900 text-base">Condividi Prodotto</h3>
-                                <p className="text-xs text-gray-500 font-medium truncate max-w-[220px] sm:max-w-xs">{product.name}</p>
+                            <div className="min-w-0">
+                                <h3 className="font-extrabold text-gray-900 text-sm sm:text-base leading-tight">Condividi Prodotto</h3>
+                                <p className="text-[11px] sm:text-xs text-gray-500 font-medium truncate max-w-[200px] sm:max-w-xs">{product.name}</p>
                             </div>
                         </div>
 
                         <button 
                             onClick={onClose}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                         >
                             <X size={20} />
                         </button>
