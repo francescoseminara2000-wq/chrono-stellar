@@ -290,9 +290,8 @@ export class ProductController {
             const title = `${product.name} - €${formattedPrice}/${unitStr} | Ortofrutta Butti`;
             const description = product.description || `Scopri ${product.name} fresco di giornata su Ortofrutta Butti Sirone. Ordina online con consegna a domicilio o ritiro!`;
 
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-            const host = req.headers['x-forwarded-host'] || req.get('host') || 'ortofruttabutti.it';
-            const baseUrl = `${protocol}://${host}`;
+            const host = (req.headers['x-forwarded-host'] || req.get('host') || 'ortofruttabutti.it').toString().split(':')[0];
+            const baseUrl = `https://${host}`;
             const imageUrl = product.imageUrl 
                 ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${baseUrl}${product.imageUrl.startsWith('/') ? '' : '/'}${product.imageUrl}`) 
                 : `${baseUrl}/logo.png`;
