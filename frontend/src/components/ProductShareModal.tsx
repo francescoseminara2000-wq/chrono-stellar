@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { 
     X, Share2, Copy, Check, MessageCircle, Facebook, Send, Download, 
-    Sparkles, Leaf, Image as ImageIcon
+    Leaf, Image as ImageIcon, Smartphone, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -29,7 +29,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
     onClose,
     product
 }) => {
-    const [activeTab, setActiveTab] = useState<'quick' | 'story'>('quick');
+    const [activeTab, setActiveTab] = useState<'quick' | 'story'>('story'); // Default to story preview
     const [copied, setCopied] = useState(false);
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const storyCardRef = useRef<HTMLDivElement>(null);
@@ -58,7 +58,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
         window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(`*${product.name}* - Ortofrutta Butti`)}`, '_blank');
     };
 
-    const handleNativeShare = () => {
+    const handleNativeLinkShare = () => {
         if (navigator.share) {
             navigator.share({
                 title: product.name,
@@ -70,10 +70,9 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
         }
     };
 
-    // Canvas exporter for vertical 9:16 story image download
-    const handleDownloadStoryCard = async () => {
-        setIsGeneratingImage(true);
-        try {
+    // Helper to generate vertical 9:16 story PNG File object
+    const generateStoryImageFile = (): Promise<File> => {
+        return new Promise((resolve, reject) => {
             const canvas = document.createElement('canvas');
             const width = 1080;
             const height = 1920;
@@ -81,110 +80,157 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
             canvas.height = height;
             const ctx = canvas.getContext('2d');
 
-            if (!ctx) return;
+            if (!ctx) return reject('Canvas context error');
 
-            // Background Gradient (Nature Green & Dark Emerald)
+            // 1. Ultra Modern Dark Gradient Background
             const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
             bgGradient.addColorStop(0, '#064e3b');   // emerald-900
-            bgGradient.addColorStop(0.5, '#022c22'); // emerald-950
-            bgGradient.addColorStop(1, '#064e3b');   // emerald-900
+            bgGradient.addColorStop(0.4, '#022c22'); // emerald-950
+            bgGradient.addColorStop(0.8, '#064e3b'); // emerald-900
+            bgGradient.addColorStop(1, '#022c22');   // emerald-950
             ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, width, height);
 
-            // Subtle Decorative Radial Glow
-            const radialGlow = ctx.createRadialGradient(width / 2, height / 3, 50, width / 2, height / 3, 600);
-            radialGlow.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
+            // 2. Radial Glow Highlight Behind Image
+            const radialGlow = ctx.createRadialGradient(width / 2, 700, 50, width / 2, 700, 650);
+            radialGlow.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+            radialGlow.addColorStop(0.7, 'rgba(16, 185, 129, 0.08)');
             radialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = radialGlow;
             ctx.fillRect(0, 0, width, height);
 
-            // Header Banner
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            // 3. Top Glassmorphic Pill Banner
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
             ctx.beginPath();
-            ctx.roundRect(140, 100, 800, 110, 55);
+            ctx.roundRect(140, 110, 800, 120, 60);
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            ctx.font = 'bold 42px Nunito, sans-serif';
+            ctx.font = 'bold 44px Nunito, sans-serif';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
-            ctx.fillText('🌿 ORTOFRUTTA BUTTI • SIRONE', width / 2, 170);
+            ctx.fillText('🔥 PRODOTTO DI STAGIONE • ORTOFRUTTA BUTTI', width / 2, 185);
 
-            // Product Image Drawing with Fallback
             const img = new Image();
             img.crossOrigin = 'anonymous';
             const imgUrl = product.imageUrl ? sanitizeImageUrl(product.imageUrl) : '';
 
             const drawRestOfCard = () => {
-                // Product Name
-                ctx.font = 'normal 95px "Dancing Script", cursive, Georgia';
+                // 5. Title & Tagline Box
+                ctx.font = 'normal 96px "Dancing Script", Georgia, serif';
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-                ctx.shadowBlur = 20;
-                ctx.fillText(product.name, width / 2, 1320);
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+                ctx.shadowBlur = 25;
+                ctx.fillText(product.name, width / 2, 1340);
                 ctx.shadowBlur = 0;
 
-                // Tagline Badge
                 ctx.font = 'bold 36px Nunito, sans-serif';
                 ctx.fillStyle = '#a7f3d0';
-                ctx.fillText('FRESCHEZZA DI GIORNATA • RACCOLTO LOCALE', width / 2, 1400);
+                ctx.fillText('FRESCHEZZA DI GIORNATA • RACCOLTO SIRONE (LC)', width / 2, 1420);
 
-                // Price Tag Pill
-                ctx.fillStyle = '#f59e0b'; // amber-500
+                // 6. Price Tag Badge (Golden Amber Pill)
+                const priceText = `€${formattedPrice} / ${product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}`;
+                ctx.fillStyle = '#fbbf24'; // amber-400
                 ctx.beginPath();
-                ctx.roundRect(width / 2 - 320, 1460, 640, 160, 80);
+                ctx.roundRect(width / 2 - 340, 1480, 680, 160, 80);
                 ctx.fill();
 
-                ctx.font = 'black 65px Nunito, sans-serif';
+                ctx.font = 'black 68px Nunito, sans-serif';
                 ctx.fillStyle = '#022c22';
-                ctx.fillText(`€${formattedPrice} / ${product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}`, width / 2, 1560);
+                ctx.fillText(priceText, width / 2, 1582);
 
-                // Footer Prompt
+                // 7. Footer Prompt
                 ctx.font = 'bold 38px Nunito, sans-serif';
                 ctx.fillStyle = '#ffffff';
-                ctx.fillText('🛒 Ordina online su ortofruttabutti.it', width / 2, 1770);
+                ctx.fillText('✨ Tocca o visita ortofruttabutti.it per ordinare', width / 2, 1780);
 
-                // Trigger Download
-                const dataUrl = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = `storia-ortofrutta-${product.id}.png`;
-                link.href = dataUrl;
-                link.click();
-                setIsGeneratingImage(false);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const file = new File([blob], `storia-ortofrutta-${product.id}.png`, { type: 'image/png' });
+                        resolve(file);
+                    } else {
+                        reject('Blob creation failed');
+                    }
+                }, 'image/png');
             };
 
+            // 4. Draw Image or Placeholder Card
             if (imgUrl) {
                 img.onload = () => {
                     ctx.save();
                     ctx.beginPath();
-                    ctx.roundRect(140, 260, 800, 950, 60);
+                    ctx.roundRect(140, 270, 800, 960, 60);
                     ctx.clip();
-                    ctx.drawImage(img, 140, 260, 800, 950);
+                    ctx.drawImage(img, 140, 270, 800, 960);
                     ctx.restore();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
                     drawRestOfCard();
                 };
                 img.onerror = () => {
-                    // Draw Placeholder
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
                     ctx.beginPath();
-                    ctx.roundRect(140, 260, 800, 950, 60);
+                    ctx.roundRect(140, 270, 800, 960, 60);
                     ctx.fill();
                     drawRestOfCard();
                 };
                 img.src = imgUrl;
             } else {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
                 ctx.beginPath();
-                ctx.roundRect(140, 260, 800, 950, 60);
+                ctx.roundRect(140, 270, 800, 960, 60);
                 ctx.fill();
                 drawRestOfCard();
             }
+        });
+    };
 
+    // Direct Instant Share to Instagram Stories / TikTok / WA via System Sheet
+    const handleDirectSocialShare = async () => {
+        setIsGeneratingImage(true);
+        try {
+            const file = await generateStoryImageFile();
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: product.name,
+                    text: shareMessage
+                });
+            } else {
+                // Fallback: Download file directly
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        } catch (err) {
+            console.log("Share cancelled or failed", err);
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    };
+
+    // Manual Download File
+    const handleDownloadStoryCard = async () => {
+        setIsGeneratingImage(true);
+        try {
+            const file = await generateStoryImageFile();
+            const url = URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            a.click();
+            URL.revokeObjectURL(url);
         } catch (err) {
             console.error("Error generating story card PNG", err);
+        } finally {
             setIsGeneratingImage(false);
         }
     };
@@ -218,19 +264,8 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                         </button>
                     </div>
 
-                    {/* Navigation Tabs (Quick Share vs Story Card 9:16) */}
+                    {/* Navigation Tabs (Story Card 9:16 vs Quick Share) */}
                     <div className="flex bg-gray-100/80 p-1 mx-4 mt-4 rounded-2xl border border-gray-200/60 text-xs font-bold">
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab('quick')}
-                            className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                activeTab === 'quick' ? 'bg-white text-emerald-900 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                        >
-                            <Share2 size={14} />
-                            <span>Condivisione Rapida</span>
-                        </button>
-
                         <button
                             type="button"
                             onClick={() => setActiveTab('story')}
@@ -239,13 +274,109 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                             }`}
                         >
                             <ImageIcon size={14} />
-                            <span>Card Storie (9:16)</span>
+                            <span>Card Storie (Instagram/TikTok)</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('quick')}
+                            className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                activeTab === 'quick' ? 'bg-white text-emerald-900 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                        >
+                            <Share2 size={14} />
+                            <span>Link Rapido</span>
                         </button>
                     </div>
 
                     {/* Modal Body */}
                     <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1">
-                        {activeTab === 'quick' ? (
+                        {activeTab === 'story' ? (
+                            /* VERTICAL 9:16 SOCIAL STORY CARD TAB */
+                            <div className="flex flex-col items-center justify-center space-y-4">
+                                <div className="text-center space-y-1">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black uppercase tracking-wider">
+                                        <Zap size={14} className="text-amber-500" /> Pronta per Storie & Reel
+                                    </span>
+                                    <p className="text-xs text-gray-500 font-medium">Tocca per aprire direttamente su Instagram o TikTok</p>
+                                </div>
+
+                                {/* Vertical Story Preview Box (9:16 Aspect Ratio) */}
+                                <div 
+                                    ref={storyCardRef}
+                                    className="w-[250px] sm:w-[270px] aspect-[9/16] rounded-3xl bg-gradient-to-b from-emerald-900 via-emerald-950 to-emerald-900 border-4 border-emerald-500/30 shadow-2xl p-4 flex flex-col justify-between items-center relative overflow-hidden text-center group"
+                                >
+                                    {/* Decorative Ambient Radial */}
+                                    <div className="absolute inset-0 bg-radial from-emerald-400/20 via-transparent to-transparent pointer-events-none"></div>
+
+                                    {/* Story Header */}
+                                    <div className="relative z-10 w-full bg-white/15 backdrop-blur-md py-1.5 px-3 rounded-full border border-white/20 text-[10px] font-black text-white tracking-wider uppercase flex items-center justify-center gap-1">
+                                        <Leaf size={11} className="text-emerald-400" />
+                                        <span>Ortofrutta Butti • Sirone</span>
+                                    </div>
+
+                                    {/* Main Product Image Container */}
+                                    <div className="relative z-10 w-full h-[52%] rounded-2xl overflow-hidden shadow-xl bg-black/20 border border-white/20 my-2">
+                                        {product.imageUrl ? (
+                                            <img 
+                                                src={sanitizeImageUrl(product.imageUrl)} 
+                                                alt={product.name} 
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center font-script text-7xl text-white/30">
+                                                {product.name[0]}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Story Text Info */}
+                                    <div className="relative z-10 w-full space-y-1">
+                                        <h4 className="font-script text-3xl sm:text-4xl text-white leading-tight drop-shadow-md">
+                                            {product.name}
+                                        </h4>
+                                        <p className="text-[10px] text-emerald-200 font-extrabold uppercase tracking-widest">
+                                            Freschezza di Giornata
+                                        </p>
+
+                                        {/* Price Tag Pill */}
+                                        <div className="pt-1.5">
+                                            <span className="inline-block bg-amber-400 text-nature-950 font-black px-4 py-1 rounded-full text-xs shadow-lg">
+                                                €{formattedPrice} / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Story Footer */}
+                                    <div className="relative z-10 pt-2 border-t border-white/10 w-full text-[10px] font-bold text-white/80">
+                                        ✨ Ordina online su ortofruttabutti.it
+                                    </div>
+                                </div>
+
+                                {/* Direct Social Share & Download Buttons Container */}
+                                <div className="w-full space-y-2.5 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleDirectSocialShare}
+                                        disabled={isGeneratingImage}
+                                        className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 active:scale-98 text-white font-black rounded-2xl text-xs sm:text-sm shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer border border-emerald-500/30"
+                                    >
+                                        <Smartphone size={18} />
+                                        <span>{isGeneratingImage ? 'Preparazione Card in Corso...' : '📲 Apri & Condividi su Instagram / TikTok'}</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleDownloadStoryCard}
+                                        disabled={isGeneratingImage}
+                                        className="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        <Download size={15} />
+                                        <span>Salva Immagine PNG</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
                             <div className="space-y-5">
                                 {/* Social Share Grid */}
                                 <div>
@@ -292,7 +423,7 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                                         {/* Device Share Sheet */}
                                         <button
                                             type="button"
-                                            onClick={handleNativeShare}
+                                            onClick={handleNativeLinkShare}
                                             className="p-3 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 text-gray-800 transition-all hover:scale-105 group cursor-pointer"
                                         >
                                             <div className="w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -327,79 +458,6 @@ export const ProductShareModal: React.FC<ProductShareModalProps> = ({
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            /* VERTICAL 9:16 SOCIAL STORY CARD TAB */
-                            <div className="flex flex-col items-center justify-center space-y-4">
-                                <div className="text-center space-y-1">
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black uppercase tracking-wider">
-                                        <Sparkles size={13} /> Formato Storie Instagram / WhatsApp / TikTok
-                                    </span>
-                                    <p className="text-xs text-gray-500 font-medium">Anteprima card pronta per la pubblicazione sui social</p>
-                                </div>
-
-                                {/* Vertical Story Preview Box (9:16 Aspect Ratio) */}
-                                <div 
-                                    ref={storyCardRef}
-                                    className="w-[260px] sm:w-[280px] aspect-[9/16] rounded-3xl bg-gradient-to-b from-emerald-900 via-emerald-950 to-emerald-900 border-4 border-emerald-700/50 shadow-2xl p-5 flex flex-col justify-between items-center relative overflow-hidden text-center"
-                                >
-                                    {/* Decorative Radial Background */}
-                                    <div className="absolute inset-0 bg-radial from-emerald-500/20 via-transparent to-transparent pointer-events-none"></div>
-
-                                    {/* Story Header */}
-                                    <div className="relative z-10 w-full bg-white/15 backdrop-blur-md py-1.5 px-3 rounded-full border border-white/20 text-[11px] font-extrabold text-white tracking-wider uppercase flex items-center justify-center gap-1">
-                                        <Leaf size={12} className="text-emerald-400" />
-                                        <span>Ortofrutta Butti • Sirone</span>
-                                    </div>
-
-                                    {/* Main Product Image Container */}
-                                    <div className="relative z-10 w-full h-[52%] rounded-2xl overflow-hidden shadow-xl bg-black/20 border border-white/20 my-2">
-                                        {product.imageUrl ? (
-                                            <img 
-                                                src={sanitizeImageUrl(product.imageUrl)} 
-                                                alt={product.name} 
-                                                className="w-full h-full object-cover" 
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center font-script text-7xl text-white/30">
-                                                {product.name[0]}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Story Text Info */}
-                                    <div className="relative z-10 w-full space-y-1">
-                                        <h4 className="font-script text-3xl sm:text-4xl text-white leading-tight drop-shadow-md">
-                                            {product.name}
-                                        </h4>
-                                        <p className="text-[10px] text-emerald-200 font-extrabold uppercase tracking-widest">
-                                            Freschezza di Giornata
-                                        </p>
-
-                                        {/* Price Tag Pill */}
-                                        <div className="pt-2">
-                                            <span className="inline-block bg-amber-400 text-nature-950 font-black px-4 py-1.5 rounded-full text-sm shadow-lg">
-                                                €{formattedPrice} / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Story Footer */}
-                                    <div className="relative z-10 pt-2 border-t border-white/10 w-full text-[10px] font-bold text-white/80">
-                                        🛒 Ordina online su ortofruttabutti.it
-                                    </div>
-                                </div>
-
-                                {/* Download Story Card Button */}
-                                <button
-                                    type="button"
-                                    onClick={handleDownloadStoryCard}
-                                    disabled={isGeneratingImage}
-                                    className="w-full sm:w-auto px-6 py-3.5 bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold rounded-2xl text-xs sm:text-sm shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-                                >
-                                    <Download size={16} />
-                                    <span>{isGeneratingImage ? 'Generazione Card...' : 'Scarica Immagine per Storie (PNG)'}</span>
-                                </button>
                             </div>
                         )}
                     </div>
