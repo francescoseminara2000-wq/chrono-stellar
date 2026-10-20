@@ -915,7 +915,7 @@ export const OrderManager = () => {
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                 {/* Orders list: visible when no order is selected */}
                 <div className={`flex flex-col h-full min-h-0 flex-1 w-full ${selectedOrder ? 'hidden' : 'flex'}`}>
-                    <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
+                    <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:auto-rows-max lg:content-start overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
                             {isMultiSelectActive && filteredOrders.length > 0 && (
                                 <div 
                                     onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
@@ -940,7 +940,7 @@ export const OrderManager = () => {
                             <div
                                 key={order.id}
                                 onClick={() => handleSelectOrder(order)}
-                                className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col gap-3 ${
+                                className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between gap-3 shrink-0 min-h-[130px] ${
                                     selectedOrder?.id === order.id
                                         ? 'bg-gradient-to-br from-emerald-50/70 via-white to-gray-50/50 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
                                         : 'bg-white border-gray-200/90 hover:border-emerald-300 hover:shadow-md'
