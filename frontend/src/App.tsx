@@ -38,6 +38,8 @@ import { sanitizeImageUrl } from './utils/imageUrl';
 import { AnalyticsDashboard } from './pages/admin/AnalyticsDashboard';
 import { GiftCardManager } from './pages/admin/GiftCardManager';
 import { NewsletterManager } from './pages/admin/NewsletterManager';
+import { CouponManager } from './pages/admin/CouponManager';
+import { NewsletterConfirm } from './pages/NewsletterConfirm';
 import { useAnalyticsTracker } from './hooks/useAnalyticsTracker';
 
 // Scroll to top & track site analytics on route change
@@ -120,6 +122,8 @@ function App() {
                     <Route path="/profilo" element={<Profile />} />
                     <Route path="/gift-cards" element={<GiftCards />} />
                     <Route path="/buoni-regalo" element={<GiftCards />} />
+                    <Route path="/newsletter/conferma" element={<NewsletterConfirm />} />
+                    <Route path="/newsletter/confirm" element={<NewsletterConfirm />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/cart" element={<Cart />} />
@@ -142,6 +146,7 @@ function App() {
                         <Route path="orders" element={<OrderManager />} />
                         <Route path="logistics" element={<DeliveryMap />} />
                         <Route path="customers" element={<CustomerManager />} />
+                        <Route path="coupons" element={<CouponManager />} />
                         <Route path="gift-cards" element={<GiftCardManager />} />
                         <Route path="newsletter" element={<NewsletterManager />} />
                         <Route path="analytics" element={<AnalyticsDashboard />} />

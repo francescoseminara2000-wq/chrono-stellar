@@ -72,7 +72,7 @@ export const NewsletterSection: React.FC<NewsletterSectionProps> = ({ variant = 
             if (res.ok) {
                 setUnsubMessage({
                     type: 'success',
-                    text: data.message || 'Richiesta inviata. Controlla la tua email per confermare la disiscrizione.'
+                    text: data.message || 'Il tuo indirizzo email è stato rimosso dalla nostra mailing list.'
                 });
                 setUnsubEmail('');
             } else {

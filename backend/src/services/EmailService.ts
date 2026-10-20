@@ -434,5 +434,150 @@ export class EmailService {
 
         return this.sendMail(to, subject, fullHtml, settings);
     }
+
+    async sendNewsletterConfirmationEmail(to: string, token: string) {
+        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        const siteName = settings?.siteName || 'Ortofrutta Butti';
+        const primaryColor = settings?.primaryColor || '#16a34a';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const confirmUrl = `${frontendUrl}/newsletter/conferma?token=${encodeURIComponent(token)}`;
+
+        const subject = `Conferma la tua iscrizione alla Newsletter - ${siteName}`;
+
+        const content = `
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #ecfdf5; color: ${primaryColor}; font-size: 28px; margin: 0 auto 16px auto; text-align: center;">
+                    🌱
+                </div>
+                <h2 style="color: #0f172a; margin-bottom: 8px; font-size: 22px;">Ci sei quasi!</h2>
+                <p style="font-size: 15px; color: #475569; max-width: 440px; margin: 0 auto; line-height: 1.6;">
+                    Grazie per aver richiesto l'iscrizione alla newsletter di <strong>${siteName}</strong>.
+                </p>
+            </div>
+
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #334155;">
+                    Clicca sul pulsante qui sotto per confermare il tuo indirizzo email e iniziare a ricevere le nostre novità e offerte esclusive:
+                </p>
+                <a href="${confirmUrl}" style="background-color: ${primaryColor}; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+                    Conferma Iscrizione
+                </a>
+                <p style="margin: 16px 0 0 0; font-size: 12px; color: #94a3b8;">
+                    Oppure copia e incolla questo link nel browser:<br/>
+                    <a href="${confirmUrl}" style="color: ${primaryColor}; word-break: break-all;">${confirmUrl}</a>
+                </p>
+            </div>
+
+            <p style="color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5;">
+                Se non hai richiesto tu questa iscrizione, puoi tranquillamente ignorare questo messaggio: nessun'altra email ti verrà recapitata senza la tua conferma.
+            </p>
+        `;
+
+        return this.sendMail(to, subject, this.getEmailTemplate('Conferma Iscrizione Newsletter', content, settings), settings);
+    }
+
+    async sendCouponPromoEmail(
+        to: string,
+        recipientName: string,
+        couponCode: string,
+        discountText: string,
+        minSpendText: string,
+        expiryDate?: string,
+        customMessage?: string
+    ) {
+        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        const siteName = settings?.siteName || 'Ortofrutta Butti';
+        const primaryColor = settings?.primaryColor || '#16a34a';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const shopUrl = `${frontendUrl}/shop`;
+
+        const subject = `🎁 Un regalo speciale per te da ${siteName}: ${discountText}!`;
+
+        const content = `
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #fef3c7; color: #d97706; font-size: 28px; margin: 0 auto 16px auto; text-align: center;">
+                    🎉
+                </div>
+                <h2 style="color: #0f172a; margin-bottom: 8px; font-size: 22px;">Ciao ${recipientName},</h2>
+                <p style="font-size: 15px; color: #475569; max-width: 480px; margin: 0 auto; line-height: 1.6;">
+                    ${customMessage || `Abbiamo riservato un'offerta esclusiva per te da utilizzare sul tuo prossimo acquisto di frutta e verdura fresca!`}
+                </p>
+            </div>
+
+            <!-- Coupon Box -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px dashed ${primaryColor}; border-radius: 16px; padding: 28px 20px; text-align: center; margin: 28px 0;">
+                <div style="font-size: 13px; font-weight: bold; color: ${primaryColor}; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+                    Buono Sconto Esclusivo
+                </div>
+                <div style="font-size: 28px; font-weight: 800; color: #064e3b; margin-bottom: 12px;">
+                    ${discountText}
+                </div>
+                <div style="background-color: #ffffff; border: 1px solid #bbf7d0; display: inline-block; padding: 10px 24px; border-radius: 8px; font-family: monospace; font-size: 20px; font-weight: bold; color: #047857; letter-spacing: 2px; margin-bottom: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                    ${couponCode}
+                </div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                    Valido ${minSpendText} ${expiryDate ? `• Scade il <strong>${expiryDate}</strong>` : ''}
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${shopUrl}" style="background-color: ${primaryColor}; color: #ffffff; padding: 14px 34px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+                    Usa il Codice sullo Shop
+                </a>
+            </div>
+
+            <p style="color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5;">
+                Per usufruire dello sconto, inserisci il codice nel campo "Codice Sconto" durante il carrello o checkout.
+            </p>
+        `;
+
+        return this.sendMail(to, subject, this.getEmailTemplate('Buono Sconto Speciale', content, settings), settings);
+    }
+
+    async sendRegistrationWelcomeEmail(to: string, name: string, couponCode?: string, discountText?: string, minSpendText?: string) {
+        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        const siteName = settings?.siteName || 'Ortofrutta Butti';
+        const primaryColor = settings?.primaryColor || '#16a34a';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+        const subject = `Benvenuto su ${siteName}! ${couponCode ? `Ecco il tuo buono sconto: ${couponCode}` : ''}`;
+
+        const content = `
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background-color: #ecfdf5; color: ${primaryColor}; font-size: 28px; margin: 0 auto 16px auto; text-align: center;">
+                    🍏
+                </div>
+                <h2 style="color: #0f172a; margin-bottom: 8px; font-size: 22px;">Benvenuto, ${name}!</h2>
+                <p style="font-size: 15px; color: #475569; max-width: 480px; margin: 0 auto; line-height: 1.6;">
+                    Il tuo account su <strong>${siteName}</strong> è stato attivato con successo. Da oggi puoi ordinare online e ricevere la spesa a domicilio o ritirarla in negozio!
+                </p>
+            </div>
+
+            ${couponCode ? `
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px dashed ${primaryColor}; border-radius: 16px; padding: 24px 20px; text-align: center; margin: 24px 0;">
+                <div style="font-size: 12px; font-weight: bold; color: ${primaryColor}; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">
+                    Il tuo Regalo di Benvenuto
+                </div>
+                <div style="font-size: 24px; font-weight: 800; color: #064e3b; margin-bottom: 10px;">
+                    ${discountText || 'Sconto sul tuo primo ordine'}
+                </div>
+                <div style="background-color: #ffffff; border: 1px solid #bbf7d0; display: inline-block; padding: 8px 20px; border-radius: 8px; font-family: monospace; font-size: 18px; font-weight: bold; color: #047857; letter-spacing: 2px; margin-bottom: 8px;">
+                    ${couponCode}
+                </div>
+                <div style="font-size: 12px; color: #64748b;">
+                    ${minSpendText ? `Valido ${minSpendText}` : 'Da inserire al momento del checkout'}
+                </div>
+            </div>
+            ` : ''}
+
+            <div style="text-align: center; margin: 28px 0;">
+                <a href="${frontendUrl}/shop" style="background-color: ${primaryColor}; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+                    Inizia a Fare la Spesa
+                </a>
+            </div>
+        `;
+
+        return this.sendMail(to, subject, this.getEmailTemplate('Benvenuto nel nostro Negozio', content, settings), settings);
+    }
 }
 

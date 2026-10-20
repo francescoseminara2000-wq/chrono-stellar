@@ -5,11 +5,15 @@ import { CashOnDeliveryStrategy } from '../infrastructure/payment/CodStrategy';
 import { RevolutPaymentStrategy } from '../infrastructure/payment/RevolutStrategy';
 import { PrismaClient, Prisma, OrderStatus, UnitType, PaymentGateway, TransactionStatus } from '@prisma/client';
 
+import { CouponService } from './CouponService';
+
 export class OrderService {
     private paymentStrategies: Map<string, PaymentStrategy>;
+    private couponService: CouponService;
 
     constructor() {
         this.paymentStrategies = new Map();
+        this.couponService = new CouponService();
         // Register strategies
         const cod = new CashOnDeliveryStrategy();
         const revolut = new RevolutPaymentStrategy();
@@ -21,7 +25,7 @@ export class OrderService {
         items: { id: number; quantity: number; orderedUnit?: UnitType }[],
         paymentMethod: string,
         deliveryDetails: { method: string; address?: string; notes?: string; shippingCost?: number; latitude?: number; longitude?: number; scheduledDate?: string; scheduledTime?: string },
-        customerDetails: { userId?: number; name?: string; email?: string; phone?: string; registerUser?: boolean; street?: string; civic?: string; city?: string; zipCode?: string; useWallet?: boolean }
+        customerDetails: { userId?: number; name?: string; email?: string; phone?: string; registerUser?: boolean; street?: string; civic?: string; city?: string; zipCode?: string; useWallet?: boolean; couponCode?: string }
     ) {
         const strategy = this.paymentStrategies.get(paymentMethod);
         if (!strategy) {
@@ -132,12 +136,35 @@ export class OrderService {
                 finalUserId = newUser.id;
             }
 
+            // Calcolo eventuale Coupon Sconto
+            let appliedCoupon: any = null;
+            let discountAmount = 0;
+            if (customerDetails.couponCode && customerDetails.couponCode.trim()) {
+                const couponValidation = await this.couponService.validateCoupon(
+                    customerDetails.couponCode,
+                    estimatedTotal, // subtotal prima della spedizione
+                    customerDetails.email,
+                    finalUserId || undefined
+                );
+
+                if (!couponValidation.valid) {
+                    throw new Error(couponValidation.error || 'Codice sconto non valido.');
+                }
+
+                appliedCoupon = couponValidation.coupon;
+                discountAmount = couponValidation.discountAmount || 0;
+            }
+
+            // Totale stimato: (Totale articoli - Sconto Coupon) + Spedizione
+            const subtotalAfterDiscount = Math.max(0, estimatedTotal - discountAmount);
+            const totalToPay = subtotalAfterDiscount + shippingCost;
+
             // Calcolo eventuale saldo Wallet da scalare
             let walletAmountUsed = 0;
             if (finalUserId && customerDetails.useWallet) {
                 const userForWallet = await tx.user.findUnique({ where: { id: finalUserId } });
                 if (userForWallet && userForWallet.walletBalance > 0) {
-                    walletAmountUsed = Math.min(userForWallet.walletBalance, Math.round(estimatedTotal));
+                    walletAmountUsed = Math.min(userForWallet.walletBalance, Math.round(totalToPay));
                 }
             }
 
@@ -149,8 +176,11 @@ export class OrderService {
                     customerEmail: customerDetails.email,
                     customerPhone: customerDetails.phone,
                     status: OrderStatus.PENDING,
-                    estimatedTotal: Math.round(estimatedTotal),
+                    estimatedTotal: Math.round(totalToPay),
                     walletAmountUsed: walletAmountUsed,
+                    couponId: appliedCoupon ? appliedCoupon.id : null,
+                    couponCode: appliedCoupon ? appliedCoupon.code : null,
+                    discountAmount: discountAmount,
                     deliveryMethod: deliveryDetails.method as any,
                     shippingAddress: deliveryDetails.address,
                     deliveryNotes: deliveryDetails.notes,
@@ -171,6 +201,24 @@ export class OrderService {
                     }
                 }
             });
+
+            // Registra utilizzo del coupon se applicato
+            if (appliedCoupon && discountAmount > 0) {
+                await tx.coupon.update({
+                    where: { id: appliedCoupon.id },
+                    data: { timesUsed: { increment: 1 } }
+                });
+
+                await tx.couponUsage.create({
+                    data: {
+                        couponId: appliedCoupon.id,
+                        orderId: newOrder.id,
+                        userId: finalUserId,
+                        customerEmail: (customerDetails.email || '').trim().toLowerCase(),
+                        discountAmount: discountAmount
+                    }
+                });
+            }
 
             // Se è stato usato il saldo, scala dal conto e registra la transazione
             if (walletAmountUsed > 0 && finalUserId) {

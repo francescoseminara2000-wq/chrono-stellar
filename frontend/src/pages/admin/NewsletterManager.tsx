@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Send, Eye, History, Sparkles, CheckCircle2, AlertTriangle, Info, Clock, RefreshCw } from 'lucide-react';
+import { Mail, Send, Eye, History, Sparkles, CheckCircle2, AlertTriangle, Info, Clock, RefreshCw, Users, Search, Trash2, UserCheck, UserX } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useAppState } from '../../store/useAppState';
 
@@ -9,7 +9,7 @@ export const NewsletterManager: React.FC = () => {
     const { token, user } = useAuthStore();
     const { settings } = useAppState();
 
-    const [activeTab, setActiveTab] = useState<'composer' | 'history' | 'guide'>('composer');
+    const [activeTab, setActiveTab] = useState<'composer' | 'subscribers' | 'history' | 'guide'>('composer');
 
     // Composer State
     const [subject, setSubject] = useState('');
@@ -18,6 +18,13 @@ export const NewsletterManager: React.FC = () => {
     const [testEmail, setTestEmail] = useState(user?.email || '');
     const [isSending, setIsSending] = useState(false);
     const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // Subscribers State
+    const [subscribers, setSubscribers] = useState<any[]>([]);
+    const [subscriberStats, setSubscriberStats] = useState({ total: 0, confirmed: 0, pending: 0, unsubscribed: 0 });
+    const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false);
+    const [subscriberSearch, setSubscriberSearch] = useState('');
+    const [subscriberFilter, setSubscriberFilter] = useState<'all' | 'confirmed' | 'pending' | 'unsubscribed'>('all');
 
     // History State
     const [history, setHistory] = useState<any[]>([]);
@@ -84,9 +91,53 @@ export const NewsletterManager: React.FC = () => {
         }
     };
 
+    const fetchSubscribers = async () => {
+        setIsLoadingSubscribers(true);
+        try {
+            const res = await fetch(`${API_URL}/api/admin/newsletter/subscribers`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSubscribers(data.subscribers || []);
+                if (data.stats) {
+                    setSubscriberStats(data.stats);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch subscribers:', err);
+        } finally {
+            setIsLoadingSubscribers(false);
+        }
+    };
+
+    const handleDeleteSubscriber = async (id: number, email: string) => {
+        if (!window.confirm(`Sei sicuro di voler eliminare l'iscritto ${email}?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/newsletter/subscribers/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setActionFeedback({ type: 'success', message: `Iscritto ${email} rimosso con successo.` });
+                fetchSubscribers();
+                setTimeout(() => setActionFeedback(null), 3000);
+            } else {
+                setActionFeedback({ type: 'error', message: 'Errore durante l\'eliminazione.' });
+            }
+        } catch (err) {
+            setActionFeedback({ type: 'error', message: 'Errore di connessione.' });
+        }
+    };
+
     useEffect(() => {
         if (activeTab === 'history') {
             fetchHistory();
+        } else if (activeTab === 'subscribers') {
+            fetchSubscribers();
         }
     }, [activeTab]);
 
@@ -161,7 +212,7 @@ export const NewsletterManager: React.FC = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-2 bg-gray-100 p-1 rounded-2xl shrink-0">
+                <div className="flex flex-wrap gap-2 bg-gray-100 p-1 rounded-2xl shrink-0">
                     <button
                         onClick={() => setActiveTab('composer')}
                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -169,6 +220,14 @@ export const NewsletterManager: React.FC = () => {
                         }`}
                     >
                         <Send size={14} /> Componi & Invia
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('subscribers')}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            activeTab === 'subscribers' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                    >
+                        <Users size={14} /> Iscritti {subscriberStats.total > 0 && <span className="ml-1 px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded-full text-[10px]">{subscriberStats.confirmed}</span>}
                     </button>
                     <button
                         onClick={() => setActiveTab('history')}
@@ -184,7 +243,7 @@ export const NewsletterManager: React.FC = () => {
                             activeTab === 'guide' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'
                         }`}
                     >
-                        <Info size={14} /> Guida IONOS
+                        <Info size={14} /> Guida & Info
                     </button>
                 </div>
             </div>
@@ -361,6 +420,226 @@ export const NewsletterManager: React.FC = () => {
                 </div>
             )}
 
+            {/* TAB: SUBSCRIBERS */}
+            {activeTab === 'subscribers' && (
+                <div className="space-y-6">
+                    {/* Stat Cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white p-5 rounded-2xl border border-gray-150 shadow-xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Totale Iscritti</span>
+                                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                    <Users size={16} />
+                                </div>
+                            </div>
+                            <div className="text-2xl font-black text-gray-900 mt-2">{subscriberStats.total}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">Tutti i contatti registrati</div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-gray-150 shadow-xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">Confermati & Attivi</span>
+                                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <UserCheck size={16} />
+                                </div>
+                            </div>
+                            <div className="text-2xl font-black text-emerald-700 mt-2">{subscriberStats.confirmed}</div>
+                            <div className="text-xs text-emerald-600/80 mt-0.5">Riceveranno le newsletter</div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-gray-150 shadow-xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-amber-600">In Attesa</span>
+                                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                                    <Clock size={16} />
+                                </div>
+                            </div>
+                            <div className="text-2xl font-black text-amber-700 mt-2">{subscriberStats.pending}</div>
+                            <div className="text-xs text-amber-600/80 mt-0.5">Email inviata, non ancora cliccata</div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-gray-150 shadow-xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Disiscritti</span>
+                                <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center">
+                                    <UserX size={16} />
+                                </div>
+                            </div>
+                            <div className="text-2xl font-black text-gray-700 mt-2">{subscriberStats.unsubscribed}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">Hanno revocato il consenso</div>
+                        </div>
+                    </div>
+
+                    {/* Table Container */}
+                    <div className="bg-white rounded-3xl border border-gray-150 shadow-xs overflow-hidden">
+                        {/* Filters & Actions Bar */}
+                        <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                <button
+                                    onClick={() => setSubscriberFilter('all')}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        subscriberFilter === 'all'
+                                            ? 'bg-gray-900 text-white'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    Tutti ({subscriberStats.total})
+                                </button>
+                                <button
+                                    onClick={() => setSubscriberFilter('confirmed')}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        subscriberFilter === 'confirmed'
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                                    }`}
+                                >
+                                    Confermati ({subscriberStats.confirmed})
+                                </button>
+                                <button
+                                    onClick={() => setSubscriberFilter('pending')}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        subscriberFilter === 'pending'
+                                            ? 'bg-amber-500 text-white'
+                                            : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                                    }`}
+                                >
+                                    In Attesa ({subscriberStats.pending})
+                                </button>
+                                <button
+                                    onClick={() => setSubscriberFilter('unsubscribed')}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        subscriberFilter === 'unsubscribed'
+                                            ? 'bg-gray-600 text-white'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    Disiscritti ({subscriberStats.unsubscribed})
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                <div className="relative w-full sm:w-64">
+                                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Cerca email..."
+                                        value={subscriberSearch}
+                                        onChange={(e) => setSubscriberSearch(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                                    />
+                                </div>
+                                <button
+                                    onClick={fetchSubscribers}
+                                    className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors shrink-0"
+                                    title="Aggiorna lista"
+                                >
+                                    <RefreshCw size={16} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Subscribers Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-black uppercase tracking-wider text-gray-400">
+                                        <th className="p-4 sm:px-6">Email Iscritto</th>
+                                        <th className="p-4">Stato Iscrizione</th>
+                                        <th className="p-4">Data Richiesta</th>
+                                        <th className="p-4">Data Conferma</th>
+                                        <th className="p-4 sm:pr-6 text-right">Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {isLoadingSubscribers ? (
+                                        <tr>
+                                            <td colSpan={5} className="text-center py-12 text-gray-400">
+                                                Caricamento iscritti in corso...
+                                            </td>
+                                        </tr>
+                                    ) : subscribers.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="text-center py-12 text-gray-400">
+                                                Nessun iscritto trovato. Quando i clienti si iscrivono dal sito appariranno qui.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        subscribers
+                                            .filter((sub) => {
+                                                if (subscriberFilter === 'confirmed') return sub.isConfirmed && sub.isActive;
+                                                if (subscriberFilter === 'pending') return !sub.isConfirmed && sub.isActive;
+                                                if (subscriberFilter === 'unsubscribed') return !sub.isActive;
+                                                return true;
+                                            })
+                                            .filter((sub) =>
+                                                subscriberSearch ? sub.email.toLowerCase().includes(subscriberSearch.toLowerCase()) : true
+                                            )
+                                            .map((sub) => (
+                                                <tr key={sub.id} className="hover:bg-gray-50/80 transition-colors">
+                                                    <td className="p-4 sm:px-6 font-semibold text-gray-900">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
+                                                                {sub.email.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <span className="font-mono text-xs sm:text-sm">{sub.email}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        {sub.isConfirmed && sub.isActive ? (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                                                <CheckCircle2 size={12} /> Confermato & Attivo
+                                                            </span>
+                                                        ) : !sub.isConfirmed && sub.isActive ? (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                                                <Clock size={12} /> In attesa di conferma
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                                                                <UserX size={12} /> Disiscritto
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4 text-xs text-gray-500 font-medium">
+                                                        {new Date(sub.subscribedAt).toLocaleDateString('it-IT', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </td>
+                                                    <td className="p-4 text-xs text-gray-500 font-medium">
+                                                        {sub.confirmedAt ? (
+                                                            new Date(sub.confirmedAt).toLocaleDateString('it-IT', {
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })
+                                                        ) : (
+                                                            <span className="text-gray-300 italic">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4 sm:pr-6 text-right">
+                                                        <button
+                                                            onClick={() => handleDeleteSubscriber(sub.id, sub.email)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                                            title="Elimina iscritto"
+                                                        >
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* TAB 2: HISTORY */}
             {activeTab === 'history' && (
                 <div className="bg-white rounded-3xl border border-gray-150 shadow-xs overflow-hidden">
@@ -430,36 +709,41 @@ export const NewsletterManager: React.FC = () => {
             {activeTab === 'guide' && (
                 <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-150 shadow-xs space-y-6 max-w-4xl">
                     <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
-                            💡
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">
+                            🌿
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg text-gray-900">Come funziona la Mailing List su IONOS</h3>
-                            <p className="text-xs text-gray-500">Tutti i dettagli tecnici e le buone pratiche per inviare comunicazioni</p>
+                            <h3 className="font-bold text-lg text-gray-900">Sistema Newsletter & Mailing List Ortofrutta Butti</h3>
+                            <p className="text-xs text-gray-500">Doppio consenso (Double Opt-in) con grafica personalizzata e invio certificato</p>
                         </div>
                     </div>
 
                     <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
                         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
-                            <h4 className="font-bold text-emerald-900 mb-1">1. L'indirizzo della Mailing List</h4>
+                            <h4 className="font-bold text-emerald-900 mb-1">1. Email di Conferma Personalizzata (100% Brandizzata)</h4>
                             <p className="text-xs text-emerald-800">
-                                La lista creata su IONOS risponde a: <strong className="font-mono">aggiornamenti@ortofruttabutti.it</strong>.
-                                Quando invii una newsletter tramite il pannello qui a fianco, il server invia l'email a questo indirizzo, e IONOS la recapita automaticamente a tutti i membri iscritti.
+                                Quando un cliente inserisce la sua email sul sito (nel Footer o nella Home), il sistema invia immediatamente un'email di benvenuto formattata con il logo, i colori del negozio e il pulsante verde di conferma in italiano. L'utente non riceve più le email grezze in inglese di IONOS.
                             </p>
                         </div>
 
                         <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200">
-                            <h4 className="font-bold text-blue-900 mb-1">2. Iscrizione e Cancellazione a norma GDPR</h4>
+                            <h4 className="font-bold text-blue-900 mb-1">2. Gestione Iscritti & GDPR nel Pannello Admin</h4>
                             <p className="text-xs text-blue-800">
-                                Il modulo presente nel Footer e nella Home Page del tuo sito invia la richiesta di iscrizione a IONOS.
-                                IONOS gestisce automaticamente il <strong>Double Opt-in</strong> (invia un'email di conferma all'utente con un link da cliccare prima di renderlo effettivo nella lista).
+                                Nella scheda <strong>"Iscritti"</strong> hai il pieno controllo: puoi verificare chi ha già confermato il link, chi è ancora in attesa, visualizzare le date di iscrizione e rimuovere contatti su richiesta con un semplice click.
                             </p>
                         </div>
 
                         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
-                            <h4 className="font-bold text-amber-900 mb-1">3. Mittenti Autorizzati nel Pannello IONOS</h4>
+                            <h4 className="font-bold text-amber-900 mb-1">3. Invio Massivo Tramite SMTP IONOS</h4>
                             <p className="text-xs text-amber-800">
-                                Nel pannello di controllo IONOS (sezione Email &gt; Mailing List), assicurati che l'indirizzo configurato come mittente (es. <strong className="font-mono">noreply@ortofruttabutti.it</strong>) sia impostato come <strong>"Moderatore"</strong> o <strong>"Autorizzato a inviare senza moderazione"</strong>. In questo modo i tuoi messaggi partiranno subito senza blocchi.
+                                Quando premi <strong>"Invia a Tutta la Mailing List"</strong>, il server consegna l'email a ciascun iscritto attivo e confermato utilizzando le credenziali SMTP ufficiali di IONOS (<strong className="font-mono">smtp.ionos.it</strong>), garantendo la massima deliverability ed evitando la cartella spam.
+                            </p>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200">
+                            <h4 className="font-bold text-gray-900 mb-1">4. Test di Invio Anteprima</h4>
+                            <p className="text-xs text-gray-700">
+                                Prima di inviare una newsletter a tutti i clienti, puoi usare il pulsante <strong>"Invia Email di Test"</strong> inserendo il tuo indirizzo: riceverai una copia identica per controllare la resa visiva su smartphone e computer.
                             </p>
                         </div>
                     </div>

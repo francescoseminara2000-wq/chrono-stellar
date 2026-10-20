@@ -173,12 +173,31 @@ app.get('/api/wallet', authenticateToken, (req, res) => giftCardController.getWa
 app.get('/api/admin/gift-cards', authenticateToken, requireAdmin, (req, res) => giftCardController.adminList(req, res));
 app.post('/api/admin/gift-cards', authenticateToken, requireAdmin, (req, res) => giftCardController.adminCreate(req, res));
 
-// Newsletter & Mailing List (IONOS)
+// Newsletter & Mailing List (IONOS / Custom Branded)
 import { NewsletterController } from './controllers/NewsletterController';
 const newsletterController = new NewsletterController();
 app.post('/api/newsletter/subscribe', (req, res) => newsletterController.subscribe(req, res));
+app.get('/api/newsletter/confirm', (req, res) => newsletterController.confirm(req, res));
+app.post('/api/newsletter/confirm', (req, res) => newsletterController.confirm(req, res));
 app.post('/api/admin/newsletter/send', authenticateToken, requireAdmin, (req, res) => newsletterController.sendCampaign(req, res));
 app.get('/api/admin/newsletter/history', authenticateToken, requireAdmin, (req, res) => newsletterController.getHistory(req, res));
+app.get('/api/admin/newsletter/subscribers', authenticateToken, requireAdmin, (req, res) => newsletterController.getSubscribers(req, res));
+app.delete('/api/admin/newsletter/subscribers/:id', authenticateToken, requireAdmin, (req, res) => newsletterController.deleteSubscriber(req, res));
+
+// Codici Sconto & Promozioni (Coupons)
+import { CouponController } from './controllers/CouponController';
+const couponController = new CouponController();
+app.post('/api/coupons/validate', (req, res) => couponController.validate(req, res));
+app.get('/api/coupons/welcome-info', (req, res) => couponController.getPublicWelcomeInfo(req, res));
+app.get('/api/admin/coupons', authenticateToken, requireAdmin, (req, res) => couponController.adminList(req, res));
+app.get('/api/admin/coupons/stats', authenticateToken, requireAdmin, (req, res) => couponController.adminStats(req, res));
+app.post('/api/admin/coupons', authenticateToken, requireAdmin, (req, res) => couponController.adminCreate(req, res));
+app.put('/api/admin/coupons/:id', authenticateToken, requireAdmin, (req, res) => couponController.adminUpdate(req, res));
+app.delete('/api/admin/coupons/:id', authenticateToken, requireAdmin, (req, res) => couponController.adminDelete(req, res));
+app.get('/api/admin/coupons/usages', authenticateToken, requireAdmin, (req, res) => couponController.adminUsages(req, res));
+app.post('/api/admin/coupons/send-promo', authenticateToken, requireAdmin, (req, res) => couponController.adminSendPromo(req, res));
+app.get('/api/admin/coupons/welcome-settings', authenticateToken, requireAdmin, (req, res) => couponController.adminGetWelcomeSettings(req, res));
+app.post('/api/admin/coupons/welcome-settings', authenticateToken, requireAdmin, (req, res) => couponController.adminSaveWelcomeSettings(req, res));
 
 app.get('/health', (req, res) => res.send('OK'));
 

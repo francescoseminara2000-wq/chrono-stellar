@@ -53,11 +53,16 @@ model Order {
   approvalStatus     String?              @default("NONE")
   customerApprovedAt DateTime?
   walletAmountUsed   Int?                 @default(0)
+  couponId           Int?
+  couponCode         String?
+  discountAmount     Int?                 @default(0)
+  coupon             Coupon?              @relation(fields: [couponId], references: [id], map: "Order_couponId_fkey")
   user              User?                @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
   items           OrderItem[]
   transaction     Transaction[]
 
   @@index([userId], map: "Order_userId_idx")
+  @@index([couponId], map: "Order_couponId_idx")
 }
 
 model OrderItem {
@@ -161,6 +166,10 @@ model StoreSettings {
   revolutEnvironment       String?  @default("sandbox")
   revolutEnabled           Boolean  @default(false)
   weighingTolerancePercent Int      @default(10)
+  registrationDiscountEnabled Boolean  @default(true)
+  registrationCouponCode      String?  @default("BENVENUTO5")
+  newsletterDiscountEnabled   Boolean  @default(true)
+  newsletterCouponCode        String?  @default("NEWSLETTER10")
 }
 
 model Transaction {
@@ -363,5 +372,65 @@ model NewsletterCampaign {
   @@index([sentAt])
 }
 
+model NewsletterSubscriber {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  isConfirmed       Boolean   @default(false)
+  confirmationToken String?   @unique
+  confirmedAt       DateTime?
+  subscribedAt      DateTime  @default(now())
+  unsubscribedAt    DateTime?
+  isActive          Boolean   @default(true)
 
+  @@index([email])
+  @@index([isConfirmed])
+  @@index([isActive])
+}
 
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model Coupon {
+  id                    Int          @id @default(autoincrement())
+  code                  String       @unique
+  description           String?      @db.Text
+  discountType          DiscountType @default(PERCENTAGE)
+  discountValue         Int          // percentage (es. 10 per 10%) o centesimi (es. 500 per 5.00€)
+  minSpend              Int?         @default(0) // centesimi (es. 3000 per 30.00€)
+  maxDiscount           Int?         // centesimi (tetto massimo per sconti %)
+  usageLimit            Int?         // limite massimo utilizzi totali
+  usageLimitPerUser     Int?         @default(1) // limite utilizzi per utente/email
+  timesUsed             Int          @default(0)
+  startDate             DateTime?
+  endDate               DateTime?
+  isActive              Boolean      @default(true)
+  isForNewsletter       Boolean      @default(false)
+  isForRegistration     Boolean      @default(false)
+  assignedCustomerEmail String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  usages                CouponUsage[]
+  orders                Order[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model CouponUsage {
+  id             Int      @id @default(autoincrement())
+  couponId       Int
+  orderId        Int?
+  userId         Int?
+  customerEmail  String
+  discountAmount Int      // in centesimi
+  usedAt         DateTime @default(now())
+
+  coupon         Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([customerEmail])
+  @@index([userId])
+}

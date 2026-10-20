@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAppState } from '../store/useAppState';
-import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock, CreditCard, CheckCircle2, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToastStore } from '../store/useToastStore';
 
 import { sanitizeImageUrl } from '../utils/imageUrl';
 import { SearchableSelect } from '../components/admin/SearchableSelect';
@@ -24,8 +25,9 @@ interface CheckoutFormData {
 
 export const Checkout = () => {
     const { items, getEstimatedTotal, clearCart, updateQuantity, removeItem } = useCartStore();
-    const { user } = useAuthStore();
+    const { user, token } = useAuthStore();
     const { settings } = useAppState();
+    const addToast = useToastStore((state) => state.addToast);
 
     // Persisted states from localStorage
 
@@ -240,11 +242,63 @@ export const Checkout = () => {
     }, [deliveryMethod, formData.city, deliveryZones]);
 
     const [useWallet, setUseWallet] = useState<boolean>(true);
-    const rawTotal = getEstimatedTotal() + shippingCost;
+    const [couponInput, setCouponInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [couponDiscount, setCouponDiscount] = useState<number>(0);
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponError, setCouponError] = useState<string | null>(null);
+
+    const itemsSubtotal = getEstimatedTotal();
+    const discountAmount = appliedCoupon ? couponDiscount : 0;
+    const subtotalAfterCoupon = Math.max(0, itemsSubtotal - discountAmount);
+    const rawTotal = subtotalAfterCoupon + shippingCost;
     const userWallet = user?.walletBalance || 0;
     const walletDeduction = (user && useWallet && userWallet > 0) ? Math.min(userWallet, rawTotal) : 0;
     const total = Math.max(0, rawTotal - walletDeduction);
     const isEstimated = items.some(i => i.isVariableWeight);
+
+    const handleApplyCoupon = async () => {
+        const cleanCode = couponInput.trim().toUpperCase();
+        if (!cleanCode) return;
+        setCouponLoading(true);
+        setCouponError(null);
+        try {
+            const res = await fetch('/api/coupons/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({
+                    code: cleanCode,
+                    cartSubtotal: itemsSubtotal,
+                    customerEmail: user?.email || formData.email
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok && data.valid) {
+                setAppliedCoupon(data.coupon);
+                setCouponDiscount(data.discountAmount);
+                setCouponInput('');
+                addToast(`Codice sconto ${data.coupon.code} applicato (-${data.formattedDiscount})!`, 'success');
+            } else {
+                setCouponError(data.error || 'Codice sconto non valido.');
+                addToast(data.error || 'Codice sconto non valido.', 'error');
+            }
+        } catch (err) {
+            setCouponError('Errore durante la verifica del codice.');
+        } finally {
+            setCouponLoading(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponDiscount(0);
+        setCouponError(null);
+        addToast('Codice sconto rimosso.', 'info');
+    };
 
     // Stock issues found: { id, name, requested, available, unitType }
     const [stockIssues, setStockIssues] = useState<Array<{
@@ -350,7 +404,8 @@ export const Checkout = () => {
             civic: formData.civic,
             city: formData.city,
             zipCode: formData.zip,
-            useWallet: Boolean(useWallet && walletDeduction > 0)
+            useWallet: Boolean(useWallet && walletDeduction > 0),
+            couponCode: appliedCoupon ? appliedCoupon.code : undefined
         };
 
         try {
@@ -1018,11 +1073,77 @@ export const Checkout = () => {
                                 ))}
                             </div>
 
-                            <div className="space-y-3 pt-4 border-t border-gray-100">
+                            {/* Coupon Input Box */}
+                            <div className="pt-4 border-t border-gray-100">
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                    <Tag size={14} className="text-emerald-600" /> Hai un codice sconto?
+                                </label>
+                                {appliedCoupon ? (
+                                    <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono font-black text-xs text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-emerald-200">
+                                                {appliedCoupon.code}
+                                            </span>
+                                            <span className="text-xs font-bold text-emerald-700">
+                                                - € {(discountAmount / 100).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleRemoveCoupon}
+                                            className="text-gray-400 hover:text-red-500 p-1 cursor-pointer"
+                                            title="Rimuovi codice"
+                                        >
+                                            <XIcon size={16} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Inserisci codice..."
+                                                value={couponInput}
+                                                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleApplyCoupon();
+                                                    }
+                                                }}
+                                                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                disabled={couponLoading || !couponInput.trim()}
+                                                onClick={handleApplyCoupon}
+                                                className="px-4 py-2 bg-gray-900 hover:bg-black disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+                                            >
+                                                {couponLoading ? 'Verifico...' : 'Applica'}
+                                            </button>
+                                        </div>
+                                        {couponError && (
+                                            <p className="text-[11px] text-red-600 font-medium pl-1">
+                                                {couponError}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-3 pt-3 border-t border-gray-100">
                                 <div className="flex justify-between text-gray-600 text-sm">
                                     <span>Subtotale</span>
-                                    <span>€ {(getEstimatedTotal() / 100).toFixed(2)}</span>
+                                    <span>€ {(itemsSubtotal / 100).toFixed(2)}</span>
                                 </div>
+
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between text-emerald-600 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-lg">
+                                        <span>Sconto ({appliedCoupon?.code})</span>
+                                        <span>- € {(discountAmount / 100).toFixed(2)}</span>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between text-gray-600 text-sm">
                                     <span>Spedizione</span>
                                     <span className={shippingCost === 0 ? 'text-green-600 font-medium' : ''}>

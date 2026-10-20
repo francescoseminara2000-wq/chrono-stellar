@@ -84,7 +84,40 @@ export class AuthController {
                 }
             });
 
-            res.json({ message: 'Email verified successfully. You can now log in.' });
+            // Recupera eventuale coupon di benvenuto per nuovi registrati
+            let welcomeCoupon = null;
+            try {
+                const regCoupon = await prisma.coupon.findFirst({
+                    where: { isForRegistration: true, isActive: true }
+                });
+
+                if (regCoupon) {
+                    welcomeCoupon = {
+                        code: regCoupon.code,
+                        discountType: regCoupon.discountType,
+                        discountValue: regCoupon.discountValue,
+                        minSpend: regCoupon.minSpend,
+                        description: regCoupon.description
+                    };
+
+                    const discountText = regCoupon.discountType === 'PERCENTAGE'
+                        ? `${regCoupon.discountValue}% di Sconto`
+                        : `€${(regCoupon.discountValue / 100).toFixed(2)} di Sconto`;
+                    const minSpendText = regCoupon.minSpend && regCoupon.minSpend > 0
+                        ? `su una spesa minima di €${(regCoupon.minSpend / 100).toFixed(2)}`
+                        : undefined;
+
+                    const emailService = new (require('../services/EmailService').EmailService)();
+                    await emailService.sendRegistrationWelcomeEmail(user.email, user.name || 'Cliente', regCoupon.code, discountText, minSpendText);
+                }
+            } catch (couponErr) {
+                console.error('[AuthController] Errore invio coupon benvenuto:', couponErr);
+            }
+
+            res.json({
+                message: 'Email verificata con successo! Ora puoi accedere.',
+                welcomeCoupon
+            });
 
         } catch (error: any) {
             res.status(500).json({ error: error.message });
