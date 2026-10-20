@@ -21,7 +21,7 @@ export class OrderService {
         items: { id: number; quantity: number; orderedUnit?: UnitType }[],
         paymentMethod: string,
         deliveryDetails: { method: string; address?: string; notes?: string; shippingCost?: number; latitude?: number; longitude?: number; scheduledDate?: string; scheduledTime?: string },
-        customerDetails: { userId?: number; name?: string; email?: string; phone?: string; registerUser?: boolean; street?: string; civic?: string; city?: string; zipCode?: string }
+        customerDetails: { userId?: number; name?: string; email?: string; phone?: string; registerUser?: boolean; street?: string; civic?: string; city?: string; zipCode?: string; useWallet?: boolean }
     ) {
         const strategy = this.paymentStrategies.get(paymentMethod);
         if (!strategy) {
@@ -132,6 +132,15 @@ export class OrderService {
                 finalUserId = newUser.id;
             }
 
+            // Calcolo eventuale saldo Wallet da scalare
+            let walletAmountUsed = 0;
+            if (finalUserId && customerDetails.useWallet) {
+                const userForWallet = await tx.user.findUnique({ where: { id: finalUserId } });
+                if (userForWallet && userForWallet.walletBalance > 0) {
+                    walletAmountUsed = Math.min(userForWallet.walletBalance, Math.round(estimatedTotal));
+                }
+            }
+
             // Create the order
             const newOrder = await tx.order.create({
                 data: {
@@ -141,6 +150,7 @@ export class OrderService {
                     customerPhone: customerDetails.phone,
                     status: OrderStatus.PENDING,
                     estimatedTotal: Math.round(estimatedTotal),
+                    walletAmountUsed: walletAmountUsed,
                     deliveryMethod: deliveryDetails.method as any,
                     shippingAddress: deliveryDetails.address,
                     deliveryNotes: deliveryDetails.notes,
@@ -162,6 +172,29 @@ export class OrderService {
                 }
             });
 
+            // Se è stato usato il saldo, scala dal conto e registra la transazione
+            if (walletAmountUsed > 0 && finalUserId) {
+                const updatedUser = await tx.user.update({
+                    where: { id: finalUserId },
+                    data: {
+                        walletBalance: {
+                            decrement: walletAmountUsed
+                        }
+                    }
+                });
+
+                await tx.walletTransaction.create({
+                    data: {
+                        userId: finalUserId,
+                        amount: -walletAmountUsed,
+                        balanceAfter: updatedUser.walletBalance,
+                        type: 'ORDER_PAYMENT',
+                        referenceId: String(newOrder.id),
+                        description: `Pagamento parziale/totale Ordine #${newOrder.id}`
+                    }
+                });
+            }
+
             // Decrement stock for each item
             for (const item of items) {
                 await tx.product.update({
@@ -174,35 +207,54 @@ export class OrderService {
                 });
             }
 
+            // Calcola l'importo residuo da incassare con il gateway esterno
+            const remainingToPay = Math.max(0, Math.round(estimatedTotal) - walletAmountUsed);
+
             // Check if cart has variable weight products
             const hasVariableWeight = newOrder.items.some((item: any) => item.product.isVariableWeight);
 
             // Initiate payment strategy and create Transaction record
             let transactionPartial: any = {};
-            if (hasVariableWeight && paymentMethod === 'REVOLUT') {
+            let gatewayVal: any = paymentMethod === 'REVOLUT' ? 'REVOLUT' : 'COD';
+
+            if (remainingToPay === 0) {
+                // Pagato al 100% con il saldo del Wallet!
+                gatewayVal = PaymentGateway.WALLET;
+                transactionPartial = {
+                    orderId: newOrder.id,
+                    amount: walletAmountUsed,
+                    currency: 'EUR',
+                    gateway: PaymentGateway.WALLET,
+                    status: TransactionStatus.CAPTURED,
+                    gatewayTxId: `WALLET-${newOrder.id}-${Date.now()}`,
+                    metadata: {
+                        paidWithWallet: true,
+                        walletAmountUsed
+                    }
+                };
+            } else if (hasVariableWeight && paymentMethod === 'REVOLUT') {
                 console.log(`[OrderService] Order #${newOrder.id} contains variable weight products. Deferring online payment until post-weighing.`);
                 transactionPartial = {
                     orderId: newOrder.id,
-                    amount: Math.round(estimatedTotal),
+                    amount: remainingToPay,
                     currency: 'EUR',
                     gateway: PaymentGateway.REVOLUT,
                     status: TransactionStatus.PENDING,
                     gatewayTxId: `REV-DEF-${newOrder.id}-${Date.now()}`,
                     metadata: {
                         deferredPayment: true,
-                        hasVariableWeight: true
+                        hasVariableWeight: true,
+                        walletAmountUsed
                     }
                 };
             } else {
-                transactionPartial = await strategy.initiate(newOrder as any, Math.round(estimatedTotal));
+                transactionPartial = await strategy.initiate(newOrder as any, remainingToPay);
             }
-            
-            let gatewayVal: any = paymentMethod === 'REVOLUT' ? 'REVOLUT' : 'COD';
 
             const transaction = await tx.transaction.create({
                 data: {
                     orderId: newOrder.id,
-                    amount: transactionPartial.amount || Math.round(estimatedTotal),
+                    amount: transactionPartial.amount !== undefined ? transactionPartial.amount : remainingToPay,
                     currency: transactionPartial.currency || 'EUR',
                     gateway: gatewayVal as PaymentGateway,
                     status: transactionPartial.status || TransactionStatus.PENDING,

@@ -14,6 +14,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import { Profile } from './pages/Profile';
+import { GiftCards } from './pages/GiftCards';
 import { Orders } from './pages/Orders';
 import { RequireAdmin } from './components/RequireAdmin';
 
@@ -35,6 +36,8 @@ import { getThemeColors } from './utils/themeHelper';
 import { sanitizeImageUrl } from './utils/imageUrl';
 
 import { AnalyticsDashboard } from './pages/admin/AnalyticsDashboard';
+import { GiftCardManager } from './pages/admin/GiftCardManager';
+import { NewsletterManager } from './pages/admin/NewsletterManager';
 import { useAnalyticsTracker } from './hooks/useAnalyticsTracker';
 
 // Scroll to top & track site analytics on route change
@@ -114,6 +117,9 @@ function App() {
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/profilo" element={<Profile />} />
+                    <Route path="/gift-cards" element={<GiftCards />} />
+                    <Route path="/buoni-regalo" element={<GiftCards />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/cart" element={<Cart />} />
@@ -136,6 +142,8 @@ function App() {
                         <Route path="orders" element={<OrderManager />} />
                         <Route path="logistics" element={<DeliveryMap />} />
                         <Route path="customers" element={<CustomerManager />} />
+                        <Route path="gift-cards" element={<GiftCardManager />} />
+                        <Route path="newsletter" element={<NewsletterManager />} />
                         <Route path="analytics" element={<AnalyticsDashboard />} />
                     </Route>
                 </Route>

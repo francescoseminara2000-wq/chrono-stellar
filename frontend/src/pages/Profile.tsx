@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
-import { User as UserIcon, MapPin, Phone, Save, Bell, Mail, ShieldCheck, Check, ShoppingBag, Sparkles, Navigation } from 'lucide-react';
+import { User as UserIcon, MapPin, Phone, Save, Bell, Mail, ShieldCheck, Check, ShoppingBag, Sparkles, Navigation, Wallet, Gift, ArrowDownLeft, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { sanitizeImageUrl } from '../utils/imageUrl';
 import { SearchableSelect } from '../components/admin/SearchableSelect';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 export const Profile = () => {
-    const { user, token, login } = useAuthStore();
+    const { user, token, login, updateUser } = useAuthStore();
+    const [searchParams] = useSearchParams();
+
+    const [walletData, setWalletData] = useState<{ balance: number; transactions: any[] } | null>(null);
+    const [redeemCode, setRedeemCode] = useState(searchParams.get('redeem') || '');
+    const [isRedeeming, setIsRedeeming] = useState(false);
+    const [redeemSuccess, setRedeemSuccess] = useState<string | null>(null);
+    const [redeemError, setRedeemError] = useState<string | null>(null);
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -53,6 +61,57 @@ export const Profile = () => {
             });
         }
     }, [user]);
+
+    const fetchWallet = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch(`/api/wallet`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setWalletData(data);
+                updateUser({ walletBalance: data.balance });
+            }
+        } catch (err) {
+            console.error('Failed to fetch wallet:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchWallet();
+    }, [token]);
+
+    const handleRedeem = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!redeemCode.trim()) return;
+        setIsRedeeming(true);
+        setRedeemError(null);
+        setRedeemSuccess(null);
+
+        try {
+            const res = await fetch(`/api/gift-cards/redeem`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ code: redeemCode.trim() })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setRedeemSuccess(data.message || 'Buono Regalo accreditato con successo sul tuo conto!');
+                setRedeemCode('');
+                await fetchWallet();
+            } else {
+                setRedeemError(data.error || 'Errore durante il riscatto della Gift Card.');
+            }
+        } catch (err: any) {
+            setRedeemError('Errore di connessione con il server.');
+        } finally {
+            setIsRedeeming(false);
+        }
+    };
 
     const handleCityChange = (selectedCity: string) => {
         const cityData = cities.find(c => c.city === selectedCity);
@@ -187,6 +246,107 @@ export const Profile = () => {
                         <span>{message}</span>
                     </div>
                 )}
+
+                {/* Section 0: Wallet & Saldo Account */}
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center shrink-0">
+                                <Wallet className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-gray-900">Il Mio Saldo & Portafoglio</h3>
+                                <p className="text-xs text-gray-500">Credito utilizzabile a scalare per tutti i tuoi ordini</p>
+                            </div>
+                        </div>
+                        <div className="text-left sm:text-right">
+                            <span className="text-xs uppercase font-bold text-gray-400 block tracking-wider">Saldo Attuale</span>
+                            <span className="text-2xl sm:text-3xl font-black text-emerald-600">
+                                € {((walletData?.balance ?? user.walletBalance ?? 0) / 100).toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Form Riscatta Gift Card */}
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-2xl p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Gift className="w-5 h-5 text-emerald-700" />
+                            <h4 className="font-bold text-sm text-emerald-950">Hai ricevuto un Buono Regalo o Gift Card?</h4>
+                        </div>
+                        <p className="text-xs text-emerald-800/80 mb-4">
+                            Inserisci il codice univoco per caricare subito l'importo sul tuo saldo personale.
+                        </p>
+
+                        <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-3">
+                            <input
+                                type="text"
+                                placeholder="Es. GIFT-9A4B-8X2F"
+                                value={redeemCode}
+                                onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                                className="flex-1 px-4 py-3 bg-white border border-emerald-300 rounded-xl text-sm font-mono font-bold tracking-wider uppercase text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                            />
+                            <button
+                                type="submit"
+                                disabled={isRedeeming || !redeemCode.trim()}
+                                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                {isRedeeming ? 'Caricamento...' : 'Carica sul Saldo'}
+                            </button>
+                        </form>
+
+                        {redeemSuccess && (
+                            <div className="mt-3 p-3 bg-emerald-100/90 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-semibold flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                                <span>{redeemSuccess}</span>
+                            </div>
+                        )}
+
+                        {redeemError && (
+                            <div className="mt-3 p-3 bg-red-100/90 text-red-900 border border-red-300 rounded-xl text-xs font-semibold flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 text-red-700 shrink-0" />
+                                <span>{redeemError}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
+                        <span>Vuoi regalare un buono a un amico o parente?</span>
+                        <Link to="/gift-cards" className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 underline">
+                            Acquista Gift Card →
+                        </Link>
+                    </div>
+
+                    {/* Storico Transazioni Saldo */}
+                    {walletData?.transactions && walletData.transactions.length > 0 && (
+                        <div className="pt-2">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                                Ultimi Movimenti Saldo
+                            </h4>
+                            <div className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                                {walletData.transactions.map((tx: any) => (
+                                    <div key={tx.id} className="py-2.5 flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                                                tx.amount > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'
+                                            }`}>
+                                                {tx.amount > 0 ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-gray-800">{tx.description}</div>
+                                                <div className="text-[10px] text-gray-400">
+                                                    {new Date(tx.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className={`font-bold font-mono text-sm ${tx.amount > 0 ? 'text-emerald-600' : 'text-slate-700'}`}>
+                                            {tx.amount > 0 ? '+' : ''}{(tx.amount / 100).toFixed(2)} €
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
 

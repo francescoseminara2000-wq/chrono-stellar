@@ -14,7 +14,7 @@ export class OrderController {
 
     async create(req: Request, res: Response) {
         try {
-            const { userId, items, paymentMethod, deliveryMethod, shippingAddress, deliveryNotes, customerName, customerEmail, shippingCost, customerPhone, latitude, longitude, scheduledDate, scheduledTime, registerUser, street, civic, city, zipCode } = req.body;
+            const { userId, items, paymentMethod, deliveryMethod, shippingAddress, deliveryNotes, customerName, customerEmail, shippingCost, customerPhone, latitude, longitude, scheduledDate, scheduledTime, registerUser, street, civic, city, zipCode, useWallet } = req.body;
 
             // Validate minimal guest info
             if (!userId && (!customerName || !customerEmail)) {
@@ -25,7 +25,7 @@ export class OrderController {
                 items,
                 paymentMethod,
                 { method: deliveryMethod, address: shippingAddress, notes: deliveryNotes, shippingCost, latitude, longitude, scheduledDate, scheduledTime },
-                { userId, name: customerName, email: customerEmail, phone: customerPhone, registerUser, street, civic, city, zipCode }
+                { userId, name: customerName, email: customerEmail, phone: customerPhone, registerUser, street, civic, city, zipCode, useWallet }
             );
 
             // Create admin notification

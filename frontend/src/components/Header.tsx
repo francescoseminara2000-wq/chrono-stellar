@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 
 import { useAuthStore } from '../store/useAuthStore';
-import { ChevronDown, ChevronRight, Package, User as UserIcon, LogOut, Settings, Bell, BellOff, Home, Apple, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronRight, Package, User as UserIcon, LogOut, Settings, Bell, BellOff, Home, Apple, MapPin, Gift } from 'lucide-react';
 import { subscribeToPushNotifications, checkPushSubscription } from '../services/pushNotification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -70,6 +70,14 @@ const AuthMenu = ({
                                 <p className="text-sm font-bold text-nature-900 truncate">{user.email}</p>
                             </div>
 
+                            {/* Wallet Balance in Auth Dropdown */}
+                            <div className="px-4 py-2 border-b border-gray-100 bg-emerald-50/70 flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">Saldo Account</span>
+                                <span className="text-xs font-black text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
+                                    € {((user.walletBalance || 0) / 100).toFixed(2)}
+                                </span>
+                            </div>
+
                             <div className="py-1">
                                 <Link
                                     to="/profile"
@@ -84,6 +92,13 @@ const AuthMenu = ({
                                     onClick={() => setIsOpen(false)}
                                 >
                                     <Package size={16} className="text-nature-400" /> I miei Ordini
+                                </Link>
+                                <Link
+                                    to="/gift-cards"
+                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-nature-50 hover:text-nature-700 transition-colors mx-1 rounded-lg"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <Gift size={16} className="text-nature-400" /> Regala Gift Card
                                 </Link>
 
                                 <button
@@ -234,6 +249,7 @@ export const Header = () => {
                             <NavLink to="/">Home</NavLink>
                             <NavLink to="/shop">Nostri Prodotti</NavLink>
                             <NavLink to="/mercati">I Nostri Mercati</NavLink>
+                            <NavLink to="/gift-cards">Gift Card</NavLink>
                         </div>
 
                         {/* User Actions Pill */}
@@ -397,6 +413,23 @@ export const Header = () => {
                                     </div>
                                 </div>
                                 <ChevronRight size={20} className="text-gray-400 group-hover:text-red-600 group-hover:translate-x-1 transition-all" />
+                            </Link>
+
+                            <Link
+                                to="/gift-cards"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/70 hover:bg-emerald-50/60 border border-gray-150 hover:border-emerald-200 transition-all group shadow-2xs"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                        <Gift size={22} />
+                                    </div>
+                                    <div>
+                                        <span className="font-black text-base text-gray-900 block">Buoni Regalo & Gift Card</span>
+                                        <span className="text-xs text-gray-400 font-medium block">Regala la freschezza e scarica in PDF</span>
+                                    </div>
+                                </div>
+                                <ChevronRight size={20} className="text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                             </Link>
 
                             <Link

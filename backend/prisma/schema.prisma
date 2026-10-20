@@ -49,10 +49,11 @@ model Order {
   longitude       Float?
   scheduledDate   String?
   scheduledTime   String?
-  approvalToken   String?
-  approvalStatus  String?              @default("NONE")
+  approvalToken      String?
+  approvalStatus     String?              @default("NONE")
   customerApprovedAt DateTime?
-  user            User?                @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
+  walletAmountUsed   Int?                 @default(0)
+  user              User?                @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
   items           OrderItem[]
   transaction     Transaction[]
 
@@ -199,9 +200,13 @@ model User {
   resetPasswordToken     String?                     @unique(map: "User_resetPasswordToken_key")
   verificationToken      String?                     @unique(map: "User_verificationToken_key")
   notificationPreference NotificationPreference      @default(EMAIL)
+  walletBalance          Int                         @default(0)
   orders                 Order[]
   pushsubscription       PushSubscription[]
   siteVisits             SiteVisit[]
+  walletTransactions     WalletTransaction[]
+  giftCardsPurchased     GiftCard[]                  @relation("PurchasedGiftCards")
+  giftCardsRedeemed      GiftCard[]                  @relation("RedeemedGiftCards")
 }
 
 enum OrderStatus {
@@ -217,6 +222,7 @@ enum PaymentGateway {
   STRIPE
   PAYPAL
   REVOLUT
+  WALLET
 }
 
 enum UnitType {
@@ -293,4 +299,69 @@ model ItinerantMarket {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model GiftCard {
+  id             Int       @id @default(autoincrement())
+  code           String    @unique
+  amount         Int       // in centesimi (es. 5000 = 50,00 €)
+  isRedeemed     Boolean   @default(false)
+  redeemedAt     DateTime?
+  redeemedById   Int?
+  redeemedBy     User?     @relation("RedeemedGiftCards", fields: [redeemedById], references: [id], onDelete: SetNull)
+
+  // Dati acquirente
+  purchaserId    Int?
+  purchaser      User?     @relation("PurchasedGiftCards", fields: [purchaserId], references: [id], onDelete: SetNull)
+  buyerName      String?
+  buyerEmail     String?
+
+  // Dati destinatario e dedica
+  recipientName  String?
+  recipientEmail String?
+  recipientPhone String?
+  customMessage  String?   @db.Text
+  expiresAt      DateTime?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([code])
+  @@index([redeemedById])
+  @@index([purchaserId])
+}
+
+model WalletTransaction {
+  id           Int          @id @default(autoincrement())
+  userId       Int
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       Int          // Positivo (accredito) o Negativo (addebito) in centesimi
+  balanceAfter Int          // Saldo risultante in centesimi
+  type         WalletTxType
+  referenceId  String?      // Codice Gift Card o ID Ordine
+  description  String       @db.Text
+  createdAt    DateTime     @default(now())
+
+  @@index([userId])
+}
+
+enum WalletTxType {
+  GIFT_CARD_REDEMPTION
+  ORDER_PAYMENT
+  ORDER_REFUND
+  MANUAL_ADJUSTMENT
+}
+
+model NewsletterCampaign {
+  id         Int      @id @default(autoincrement())
+  subject    String
+  preview    String?
+  content    String   @db.LongText
+  targetList String   @default("aggiornamenti@ortofruttabutti.it")
+  sentBy     String?
+  sentAt     DateTime @default(now())
+
+  @@index([sentAt])
+}
+
+
 

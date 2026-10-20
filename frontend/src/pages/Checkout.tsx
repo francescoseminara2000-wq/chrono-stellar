@@ -239,7 +239,11 @@ export const Checkout = () => {
         }
     }, [deliveryMethod, formData.city, deliveryZones]);
 
-    const total = getEstimatedTotal() + shippingCost;
+    const [useWallet, setUseWallet] = useState<boolean>(true);
+    const rawTotal = getEstimatedTotal() + shippingCost;
+    const userWallet = user?.walletBalance || 0;
+    const walletDeduction = (user && useWallet && userWallet > 0) ? Math.min(userWallet, rawTotal) : 0;
+    const total = Math.max(0, rawTotal - walletDeduction);
     const isEstimated = items.some(i => i.isVariableWeight);
 
     // Stock issues found: { id, name, requested, available, unitType }
@@ -345,7 +349,8 @@ export const Checkout = () => {
             street: formData.street,
             civic: formData.civic,
             city: formData.city,
-            zipCode: formData.zip
+            zipCode: formData.zip,
+            useWallet: Boolean(useWallet && walletDeduction > 0)
         };
 
         try {
@@ -877,7 +882,43 @@ export const Checkout = () => {
                                     <CreditCard size={22} className="text-emerald-600" /> 3. Metodo di Pagamento
                                 </h3>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Wallet Credit Banner if user has balance */}
+                                {user && userWallet > 0 && (
+                                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl">💳</span>
+                                                <div>
+                                                    <div className="font-black text-sm text-emerald-950">
+                                                        Saldo Account Disponibile: € {(userWallet / 100).toFixed(2)}
+                                                    </div>
+                                                    <div className="text-xs text-emerald-700">
+                                                        {walletDeduction >= rawTotal
+                                                            ? 'Il tuo saldo copre il 100% dell\'ordine! Nessun ulteriore pagamento richiesto.'
+                                                            : `Verranno scalati € ${(walletDeduction / 100).toFixed(2)} dal tuo saldo. Residuo da pagare: € ${(total / 100).toFixed(2)}`}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-emerald-300 shadow-sm shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={useWallet}
+                                                    onChange={(e) => setUseWallet(e.target.checked)}
+                                                    className="w-4 h-4 accent-emerald-600 rounded"
+                                                />
+                                                <span className="text-xs font-bold text-emerald-900">Usa Saldo</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {total === 0 && walletDeduction > 0 ? (
+                                    <div className="p-4 rounded-2xl bg-emerald-100/70 border border-emerald-300 text-emerald-900 text-sm font-bold flex items-center gap-2">
+                                        <span>🎉</span>
+                                        <span>Questo ordine verrà interamente saldato con il saldo del tuo conto.</span>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod('COD')}
@@ -910,6 +951,7 @@ export const Checkout = () => {
                                         </div>
                                     </button>
                                 </div>
+                                )}
 
                                 <div className="pt-2">
                                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Note aggiuntive (Opzionale)</label>
@@ -988,8 +1030,15 @@ export const Checkout = () => {
                                     </span>
                                 </div>
 
+                                {walletDeduction > 0 && (
+                                    <div className="flex justify-between text-emerald-600 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-lg">
+                                        <span>Saldo Account Utilizzato</span>
+                                        <span>- € {(walletDeduction / 100).toFixed(2)}</span>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between font-bold text-2xl text-nature-900 pt-2">
-                                    <span>Totale</span>
+                                    <span>Totale {walletDeduction > 0 ? 'da Pagare' : ''}</span>
                                     <span>€ {(total / 100).toFixed(2)}</span>
                                 </div>
 

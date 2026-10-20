@@ -160,7 +160,8 @@ export class AuthController {
                     civic: user.civic,
                     city: user.city,
                     zipCode: user.zipCode,
-                    role: user.role
+                    role: user.role,
+                    walletBalance: user.walletBalance || 0
                 },
                 token
             });
@@ -303,6 +304,7 @@ export class AuthController {
                 zipCode: user.zipCode,
                 avatar: user.avatar,
                 role: user.role,
+                walletBalance: user.walletBalance || 0,
                 isEmailVerified: user.isEmailVerified,
                 notificationPreference: user.notificationPreference
             });
@@ -346,6 +348,7 @@ export class AuthController {
                     longitude: user.longitude,
                     avatar: user.avatar,
                     role: user.role,
+                    walletBalance: user.walletBalance || 0,
                     isEmailVerified: user.isEmailVerified,
                     notificationPreference: user.notificationPreference
                 }

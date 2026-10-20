@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAppState } from '../store/useAppState';
 import { BlockRenderer } from '../components/cms/BlockRenderer';
+import { NewsletterSection } from '../components/NewsletterSection';
 
 const API_URL = '';
 
@@ -189,6 +190,11 @@ export const Home = () => {
                                 </Link>
                             </motion.div>
                         </div>
+                    </section>
+
+                    {/* Newsletter Subscription Section */}
+                    <section className="py-12 md:py-16 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <NewsletterSection variant="home" />
                     </section>
                 </>
             )}

@@ -163,6 +163,23 @@ app.post('/api/push/subscribe', authenticateToken, (req, res) => pushController.
 
 app.get('/api/categories', (req, res) => categoryController.list(req, res));
 
+// Gift Cards & Wallet
+import { GiftCardController } from './controllers/GiftCardController';
+const giftCardController = new GiftCardController();
+app.post('/api/gift-cards/buy', (req, res) => giftCardController.buy(req, res));
+app.post('/api/gift-cards/redeem', authenticateToken, (req, res) => giftCardController.redeem(req, res));
+app.get('/api/gift-cards/:code/pdf', (req, res) => giftCardController.downloadPdf(req, res));
+app.get('/api/wallet', authenticateToken, (req, res) => giftCardController.getWallet(req, res));
+app.get('/api/admin/gift-cards', authenticateToken, requireAdmin, (req, res) => giftCardController.adminList(req, res));
+app.post('/api/admin/gift-cards', authenticateToken, requireAdmin, (req, res) => giftCardController.adminCreate(req, res));
+
+// Newsletter & Mailing List (IONOS)
+import { NewsletterController } from './controllers/NewsletterController';
+const newsletterController = new NewsletterController();
+app.post('/api/newsletter/subscribe', (req, res) => newsletterController.subscribe(req, res));
+app.post('/api/admin/newsletter/send', authenticateToken, requireAdmin, (req, res) => newsletterController.sendCampaign(req, res));
+app.get('/api/admin/newsletter/history', authenticateToken, requireAdmin, (req, res) => newsletterController.getHistory(req, res));
+
 app.get('/health', (req, res) => res.send('OK'));
 
 // Auth Routes

@@ -341,4 +341,98 @@ export class EmailService {
         
         return this.sendMail(to, subject, this.getEmailTemplate(`Aggiornamento Ordine #${order.id}`, content, settings), settings);
     }
+
+    async sendGiftCardEmail(
+        to: string,
+        recipientName: string,
+        buyerName: string,
+        amountFormatted: string,
+        code: string,
+        message: string | null,
+        pdfBuffer: Buffer
+    ) {
+        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        const siteName = settings?.siteName || 'Ortofrutta Butti';
+        const primaryColor = settings?.primaryColor || '#16a34a';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const redeemUrl = `${frontendUrl}/profilo?redeem=${encodeURIComponent(code)}`;
+
+        const subject = `Hai ricevuto un Buono Regalo da ${buyerName || 'un amico'}! - ${siteName}`;
+
+        const content = `
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h2 style="color: ${primaryColor}; margin-bottom: 6px;">Buono Regalo di ${amountFormatted}</h2>
+                <p style="font-size: 16px; color: #475569;">Ciao <strong>${recipientName || 'amico'}</strong>, ${buyerName ? `<strong>${buyerName}</strong> ti ha inviato un regalo speciale!` : 'hai ricevuto una Gift Card!'}</p>
+            </div>
+
+            ${message ? `
+            <div style="background: #f8fafc; border-left: 4px solid ${primaryColor}; padding: 14px 18px; border-radius: 6px; margin: 20px 0; font-style: italic; color: #334155;">
+                "${message}"
+            </div>
+            ` : ''}
+
+            <div style="background-color: #f1f5f9; padding: 20px; border-radius: 10px; text-align: center; margin: 24px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: #64748b; font-weight: bold; text-transform: uppercase;">Il tuo codice Gift Card</p>
+                <div style="font-family: monospace; font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #0f172a; background: #ffffff; padding: 12px 20px; border-radius: 6px; display: inline-block; border: 2px dashed ${primaryColor};">
+                    ${code}
+                </div>
+                <div style="margin-top: 18px;">
+                    <a href="${redeemUrl}" style="background-color: ${primaryColor}; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">
+                        Carica Subito sul tuo Saldo
+                    </a>
+                </div>
+            </div>
+
+            <p style="color: #64748b; font-size: 13px; line-height: 1.5;">
+                <strong>Come usarlo:</strong> Clicca sul pulsante sopra per accreditare l'importo direttamente nel saldo del tuo account. Potrai usare il credito per i tuoi acquisti online su ${siteName} ogni volta che vorrai (anche per più ordini differenti a scalare!).<br/>
+                In allegato a questa email trovi anche il <strong>Buono Regalo in formato PDF pronto da stampare o conservare</strong>.
+            </p>
+        `;
+
+        try {
+            const fromName = settings?.siteName || 'Ortofrutta Butti';
+            const fromEmail = settings?.contactEmail || 'noreply@ortofruttabutti.it';
+
+            const info = await this.transporter.sendMail({
+                from: process.env.SMTP_FROM || `"${fromName}" <${fromEmail}>`,
+                to,
+                subject,
+                html: this.getEmailTemplate('Hai ricevuto un Buono Regalo!', content, settings),
+                attachments: [
+                    {
+                        filename: `Buono-Regalo-${code}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }
+                ]
+            });
+            console.log('[EmailService] Gift Card email sent: %s', info.messageId);
+            return true;
+        } catch (error) {
+            console.error('[EmailService] Error sending gift card email:', error);
+            return false;
+        }
+    }
+
+    async sendNewsletterEmail(to: string, subject: string, htmlBody: string, senderName?: string) {
+        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        const siteName = settings?.siteName || 'Ortofrutta Butti';
+        const fromName = senderName || siteName;
+        const fromEmail = settings?.contactEmail || process.env.SMTP_USER || 'noreply@ortofruttabutti.it';
+
+        const fullHtml = this.getEmailTemplate(
+            subject,
+            `
+            <div>${htmlBody}</div>
+            <div style="margin-top: 35px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.5;">
+                Ricevi questa comunicazione perché sei iscritto alla mailing list di ${siteName}.<br/>
+                Per cancellarti o gestire l'iscrizione, visita il nostro sito oppure scrivi a <a href="mailto:${fromEmail}" style="color: #64748b;">${fromEmail}</a>.
+            </div>
+            `,
+            settings
+        );
+
+        return this.sendMail(to, subject, fullHtml, settings);
+    }
 }
+
