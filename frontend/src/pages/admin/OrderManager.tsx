@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, ChevronRight, Zap } from 'lucide-react';
+import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -388,7 +388,6 @@ export const OrderManager = () => {
 
     const handleSelectOrder = (order: Order) => {
         setSelectedOrder(order);
-        setActiveTab(order.status === 'PENDING' ? 'items' : 'overview');
         const initialData: Record<number, number> = {};
         const initialPriceData: Record<number, number> = {};
         order.items.forEach(item => {
@@ -399,26 +398,6 @@ export const OrderManager = () => {
         });
         setFulfillmentData(initialData);
         setFulfillmentPriceData(initialPriceData);
-    };
-
-    const handleAutoFillAllWeights = () => {
-        if (!selectedOrder) return;
-        const newFulfillment: Record<number, number> = { ...fulfillmentData };
-        const newPrices: Record<number, number> = { ...fulfillmentPriceData };
-        const allIds: number[] = [];
-
-        selectedOrder.items.forEach(item => {
-            const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
-            const defaultQty = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-            newFulfillment[item.id] = defaultQty;
-            newPrices[item.id] = (item.priceAtPurchase || item.product.priceCents) / 100;
-            allIds.push(item.id);
-        });
-
-        setFulfillmentData(newFulfillment);
-        setFulfillmentPriceData(newPrices);
-        setWeighedItemIds(allIds);
-        addToast('Tutti i prodotti impostati con i pesi stimati richiesti!', 'info');
     };
 
     const handleOpenSingleItemWeighing = (item: any) => {
@@ -794,176 +773,178 @@ export const OrderManager = () => {
 
     return (
         <div className={`flex flex-col h-full bg-gray-50 -m-5 lg:-m-8 ${selectedOrder ? 'p-0 lg:p-8' : 'p-5 lg:p-8'} overflow-hidden`}>
-            {!selectedOrder && (
-                <div className="space-y-3 lg:space-y-6 mb-3 lg:mb-6 block shrink-0">
-                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
-                        <div>
-                            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestione Ordini</h1>
-                            <div className="flex items-center gap-3 mt-1 flex-wrap">
-                                <p className="text-gray-500 text-sm font-medium">Gestisci le pesature e monitora lo stato delle consegne.</p>
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-xs" title="Aggiornamento automatico attivo ogni 15 secondi">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Live Sync (15s)
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        fetchOrders(false);
-                                        addToast('Ordini aggiornati con successo!', 'success');
-                                    }}
-                                    className="text-xs font-black text-gray-600 hover:text-emerald-700 transition-colors cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-xs"
-                                >
-                                    🔄 Aggiorna Ora
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Mobile Toolbar Toggle Buttons */}
-                        <div className="flex lg:hidden gap-2 w-full">
+            <div className={`space-y-3 lg:space-y-6 mb-3 lg:mb-6 ${selectedOrder ? 'hidden' : 'block'}`}>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
+                    <div>
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestione Ordini</h1>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            <p className="text-gray-500 text-sm font-medium">Gestisci le pesature e monitora lo stato delle consegne.</p>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-xs" title="Aggiornamento automatico attivo ogni 15 secondi">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Live Sync (15s)
+                            </span>
                             <button
+                                type="button"
                                 onClick={() => {
-                                    setShowSearch(!showSearch);
-                                    setShowFilter(false);
+                                    fetchOrders(false);
+                                    addToast('Ordini aggiornati con successo!', 'success');
                                 }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                    showSearch || searchQuery
-                                        ? 'bg-nature-600 text-white border-transparent shadow-sm'
-                                        : 'bg-white text-gray-500 border-gray-200 shadow-sm'
-                                }`}
+                                className="text-xs font-black text-gray-600 hover:text-emerald-700 transition-colors cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-xs"
                             >
-                                <Search size={14} />
-                                <span>Cerca</span>
-                                {searchQuery && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowFilter(!showFilter);
-                                    setShowSearch(false);
-                                }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                    showFilter || filterStatus !== 'ALL'
-                                        ? 'bg-nature-600 text-white border-transparent shadow-sm'
-                                        : 'bg-white text-gray-500 border-gray-200 shadow-sm'
-                                }`}
-                            >
-                                <ListFilter size={14} />
-                                <span>Stato</span>
-                                {filterStatus !== 'ALL' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setIsMultiSelectActive(!isMultiSelectActive);
-                                    if (!isMultiSelectActive) {
-                                        setSelectedIds([]);
-                                    }
-                                }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                    isMultiSelectActive
-                                        ? 'bg-nature-600 text-white border-transparent shadow-sm'
-                                        : 'bg-white text-gray-500 border-gray-200 shadow-sm'
-                                }`}
-                            >
-                                <CheckCircle size={14} />
-                                <span>Sel. Multipla</span>
-                            </button>
-                        </div>
-
-                        {/* Search Input Panel & Bulk Toggle on Desktop */}
-                        <div className="flex items-center gap-3 w-full lg:w-auto">
-                            <div className={`relative w-full lg:w-96 group ${showSearch ? 'block' : 'hidden'} lg:block`}>
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-nature-600 transition-colors">
-                                    <Search size={20} />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Cerca per ID, cliente o prodotto..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
-                                />
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setIsMultiSelectActive(!isMultiSelectActive);
-                                    if (!isMultiSelectActive) {
-                                        setSelectedIds([]);
-                                    }
-                                }}
-                                className={`hidden lg:flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold border transition-all ${
-                                    isMultiSelectActive
-                                        ? 'bg-nature-600 text-white border-transparent shadow-md shadow-nature-200'
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-nature-300 hover:text-nature-700'
-                                }`}
-                            >
-                                <CheckCircle size={18} />
-                                <span>Selezione Multipla</span>
+                                🔄 Aggiorna Ora
                             </button>
                         </div>
                     </div>
 
-                    {/* Status Tabs */}
-                    <div className={`flex gap-1.5 p-1.5 bg-gray-100 rounded-2xl w-full overflow-x-auto custom-scrollbar no-scrollbar ${showFilter ? 'block' : 'hidden'} lg:flex`}>
-                        {statusTabs.map(tab => {
-                            const count = getStatusCount(tab.id);
-                            const isActive = filterStatus === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setFilterStatus(tab.id)}
-                                    className={`
-                                        flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap
-                                        ${isActive
-                                            ? `bg-white text-nature-900 shadow-sm ring-2 ${activeColorMap[tab.color]}`
-                                            : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
-                                        }
-                                    `}
-                                >
-                                    <span className={isActive ? colorMap[tab.color].split(' ')[0] : 'text-gray-400'}>
-                                        {tab.icon}
-                                    </span>
-                                    {tab.label}
-                                    <span className={`
-                                        px-2 py-0.5 rounded-lg text-[10px] font-black
-                                        ${isActive ? colorMap[tab.color] : 'bg-gray-200 text-gray-500'}
-                                    `}>
-                                        {count}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                    {/* Mobile Toolbar Toggle Buttons */}
+                    <div className="flex lg:hidden gap-2 w-full">
+                        <button
+                            onClick={() => {
+                                setShowSearch(!showSearch);
+                                setShowFilter(false);
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                showSearch || searchQuery
+                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                            }`}
+                        >
+                            <Search size={14} />
+                            <span>Cerca</span>
+                            {searchQuery && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowFilter(!showFilter);
+                                setShowSearch(false);
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                showFilter || filterStatus !== 'ALL'
+                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                            }`}
+                        >
+                            <ListFilter size={14} />
+                            <span>Stato</span>
+                            {filterStatus !== 'ALL' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setIsMultiSelectActive(!isMultiSelectActive);
+                                if (!isMultiSelectActive) {
+                                    setSelectedIds([]);
+                                }
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                isMultiSelectActive
+                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                            }`}
+                        >
+                            <CheckCircle size={14} />
+                            <span>Sel. Multipla</span>
+                        </button>
+                    </div>
+
+                    {/* Search Input Panel & Bulk Toggle on Desktop */}
+                    <div className="flex items-center gap-3 w-full lg:w-auto">
+                        <div className={`relative w-full lg:w-96 group ${showSearch ? 'block' : 'hidden'} lg:block`}>
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-nature-600 transition-colors">
+                                <Search size={20} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Cerca per ID, cliente o prodotto..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
+                            />
+                        </div>
+                        <button
+                            onClick={() => {
+                                setIsMultiSelectActive(!isMultiSelectActive);
+                                if (!isMultiSelectActive) {
+                                    setSelectedIds([]);
+                                }
+                            }}
+                            className={`hidden lg:flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold border transition-all ${
+                                isMultiSelectActive
+                                    ? 'bg-nature-600 text-white border-transparent shadow-md shadow-nature-200'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:border-nature-300 hover:text-nature-700'
+                            }`}
+                        >
+                            <CheckCircle size={18} />
+                            <span>Selezione Multipla</span>
+                        </button>
                     </div>
                 </div>
-            )}
 
-            {!selectedOrder ? (
-                <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                    {isMultiSelectActive && filteredOrders.length > 0 && (
-                        <div 
-                            onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
-                            className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 mb-3 select-none cursor-pointer hover:border-nature-200 transition-all shadow-sm shrink-0 animate-in fade-in duration-200 max-w-4xl mx-auto w-full"
-                        >
-                            <input
-                                type="checkbox"
-                                checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
-                                readOnly
-                                className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
-                            />
-                            <span className="text-xs font-black text-gray-700 uppercase tracking-wider">Seleziona Tutti ({filteredOrders.length})</span>
-                        </div>
-                    )}
+                {/* Status Tabs */}
+                <div className={`flex gap-1.5 p-1.5 bg-gray-100 rounded-2xl w-full overflow-x-auto custom-scrollbar no-scrollbar ${showFilter ? 'block' : 'hidden'} lg:flex`}>
+                    {statusTabs.map(tab => {
+                        const count = getStatusCount(tab.id);
+                        const isActive = filterStatus === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setFilterStatus(tab.id)}
+                                className={`
+                                    flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap
+                                    ${isActive
+                                        ? `bg-white text-nature-900 shadow-sm ring-2 ${activeColorMap[tab.color]}`
+                                        : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                    }
+                                `}
+                            >
+                                <span className={isActive ? colorMap[tab.color].split(' ')[0] : 'text-gray-400'}>
+                                    {tab.icon}
+                                </span>
+                                {tab.label}
+                                <span className={`
+                                    px-2 py-0.5 rounded-lg text-[10px] font-black
+                                    ${isActive ? colorMap[tab.color] : 'bg-gray-200 text-gray-500'}
+                                `}>
+                                    {count}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
 
-                    <div className="max-w-4xl mx-auto w-full space-y-3.5 overflow-y-auto pr-2 pb-28 lg:pb-8 custom-scrollbar flex-1">
-                        {filteredOrders.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-white rounded-2xl border border-gray-100">
-                                <ShoppingBag size={48} className="mb-4 opacity-50" />
-                                <p className="font-bold text-gray-600">Nessun ordine trovato</p>
-                            </div>
-                        )}
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                {/* Orders list: visible when no order is selected */}
+                <div className={`flex flex-col h-full min-h-0 flex-1 w-full ${selectedOrder ? 'hidden' : 'flex'}`}>
+                    <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
+                            {isMultiSelectActive && filteredOrders.length > 0 && (
+                                <div 
+                                    onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                                    className="lg:col-span-2 flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 mb-2 select-none cursor-pointer hover:border-nature-200 transition-all shadow-sm shrink-0 animate-in fade-in duration-200"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
+                                        readOnly
+                                        className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
+                                    />
+                                    <span className="text-xs font-black text-gray-700 uppercase tracking-wider">Seleziona Tutti ({filteredOrders.length})</span>
+                                </div>
+                            )}
+                            {filteredOrders.length === 0 && (
+                                <div className="lg:col-span-2 flex flex-col items-center justify-center py-20 text-gray-400">
+                                    <ShoppingBag size={48} className="mb-4 opacity-50" />
+                                    <p>Nessun ordine trovato</p>
+                                </div>
+                            )}
                         {filteredOrders.map(order => (
                             <div
                                 key={order.id}
                                 onClick={() => handleSelectOrder(order)}
-                                className="group p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col gap-3.5 bg-white border-gray-200/90 hover:border-emerald-400 hover:shadow-md"
+                                className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col gap-3 ${
+                                    selectedOrder?.id === order.id
+                                        ? 'bg-gradient-to-br from-emerald-50/70 via-white to-gray-50/50 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
+                                        : 'bg-white border-gray-200/90 hover:border-emerald-300 hover:shadow-md'
+                                }`}
                             >
                                 {/* Checkbox for multiple selection */}
                                 {isMultiSelectActive && (
@@ -1075,160 +1056,94 @@ export const OrderManager = () => {
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Action footer on card */}
-                                <div className="flex items-center justify-between pt-2.5 mt-0.5 border-t border-gray-100 text-xs font-black text-emerald-700 group-hover:text-emerald-800">
-                                    <span className="flex items-center gap-1.5 text-gray-500 font-bold">
-                                        🛒 {order.items?.length || 0} {order.items?.length === 1 ? 'articolo' : 'articoli'}
-                                    </span>
-                                    <span className="flex items-center gap-1 text-emerald-700 font-black">
-                                        Gestisci & Pesa <ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" />
-                                    </span>
-                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
-            ) : (
-                /* DEDICATED FULL SCREEN ORDER DETAIL */
-                <div className="flex-1 min-h-0 flex flex-col bg-white rounded-none lg:rounded-3xl lg:shadow-xl lg:border lg:border-nature-100 fixed inset-0 z-[60] lg:relative lg:inset-auto lg:z-auto overflow-hidden animate-in fade-in duration-200">
-                    {/* Mobile Back Header (exact original behavior preserved on smartphone) */}
-                    <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-950 text-white shrink-0 shadow-lg">
-                        <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 px-3 py-2 bg-nature-800/90 rounded-2xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-black shadow-inner cursor-pointer">
-                            <X size={20} /> Chiudi
-                        </button>
-                        <div className="flex items-center gap-2.5">
-                            <span className="font-black text-base tracking-wide">Ordine #{selectedOrder.id}</span>
-                            <StatusBadge status={selectedOrder.status} />
-                        </div>
-                    </div>
 
-                    {/* Desktop Dedicated Header */}
-                    <div className="hidden lg:block p-5 lg:p-6 bg-gradient-to-r from-emerald-950 via-nature-950 to-teal-950 text-white shrink-0 shadow-md">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3.5 flex-wrap">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedOrder(null)}
-                                    className="flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-xl text-white text-xs sm:text-sm font-black transition-all border border-white/20 shadow-xs cursor-pointer"
-                                    title="Torna all'elenco di tutti gli ordini"
-                                >
-                                    <ArrowLeft size={18} />
-                                    <span>Torna agli Ordini</span>
-                                </button>
-                                <div className="h-6 w-px bg-white/20 hidden sm:block"></div>
+            {/* Dedicated Detail View: Full width on desktop and original drawer on smartphone */}
+            {selectedOrder && (
+                <div className="h-full min-h-0 flex fixed inset-0 z-[60] lg:relative lg:inset-auto lg:z-auto bg-white flex-col overflow-hidden w-full">
+                    <div className="bg-white lg:rounded-2xl lg:shadow-xl lg:border lg:border-nature-100 flex flex-col overflow-hidden h-full relative">
+                        {/* Mobile Back Header (100% original) */}
+                        <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-950 text-white shrink-0 shadow-lg">
+                            <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 px-3 py-2 bg-nature-800/90 rounded-2xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-black shadow-inner">
+                                <X size={20} /> Chiudi
+                            </button>
+                            <div className="flex items-center gap-2.5">
+                                <span className="font-black text-base tracking-wide">Ordine #{selectedOrder.id}</span>
+                                <StatusBadge status={selectedOrder.status} />
+                            </div>
+                        </div>
+
+                        {/* Main content wrapper - flex layout */}
+                        <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
+                            {/* Desktop Header: Back Button + Order ID + Status + Payment Method */}
+                            <div className="hidden lg:flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight">
-                                        Ordine #{selectedOrder.id}
-                                    </h2>
-                                    <StatusBadge status={selectedOrder.status} />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                                {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
-                                    <span className="px-3 py-1.5 bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-2xs">
-                                        💳 Revolut Pay Online
-                                    </span>
-                                ) : (
-                                    <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-2xs">
-                                        💵 Contanti / POS alla Consegna
-                                    </span>
-                                )}
-
-                                <span className="px-3 py-1.5 bg-white/10 text-white border border-white/20 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-2xs">
-                                    {selectedOrder.deliveryMethod === 'DELIVERY' ? <Truck size={15} className="text-emerald-300" /> : <Scale size={15} className="text-amber-300" />}
-                                    {selectedOrder.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro in Negozio'}
-                                </span>
-
-                                {selectedOrder.customerPhone && (
-                                    <a
-                                        href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-nature-950 font-black text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                                        title="Apri chat WhatsApp"
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedOrder(null)}
+                                        className="flex items-center gap-2 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-black text-xs rounded-xl border border-gray-200 transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                                        title="Torna all'elenco ordini"
                                     >
-                                        <MessageCircle size={16} /> WhatsApp
-                                    </a>
-                                )}
-                            </div>
-                        </div>
+                                        <ArrowLeft size={16} /> Torna agli Ordini
+                                    </button>
+                                    <h2 className="text-3xl font-black text-gray-900 leading-none tracking-tight">Ordine #{selectedOrder.id}</h2>
+                                        {/* Payment Method Badge */}
+                                        {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
+                                            <span className="px-3.5 py-1.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                                💳 Revolut Pay Online
+                                            </span>
+                                        ) : (
+                                            <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-950 border border-emerald-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                                💵 Contanti / POS alla Consegna
+                                            </span>
+                                        )}
+                                    </div>
 
-                        {/* Customer & Scheduling Sub-bar */}
-                        <div className="mt-3.5 pt-3.5 border-t border-white/10 flex items-center justify-between gap-4 text-xs text-emerald-200 flex-wrap">
-                            <div className="flex items-center gap-4 flex-wrap">
-                                <span className="flex items-center gap-1.5">
-                                    <span>👤 Cliente:</span>
-                                    <strong className="text-white text-sm">{selectedOrder.customerName || selectedOrder.user?.name || 'Cliente'}</strong>
-                                </span>
-                                {selectedOrder.customerEmail && (
-                                    <span className="text-emerald-300/80">({selectedOrder.customerEmail})</span>
-                                )}
-                                <span>🕒 Ricevuto: <strong className="text-white">{new Date(selectedOrder.createdAt).toLocaleString()}</strong></span>
-                                {selectedOrder.scheduledDate && (
-                                    <span className="bg-emerald-900/60 text-white px-2.5 py-1 rounded-lg border border-emerald-700/60 font-bold">
-                                        🗓️ Consegna: {selectedOrder.scheduledDate.split('-').reverse().join('/')} {selectedOrder.scheduledTime ? `(${selectedOrder.scheduledTime})` : ''}
-                                    </span>
-                                )}
-                            </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs font-black text-gray-400 uppercase tracking-wider">Stato Attuale:</span>
+                                        <StatusBadge status={selectedOrder.status} />
+                                    </div>
+                                </div>
 
-                            <div className="flex items-center gap-2">
-                                <span className="text-emerald-300/90 text-xs font-bold uppercase tracking-wider">Totale Stimato:</span>
-                                <span className="text-lg font-black text-white">€ {((selectedOrder.finalTotal || selectedOrder.estimatedTotal) / 100).toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Generous Full-Width Tab Bar */}
-                    <div className="px-4 sm:px-6 pt-3 bg-gray-100/90 border-b border-gray-200 shrink-0">
-                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('items')}
-                                className={`py-3 px-5 font-black text-xs sm:text-sm transition-all border-b-2 flex items-center gap-2.5 cursor-pointer whitespace-nowrap ${
-                                    activeTab === 'items'
-                                        ? 'border-emerald-600 text-emerald-950 bg-white rounded-t-2xl shadow-xs border-t border-x border-gray-200/90 -mb-px'
-                                        : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/40 rounded-t-2xl'
-                                }`}
-                            >
-                                <span className="text-base">🛒</span>
-                                <span>Prodotti Ordinati ({selectedOrder.items.length})</span>
-                                {selectedOrder.items.filter(i => !weighedItemIds.includes(i.id) && i.quantityFulfilled === null).length > 0 && (
-                                    <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">
-                                        {selectedOrder.items.filter(i => !weighedItemIds.includes(i.id) && i.quantityFulfilled === null).length} da pesare
-                                    </span>
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('overview')}
-                                className={`py-3 px-5 font-black text-xs sm:text-sm transition-all border-b-2 flex items-center gap-2.5 cursor-pointer whitespace-nowrap ${
-                                    activeTab === 'overview'
-                                        ? 'border-emerald-600 text-emerald-950 bg-white rounded-t-2xl shadow-xs border-t border-x border-gray-200/90 -mb-px'
-                                        : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/40 rounded-t-2xl'
-                                }`}
-                            >
-                                <span className="text-base">📋</span>
-                                <span>Riepilogo & Note</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('customer')}
-                                className={`py-3 px-5 font-black text-xs sm:text-sm transition-all border-b-2 flex items-center gap-2.5 cursor-pointer whitespace-nowrap ${
-                                    activeTab === 'customer'
-                                        ? 'border-emerald-600 text-emerald-950 bg-white rounded-t-2xl shadow-xs border-t border-x border-gray-200/90 -mb-px'
-                                        : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/40 rounded-t-2xl'
-                                }`}
-                            >
-                                <span className="text-base">👤</span>
-                                <span>Cliente & Consegna</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Main content wrapper - flex layout */}
-                    <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0 overflow-y-auto relative z-30">
+                                {/* TAB NAVIGATION HEADER (Generous sizing & crisp styling) */}
+                                <div className="flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-2xl mb-5 shrink-0 border border-gray-200/70 shadow-inner">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('overview')}
+                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                            activeTab === 'overview'
+                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                                        }`}
+                                    >
+                                        <span className="text-base">📋</span> Riepilogo
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('items')}
+                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                            activeTab === 'items'
+                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                                        }`}
+                                    >
+                                        <span className="text-base">🛒</span> Prodotti ({selectedOrder.items.length})
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('customer')}
+                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                            activeTab === 'customer'
+                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                                        }`}
+                                    >
+                                        <span className="text-base">👤</span> Cliente & Consegna
+                                    </button>
+                                </div>
 
                                 {/* TAB 1: RIEPILOGO (OVERVIEW) */}
                                 {activeTab === 'overview' && (
@@ -1315,22 +1230,11 @@ export const OrderManager = () => {
                                 {/* TAB 2: PRODOTTI ORDINATI (ITEMS) */}
                                 {activeTab === 'items' && (
                                     <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/90 rounded-2xl p-4 sm:p-5 overflow-hidden shadow-sm animate-in fade-in duration-200">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-gray-100 gap-3 shrink-0">
+                                        <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-gray-100 shrink-0">
                                             <div>
-                                                <span className="text-sm sm:text-base font-black text-gray-900 uppercase tracking-wider block">Elenco Prodotti Ordinati ({selectedOrder.items.length})</span>
+                                                <span className="text-sm font-black text-gray-900 uppercase tracking-wider block">Elenco Prodotti Ordinati ({selectedOrder.items.length})</span>
                                                 <span className="text-xs font-bold text-gray-500">Stato pesatura e consuntivo articolo per articolo</span>
                                             </div>
-                                            {selectedOrder.status === 'PENDING' && (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleAutoFillAllWeights}
-                                                    className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
-                                                    title="Imposta tutti i prodotti con i pesi e quantità richieste"
-                                                >
-                                                    <Zap size={15} className="text-amber-500" />
-                                                    Auto-compila tutti con pesi stimati
-                                                </button>
-                                            )}
                                         </div>
                                         <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 custom-scrollbar">
                                             {selectedOrder.items.map(item => {
@@ -1649,7 +1553,9 @@ export const OrderManager = () => {
                                 </div>
                             </div>
                         </div>
-            )}
+                    </div>
+                )}
+            </div>
             {isScheduleModalOpen && selectedOrder && (
                 <div className="fixed inset-0 bg-nature-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
                     <div className="bg-white w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
