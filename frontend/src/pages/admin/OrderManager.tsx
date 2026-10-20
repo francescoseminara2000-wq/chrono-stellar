@@ -793,7 +793,7 @@ export const OrderManager = () => {
     };
 
     return (
-        <div className={`flex flex-col h-full bg-gray-50 -m-5 lg:-m-8 ${selectedOrder ? 'p-0 sm:p-2 lg:p-4' : 'p-4 sm:p-6 lg:p-8'} overflow-hidden`}>
+        <div className={`flex flex-col h-full bg-gray-50 -m-5 lg:-m-8 ${selectedOrder ? 'p-0 lg:p-8' : 'p-5 lg:p-8'} overflow-hidden`}>
             {!selectedOrder && (
                 <div className="space-y-3 lg:space-y-6 mb-3 lg:mb-6 block shrink-0">
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
@@ -937,32 +937,33 @@ export const OrderManager = () => {
 
             {!selectedOrder ? (
                 <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4.5 overflow-y-auto pr-2 pb-24 lg:pb-6 custom-scrollbar flex-1">
-                        {isMultiSelectActive && filteredOrders.length > 0 && (
-                            <div 
-                                onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
-                                className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 mb-2 select-none cursor-pointer hover:border-nature-200 transition-all shadow-sm shrink-0 animate-in fade-in duration-200"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
-                                    readOnly
-                                    className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
-                                />
-                                <span className="text-xs font-black text-gray-700 uppercase tracking-wider">Seleziona Tutti ({filteredOrders.length})</span>
-                            </div>
-                        )}
+                    {isMultiSelectActive && filteredOrders.length > 0 && (
+                        <div 
+                            onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                            className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-100 mb-3 select-none cursor-pointer hover:border-nature-200 transition-all shadow-sm shrink-0 animate-in fade-in duration-200 max-w-4xl mx-auto w-full"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
+                                readOnly
+                                className="w-4.5 h-4.5 text-nature-600 rounded focus:ring-nature-500 cursor-pointer pointer-events-none"
+                            />
+                            <span className="text-xs font-black text-gray-700 uppercase tracking-wider">Seleziona Tutti ({filteredOrders.length})</span>
+                        </div>
+                    )}
+
+                    <div className="max-w-4xl mx-auto w-full space-y-3.5 overflow-y-auto pr-2 pb-28 lg:pb-8 custom-scrollbar flex-1">
                         {filteredOrders.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                            <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-white rounded-2xl border border-gray-100">
                                 <ShoppingBag size={48} className="mb-4 opacity-50" />
-                                <p>Nessun ordine trovato</p>
+                                <p className="font-bold text-gray-600">Nessun ordine trovato</p>
                             </div>
                         )}
                         {filteredOrders.map(order => (
                             <div
                                 key={order.id}
                                 onClick={() => handleSelectOrder(order)}
-                                className="p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col gap-3 bg-white border-gray-200/90 hover:border-emerald-300 hover:shadow-md"
+                                className="group p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col gap-3.5 bg-white border-gray-200/90 hover:border-emerald-400 hover:shadow-md"
                             >
                                 {/* Checkbox for multiple selection */}
                                 {isMultiSelectActive && (
@@ -1090,9 +1091,20 @@ export const OrderManager = () => {
                 </div>
             ) : (
                 /* DEDICATED FULL SCREEN ORDER DETAIL */
-                <div className="flex-1 min-h-0 flex flex-col bg-white rounded-2xl lg:rounded-3xl shadow-xl border border-gray-200 overflow-hidden animate-in fade-in duration-200">
-                    {/* Unified Dedicated Header */}
-                    <div className="p-4 sm:p-5 lg:p-6 bg-gradient-to-r from-emerald-950 via-nature-950 to-teal-950 text-white shrink-0 shadow-md">
+                <div className="flex-1 min-h-0 flex flex-col bg-white rounded-none lg:rounded-3xl lg:shadow-xl lg:border lg:border-nature-100 fixed inset-0 z-[60] lg:relative lg:inset-auto lg:z-auto overflow-hidden animate-in fade-in duration-200">
+                    {/* Mobile Back Header (exact original behavior preserved on smartphone) */}
+                    <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-950 text-white shrink-0 shadow-lg">
+                        <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 px-3 py-2 bg-nature-800/90 rounded-2xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-black shadow-inner cursor-pointer">
+                            <X size={20} /> Chiudi
+                        </button>
+                        <div className="flex items-center gap-2.5">
+                            <span className="font-black text-base tracking-wide">Ordine #{selectedOrder.id}</span>
+                            <StatusBadge status={selectedOrder.status} />
+                        </div>
+                    </div>
+
+                    {/* Desktop Dedicated Header */}
+                    <div className="hidden lg:block p-5 lg:p-6 bg-gradient-to-r from-emerald-950 via-nature-950 to-teal-950 text-white shrink-0 shadow-md">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex items-center gap-3.5 flex-wrap">
                                 <button
