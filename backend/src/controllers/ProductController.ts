@@ -2,11 +2,33 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { UnitType } from '@prisma/client';
 
+let columnsEnsured = false;
+async function ensureProductColumnsExist() {
+    if (columnsEnsured) return;
+    try {
+        const columns: any = await prisma.$queryRawUnsafe(`SHOW COLUMNS FROM Product`);
+        const colNames = Array.isArray(columns) ? columns.map((c: any) => c.Field) : [];
+        if (!colNames.includes('origin')) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN origin VARCHAR(255) NULL`);
+        }
+        if (!colNames.includes('caliber')) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN caliber VARCHAR(255) NULL`);
+        }
+        if (!colNames.includes('commercialCategory')) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN commercialCategory VARCHAR(255) NULL`);
+        }
+        columnsEnsured = true;
+    } catch (e) {
+        console.error('[ProductController] ensureProductColumnsExist error:', e);
+    }
+}
+
 export class ProductController {
 
     // List all products (Admin view allows seeing disabled ones)
     async list(req: Request, res: Response) {
         try {
+            await ensureProductColumnsExist();
             const { categoryId, search, sortBy, sortOrder } = req.query;
             const where: any = {};
             if (categoryId) where.categoryId = Number(categoryId);
@@ -36,6 +58,7 @@ export class ProductController {
     // List available products (Public view)
     async listPublic(req: Request, res: Response) {
         try {
+            await ensureProductColumnsExist();
             const { categoryId, search, sortBy, sortOrder } = req.query;
             const where: any = {
                 isAvailable: true,
@@ -69,7 +92,11 @@ export class ProductController {
 
     async create(req: Request, res: Response) {
         try {
-            const { name, description, priceCents, unitType, isVariableWeight, stepAmount, seasonalTips, categoryId } = req.body;
+            await ensureProductColumnsExist();
+            const {
+                name, description, priceCents, unitType, isVariableWeight,
+                stepAmount, seasonalTips, categoryId, origin, caliber, commercialCategory
+            } = req.body;
             const file = req.file;
 
             const product = await prisma.product.create({
@@ -84,6 +111,9 @@ export class ProductController {
                     lowStockThreshold: Number(req.body.lowStockThreshold || 0),
                     allowBackorder: req.body.allowBackorder === 'true' || req.body.allowBackorder === true,
                     seasonalTips,
+                    origin: origin ? String(origin).trim() : null,
+                    caliber: caliber ? String(caliber).trim() : null,
+                    commercialCategory: commercialCategory ? String(commercialCategory).trim() : null,
                     categoryId: categoryId ? Number(categoryId) : null,
                     imageUrl: file ? `/uploads/${file.filename}` : null,
                     isAvailable: true
@@ -97,14 +127,19 @@ export class ProductController {
 
     async update(req: Request, res: Response) {
         try {
+            await ensureProductColumnsExist();
             const { id } = req.params;
-            const { name, description, priceCents, unitType, isVariableWeight, stepAmount, isAvailable, seasonalTips, categoryId } = req.body;
+            const {
+                name, description, priceCents, unitType, isVariableWeight,
+                stepAmount, isAvailable, seasonalTips, categoryId,
+                origin, caliber, commercialCategory
+            } = req.body;
             const file = req.file;
 
             // Prepare update data
             const data: any = {};
             if (name) data.name = name;
-            if (description) data.description = description;
+            if (description !== undefined) data.description = description;
             if (priceCents) data.priceCents = Number(priceCents);
             if (unitType) data.unitType = unitType as UnitType;
             if (isVariableWeight !== undefined) data.isVariableWeight = isVariableWeight === 'true' || isVariableWeight === true;
@@ -113,7 +148,10 @@ export class ProductController {
             if (req.body.stockQuantity !== undefined) data.stockQuantity = Number(req.body.stockQuantity);
             if (req.body.lowStockThreshold !== undefined) data.lowStockThreshold = Number(req.body.lowStockThreshold);
             if (req.body.allowBackorder !== undefined) data.allowBackorder = req.body.allowBackorder === 'true' || req.body.allowBackorder === true;
-            if (seasonalTips) data.seasonalTips = seasonalTips;
+            if (seasonalTips !== undefined) data.seasonalTips = seasonalTips;
+            if (origin !== undefined) data.origin = origin ? String(origin).trim() : null;
+            if (caliber !== undefined) data.caliber = caliber ? String(caliber).trim() : null;
+            if (commercialCategory !== undefined) data.commercialCategory = commercialCategory ? String(commercialCategory).trim() : null;
             if (categoryId !== undefined) data.categoryId = categoryId ? Number(categoryId) : null;
             if (file) data.imageUrl = `/uploads/${file.filename}`;
 

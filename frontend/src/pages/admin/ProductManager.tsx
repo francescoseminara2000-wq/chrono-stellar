@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter, Sliders, Tag, Euro, FileText, ChefHat, Scale, Package, AlertTriangle, Image, Check } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter, Sliders, Tag, Euro, FileText, ChefHat, Scale, Package, AlertTriangle, Image, Check, MapPin, Globe, Ruler, Award } from 'lucide-react';
 
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +23,9 @@ interface Product {
     lowStockThreshold: number;
     allowBackorder: boolean;
     seasonalTips?: string;
+    origin?: string;
+    caliber?: string;
+    commercialCategory?: string;
     categoryId?: number;
     category?: { id: number, name: string, color: string };
 }
@@ -53,6 +56,9 @@ export const ProductManager = () => {
         lowStockThreshold: '0',
         allowBackorder: false,
         seasonalTips: '',
+        origin: '',
+        caliber: '',
+        commercialCategory: '',
         categoryId: '',
         image: null as File | null
     });
@@ -209,6 +215,9 @@ export const ProductManager = () => {
         data.append('lowStockThreshold', formData.lowStockThreshold);
         data.append('allowBackorder', String(formData.allowBackorder));
         data.append('seasonalTips', formData.seasonalTips);
+        data.append('origin', formData.origin);
+        data.append('caliber', formData.caliber);
+        data.append('commercialCategory', formData.commercialCategory);
         data.append('categoryId', formData.categoryId);
         if (formData.image) {
             data.append('image', formData.image);
@@ -286,6 +295,9 @@ export const ProductManager = () => {
             lowStockThreshold: product.lowStockThreshold.toString(),
             allowBackorder: product.allowBackorder,
             seasonalTips: product.seasonalTips || '',
+            origin: product.origin || '',
+            caliber: product.caliber || '',
+            commercialCategory: product.commercialCategory || '',
             categoryId: product.categoryId?.toString() || '',
             image: null
         });
@@ -306,6 +318,9 @@ export const ProductManager = () => {
             lowStockThreshold: '0',
             allowBackorder: false,
             seasonalTips: '',
+            origin: '',
+            caliber: '',
+            commercialCategory: '',
             categoryId: '',
             image: null
         });
@@ -580,6 +595,21 @@ export const ProductManager = () => {
                                                         <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wide">
                                                             {product.unitType === 'BOX' ? 'Cassetta' : product.unitType}{product.isVariableWeight ? ' · Var.' : ''}
                                                         </span>
+                                                        {product.origin && (
+                                                            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md border border-emerald-200/60 flex items-center gap-0.5">
+                                                                <Globe size={9} className="text-emerald-600" /> {product.origin}
+                                                            </span>
+                                                        )}
+                                                        {product.caliber && (
+                                                            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md border border-emerald-200/60 flex items-center gap-0.5">
+                                                                <Ruler size={9} className="text-emerald-600" /> {product.caliber}
+                                                            </span>
+                                                        )}
+                                                        {product.commercialCategory && (
+                                                            <span className="text-[10px] bg-amber-50 text-amber-800 font-bold px-1.5 py-0.5 rounded-md border border-amber-200 flex items-center gap-0.5">
+                                                                <Award size={9} className="text-amber-600" /> {product.commercialCategory}
+                                                            </span>
+                                                        )}
                                                         {product.allowBackorder && (
                                                             <span className="text-[10px] bg-sky-50 text-sky-600 font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide border border-sky-100">∞</span>
                                                         )}
@@ -788,6 +818,21 @@ export const ProductManager = () => {
                                             <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md font-black uppercase tracking-wider">
                                                 {product.unitType}
                                             </span>
+                                            {product.origin && (
+                                                <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md border border-emerald-200/60 flex items-center gap-0.5">
+                                                    <Globe size={9} className="text-emerald-600" /> {product.origin}
+                                                </span>
+                                            )}
+                                            {product.caliber && (
+                                                <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md border border-emerald-200/60 flex items-center gap-0.5">
+                                                    <Ruler size={9} className="text-emerald-600" /> {product.caliber}
+                                                </span>
+                                            )}
+                                            {product.commercialCategory && (
+                                                <span className="text-[10px] bg-amber-50 text-amber-800 font-bold px-1.5 py-0.5 rounded-md border border-amber-200 flex items-center gap-0.5">
+                                                    <Award size={9} className="text-amber-600" /> {product.commercialCategory}
+                                                </span>
+                                            )}
                                             {product.category && (
                                                 <span className="text-[10px] bg-gray-50 px-2 py-0.5 rounded-md font-black text-gray-600 flex items-center gap-1 border border-gray-200" style={{ borderColor: `${product.category.color}30` }}>
                                                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: product.category.color }} />
@@ -1014,6 +1059,106 @@ export const ProductManager = () => {
                                                         value={formData.seasonalTips} 
                                                         onChange={e => setFormData({ ...formData, seasonalTips: e.target.value })} 
                                                     />
+                                                </div>
+
+                                                {/* Scheda Ortofrutta & Tracciabilità */}
+                                                <div className="col-span-2 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/70 via-nature-50/40 to-teal-50/40 border border-emerald-200/90 shadow-2xs space-y-4">
+                                                    <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                                                                <MapPin size={15} />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                                                                    Scheda Ortofrutta & Tracciabilità
+                                                                </h4>
+                                                                <p className="text-[10px] text-emerald-800/80 font-medium">Dati obbligatori per cartellino ed e-commerce</p>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                            Normativa Ortofrutta
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                                        {/* 1. Provenienza */}
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+                                                                <Globe size={12} className="text-emerald-600" /> Provenienza / Origine
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-xs font-medium text-gray-800 shadow-2xs"
+                                                                placeholder="es. Italia (Sicilia)"
+                                                                value={formData.origin}
+                                                                onChange={e => setFormData({ ...formData, origin: e.target.value })}
+                                                            />
+                                                            <div className="flex gap-1 flex-wrap pt-0.5">
+                                                                {['Italia', 'Sicilia', 'Spagna', 'Km 0'].map(sugg => (
+                                                                    <button
+                                                                        key={sugg}
+                                                                        type="button"
+                                                                        onClick={() => setFormData({ ...formData, origin: sugg })}
+                                                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs"
+                                                                    >
+                                                                        {sugg}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 2. Calibro */}
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+                                                                <Ruler size={12} className="text-emerald-600" /> Calibro
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-xs font-medium text-gray-800 shadow-2xs"
+                                                                placeholder="es. Calibro 2, 70-80 mm"
+                                                                value={formData.caliber}
+                                                                onChange={e => setFormData({ ...formData, caliber: e.target.value })}
+                                                            />
+                                                            <div className="flex gap-1 flex-wrap pt-0.5">
+                                                                {['Cal. 1', 'Cal. 2', '70-80 mm', 'Medio'].map(sugg => (
+                                                                    <button
+                                                                        key={sugg}
+                                                                        type="button"
+                                                                        onClick={() => setFormData({ ...formData, caliber: sugg })}
+                                                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs"
+                                                                    >
+                                                                        {sugg}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 3. Categoria Commerciale */}
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+                                                                <Award size={12} className="text-emerald-600" /> Categoria Commerciale
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                className="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-xs font-medium text-gray-800 shadow-2xs"
+                                                                placeholder="es. Cat. I, Extra"
+                                                                value={formData.commercialCategory}
+                                                                onChange={e => setFormData({ ...formData, commercialCategory: e.target.value })}
+                                                            />
+                                                            <div className="flex gap-1 flex-wrap pt-0.5">
+                                                                {['Cat. I', 'Cat. II', 'Extra'].map(sugg => (
+                                                                    <button
+                                                                        key={sugg}
+                                                                        type="button"
+                                                                        onClick={() => setFormData({ ...formData, commercialCategory: sugg })}
+                                                                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs"
+                                                                    >
+                                                                        {sugg}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
                                                 <div className="col-span-2 space-y-2">

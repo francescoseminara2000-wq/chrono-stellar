@@ -103,6 +103,9 @@ model Product {
   updatedAt         DateTime         @updatedAt
   isAvailable       Boolean          @default(true)
   seasonalTips      String?          @db.Text
+  origin            String?
+  caliber           String?
+  commercialCategory String?
   lowStockThreshold Decimal          @default(0.00) @db.Decimal(10, 2)
   stockQuantity     Decimal          @default(0.00) @db.Decimal(10, 2)
   allowBackorder    Boolean          @default(false)

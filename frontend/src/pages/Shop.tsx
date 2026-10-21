@@ -22,6 +22,9 @@ interface Product {
     stepAmount: number;
     imageUrl?: string;
     isAvailable: boolean;
+    origin?: string;
+    caliber?: string;
+    commercialCategory?: string;
     categoryId?: number;
     category?: { id: number; name: string; color: string };
 }
