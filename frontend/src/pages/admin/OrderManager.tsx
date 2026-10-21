@@ -1101,7 +1101,214 @@ export const OrderManager = () => {
                 const weighedCount = selectedOrder.items.filter(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)).length;
                 const totalItemsCount = selectedOrder.items.length;
                 const weighingPercentage = totalItemsCount > 0 ? Math.round((weighedCount / totalItemsCount) * 100) : 0;
-                const unweighedItems = selectedOrder.items.filter(i => !weighedItemIds.includes(i.id) && i.quantityFulfilled === null);
+                const unweighedItems = selectedOrder.items.filter(i => !weighedItemIds.includes(i.id) && (i.quantityFulfilled === null || i.quantityFulfilled === undefined));
+                const weighedItems = selectedOrder.items.filter(i => weighedItemIds.includes(i.id) || (i.quantityFulfilled !== null && i.quantityFulfilled !== undefined));
+
+                {/* Sub-component: Single Product Row */}
+                const renderProductRow = (item: any) => {
+                    const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+                    const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
+                    const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
+
+                    const isWeighed = weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined);
+                    const currentQty = typeof fulfillmentData[item.id] === 'number'
+                        ? fulfillmentData[item.id]
+                        : (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? Number(item.quantityFulfilled) : itemEstQtyKg);
+
+                    const currentUnitPrice = typeof fulfillmentPriceData[item.id] === 'number'
+                        ? fulfillmentPriceData[item.id]
+                        : ((item.priceAtPurchase || item.product.priceCents) / 100);
+
+                    const isPriceModified = currentUnitPrice !== (item.product.priceCents / 100);
+                    const itemActualCost = currentQty * currentUnitPrice;
+
+                    const qtyDiff = Number((currentQty - itemEstQtyKg).toFixed(2));
+                    const priceDiff = Number((itemActualCost - itemEstCost).toFixed(2));
+
+                    return (
+                        <div
+                            key={item.id}
+                            className={`group rounded-2xl border transition-all duration-200 shadow-2xs overflow-hidden ${
+                                isWeighed
+                                    ? 'bg-emerald-50/30 border-emerald-250/70 hover:border-emerald-300'
+                                    : 'bg-amber-50/25 border-amber-300/80 hover:border-amber-400 ring-1 ring-amber-400/20'
+                            }`}
+                        >
+                            {/* MOBILE COMPACT ROW (flex sm:hidden): Thumb + Details on Left, Big Thumb-Friendly Weigh Button on Right */}
+                            <div className="flex sm:hidden items-center justify-between p-2.5 gap-2.5">
+                                {/* Left part: compact thumbnail + details */}
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div className="w-12 h-12 rounded-xl bg-emerald-50/70 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
+                                        {item.product.imageUrl ? (
+                                            <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-xl select-none">🍏</span>
+                                        )}
+                                        <span
+                                            className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white shadow-2xs ${
+                                                isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white animate-pulse'
+                                            }`}
+                                            title={isWeighed ? 'Pesato' : 'Da pesare'}
+                                        >
+                                            {isWeighed ? '✓' : '⚖'}
+                                        </span>
+                                    </div>
+
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5">
+                                            <h4 className="font-black text-xs text-gray-900 truncate leading-snug">
+                                                {item.product.name}
+                                            </h4>
+                                            {!isWeighed && (
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded shrink-0">
+                                                    Da pesare
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                            <span className="text-[10px] font-extrabold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                                                Ord: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                            </span>
+                                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                                                isWeighed ? 'text-emerald-900 bg-emerald-100/70' : 'text-gray-700 bg-gray-100'
+                                            }`}>
+                                                {isWeighed ? `${currentQty} ${isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()} • ` : ''}€ {itemActualCost.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right part: Mobile Big Action Button */}
+                                {selectedOrder.status === 'PENDING' ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenSingleItemWeighing(item)}
+                                        className={`h-11 px-3.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shrink-0 active:scale-95 ${
+                                            isWeighed
+                                                ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
+                                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 ring-2 ring-emerald-500/20'
+                                        }`}
+                                    >
+                                        <Scale size={16} />
+                                        <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
+                                    </button>
+                                ) : (
+                                    <div className="text-right shrink-0">
+                                        <span className="text-[10px] font-bold text-gray-400 block">Pesato</span>
+                                        <span className="text-xs font-black text-gray-900">
+                                            {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* DESKTOP EXPANDED ROW (hidden sm:flex): Full details and stats */}
+                            <div className="hidden sm:flex items-center justify-between p-3 gap-3">
+                                {/* Left part: compact thumbnail + details */}
+                                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-50/60 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
+                                        {item.product.imageUrl ? (
+                                            <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                        ) : (
+                                            <span className="text-2xl select-none">🍏</span>
+                                        )}
+                                        <span
+                                            className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-xs ${
+                                                isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white animate-pulse'
+                                            }`}
+                                            title={isWeighed ? 'Prodotto Pesato' : 'Da Pesare'}
+                                        >
+                                            {isWeighed ? '✓' : '⚖'}
+                                        </span>
+                                    </div>
+
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-mono text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md border border-gray-200">
+                                                #{item.product.id}
+                                            </span>
+                                            <h4 className="font-black text-sm sm:text-base text-gray-900 truncate" title={item.product.name}>
+                                                {item.product.name}
+                                            </h4>
+                                            {!isWeighed && (
+                                                <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-black rounded-md border border-amber-200 uppercase tracking-wider">
+                                                    Da pesare
+                                                </span>
+                                            )}
+                                            {item.product.category?.name && (
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+                                                    {item.product.category.name}
+                                                </span>
+                                            )}
+                                            {item.product.origin && (
+                                                <span className="text-[10px] font-medium text-gray-500">
+                                                    Origine: <strong className="text-gray-700">{item.product.origin}</strong>
+                                                </span>
+                                            )}
+                                            {isPriceModified && (
+                                                <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-900 text-[9px] font-black rounded-md border border-indigo-200 uppercase tracking-wider">
+                                                    Prezzo Modificato
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-2 text-xs text-gray-600 font-bold flex-wrap">
+                                            <span className="bg-gray-100 px-2 py-0.5 rounded-lg text-gray-800 font-black text-[11px]">
+                                                Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                            </span>
+                                            <span className="text-gray-400 text-[11px] font-medium">
+                                                (Base: € {(item.product.priceCents / 100).toFixed(2)}/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right part: metric card + action button */}
+                                <div className="flex items-center justify-end gap-3 shrink-0">
+                                    <div className="text-right bg-white px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                                        <span className="text-[9px] font-black uppercase tracking-wider block text-gray-400">
+                                            {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
+                                        </span>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            {isWeighed && qtyDiff !== 0 && (
+                                                <span className="line-through text-red-400 font-bold text-xs" title={`Richiesto: ${itemEstQtyKg}`}>
+                                                    {itemEstQtyKg}
+                                                </span>
+                                            )}
+                                            <span className="font-black text-xs sm:text-sm text-gray-900">
+                                                {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                            </span>
+                                            <span className={`font-black text-xs px-2 py-0.5 rounded-lg border ${
+                                                isWeighed
+                                                    ? 'text-emerald-900 bg-emerald-50 border-emerald-200'
+                                                    : 'text-gray-700 bg-gray-50 border-gray-200'
+                                            }`}>
+                                                € {itemActualCost.toFixed(2)}
+                                            </span>
+                                            {isWeighed && priceDiff > 0 && <span className="text-[10px] font-black text-emerald-700">↑</span>}
+                                            {isWeighed && priceDiff < 0 && <span className="text-[10px] font-black text-amber-800">↓</span>}
+                                        </div>
+                                    </div>
+
+                                    {selectedOrder.status === 'PENDING' && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenSingleItemWeighing(item)}
+                                            className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 ${
+                                                isWeighed
+                                                    ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
+                                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 active:scale-95'
+                                            }`}
+                                        >
+                                            <Scale size={14} />
+                                            <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                };
 
                 {/* Sub-component: Products List Card */}
                 const renderProductsCard = () => (
@@ -1155,201 +1362,70 @@ export const OrderManager = () => {
                             </div>
                         </div>
 
-                        {/* Product Rows List */}
-                        <div className="space-y-2.5">
-                            {selectedOrder.items.map(item => {
-                                const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
-                                const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-                                const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
-
-                                const isWeighed = weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined);
-                                const currentQty = typeof fulfillmentData[item.id] === 'number'
-                                    ? fulfillmentData[item.id]
-                                    : (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? Number(item.quantityFulfilled) : itemEstQtyKg);
-
-                                const currentUnitPrice = typeof fulfillmentPriceData[item.id] === 'number'
-                                    ? fulfillmentPriceData[item.id]
-                                    : ((item.priceAtPurchase || item.product.priceCents) / 100);
-
-                                const isPriceModified = currentUnitPrice !== (item.product.priceCents / 100);
-                                const itemActualCost = currentQty * currentUnitPrice;
-
-                                const qtyDiff = Number((currentQty - itemEstQtyKg).toFixed(2));
-                                const priceDiff = Number((itemActualCost - itemEstCost).toFixed(2));
-
-                                return (
-                                    <div
-                                        key={item.id}
-                                        className={`group rounded-2xl border transition-all duration-200 shadow-2xs overflow-hidden ${
-                                            isWeighed
-                                                ? 'bg-emerald-50/40 border-emerald-250 hover:border-emerald-300'
-                                                : 'bg-white border-gray-200/90 hover:border-gray-300'
-                                        }`}
-                                    >
-                                        {/* MOBILE COMPACT ROW (flex sm:hidden): Thumb + Details on Left, Big Thumb-Friendly Weigh Button on Right */}
-                                        <div className="flex sm:hidden items-center justify-between p-2.5 gap-2.5">
-                                            {/* Left part: compact thumbnail + details */}
-                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                                <div className="w-12 h-12 rounded-xl bg-emerald-50/70 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
-                                                    {item.product.imageUrl ? (
-                                                        <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <span className="text-xl select-none">🍏</span>
-                                                    )}
-                                                    <span
-                                                        className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white shadow-2xs ${
-                                                            isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'
-                                                        }`}
-                                                        title={isWeighed ? 'Pesato' : 'Da pesare'}
-                                                    >
-                                                        {isWeighed ? '✓' : '⚖'}
-                                                    </span>
-                                                </div>
-
-                                                <div className="min-w-0 flex-1">
-                                                    <h4 className="font-black text-xs text-gray-900 truncate leading-snug">
-                                                        {item.product.name}
-                                                    </h4>
-                                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                                        <span className="text-[10px] font-extrabold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-md">
-                                                            Ord: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                        </span>
-                                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
-                                                            isWeighed ? 'text-emerald-900 bg-emerald-100/70' : 'text-gray-700 bg-gray-100'
-                                                        }`}>
-                                                            {isWeighed ? `${currentQty} ${isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()} • ` : ''}€ {itemActualCost.toFixed(2)}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                        {/* Product Rows List: 2 Distinct Sections when PENDING */}
+                        {selectedOrder.status === 'PENDING' ? (
+                            <div className="space-y-5">
+                                {/* SECTION 1: DA PESARE (in alto ed evidenti) */}
+                                {unweighedItems.length > 0 ? (
+                                    <div className="space-y-2.5">
+                                        <div className="flex items-center justify-between px-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="relative flex h-2.5 w-2.5">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                                </span>
+                                                <h4 className="text-xs font-black text-amber-950 uppercase tracking-wider">
+                                                    Da Pesare ({unweighedItems.length})
+                                                </h4>
                                             </div>
-
-                                            {/* Right part: Mobile Big Action Button */}
-                                            {selectedOrder.status === 'PENDING' ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleOpenSingleItemWeighing(item)}
-                                                    className={`h-11 px-3.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shrink-0 active:scale-95 ${
-                                                        isWeighed
-                                                            ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
-                                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 ring-2 ring-emerald-500/20'
-                                                    }`}
-                                                >
-                                                    <Scale size={16} />
-                                                    <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
-                                                </button>
-                                            ) : (
-                                                <div className="text-right shrink-0">
-                                                    <span className="text-[10px] font-bold text-gray-400 block">Pesato</span>
-                                                    <span className="text-xs font-black text-gray-900">
-                                                        {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                    </span>
-                                                </div>
-                                            )}
+                                            <span className="text-[10px] font-black text-amber-800 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-lg shadow-2xs">
+                                                Priorità Banco ⚖
+                                            </span>
                                         </div>
 
-                                        {/* DESKTOP EXPANDED ROW (hidden sm:flex): Full details and stats */}
-                                        <div className="hidden sm:flex items-center justify-between p-3 gap-3">
-                                            {/* Left part: compact thumbnail + details */}
-                                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-50/60 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
-                                                    {item.product.imageUrl ? (
-                                                        <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                                                    ) : (
-                                                        <span className="text-2xl select-none">🍏</span>
-                                                    )}
-                                                    <span
-                                                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-xs ${
-                                                            isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'
-                                                        }`}
-                                                        title={isWeighed ? 'Prodotto Pesato' : 'Da Pesare'}
-                                                    >
-                                                        {isWeighed ? '✓' : '⚖'}
-                                                    </span>
-                                                </div>
-
-                                                <div className="min-w-0 flex-1 space-y-1">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="font-mono text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md border border-gray-200">
-                                                            #{item.product.id}
-                                                        </span>
-                                                        <h4 className="font-black text-sm sm:text-base text-gray-900 truncate" title={item.product.name}>
-                                                            {item.product.name}
-                                                        </h4>
-                                                        {item.product.category?.name && (
-                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70">
-                                                                {item.product.category.name}
-                                                            </span>
-                                                        )}
-                                                        {item.product.origin && (
-                                                            <span className="text-[10px] font-medium text-gray-500">
-                                                                Origine: <strong className="text-gray-700">{item.product.origin}</strong>
-                                                            </span>
-                                                        )}
-                                                        {isPriceModified && (
-                                                            <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-900 text-[9px] font-black rounded-md border border-indigo-200 uppercase tracking-wider">
-                                                                Prezzo Modificato
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex items-center gap-2 text-xs text-gray-600 font-bold flex-wrap">
-                                                        <span className="bg-gray-100 px-2 py-0.5 rounded-lg text-gray-800 font-black text-[11px]">
-                                                            Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                        </span>
-                                                        <span className="text-gray-400 text-[11px] font-medium">
-                                                            (Base: € {(item.product.priceCents / 100).toFixed(2)}/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Right part: metric card + action button */}
-                                            <div className="flex items-center justify-end gap-3 shrink-0">
-                                                <div className="text-right bg-white px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-2xs">
-                                                    <span className="text-[9px] font-black uppercase tracking-wider block text-gray-400">
-                                                        {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
-                                                    </span>
-                                                    <div className="flex items-center gap-2 mt-0.5">
-                                                        {isWeighed && qtyDiff !== 0 && (
-                                                            <span className="line-through text-red-400 font-bold text-xs" title={`Richiesto: ${itemEstQtyKg}`}>
-                                                                {itemEstQtyKg}
-                                                            </span>
-                                                        )}
-                                                        <span className="font-black text-xs sm:text-sm text-gray-900">
-                                                            {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                        </span>
-                                                        <span className={`font-black text-xs px-2 py-0.5 rounded-lg border ${
-                                                            isWeighed
-                                                                ? 'text-emerald-900 bg-emerald-50 border-emerald-200'
-                                                                : 'text-gray-700 bg-gray-50 border-gray-200'
-                                                        }`}>
-                                                            € {itemActualCost.toFixed(2)}
-                                                        </span>
-                                                        {isWeighed && priceDiff > 0 && <span className="text-[10px] font-black text-emerald-700">↑</span>}
-                                                        {isWeighed && priceDiff < 0 && <span className="text-[10px] font-black text-amber-800">↓</span>}
-                                                    </div>
-                                                </div>
-
-                                                {selectedOrder.status === 'PENDING' && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleOpenSingleItemWeighing(item)}
-                                                        className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 ${
-                                                            isWeighed
-                                                                ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
-                                                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 active:scale-95'
-                                                        }`}
-                                                    >
-                                                        <Scale size={14} />
-                                                        <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
-                                                    </button>
-                                                )}
-                                            </div>
+                                        <div className="space-y-2.5">
+                                            {unweighedItems.map(item => renderProductRow(item))}
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                ) : (
+                                    <div className="p-3.5 bg-emerald-50 border border-emerald-250 rounded-2xl flex items-center gap-3 text-emerald-950 shadow-2xs">
+                                        <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-base font-black shrink-0">
+                                            ✓
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-xs sm:text-sm text-emerald-950">Tutti i prodotti sono stati pesati!</h4>
+                                            <p className="text-[11px] text-emerald-800 font-bold mt-0.5">Puoi ora procedere con la Conferma Pesatura Generale.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* SECTION 2: GIÀ PESATI (in basso, completati) */}
+                                {weighedItems.length > 0 && (
+                                    <div className="space-y-2.5 pt-3 border-t border-dashed border-gray-200">
+                                        <div className="flex items-center justify-between px-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                                <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                                                    Già Pesati ({weighedItems.length})
+                                                </h4>
+                                            </div>
+                                            <span className="text-[10px] font-black text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                                                Completati ✓
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-2.5">
+                                            {weighedItems.map(item => renderProductRow(item))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            /* Non-PENDING orders: Standard display */
+                            <div className="space-y-2.5">
+                                {selectedOrder.items.map(item => renderProductRow(item))}
+                            </div>
+                        )}
                     </div>
                 );
 
