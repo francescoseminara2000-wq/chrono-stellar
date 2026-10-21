@@ -184,9 +184,9 @@ export const ProductDetail = () => {
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
-                        className="lg:col-span-6 lg:sticky lg:top-24 self-start"
+                        className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-24 self-start flex justify-center lg:justify-start"
                     >
-                        <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-100 group">
+                        <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/80 w-full max-w-[420px] xl:max-w-[450px] group">
                             <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-gray-50/50 to-white">
                                 {product.imageUrl ? (
                                     <img
@@ -201,8 +201,8 @@ export const ProductDetail = () => {
                                 )}
 
                                 {/* Subtle Discreet Badges */}
-                                <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                                    <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-gray-800 shadow-xs border border-gray-200/60 flex items-center gap-1.5">
+                                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+                                    <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-gray-800 shadow-2xs border border-gray-200/60 flex items-center gap-1.5">
                                         {product.unitType === 'KG' ? (
                                             <>
                                                 <Scale size={13} className="text-emerald-700" />
@@ -217,12 +217,12 @@ export const ProductDetail = () => {
                                     </span>
 
                                     {product.isAvailable ? (
-                                        <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-emerald-800 shadow-xs border border-emerald-200/60 flex items-center gap-1.5">
+                                        <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-emerald-800 shadow-2xs border border-emerald-200/60 flex items-center gap-1.5">
                                             <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
                                             <span>Disponibile</span>
                                         </span>
                                     ) : (
-                                        <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-red-700 shadow-xs border border-red-200 flex items-center gap-1.5">
+                                        <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-red-700 shadow-2xs border border-red-200 flex items-center gap-1.5">
                                             <span className="w-2 h-2 rounded-full bg-red-600"></span>
                                             <span>Esaurito</span>
                                         </span>
@@ -231,12 +231,12 @@ export const ProductDetail = () => {
                             </div>
 
                             {/* Minimal Bottom Bar */}
-                            <div className="px-5 py-3.5 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
+                            <div className="px-4 py-2.5 bg-gray-50/80 border-t border-gray-150/70 flex items-center justify-between text-xs text-gray-500 font-medium">
                                 <span className="flex items-center gap-1.5">
                                     <Leaf size={14} className="text-emerald-700" />
                                     <span>Filiera corta garantita</span>
                                 </span>
-                                <span className="text-emerald-800 font-bold">
+                                <span className="text-emerald-800 font-bold text-xs">
                                     Fresco di giornata
                                 </span>
                             </div>
@@ -248,7 +248,7 @@ export const ProductDetail = () => {
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="lg:col-span-6 flex flex-col"
+                        className="lg:col-span-7 flex flex-col"
                     >
                         {/* Category & Title Header */}
                         <div className="mb-4">
