@@ -772,150 +772,153 @@ export const OrderManager = () => {
     };
 
     return (
-        <div className={`flex flex-col h-full bg-gray-50 -m-5 lg:-m-8 ${selectedOrder ? 'p-0 lg:p-8' : 'p-5 lg:p-8'} overflow-hidden`}>
-            <div className={`space-y-3 lg:space-y-6 mb-3 lg:mb-6 ${selectedOrder ? 'hidden' : 'block'}`}>
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
-                    <div>
-                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestione Ordini</h1>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                            <p className="text-gray-500 text-sm font-medium">Gestisci le pesature e monitora lo stato delle consegne.</p>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-xs" title="Aggiornamento automatico attivo ogni 15 secondi">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Live Sync (15s)
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    fetchOrders(false);
-                                    addToast('Ordini aggiornati con successo!', 'success');
-                                }}
-                                className="text-xs font-black text-gray-600 hover:text-emerald-700 transition-colors cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-xs"
-                            >
-                                🔄 Aggiorna Ora
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Mobile Toolbar Toggle Buttons */}
-                    <div className="flex lg:hidden gap-2 w-full">
-                        <button
-                            onClick={() => {
-                                setShowSearch(!showSearch);
-                                setShowFilter(false);
-                            }}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                showSearch || searchQuery
-                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
-                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
-                            }`}
-                        >
-                            <Search size={14} />
-                            <span>Cerca</span>
-                            {searchQuery && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setShowFilter(!showFilter);
-                                setShowSearch(false);
-                            }}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                showFilter || filterStatus !== 'ALL'
-                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
-                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
-                            }`}
-                        >
-                            <ListFilter size={14} />
-                            <span>Stato</span>
-                            {filterStatus !== 'ALL' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setIsMultiSelectActive(!isMultiSelectActive);
-                                if (!isMultiSelectActive) {
-                                    setSelectedIds([]);
-                                }
-                            }}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                isMultiSelectActive
-                                    ? 'bg-nature-600 text-white border-transparent shadow-sm'
-                                    : 'bg-white text-gray-500 border-gray-200 shadow-sm'
-                            }`}
-                        >
-                            <CheckCircle size={14} />
-                            <span>Sel. Multipla</span>
-                        </button>
-                    </div>
-
-                    {/* Search Input Panel & Bulk Toggle on Desktop */}
-                    <div className="flex items-center gap-3 w-full lg:w-auto">
-                        <div className={`relative w-full lg:w-96 group ${showSearch ? 'block' : 'hidden'} lg:block`}>
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-nature-600 transition-colors">
-                                <Search size={20} />
+        <div className={`flex flex-col ${selectedOrder ? 'w-full' : 'h-full bg-gray-50 -m-5 lg:-m-8 p-5 lg:p-8 overflow-hidden'}`}>
+            {!selectedOrder && (
+                <div className="space-y-3 lg:space-y-6 mb-3 lg:mb-6">
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
+                        <div>
+                            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestione Ordini</h1>
+                            <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                <p className="text-gray-500 text-sm font-medium">Gestisci le pesature e monitora lo stato delle consegne.</p>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-xs" title="Aggiornamento automatico attivo ogni 15 secondi">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Live Sync (15s)
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        fetchOrders(false);
+                                        addToast('Ordini aggiornati con successo!', 'success');
+                                    }}
+                                    className="text-xs font-black text-gray-600 hover:text-emerald-700 transition-colors cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-xs"
+                                >
+                                    🔄 Aggiorna Ora
+                                </button>
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Cerca per ID, cliente o prodotto..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
-                            />
                         </div>
-                        <button
-                            onClick={() => {
-                                setIsMultiSelectActive(!isMultiSelectActive);
-                                if (!isMultiSelectActive) {
-                                    setSelectedIds([]);
-                                }
-                            }}
-                            className={`hidden lg:flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold border transition-all ${
-                                isMultiSelectActive
-                                    ? 'bg-nature-600 text-white border-transparent shadow-md shadow-nature-200'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-nature-300 hover:text-nature-700'
-                            }`}
-                        >
-                            <CheckCircle size={18} />
-                            <span>Selezione Multipla</span>
-                        </button>
+
+                        {/* Mobile Toolbar Toggle Buttons */}
+                        <div className="flex lg:hidden gap-2 w-full">
+                            <button
+                                onClick={() => {
+                                    setShowSearch(!showSearch);
+                                    setShowFilter(false);
+                                }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                    showSearch || searchQuery
+                                        ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                        : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                                }`}
+                            >
+                                <Search size={14} />
+                                <span>Cerca</span>
+                                {searchQuery && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowFilter(!showFilter);
+                                    setShowSearch(false);
+                                }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                    showFilter || filterStatus !== 'ALL'
+                                        ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                        : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                                }`}
+                            >
+                                <ListFilter size={14} />
+                                <span>Stato</span>
+                                {filterStatus !== 'ALL' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsMultiSelectActive(!isMultiSelectActive);
+                                    if (!isMultiSelectActive) {
+                                        setSelectedIds([]);
+                                    }
+                                }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                    isMultiSelectActive
+                                        ? 'bg-nature-600 text-white border-transparent shadow-sm'
+                                        : 'bg-white text-gray-500 border-gray-200 shadow-sm'
+                                }`}
+                            >
+                                <CheckCircle size={14} />
+                                <span>Sel. Multipla</span>
+                            </button>
+                        </div>
+
+                        {/* Search Input Panel & Bulk Toggle on Desktop */}
+                        <div className="flex items-center gap-3 w-full lg:w-auto">
+                            <div className={`relative w-full lg:w-96 group ${showSearch ? 'block' : 'hidden'} lg:block`}>
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-nature-600 transition-colors">
+                                    <Search size={20} />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Cerca per ID, cliente o prodotto..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-nature-500/10 focus:border-nature-500 outline-none transition-all placeholder:text-gray-400 font-medium"
+                                />
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setIsMultiSelectActive(!isMultiSelectActive);
+                                    if (!isMultiSelectActive) {
+                                        setSelectedIds([]);
+                                    }
+                                }}
+                                className={`hidden lg:flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold border transition-all ${
+                                    isMultiSelectActive
+                                        ? 'bg-nature-600 text-white border-transparent shadow-md shadow-nature-200'
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-nature-300 hover:text-nature-700'
+                                }`}
+                            >
+                                <CheckCircle size={18} />
+                                <span>Selezione Multipla</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Status Tabs */}
+                    <div className={`flex gap-1.5 p-1.5 bg-gray-100 rounded-2xl w-full overflow-x-auto custom-scrollbar no-scrollbar ${showFilter ? 'block' : 'hidden'} lg:flex`}>
+                        {statusTabs.map(tab => {
+                            const count = getStatusCount(tab.id);
+                            const isActive = filterStatus === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setFilterStatus(tab.id)}
+                                    className={`
+                                        flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap
+                                        ${isActive
+                                            ? `bg-white text-nature-900 shadow-sm ring-2 ${activeColorMap[tab.color]}`
+                                            : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                        }
+                                    `}
+                                >
+                                    <span className={isActive ? colorMap[tab.color].split(' ')[0] : 'text-gray-400'}>
+                                        {tab.icon}
+                                    </span>
+                                    {tab.label}
+                                    <span className={`
+                                        px-2 py-0.5 rounded-lg text-[10px] font-black
+                                        ${isActive ? colorMap[tab.color] : 'bg-gray-200 text-gray-500'}
+                                    `}>
+                                        {count}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
+            )}
 
-                {/* Status Tabs */}
-                <div className={`flex gap-1.5 p-1.5 bg-gray-100 rounded-2xl w-full overflow-x-auto custom-scrollbar no-scrollbar ${showFilter ? 'block' : 'hidden'} lg:flex`}>
-                    {statusTabs.map(tab => {
-                        const count = getStatusCount(tab.id);
-                        const isActive = filterStatus === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setFilterStatus(tab.id)}
-                                className={`
-                                    flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap
-                                    ${isActive
-                                        ? `bg-white text-nature-900 shadow-sm ring-2 ${activeColorMap[tab.color]}`
-                                        : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
-                                    }
-                                `}
-                            >
-                                <span className={isActive ? colorMap[tab.color].split(' ')[0] : 'text-gray-400'}>
-                                    {tab.icon}
-                                </span>
-                                {tab.label}
-                                <span className={`
-                                    px-2 py-0.5 rounded-lg text-[10px] font-black
-                                    ${isActive ? colorMap[tab.color] : 'bg-gray-200 text-gray-500'}
-                                `}>
-                                    {count}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-                {/* Orders list: visible when no order is selected */}
-                <div className={`flex flex-col h-full min-h-0 flex-1 w-full ${selectedOrder ? 'hidden' : 'flex'}`}>
-                    <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:auto-rows-max lg:content-start overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
+            {/* Orders list: visible ONLY when no order is selected */}
+            {!selectedOrder && (
+                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                    <div className="flex flex-col h-full min-h-0 flex-1 w-full">
+                        <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 lg:auto-rows-max lg:content-start overflow-y-auto pr-2 custom-scrollbar flex-1 pb-28 lg:pb-4">
                             {isMultiSelectActive && filteredOrders.length > 0 && (
                                 <div 
                                     onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
@@ -936,132 +939,133 @@ export const OrderManager = () => {
                                     <p>Nessun ordine trovato</p>
                                 </div>
                             )}
-                        {filteredOrders.map(order => (
-                            <div
-                                key={order.id}
-                                onClick={() => handleSelectOrder(order)}
-                                className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between gap-3 shrink-0 min-h-[130px] ${
-                                    selectedOrder?.id === order.id
-                                        ? 'bg-gradient-to-br from-emerald-50/70 via-white to-gray-50/50 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
-                                        : 'bg-white border-gray-200/90 hover:border-emerald-300 hover:shadow-md'
-                                }`}
-                            >
-                                {/* Checkbox for multiple selection */}
-                                {isMultiSelectActive && (
-                                    <div 
-                                        onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
-                                        className="absolute top-3 left-3 z-10 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedIds.includes(order.id)}
-                                            readOnly
-                                            className="w-4.5 h-4.5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer pointer-events-none"
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Header Row: ID + Customer Name + Timestamp + Status Badge */}
-                                <div className="flex items-start justify-between gap-2.5">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-10 h-10 bg-emerald-100/80 text-emerald-900 border border-emerald-200/80 rounded-xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
-                                            #{order.id}
+                            {filteredOrders.map(order => (
+                                <div
+                                    key={order.id}
+                                    onClick={() => handleSelectOrder(order)}
+                                    className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between gap-3 shrink-0 min-h-[130px] ${
+                                        (selectedOrder as Order | null)?.id === order.id
+                                            ? 'bg-gradient-to-br from-emerald-50/70 via-white to-gray-50/50 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
+                                            : 'bg-white border-gray-200/90 hover:border-emerald-300 hover:shadow-md'
+                                    }`}
+                                >
+                                    {/* Checkbox for multiple selection */}
+                                    {isMultiSelectActive && (
+                                        <div 
+                                            onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
+                                            className="absolute top-3 left-3 z-10 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(order.id)}
+                                                readOnly
+                                                className="w-4.5 h-4.5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer pointer-events-none"
+                                            />
                                         </div>
-                                        <div className="min-w-0">
-                                            <h3 className="font-black text-gray-900 text-base leading-tight truncate" title={order.customerName || order.user?.name || 'Cliente'}>
-                                                {order.customerName || order.user?.name || 'Cliente'}
-                                            </h3>
-                                            <p className="text-[11px] text-gray-400 font-bold mt-0.5">
-                                                {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
-                                            </p>
+                                    )}
+
+                                    {/* Header Row: ID + Customer Name + Timestamp + Status Badge */}
+                                    <div className="flex items-start justify-between gap-2.5">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-10 h-10 bg-emerald-100/80 text-emerald-900 border border-emerald-200/80 rounded-xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
+                                                #{order.id}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-black text-gray-900 text-base leading-tight truncate" title={order.customerName || order.user?.name || 'Cliente'}>
+                                                    {order.customerName || order.user?.name || 'Cliente'}
+                                                </h3>
+                                                <p className="text-[11px] text-gray-400 font-bold mt-0.5">
+                                                    {new Date(order.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="shrink-0">
+                                            <StatusBadge status={order.status} />
                                         </div>
                                     </div>
 
-                                    <div className="shrink-0">
-                                        <StatusBadge status={order.status} />
+                                    {/* Middle Row: Scheduled Slot Pill */}
+                                    {order.scheduledDate && (
+                                        <div className="bg-indigo-50/80 border border-indigo-100 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs text-indigo-950 font-bold">
+                                            <span className="flex items-center gap-1.5">
+                                                <Calendar size={13} className="text-indigo-600 shrink-0" />
+                                                <span>Pianificato: <strong>{order.scheduledDate.split('-').reverse().join('/')}</strong></span>
+                                            </span>
+                                            {order.scheduledTime && (
+                                                <span className="text-[11px] text-indigo-700 bg-white px-2 py-0.5 rounded-md border border-indigo-200 shadow-2xs font-bold">
+                                                    {order.scheduledTime.includes('-') ? `Fascia: ${order.scheduledTime}` : `alle ${order.scheduledTime}`}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Customer Weight Approval Status Pill (AT-A-GLANCE CRITICAL TAG) */}
+                                    {((order as any).approvalStatus || (order.status === 'WEIGHING_COMPLETED' || order.status === 'WEIGNING_COMPLETED')) && (
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {(order as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
+                                                <span className="px-2.5 py-1 bg-amber-100 text-amber-950 border border-amber-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs animate-pulse">
+                                                    ⏳ In Attesa Approvazione Pesatura Cliente
+                                                </span>
+                                            )}
+                                            {(order as any).approvalStatus === 'CUSTOMER_APPROVED' && (
+                                                <span className="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
+                                                    ✅ Pesatura Approvata dal Cliente
+                                                </span>
+                                            )}
+                                            {(order as any).approvalStatus === 'CUSTOMER_REJECTED' && (
+                                                <span className="px-2.5 py-1 bg-rose-100 text-rose-950 border border-rose-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
+                                                    ❌ Pesatura Contestata dal Cliente
+                                                </span>
+                                            )}
+                                            {(order as any).approvalStatus === 'AUTO_APPROVED' && (
+                                                <span className="px-2.5 py-1 bg-sky-100 text-sky-950 border border-sky-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
+                                                    ⚡ Tolleranza Pesatura OK (≤ 10%)
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Footer Row: Shipping Method Badge + Payment Tag + Total Price */}
+                                    <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-0.5">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            {/* Delivery vs Pickup */}
+                                            <span className="flex items-center gap-1 text-[11px] font-bold bg-gray-100/90 text-gray-700 px-2.5 py-1 rounded-lg border border-gray-200/80">
+                                                {order.deliveryMethod === 'DELIVERY' ? <Truck size={12} className="text-emerald-600" /> : <Scale size={12} className="text-amber-600" />}
+                                                {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro in Negozio'}
+                                            </span>
+
+                                            {/* Payment Method */}
+                                            {((order as any).transactions?.[0]?.gateway === 'REVOLUT' || (order as any).paymentMethod === 'REVOLUT') ? (
+                                                <span className="text-[10px] font-black bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-md border border-indigo-200">
+                                                    💳 Online
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] font-black bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-200">
+                                                    💵 Contanti / POS
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Total Price */}
+                                        <div className="text-right">
+                                            <span className="text-lg font-black text-gray-900 leading-none block">
+                                                € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
+                                            </span>
+                                            {!order.finalTotal && (
+                                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mt-0.5">
+                                                    Stimato
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Middle Row: Scheduled Slot Pill */}
-                                {order.scheduledDate && (
-                                    <div className="bg-indigo-50/80 border border-indigo-100 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs text-indigo-950 font-bold">
-                                        <span className="flex items-center gap-1.5">
-                                            <Calendar size={13} className="text-indigo-600 shrink-0" />
-                                            <span>Pianificato: <strong>{order.scheduledDate.split('-').reverse().join('/')}</strong></span>
-                                        </span>
-                                        {order.scheduledTime && (
-                                            <span className="text-[11px] text-indigo-700 bg-white px-2 py-0.5 rounded-md border border-indigo-200 shadow-2xs font-bold">
-                                                {order.scheduledTime.includes('-') ? `Fascia: ${order.scheduledTime}` : `alle ${order.scheduledTime}`}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Customer Weight Approval Status Pill (AT-A-GLANCE CRITICAL TAG) */}
-                                {((order as any).approvalStatus || (order.status === 'WEIGHING_COMPLETED' || order.status === 'WEIGNING_COMPLETED')) && (
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        {(order as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
-                                            <span className="px-2.5 py-1 bg-amber-100 text-amber-950 border border-amber-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs animate-pulse">
-                                                ⏳ In Attesa Approvazione Pesatura Cliente
-                                            </span>
-                                        )}
-                                        {(order as any).approvalStatus === 'CUSTOMER_APPROVED' && (
-                                            <span className="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
-                                                ✅ Pesatura Approvata dal Cliente
-                                            </span>
-                                        )}
-                                        {(order as any).approvalStatus === 'CUSTOMER_REJECTED' && (
-                                            <span className="px-2.5 py-1 bg-rose-100 text-rose-950 border border-rose-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
-                                                ❌ Pesatura Contestata dal Cliente
-                                            </span>
-                                        )}
-                                        {(order as any).approvalStatus === 'AUTO_APPROVED' && (
-                                            <span className="px-2.5 py-1 bg-sky-100 text-sky-950 border border-sky-300 rounded-lg text-[11px] font-black flex items-center gap-1 shadow-2xs">
-                                                ⚡ Tolleranza Pesatura OK (≤ 10%)
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Footer Row: Shipping Method Badge + Payment Tag + Total Price */}
-                                <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-0.5">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        {/* Delivery vs Pickup */}
-                                        <span className="flex items-center gap-1 text-[11px] font-bold bg-gray-100/90 text-gray-700 px-2.5 py-1 rounded-lg border border-gray-200/80">
-                                            {order.deliveryMethod === 'DELIVERY' ? <Truck size={12} className="text-emerald-600" /> : <Scale size={12} className="text-amber-600" />}
-                                            {order.deliveryMethod === 'DELIVERY' ? 'Domicilio' : 'Ritiro in Negozio'}
-                                        </span>
-
-                                        {/* Payment Method */}
-                                        {((order as any).transactions?.[0]?.gateway === 'REVOLUT' || (order as any).paymentMethod === 'REVOLUT') ? (
-                                            <span className="text-[10px] font-black bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-md border border-indigo-200">
-                                                💳 Online
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] font-black bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-200">
-                                                💵 Contanti / POS
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Total Price */}
-                                    <div className="text-right">
-                                        <span className="text-lg font-black text-gray-900 leading-none block">
-                                            € {((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}
-                                        </span>
-                                        {!order.finalTotal && (
-                                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mt-0.5">
-                                                Stimato
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
+            )}
 
-            {/* Dedicated Detail View: Full width on desktop and original drawer on smartphone */}
             {/* Dedicated Detail View: 2-Column Desktop Layout (Option A) & Responsive Mobile Tabs */}
             {selectedOrder && (() => {
                 const weighedCount = selectedOrder.items.filter(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)).length;
@@ -1400,230 +1404,216 @@ export const OrderManager = () => {
                 );
 
                 return (
-                    <div className="min-h-full flex fixed inset-0 z-[60] lg:relative lg:inset-auto lg:z-auto bg-gray-50/50 flex-col w-full">
-                        <div className="bg-white lg:rounded-3xl lg:shadow-md lg:border lg:border-gray-200/80 flex flex-col w-full relative">
-                            {/* Mobile Back Header */}
-                            <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-950 text-white shrink-0 shadow-lg">
-                                <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 px-3 py-2 bg-nature-800/90 rounded-2xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-black shadow-inner cursor-pointer">
-                                    <X size={20} /> Chiudi
-                                </button>
-                                <div className="flex items-center gap-2.5">
-                                    <span className="font-black text-base tracking-wide">Ordine #{selectedOrder.id}</span>
+                    <div className="w-full space-y-6 pb-20 animate-in fade-in duration-200">
+                        {/* Main White Order Card */}
+                        <div className="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-7 space-y-6">
+                            {/* Header: Back Button + Order ID + Status + Payment Method */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedOrder(null)}
+                                        className="flex items-center gap-2 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-black text-xs rounded-xl border border-gray-200 transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                                        title="Torna all'elenco ordini"
+                                    >
+                                        <ArrowLeft size={16} /> Torna agli Ordini
+                                    </button>
+                                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 leading-none tracking-tight">Ordine #{selectedOrder.id}</h2>
+                                    {/* Payment Method Badge */}
+                                    {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
+                                        <span className="px-3.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-2xs">
+                                            💳 Revolut Pay Online
+                                        </span>
+                                    ) : (
+                                        <span className="px-3.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-2xs">
+                                            💵 Contanti / POS alla Consegna
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs font-black text-gray-400 uppercase tracking-wider">Stato Attuale:</span>
                                     <StatusBadge status={selectedOrder.status} />
                                 </div>
                             </div>
 
-                            {/* Main Content Area */}
-                            <div className="flex-1 p-4 md:p-6 flex flex-col relative z-30">
-                                {/* Desktop Header: Back Button + Order ID + Status + Payment Method */}
-                                <div className="hidden lg:flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                            {/* Customer Approval Status Alert Box (if active) */}
+                            {(selectedOrder as any).approvalStatus && ['AWAITING_CUSTOMER_APPROVAL', 'CUSTOMER_APPROVED', 'CUSTOMER_REJECTED'].includes((selectedOrder as any).approvalStatus) && (
+                                <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs ${
+                                    (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL'
+                                        ? 'bg-amber-50 border-amber-300 text-amber-950'
+                                        : (selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED'
+                                        ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                                        : 'bg-red-50 border-red-300 text-red-950'
+                                }`}>
                                     <div className="flex items-center gap-3">
+                                        <div className="text-2xl shrink-0">
+                                            {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && '⏳'}
+                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && '✅'}
+                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && '❌'}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-sm leading-snug">
+                                                {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'In Attesa Approvazione Pesatura Cliente'}
+                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && 'Pesatura Approvata dal Cliente'}
+                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Pesatura Contestata dal Cliente'}
+                                            </h4>
+                                            <p className="text-xs font-bold opacity-80 mt-0.5">
+                                                {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'La variazione supera la soglia di tolleranza. In attesa che il cliente confermi dal link WhatsApp.'}
+                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && `Confermata il ${(selectedOrder as any).customerApprovedAt ? new Date((selectedOrder as any).customerApprovedAt).toLocaleString('it-IT') : 'recente'}.`}
+                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Il cliente ha richiesto assistenza o contestato la variazione.'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedOrder(null)}
-                                            className="flex items-center gap-2 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-black text-xs rounded-xl border border-gray-200 transition-all cursor-pointer shadow-2xs hover:border-gray-300"
-                                            title="Torna all'elenco ordini"
+                                            onClick={() => handleResendApproval(selectedOrder.id)}
+                                            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-xs transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
                                         >
-                                            <ArrowLeft size={16} /> Torna agli Ordini
+                                            📲 Sollecita WhatsApp
                                         </button>
-                                        <h2 className="text-3xl font-black text-gray-900 leading-none tracking-tight">Ordine #{selectedOrder.id}</h2>
-                                        {/* Payment Method Badge */}
-                                        {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
-                                            <span className="px-3.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-2xs">
-                                                💳 Revolut Pay Online
-                                            </span>
-                                        ) : (
-                                            <span className="px-3.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-2xs">
-                                                💵 Contanti / POS alla Consegna
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs font-black text-gray-400 uppercase tracking-wider">Stato Attuale:</span>
-                                        <StatusBadge status={selectedOrder.status} />
-                                    </div>
+                                    )}
                                 </div>
+                            )}
 
-                                {/* Customer Approval Status Alert Box (if active) */}
-                                {(selectedOrder as any).approvalStatus && ['AWAITING_CUSTOMER_APPROVAL', 'CUSTOMER_APPROVED', 'CUSTOMER_REJECTED'].includes((selectedOrder as any).approvalStatus) && (
-                                    <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs mb-4 ${
-                                        (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL'
-                                            ? 'bg-amber-50 border-amber-300 text-amber-950'
-                                            : (selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED'
-                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-                                            : 'bg-red-50 border-red-300 text-red-950'
-                                    }`}>
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-2xl shrink-0">
-                                                {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && '⏳'}
-                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && '✅'}
-                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && '❌'}
-                                            </div>
-                                            <div>
-                                                <h4 className="font-black text-sm leading-snug">
-                                                    {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'In Attesa Approvazione Pesatura Cliente'}
-                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && 'Pesatura Approvata dal Cliente'}
-                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Pesatura Contestata dal Cliente'}
-                                                </h4>
-                                                <p className="text-xs font-bold opacity-80 mt-0.5">
-                                                    {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'La variazione supera la soglia di tolleranza. In attesa che il cliente confermi dal link WhatsApp.'}
-                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && `Confermata il ${(selectedOrder as any).customerApprovedAt ? new Date((selectedOrder as any).customerApprovedAt).toLocaleString('it-IT') : 'recente'}.`}
-                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Il cliente ha richiesto assistenza o contestato la variazione.'}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleResendApproval(selectedOrder.id)}
-                                                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-xs transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
-                                            >
-                                                📲 Sollecita WhatsApp
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* MOBILE TABS (< lg only) */}
-                                <div className="lg:hidden flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-2xl mb-4 shrink-0 border border-gray-200/70 shadow-inner">
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab('items')}
-                                        className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                            activeTab === 'items'
-                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
-                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
-                                        }`}
-                                    >
-                                        <span>🛒</span> Prodotti ({totalItemsCount})
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab('customer')}
-                                        className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                            activeTab === 'customer'
-                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
-                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
-                                        }`}
-                                    >
-                                        <span>👤</span> Cliente
-                                    </button>
-                                </div>
-
-                                {/* MOBILE CONTENT: Renders tab content */}
-                                <div className="lg:hidden space-y-4">
-                                    {activeTab === 'items' && renderProductsCard()}
-                                    {activeTab === 'customer' && renderCustomerSidebar()}
-                                </div>
-
-                                {/* DESKTOP 2-COLUMN VIEW (Option A): Products on Left, Sidebar on Right */}
-                                <div className="hidden lg:flex flex-row items-start gap-6">
-                                    {/* Left Column: Products Card */}
-                                    <div className="flex-1 min-w-0">
-                                        {renderProductsCard()}
-                                    </div>
-
-                                    {/* Right Column: Customer & Delivery Sidebar */}
-                                    <div className="w-80 xl:w-96 shrink-0 sticky top-4 self-start">
-                                        {renderCustomerSidebar()}
-                                    </div>
-                                </div>
+                            {/* MOBILE TABS (< lg only) */}
+                            <div className="lg:hidden flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-2xl shrink-0 border border-gray-200/70 shadow-inner">
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('items')}
+                                    className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                        activeTab === 'items'
+                                            ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                                    }`}
+                                >
+                                    <span>🛒</span> Prodotti ({totalItemsCount})
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('customer')}
+                                    className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                        activeTab === 'customer'
+                                            ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
+                                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                                    }`}
+                                >
+                                    <span>👤</span> Cliente
+                                </button>
                             </div>
 
-                            {/* Action Footer (Sticky) */}
-                            <div className="bg-white border-t border-gray-200 p-3.5 sm:p-4 shadow-[0_-8px_25px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 sticky bottom-0">
-                                <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
-                                    <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
-                                    <span className="text-xl font-black text-white leading-none mt-1">
-                                        € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
-                                    </span>
+                            {/* MOBILE CONTENT (< lg): Renders selected tab content */}
+                            <div className="lg:hidden space-y-4">
+                                {activeTab === 'items' && renderProductsCard()}
+                                {activeTab === 'customer' && renderCustomerSidebar()}
+                            </div>
+
+                            {/* DESKTOP 2-COLUMN VIEW (lg:): Products on Left, Sidebar on Right */}
+                            <div className="hidden lg:flex flex-row items-start gap-6">
+                                {/* Left Column: Products Card */}
+                                <div className="flex-1 min-w-0">
+                                    {renderProductsCard()}
                                 </div>
 
-                                <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
-                                    {/* WhatsApp Button */}
-                                    {selectedOrder.customerPhone && (
-                                        <a
-                                            href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                                            title="Apri Chat WhatsApp col Cliente"
+                                {/* Right Column: Customer & Delivery Sidebar */}
+                                <div className="w-80 xl:w-96 shrink-0 sticky top-4 self-start">
+                                    {renderCustomerSidebar()}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Floating Action Bar (Sticky at bottom-4) */}
+                        <div className="sticky bottom-4 z-40 bg-white/95 backdrop-blur-md border border-gray-200/90 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
+                                <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
+                                <span className="text-xl font-black text-white leading-none mt-1">
+                                    € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
+                                {/* WhatsApp Button */}
+                                {selectedOrder.customerPhone && (
+                                    <a
+                                        href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                                        title="Apri Chat WhatsApp col Cliente"
+                                    >
+                                        <MessageCircle size={18} /> WhatsApp
+                                    </a>
+                                )}
+
+                                {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
+                                {selectedOrder.status === 'PENDING' && (
+                                    selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
+                                        <button
+                                            onClick={handleFulfill}
+                                            className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer animate-in zoom-in-95"
                                         >
-                                            <MessageCircle size={18} /> WhatsApp
-                                        </a>
-                                    )}
-
-                                    {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
-                                    {selectedOrder.status === 'PENDING' && (
-                                        selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
-                                            <button
-                                                onClick={handleFulfill}
-                                                className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer animate-in zoom-in-95"
-                                            >
-                                                <Scale size={18} /> Conferma Pesatura Generale & Notifica
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
-                                                }}
-                                                className="px-3.5 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
-                                                title="Clicca per aprire la pesatura del prossimo articolo"
-                                            >
-                                                <span className="relative flex h-2 w-2">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                                </span>
-                                                Pesa prodotti rimanenti ({unweighedItems.length})
-                                            </button>
-                                        )
-                                    )}
-
-                                    {selectedOrder.status === 'WEIGHING_COMPLETED' && (
-                                        (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
-                                            <div className="px-4 py-3 bg-amber-50 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90" title="Spedizione bloccata fino all'approvazione del cliente dal link WhatsApp/Email">
-                                                <span className="relative flex h-2 w-2">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                                </span>
-                                                🔒 Spedisci Bloccato (In Attesa Approvazione Cliente)
-                                            </div>
-                                        ) : (
-                                            <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                                <Truck size={18} /> Spedisci
-                                            </button>
-                                        )
-                                    )}
-
-                                    {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
-                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                            <CheckCircle size={18} /> Concludi
+                                            <Scale size={18} /> Conferma Pesatura Generale & Notifica
                                         </button>
-                                    )}
-
-                                    {/* Annulla Ordine Button */}
-                                    {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
-                                        <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                                            <Ban size={16} /> Annulla
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
+                                            }}
+                                            className="px-3.5 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+                                            title="Clicca per aprire la pesatura del prossimo articolo"
+                                        >
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                            </span>
+                                            Pesa prodotti rimanenti ({unweighedItems.length})
                                         </button>
-                                    )}
+                                    )
+                                )}
 
-                                    {/* Elimina Ordine Button */}
-                                    {selectedOrder.status === 'CANCELLED' && (
-                                        <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                                            <Trash2 size={18} /> Elimina Ordine
+                                {selectedOrder.status === 'WEIGHING_COMPLETED' && (
+                                    (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
+                                        <div className="px-4 py-3 bg-amber-50 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90" title="Spedizione bloccata fino all'approvazione del cliente dal link WhatsApp/Email">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                            </span>
+                                            🔒 Spedisci Bloccato (In Attesa Approvazione Cliente)
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                            <Truck size={18} /> Spedisci
                                         </button>
-                                    )}
-                                </div>
+                                    )
+                                )}
+
+                                {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
+                                    <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                        <CheckCircle size={18} /> Concludi
+                                    </button>
+                                )}
+
+                                {/* Annulla Ordine Button */}
+                                {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
+                                    <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                        <Ban size={16} /> Annulla
+                                    </button>
+                                )}
+
+                                {/* Elimina Ordine Button */}
+                                {selectedOrder.status === 'CANCELLED' && (
+                                    <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                        <Trash2 size={18} /> Elimina Ordine
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
                 );
             })()}
-            </div>
             {isScheduleModalOpen && selectedOrder && (
                 <div className="fixed inset-0 bg-nature-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
                     <div className="bg-white w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
