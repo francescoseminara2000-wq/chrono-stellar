@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, Phone, Mail, MapPin } from 'lucide-react';
+import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, Phone, Mail, MapPin, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -45,7 +45,8 @@ export const OrderManager = () => {
     const [editTime, setEditTime] = useState('');
     const [editNotes, setEditNotes] = useState('');
     const [isSavingEdits, setIsSavingEdits] = useState(false);
-    const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'customer'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'customer'>('items');
+    const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
     const [weighedItemIds, setWeighedItemIds] = useState<number[]>([]);
     const [weighingItemModal, setWeighingItemModal] = useState<{
         isOpen: boolean;
@@ -1179,111 +1180,171 @@ export const OrderManager = () => {
                                 return (
                                     <div
                                         key={item.id}
-                                        className={`group flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-2xl border transition-all duration-200 gap-3 shadow-2xs ${
+                                        className={`group rounded-2xl border transition-all duration-200 shadow-2xs overflow-hidden ${
                                             isWeighed
                                                 ? 'bg-emerald-50/40 border-emerald-250 hover:border-emerald-300'
                                                 : 'bg-white border-gray-200/90 hover:border-gray-300'
                                         }`}
                                     >
-                                        {/* Left part: compact thumbnail + details */}
-                                        <div className="flex items-center gap-3.5 min-w-0 flex-1 w-full sm:w-auto">
-                                            {/* Compact Thumbnail with status badge */}
-                                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-50/60 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
-                                                {item.product.imageUrl ? (
-                                                    <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                                                ) : (
-                                                    <span className="text-2xl select-none">🍏</span>
-                                                )}
-                                                <span
-                                                    className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-xs ${
-                                                        isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'
-                                                    }`}
-                                                    title={isWeighed ? 'Prodotto Pesato' : 'Da Pesare'}
-                                                >
-                                                    {isWeighed ? '✓' : '⚖'}
-                                                </span>
-                                            </div>
-
-                                            {/* Details */}
-                                            <div className="min-w-0 flex-1 space-y-1">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-mono text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md border border-gray-200">
-                                                        #{item.product.id}
+                                        {/* MOBILE COMPACT ROW (flex sm:hidden): Thumb + Details on Left, Big Thumb-Friendly Weigh Button on Right */}
+                                        <div className="flex sm:hidden items-center justify-between p-2.5 gap-2.5">
+                                            {/* Left part: compact thumbnail + details */}
+                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                <div className="w-12 h-12 rounded-xl bg-emerald-50/70 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
+                                                    {item.product.imageUrl ? (
+                                                        <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-xl select-none">🍏</span>
+                                                    )}
+                                                    <span
+                                                        className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white shadow-2xs ${
+                                                            isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'
+                                                        }`}
+                                                        title={isWeighed ? 'Pesato' : 'Da pesare'}
+                                                    >
+                                                        {isWeighed ? '✓' : '⚖'}
                                                     </span>
-                                                    <h4 className="font-black text-sm sm:text-base text-gray-900 truncate" title={item.product.name}>
+                                                </div>
+
+                                                <div className="min-w-0 flex-1">
+                                                    <h4 className="font-black text-xs text-gray-900 truncate leading-snug">
                                                         {item.product.name}
                                                     </h4>
-                                                    {item.product.category?.name && (
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70">
-                                                            {item.product.category.name}
+                                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                                        <span className="text-[10px] font-extrabold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                                                            Ord: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
                                                         </span>
-                                                    )}
-                                                    {item.product.origin && (
-                                                        <span className="text-[10px] font-medium text-gray-500">
-                                                            Origine: <strong className="text-gray-700">{item.product.origin}</strong>
+                                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                                                            isWeighed ? 'text-emerald-900 bg-emerald-100/70' : 'text-gray-700 bg-gray-100'
+                                                        }`}>
+                                                            {isWeighed ? `${currentQty} ${isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()} • ` : ''}€ {itemActualCost.toFixed(2)}
                                                         </span>
-                                                    )}
-                                                    {isPriceModified && (
-                                                        <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-900 text-[9px] font-black rounded-md border border-indigo-200 uppercase tracking-wider">
-                                                            Prezzo Modificato
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex items-center gap-2 text-xs text-gray-600 font-bold flex-wrap">
-                                                    <span className="bg-gray-100 px-2 py-0.5 rounded-lg text-gray-800 font-black text-[11px]">
-                                                        Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                    </span>
-                                                    <span className="text-gray-400 text-[11px] font-medium">
-                                                        (Base: € {(item.product.priceCents / 100).toFixed(2)}/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Right part: metric card + action button */}
-                                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                                            {/* Consuntivo / Stima Box */}
-                                            <div className="text-right bg-white px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-2xs">
-                                                <span className="text-[9px] font-black uppercase tracking-wider block text-gray-400">
-                                                    {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
-                                                </span>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    {isWeighed && qtyDiff !== 0 && (
-                                                        <span className="line-through text-red-400 font-bold text-xs" title={`Richiesto: ${itemEstQtyKg}`}>
-                                                            {itemEstQtyKg}
-                                                        </span>
-                                                    )}
-                                                    <span className="font-black text-xs sm:text-sm text-gray-900">
-                                                        {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                    </span>
-                                                    <span className={`font-black text-xs px-2 py-0.5 rounded-lg border ${
-                                                        isWeighed
-                                                            ? 'text-emerald-900 bg-emerald-50 border-emerald-200'
-                                                            : 'text-gray-700 bg-gray-50 border-gray-200'
-                                                    }`}>
-                                                        € {itemActualCost.toFixed(2)}
-                                                    </span>
-                                                    {isWeighed && priceDiff > 0 && <span className="text-[10px] font-black text-emerald-700">↑</span>}
-                                                    {isWeighed && priceDiff < 0 && <span className="text-[10px] font-black text-amber-800">↓</span>}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            {/* Action Button (PENDING only) */}
-                                            {selectedOrder.status === 'PENDING' && (
+                                            {/* Right part: Mobile Big Action Button */}
+                                            {selectedOrder.status === 'PENDING' ? (
                                                 <button
                                                     type="button"
                                                     onClick={() => handleOpenSingleItemWeighing(item)}
-                                                    className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 ${
+                                                    className={`h-11 px-3.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shrink-0 active:scale-95 ${
                                                         isWeighed
                                                             ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
-                                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 active:scale-95'
+                                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 ring-2 ring-emerald-500/20'
                                                     }`}
                                                 >
-                                                    <Scale size={14} />
+                                                    <Scale size={16} />
                                                     <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
                                                 </button>
+                                            ) : (
+                                                <div className="text-right shrink-0">
+                                                    <span className="text-[10px] font-bold text-gray-400 block">Pesato</span>
+                                                    <span className="text-xs font-black text-gray-900">
+                                                        {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                    </span>
+                                                </div>
                                             )}
+                                        </div>
+
+                                        {/* DESKTOP EXPANDED ROW (hidden sm:flex): Full details and stats */}
+                                        <div className="hidden sm:flex items-center justify-between p-3 gap-3">
+                                            {/* Left part: compact thumbnail + details */}
+                                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-50/60 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
+                                                    {item.product.imageUrl ? (
+                                                        <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                    ) : (
+                                                        <span className="text-2xl select-none">🍏</span>
+                                                    )}
+                                                    <span
+                                                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-xs ${
+                                                            isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'
+                                                        }`}
+                                                        title={isWeighed ? 'Prodotto Pesato' : 'Da Pesare'}
+                                                    >
+                                                        {isWeighed ? '✓' : '⚖'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="min-w-0 flex-1 space-y-1">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="font-mono text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md border border-gray-200">
+                                                            #{item.product.id}
+                                                        </span>
+                                                        <h4 className="font-black text-sm sm:text-base text-gray-900 truncate" title={item.product.name}>
+                                                            {item.product.name}
+                                                        </h4>
+                                                        {item.product.category?.name && (
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+                                                                {item.product.category.name}
+                                                            </span>
+                                                        )}
+                                                        {item.product.origin && (
+                                                            <span className="text-[10px] font-medium text-gray-500">
+                                                                Origine: <strong className="text-gray-700">{item.product.origin}</strong>
+                                                            </span>
+                                                        )}
+                                                        {isPriceModified && (
+                                                            <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-900 text-[9px] font-black rounded-md border border-indigo-200 uppercase tracking-wider">
+                                                                Prezzo Modificato
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 text-xs text-gray-600 font-bold flex-wrap">
+                                                        <span className="bg-gray-100 px-2 py-0.5 rounded-lg text-gray-800 font-black text-[11px]">
+                                                            Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                                        </span>
+                                                        <span className="text-gray-400 text-[11px] font-medium">
+                                                            (Base: € {(item.product.priceCents / 100).toFixed(2)}/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Right part: metric card + action button */}
+                                            <div className="flex items-center justify-end gap-3 shrink-0">
+                                                <div className="text-right bg-white px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                                                    <span className="text-[9px] font-black uppercase tracking-wider block text-gray-400">
+                                                        {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
+                                                    </span>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        {isWeighed && qtyDiff !== 0 && (
+                                                            <span className="line-through text-red-400 font-bold text-xs" title={`Richiesto: ${itemEstQtyKg}`}>
+                                                                {itemEstQtyKg}
+                                                            </span>
+                                                        )}
+                                                        <span className="font-black text-xs sm:text-sm text-gray-900">
+                                                            {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                        </span>
+                                                        <span className={`font-black text-xs px-2 py-0.5 rounded-lg border ${
+                                                            isWeighed
+                                                                ? 'text-emerald-900 bg-emerald-50 border-emerald-200'
+                                                                : 'text-gray-700 bg-gray-50 border-gray-200'
+                                                        }`}>
+                                                            € {itemActualCost.toFixed(2)}
+                                                        </span>
+                                                        {isWeighed && priceDiff > 0 && <span className="text-[10px] font-black text-emerald-700">↑</span>}
+                                                        {isWeighed && priceDiff < 0 && <span className="text-[10px] font-black text-amber-800">↓</span>}
+                                                    </div>
+                                                </div>
+
+                                                {selectedOrder.status === 'PENDING' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenSingleItemWeighing(item)}
+                                                        className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 ${
+                                                            isWeighed
+                                                                ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
+                                                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 active:scale-95'
+                                                        }`}
+                                                    >
+                                                        <Scale size={14} />
+                                                        <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -1436,8 +1497,48 @@ export const OrderManager = () => {
                     <div className="w-full space-y-6 pb-28 sm:pb-32 animate-in fade-in duration-200">
                         {/* Main White Order Card */}
                         <div className="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-7 space-y-6">
-                            {/* Header: Back Button + Order ID + Status + Payment Method + Total Pill */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                            {/* MOBILE HEADER (flex sm:hidden): Compact 1-Row Ergonomic Header */}
+                            <div className="flex sm:hidden items-center justify-between gap-2 pb-3 border-b border-gray-100">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedOrder(null)}
+                                        className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-800 flex items-center justify-center shrink-0 border border-gray-200 shadow-2xs cursor-pointer"
+                                        title="Torna agli ordini"
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </button>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-base font-black text-gray-900 tracking-tight">#{selectedOrder.id}</span>
+                                            {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
+                                                <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-md font-black text-[9px] shrink-0">
+                                                    💳 Revolut
+                                                </span>
+                                            ) : (
+                                                <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-200 rounded-md font-black text-[9px] shrink-0">
+                                                    💵 Contanti
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="text-[11px] font-bold text-gray-500 truncate leading-none mt-0.5">
+                                            {selectedOrder.customerName || selectedOrder.user?.name || 'Cliente'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    <StatusBadge status={selectedOrder.status} />
+                                    <div className="bg-[#052e16] text-white px-2.5 py-1 rounded-xl shadow-xs flex items-center border border-emerald-900">
+                                        <span className="text-xs font-black text-white">
+                                            € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* DESKTOP HEADER (hidden sm:flex): Full Back Button + Order ID + Status + Payment + Total */}
+                            <div className="hidden sm:flex sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
                                 <div className="flex items-center gap-3 flex-wrap">
                                     <button
                                         type="button"
@@ -1563,93 +1664,258 @@ export const OrderManager = () => {
                                 style={{
                                     left: typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${sidebarWidth}px` : '0px',
                                     right: 0,
-                                    bottom: typeof window !== 'undefined' && window.innerWidth < 1024 ? '64px' : '0px',
+                                    bottom: 0,
                                 }}
-                                className="fixed z-50 bg-white/95 backdrop-blur-md border-t border-gray-200/90 px-4 sm:px-8 py-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
+                                className="fixed z-[70] bg-white/95 backdrop-blur-md border-t border-gray-200/90 px-3 sm:px-8 py-2.5 sm:py-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] animate-in fade-in slide-in-from-bottom-2 duration-200"
                             >
-                                <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
-                                    <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
-                                    <span className="text-xl font-black text-white leading-none mt-1">
-                                        € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
-                                    </span>
-                                </div>
+                                {/* MOBILE 1-ROW ACTION BAR (flex lg:hidden): Thumb-Friendly, Compact & Ergonomic */}
+                                <div className="flex lg:hidden items-center justify-between gap-2 w-full">
+                                    {/* 1. Total Box */}
+                                    <div className="bg-[#052e16] text-white px-2.5 py-1.5 rounded-xl border border-emerald-900 shrink-0 shadow-xs">
+                                        <span className="text-[9px] text-emerald-300 font-black uppercase tracking-wider block leading-none">Totale</span>
+                                        <span className="text-sm font-black text-white leading-none mt-1 block">
+                                            € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
+                                        </span>
+                                    </div>
 
-                                <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
-                                    {/* WhatsApp Button */}
+                                    {/* 2. WhatsApp Button */}
                                     {selectedOrder.customerPhone && (
                                         <a
                                             href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                                            title="Apri Chat WhatsApp col Cliente"
+                                            className="w-11 h-11 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl shadow-xs transition-all flex items-center justify-center shrink-0 cursor-pointer"
+                                            title="Chatta su WhatsApp"
                                         >
-                                            <MessageCircle size={18} /> WhatsApp
+                                            <MessageCircle size={20} />
                                         </a>
                                     )}
 
-                                    {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
-                                    {selectedOrder.status === 'PENDING' && (
-                                        selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
-                                            <button
-                                                onClick={handleFulfill}
-                                                className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer animate-in zoom-in-95"
-                                            >
-                                                <Scale size={18} /> Conferma Pesatura Generale & Notifica
-                                            </button>
-                                        ) : (
+                                    {/* 3. Primary Action Button (flex-1) */}
+                                    <div className="flex-1 min-w-0">
+                                        {selectedOrder.status === 'PENDING' && (
+                                            selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleFulfill}
+                                                    className="w-full h-11 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer truncate"
+                                                >
+                                                    <Scale size={16} className="shrink-0" />
+                                                    <span className="truncate">Conferma Pesatura</span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
+                                                    }}
+                                                    className="w-full h-11 px-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer truncate"
+                                                >
+                                                    <Scale size={16} className="shrink-0 animate-pulse" />
+                                                    <span className="truncate">Pesa Rimanenti ({unweighedItems.length})</span>
+                                                </button>
+                                            )
+                                        )}
+
+                                        {selectedOrder.status === 'WEIGHING_COMPLETED' && (
+                                            (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
+                                                <div className="w-full h-11 px-2 bg-amber-100 text-amber-950 border border-amber-300 rounded-xl font-black text-[11px] flex items-center justify-center text-center leading-tight">
+                                                    ⏳ In attesa cliente
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')}
+                                                    className="w-full h-11 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                                >
+                                                    <Truck size={16} className="shrink-0" />
+                                                    <span>Spedisci</span>
+                                                </button>
+                                            )
+                                        )}
+
+                                        {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
-                                                }}
-                                                className="px-3.5 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
-                                                title="Clicca per aprire la pesatura del prossimo articolo"
+                                                onClick={() => handleUpdateStatus('DELIVERED')}
+                                                className="w-full h-11 px-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                             >
-                                                <span className="relative flex h-2 w-2">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                                </span>
-                                                Pesa prodotti rimanenti ({unweighedItems.length})
+                                                <CheckCircle size={16} className="shrink-0" />
+                                                <span>Concludi</span>
                                             </button>
-                                        )
-                                    )}
+                                        )}
 
-                                    {selectedOrder.status === 'WEIGHING_COMPLETED' && (
-                                        (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
-                                            <div className="px-4 py-3 bg-amber-50 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90" title="Spedizione bloccata fino all'approvazione del cliente dal link WhatsApp/Email">
-                                                <span className="relative flex h-2 w-2">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                                </span>
-                                                🔒 Spedisci Bloccato (In Attesa Approvazione Cliente)
+                                        {selectedOrder.status === 'DELIVERED' && (
+                                            <div className="w-full h-11 px-3 bg-gray-100 text-gray-700 font-black text-xs rounded-xl flex items-center justify-center">
+                                                ✅ Ordine Concluso
                                             </div>
-                                        ) : (
-                                            <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                                <Truck size={18} /> Spedisci
+                                        )}
+
+                                        {selectedOrder.status === 'CANCELLED' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteOrder()}
+                                                className="w-full h-11 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                            >
+                                                <Trash2 size={16} className="shrink-0" />
+                                                <span>Elimina Ordine</span>
                                             </button>
-                                        )
-                                    )}
+                                        )}
+                                    </div>
 
-                                    {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
-                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                            <CheckCircle size={18} /> Concludi
+                                    {/* 4. More Options Button (3-dots) for Secondary Actions */}
+                                    <div className="relative shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowMobileMoreMenu(prev => !prev)}
+                                            className="w-11 h-11 bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-700 rounded-xl border border-gray-200 shadow-2xs flex items-center justify-center cursor-pointer"
+                                            title="Altre Opzioni"
+                                        >
+                                            <MoreVertical size={18} />
                                         </button>
-                                    )}
 
-                                    {/* Annulla Ordine Button */}
-                                    {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
-                                        <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                                            <Ban size={16} /> Annulla
-                                        </button>
-                                    )}
+                                        {/* Popover Menu upwards */}
+                                        {showMobileMoreMenu && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-[75] bg-black/20"
+                                                    onClick={() => setShowMobileMoreMenu(false)}
+                                                />
+                                                <div className="absolute right-0 bottom-14 z-[80] bg-white rounded-2xl shadow-2xl border border-gray-200 py-2 w-56 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                                                    <div className="px-3 py-1.5 text-[10px] font-black uppercase text-gray-400 tracking-wider border-b border-gray-100">
+                                                        Opzioni Ordine #{selectedOrder.id}
+                                                    </div>
 
-                                    {/* Elimina Ordine Button */}
-                                    {selectedOrder.status === 'CANCELLED' && (
-                                        <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                                            <Trash2 size={18} /> Elimina Ordine
-                                        </button>
-                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setShowMobileMoreMenu(false);
+                                                            setTempModalDate(selectedOrder.scheduledDate || '');
+                                                            setTempModalTime(selectedOrder.scheduledTime || '');
+                                                            setIsScheduleModalOpen(true);
+                                                        }}
+                                                        className="w-full px-3 py-2.5 text-left text-xs font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer"
+                                                    >
+                                                        <Calendar size={14} className="text-gray-500" /> Pianifica Consegna/Ritiro
+                                                    </button>
+
+                                                    {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setShowMobileMoreMenu(false);
+                                                                handleUpdateStatus('CANCELLED');
+                                                            }}
+                                                            className="w-full px-3 py-2.5 text-left text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100 cursor-pointer"
+                                                        >
+                                                            <Ban size={14} className="text-red-500" /> Annulla Ordine
+                                                        </button>
+                                                    )}
+
+                                                    {selectedOrder.status === 'CANCELLED' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setShowMobileMoreMenu(false);
+                                                                handleDeleteOrder();
+                                                            }}
+                                                            className="w-full px-3 py-2.5 text-left text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100 cursor-pointer"
+                                                        >
+                                                            <Trash2 size={14} className="text-red-500" /> Elimina Definitivamente
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* DESKTOP ACTION BAR (hidden lg:flex): Full Buttons Row */}
+                                <div className="hidden lg:flex items-center justify-between gap-4 w-full">
+                                    <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex flex-col justify-center items-start min-w-[140px] shrink-0 border border-emerald-900">
+                                        <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
+                                        <span className="text-xl font-black text-white leading-none mt-1">
+                                            € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 justify-end flex-1 flex-wrap">
+                                        {/* WhatsApp Button */}
+                                        {selectedOrder.customerPhone && (
+                                            <a
+                                                href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                                                title="Apri Chat WhatsApp col Cliente"
+                                            >
+                                                <MessageCircle size={18} /> WhatsApp
+                                            </a>
+                                        )}
+
+                                        {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
+                                        {selectedOrder.status === 'PENDING' && (
+                                            selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
+                                                <button
+                                                    onClick={handleFulfill}
+                                                    className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer animate-in zoom-in-95"
+                                                >
+                                                    <Scale size={18} /> Conferma Pesatura Generale & Notifica
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
+                                                    }}
+                                                    className="px-3.5 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+                                                    title="Clicca per aprire la pesatura del prossimo articolo"
+                                                >
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                                    </span>
+                                                    Pesa prodotti rimanenti ({unweighedItems.length})
+                                                </button>
+                                            )
+                                        )}
+
+                                        {selectedOrder.status === 'WEIGHING_COMPLETED' && (
+                                            (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
+                                                <div className="px-4 py-3 bg-amber-50 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90" title="Spedizione bloccata fino all'approvazione del cliente dal link WhatsApp/Email">
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                                    </span>
+                                                    🔒 Spedisci Bloccato (In Attesa Approvazione Cliente)
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                                    <Truck size={18} /> Spedisci
+                                                </button>
+                                            )
+                                        )}
+
+                                        {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
+                                            <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                                <CheckCircle size={18} /> Concludi
+                                            </button>
+                                        )}
+
+                                        {/* Annulla Ordine Button */}
+                                        {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
+                                            <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                                <Ban size={16} /> Annulla
+                                            </button>
+                                        )}
+
+                                        {/* Elimina Ordine Button */}
+                                        {selectedOrder.status === 'CANCELLED' && (
+                                            <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                                <Trash2 size={18} /> Elimina Ordine
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
