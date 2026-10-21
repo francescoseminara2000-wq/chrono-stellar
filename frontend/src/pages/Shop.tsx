@@ -88,6 +88,132 @@ export const Shop = () => {
     const isFilterActive = Boolean(filterCategory || sortBy !== 'name' || sortOrder !== 'asc');
     const selectedCategoryObj = categories.find(c => c.id.toString() === filterCategory);
 
+    const renderFilterControls = (isSidebar: boolean = false) => (
+        <div className="space-y-5">
+            {/* Category Section */}
+            <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">
+                        Filtra per Categoria
+                    </span>
+                    {filterCategory && (
+                        <button
+                            onClick={() => setFilterCategory('')}
+                            className="text-[11px] text-emerald-700 font-bold hover:underline cursor-pointer"
+                        >
+                            Tutte
+                        </button>
+                    )}
+                </div>
+                <div className={isSidebar ? "flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1" : "flex flex-wrap gap-2"}>
+                    <button
+                        onClick={() => setFilterCategory('')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between border cursor-pointer ${filterCategory === ''
+                            ? 'bg-nature-900 text-white border-nature-900 shadow-2xs font-black'
+                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                            }`}
+                    >
+                        <span className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span>Tutte le categorie</span>
+                        </span>
+                        {filterCategory === '' && <Check size={14} />}
+                    </button>
+                    {categories.map(cat => {
+                        const isSelected = filterCategory === cat.id.toString();
+                        return (
+                            <button
+                                key={cat.id}
+                                onClick={() => setFilterCategory(isSelected ? '' : cat.id.toString())}
+                                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between border cursor-pointer ${isSelected
+                                    ? 'text-white border-transparent shadow-2xs font-black'
+                                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
+                                    }`}
+                                style={isSelected ? { backgroundColor: cat.color || '#10b981' } : {}}
+                            >
+                                <span className="flex items-center gap-2 truncate">
+                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: isSelected ? 'white' : (cat.color || '#10b981') }}></span>
+                                    <span className="truncate">{cat.name}</span>
+                                </span>
+                                {isSelected && <Check size={14} className="shrink-0 ml-1" />}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Sorting Section */}
+            <div className="space-y-2.5">
+                <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider block">
+                    Ordina I Prodotti
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        onClick={() => { setSortBy('name'); setSortOrder('asc'); }}
+                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${sortBy === 'name' && sortOrder === 'asc'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                            : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                            }`}
+                    >
+                        <span className="text-xs block">Nome (A-Z)</span>
+                        <span className="text-[10px] text-gray-400 font-normal">Alfabetico cresc.</span>
+                    </button>
+
+                    <button
+                        onClick={() => { setSortBy('name'); setSortOrder('desc'); }}
+                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${sortBy === 'name' && sortOrder === 'desc'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                            : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                            }`}
+                    >
+                        <span className="text-xs block">Nome (Z-A)</span>
+                        <span className="text-[10px] text-gray-400 font-normal">Alfabetico decresc.</span>
+                    </button>
+
+                    <button
+                        onClick={() => { setSortBy('price'); setSortOrder('asc'); }}
+                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${sortBy === 'price' && sortOrder === 'asc'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                            : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                            }`}
+                    >
+                        <span className="text-xs block">Prezzo (€ ↑)</span>
+                        <span className="text-[10px] text-gray-400 font-normal">Dal più economico</span>
+                    </button>
+
+                    <button
+                        onClick={() => { setSortBy('price'); setSortOrder('desc'); }}
+                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${sortBy === 'price' && sortOrder === 'desc'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
+                            : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
+                            }`}
+                    >
+                        <span className="text-xs block">Prezzo (€ ↓)</span>
+                        <span className="text-[10px] text-gray-400 font-normal">Dal più caro</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Quick Reset if active */}
+            {isFilterActive && (
+                <div className="pt-2">
+                    <button
+                        onClick={() => {
+                            setFilterCategory('');
+                            setSortBy('name');
+                            setSortOrder('asc');
+                            setSearchTerm('');
+                        }}
+                        className="w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                        <RotateCcw size={13} />
+                        <span>Reimposta Filtri</span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+
     if (loading) return (
         <div className="flex justify-center items-center h-screen bg-nature-50">
             <div className="animate-pulse flex flex-col items-center gap-4">
@@ -114,16 +240,16 @@ export const Shop = () => {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
                                     <X size={16} />
                                 </button>
                             )}
                         </div>
 
-                        {/* Dedicated Filter & Sort Icon Button */}
+                        {/* Dedicated Filter & Sort Icon Button (Visible on mobile/tablet, hidden on desktop where sidebar is displayed) */}
                         <button
                             onClick={() => setIsFilterModalOpen(true)}
-                            className={`relative p-2.5 rounded-2xl flex items-center justify-center transition-all cursor-pointer shrink-0 border shadow-2xs ${isFilterActive
+                            className={`lg:hidden relative p-2.5 rounded-2xl flex items-center justify-center transition-all cursor-pointer shrink-0 border shadow-2xs ${isFilterActive
                                 ? 'bg-emerald-600 text-white border-emerald-600'
                                 : 'bg-white hover:bg-emerald-100/50 text-gray-700 border-emerald-200/70'
                                 }`}
@@ -139,14 +265,14 @@ export const Shop = () => {
                         <div className="flex items-center bg-white p-1 rounded-2xl border border-emerald-200/70 shrink-0 shadow-2xs">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
+                                className={`p-1.5 rounded-xl transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
                                 title="Vista a griglia"
                             >
                                 <LayoutGrid size={17} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
+                                className={`p-1.5 rounded-xl transition-all cursor-pointer ${viewMode === 'list' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-gray-400 hover:text-gray-700'}`}
                                 title="Vista a elenco"
                             >
                                 <List size={17} />
@@ -168,59 +294,94 @@ export const Shop = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-3">
-                {/* Active Filters Bar (If filter is set) */}
-                {filterCategory && (
-                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-150 rounded-2xl px-3.5 py-2 mb-3.5 shadow-2xs">
-                        <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: selectedCategoryObj?.color || '#10b981' }}></span>
-                            <span className="text-xs font-bold text-emerald-900">
-                                Categoria: <span className="font-black">{selectedCategoryObj?.name}</span>
-                            </span>
-                        </div>
-                        <button
-                            onClick={() => setFilterCategory('')}
-                            className="text-xs text-emerald-700 font-black hover:underline flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-emerald-200"
-                        >
-                            Mostra tutti <X size={13} />
-                        </button>
-                    </div>
-                )}
+            {/* Main Content Area: Products on Left, Filters Sidebar on Right on Desktop */}
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-4">
+                <div className="flex flex-col lg:flex-row items-start gap-6">
+                    {/* LEFT COLUMN: Products Grid & Active Filter Pills */}
+                    <main className="flex-1 min-w-0 w-full">
+                        {/* Active Filters Bar (If filter is set) */}
+                        {filterCategory && (
+                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-150 rounded-2xl px-3.5 py-2 mb-3.5 shadow-2xs">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: selectedCategoryObj?.color || '#10b981' }}></span>
+                                    <span className="text-xs font-bold text-emerald-900">
+                                        Categoria: <span className="font-black">{selectedCategoryObj?.name}</span>
+                                    </span>
+                                    <span className="text-[11px] text-emerald-600 font-medium">
+                                        ({products.length} {products.length === 1 ? 'prodotto' : 'prodotti'})
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setFilterCategory('')}
+                                    className="text-xs text-emerald-700 font-black hover:underline flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-emerald-200 cursor-pointer"
+                                >
+                                    Mostra tutti <X size={13} />
+                                </button>
+                            </div>
+                        )}
 
-                {/* Product List / Grid */}
-                {products.length > 0 ? (
-                    <div className={viewMode === 'grid'
-                        ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5"
-                        : "flex flex-col gap-2.5"
-                    }>
-                        {products.map(product => (
-                            <ProductCard
-                                key={product.id}
-                                product={product}
-                                onWeightSelect={setSelectedProductForWeight}
-                                onUnitSelect={setSelectedProductForUnit}
-                                viewMode={viewMode}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 my-6">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Search size={28} className="text-gray-300" />
+                        {/* Product List / Grid */}
+                        {products.length > 0 ? (
+                            <div className={viewMode === 'grid'
+                                ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-2.5 sm:gap-4"
+                                : "flex flex-col gap-2.5"
+                            }>
+                                {products.map(product => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                        onWeightSelect={setSelectedProductForWeight}
+                                        onUnitSelect={setSelectedProductForUnit}
+                                        viewMode={viewMode}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 my-6">
+                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Search size={28} className="text-gray-300" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">Nessun prodotto trovato</h3>
+                                <p className="text-xs text-gray-500">Prova a cercare qualcos'altro o resetta i filtri.</p>
+                                <button
+                                    onClick={() => { setSearchTerm(''); setFilterCategory(''); }}
+                                    className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl font-black text-xs shadow-2xs hover:bg-emerald-700 cursor-pointer"
+                                >
+                                    Mostra tutto il raccolto
+                                </button>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* RIGHT COLUMN: Desktop Filters & Sorting Sidebar */}
+                    <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-[124px] self-start">
+                        <div className="bg-white rounded-3xl p-5 border border-emerald-150/80 shadow-xs space-y-4">
+                            {/* Sidebar Header */}
+                            <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                                        <SlidersHorizontal size={16} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-black text-sm text-gray-900 leading-tight">Filtri e Ordina</h3>
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Personalizza il raccolto</span>
+                                    </div>
+                                </div>
+                                {isFilterActive && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">
+                                        Attivi
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Sidebar Filter & Sort Controls */}
+                            {renderFilterControls(true)}
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">Nessun prodotto trovato</h3>
-                        <p className="text-xs text-gray-500">Prova a cercare qualcos'altro o resetta i filtri.</p>
-                        <button
-                            onClick={() => { setSearchTerm(''); setFilterCategory(''); }}
-                            className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl font-black text-xs shadow-2xs hover:bg-emerald-700"
-                        >
-                            Mostra tutto il raccolto
-                        </button>
-                    </div>
-                )}
+                    </aside>
+                </div>
             </div>
 
-            {/* DEDICATED FILTER & SORT MODAL */}
+            {/* DEDICATED FILTER & SORT MODAL (MOBILE / TABLET) */}
             <AnimatePresence>
                 {isFilterModalOpen && (
                     <>
@@ -261,98 +422,14 @@ export const Shop = () => {
                                     </button>
                                 </div>
 
-                                {/* Category Section */}
-                                <div className="py-4 border-b border-gray-100 space-y-2.5">
-                                    <span className="text-xs font-black text-gray-400 uppercase tracking-wider block">
-                                        Filtra per Categoria
-                                    </span>
-                                    <div className="flex flex-wrap gap-2">
-                                        <button
-                                            onClick={() => setFilterCategory('')}
-                                            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 border ${filterCategory === ''
-                                                ? 'bg-nature-900 text-white border-nature-900 shadow-2xs'
-                                                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                                                }`}
-                                        >
-                                            {filterCategory === '' && <Check size={14} />}
-                                            <span>Tutte le categorie</span>
-                                        </button>
-                                        {categories.map(cat => {
-                                            const isSelected = filterCategory === cat.id.toString();
-                                            return (
-                                                <button
-                                                    key={cat.id}
-                                                    onClick={() => setFilterCategory(isSelected ? '' : cat.id.toString())}
-                                                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 border ${isSelected
-                                                        ? 'text-white border-transparent shadow-2xs'
-                                                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
-                                                        }`}
-                                                    style={isSelected ? { backgroundColor: cat.color } : {}}
-                                                >
-                                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: isSelected ? 'white' : cat.color }}></span>
-                                                    <span>{cat.name}</span>
-                                                    {isSelected && <Check size={14} />}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Sorting Section */}
-                                <div className="py-4 space-y-2.5">
-                                    <span className="text-xs font-black text-gray-400 uppercase tracking-wider block">
-                                        Ordina I Prodotti
-                                    </span>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            onClick={() => { setSortBy('name'); setSortOrder('asc'); }}
-                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'name' && sortOrder === 'asc'
-                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
-                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
-                                                }`}
-                                        >
-                                            <span className="text-xs block">Nome (A-Z)</span>
-                                            <span className="text-[10px] text-gray-400 font-normal">Alfabetico cresc.</span>
-                                        </button>
-
-                                        <button
-                                            onClick={() => { setSortBy('name'); setSortOrder('desc'); }}
-                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'name' && sortOrder === 'desc'
-                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
-                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
-                                                }`}
-                                        >
-                                            <span className="text-xs block">Nome (Z-A)</span>
-                                            <span className="text-[10px] text-gray-400 font-normal">Alfabetico decresc.</span>
-                                        </button>
-
-                                        <button
-                                            onClick={() => { setSortBy('price'); setSortOrder('asc'); }}
-                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'price' && sortOrder === 'asc'
-                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
-                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
-                                                }`}
-                                        >
-                                            <span className="text-xs block">Prezzo (€ ↑)</span>
-                                            <span className="text-[10px] text-gray-400 font-normal">Dal più economico</span>
-                                        </button>
-
-                                        <button
-                                            onClick={() => { setSortBy('price'); setSortOrder('desc'); }}
-                                            className={`p-3 rounded-2xl border text-left transition-all ${sortBy === 'price' && sortOrder === 'desc'
-                                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-black shadow-2xs'
-                                                : 'bg-gray-50 border-gray-200 text-gray-700 font-bold hover:bg-gray-100'
-                                                }`}
-                                        >
-                                            <span className="text-xs block">Prezzo (€ ↓)</span>
-                                            <span className="text-[10px] text-gray-400 font-normal">Dal più caro</span>
-                                        </button>
-                                    </div>
+                                {/* Modal Controls */}
+                                <div className="py-2">
+                                    {renderFilterControls(false)}
                                 </div>
                             </div>
 
                             {/* Modal Actions */}
-                            <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 mt-2">
+                            <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 mt-4">
                                 <button
                                     onClick={() => {
                                         setFilterCategory('');
@@ -360,16 +437,16 @@ export const Shop = () => {
                                         setSortOrder('asc');
                                         setSearchTerm('');
                                     }}
-                                    className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-xs transition-all flex items-center gap-1.5"
+                                    className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                                 >
                                     <RotateCcw size={14} />
                                     <span>Reset</span>
                                 </button>
                                 <button
                                     onClick={() => setIsFilterModalOpen(false)}
-                                    className="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-all text-center"
+                                    className="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-all text-center cursor-pointer"
                                 >
-                                    Applica Filtri
+                                    Mostra Risultati ({products.length})
                                 </button>
                             </div>
                         </motion.div>
