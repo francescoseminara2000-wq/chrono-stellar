@@ -354,109 +354,116 @@ export const Header = () => {
     return (
         <header className={`${isMenuOpen ? 'fixed inset-0 z-[9999] bg-transparent' : `bg-white/90 backdrop-blur-md sticky top-0 z-[100] border-b border-gray-100 ${isScrolled ? 'py-1.5 shadow-md' : 'py-3.5 shadow-sm'}`} transition-all duration-300`}>
             <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center">
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group relative z-50 flex-shrink-0">
-                        <motion.div
-                            layout
-                            className={`relative flex items-center justify-center transition-all duration-500 ${isScrolled ? 'w-10 h-10 md:w-12 md:h-12' : 'w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22'}`}
-                        >
-                            <img
-                                src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"}
-                                alt={`${settings?.siteName || 'Chrono Stellar'} Logo`}
-                                className="w-full h-full object-contain scale-115 drop-shadow-sm group-hover:scale-125 transition-transform duration-300 origin-center"
-                            />
-                        </motion.div>
-                        <motion.div
-                            layout
-                            className="flex flex-col justify-center origin-left transition-all duration-500"
-                        >
-                            <h1 className={`font-script text-nature-900 leading-none whitespace-nowrap transition-all duration-500 ${isScrolled ? 'text-xl md:text-2xl' : 'text-2xl sm:text-3xl md:text-4xl'}`}>
-                                {settings?.siteName ? (
-                                    <>
-                                         <span className="text-nature-600">{settings.siteName.split(' ')[0]}</span>{' '}
-                                        {settings.siteName.substring(settings.siteName.indexOf(' ') + 1)}
-                                    </>
-                                ) : (
-                                    <><span className="text-nature-600">Ortofrutta</span> Butti</>
-                                )}
-                            </h1>
-                            <p className={`text-nature-600/90 font-sans tracking-[0.22em] uppercase font-bold transition-all duration-500 mt-1 ${isScrolled ? 'text-[8px] md:text-[9px]' : 'text-[9px] sm:text-[10px] md:text-xs'}`}>
-                                {settings?.tagline || 'FRESCHEZZA DI QUALITÀ'}
-                            </p>
-                        </motion.div>
-                    </Link>
+                <div className="flex justify-between items-center gap-4 sm:gap-6">
+                    {/* Left: Logo + Desktop Menu Nav Bar */}
+                    <div className="flex items-center gap-5 sm:gap-7 lg:gap-10 min-w-0">
+                        {/* Logo */}
+                        <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group relative z-50 flex-shrink-0">
+                            <motion.div
+                                layout
+                                className={`relative flex items-center justify-center transition-all duration-500 ${isScrolled ? 'w-10 h-10 md:w-12 md:h-12' : 'w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22'}`}
+                            >
+                                <img
+                                    src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"}
+                                    alt={`${settings?.siteName || 'Chrono Stellar'} Logo`}
+                                    className="w-full h-full object-contain scale-115 drop-shadow-sm group-hover:scale-125 transition-transform duration-300 origin-center"
+                                />
+                            </motion.div>
+                            <motion.div
+                                layout
+                                className="flex flex-col justify-center origin-left transition-all duration-500"
+                            >
+                                <h1 className={`font-script text-nature-900 leading-none whitespace-nowrap transition-all duration-500 ${isScrolled ? 'text-xl md:text-2xl' : 'text-2xl sm:text-3xl md:text-4xl'}`}>
+                                    {settings?.siteName ? (
+                                        <>
+                                             <span className="text-nature-600">{settings.siteName.split(' ')[0]}</span>{' '}
+                                            {settings.siteName.substring(settings.siteName.indexOf(' ') + 1)}
+                                        </>
+                                    ) : (
+                                        <><span className="text-nature-600">Ortofrutta</span> Butti</>
+                                    )}
+                                </h1>
+                                <p className={`text-nature-600/90 font-sans tracking-[0.22em] uppercase font-bold transition-all duration-500 mt-1 ${isScrolled ? 'text-[8px] md:text-[9px]' : 'text-[9px] sm:text-[10px] md:text-xs'}`}>
+                                    {settings?.tagline || 'FRESCHEZZA DI QUALITÀ'}
+                                </p>
+                            </motion.div>
+                        </Link>
 
-                    {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-                        <div 
-                            onMouseLeave={() => setHoveredNav(null)}
-                            className={`relative bg-nature-50/90 backdrop-blur-md border border-nature-200/70 rounded-full shadow-[0_2px_12px_-4px_rgba(20,83,45,0.07)] flex items-center transition-all duration-300 ${
-                                isScrolled ? 'p-1 gap-0.5' : 'p-1.5 gap-1'
-                            }`}
-                        >
-                            {NAV_ITEMS.map((item) => {
-                                const isActive = item.path === '/'
-                                    ? location.pathname === '/'
-                                    : (item.matchPrefix
-                                        ? item.matchPrefix.some(p => location.pathname.startsWith(p))
-                                        : location.pathname.startsWith(item.path));
-                                const isHovered = hoveredNav === item.path;
+                        {/* Desktop Nav - Aligned Left right after the Logo */}
+                        <nav className="hidden md:flex items-center">
+                            <div 
+                                onMouseLeave={() => setHoveredNav(null)}
+                                className={`relative bg-nature-50/90 backdrop-blur-md border border-nature-200/80 rounded-full shadow-[0_3px_14px_-3px_rgba(20,83,45,0.09)] flex items-center transition-all duration-300 ${
+                                    isScrolled ? 'p-1 gap-1' : 'p-1.5 lg:p-2 gap-1 lg:gap-1.5'
+                                }`}
+                            >
+                                {NAV_ITEMS.map((item) => {
+                                    const isActive = item.path === '/'
+                                        ? location.pathname === '/'
+                                        : (item.matchPrefix
+                                            ? item.matchPrefix.some(p => location.pathname.startsWith(p))
+                                            : location.pathname.startsWith(item.path));
+                                    const isHovered = hoveredNav === item.path;
 
-                                return (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onMouseEnter={() => setHoveredNav(item.path)}
-                                        className={`relative rounded-full font-semibold transition-colors duration-200 z-10 flex items-center select-none ${
-                                            isScrolled ? 'px-3.5 py-1 text-xs' : 'px-4 py-1.5 text-sm'
-                                        } ${
-                                            isActive 
-                                                ? 'text-white font-bold' 
-                                                : 'text-nature-900/80 hover:text-emerald-800'
-                                        }`}
-                                    >
-                                        {/* Active Pill (Vibrant Emerald Gradient with soft glow) */}
-                                        {isActive && (
-                                            <motion.div
-                                                layoutId="activeNavPill"
-                                                transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                                                className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-nature-600 to-emerald-700 rounded-full shadow-[0_3px_12px_rgba(22,163,74,0.35)] border border-emerald-500/40 -z-10"
-                                            />
-                                        )}
-
-                                        {/* Hover Pill (when hovering over another link) */}
-                                        {isHovered && !isActive && (
-                                            <motion.div
-                                                layoutId="hoverNavPill"
-                                                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                                                className="absolute inset-0 bg-nature-200/50 rounded-full -z-10 shadow-2xs border border-nature-300/30"
-                                            />
-                                        )}
-
-                                        <motion.span 
-                                            animate={{ 
-                                                scale: isHovered ? 1.05 : 1,
-                                                y: isHovered ? -0.5 : 0 
-                                            }}
-                                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                                            className="relative z-10 flex items-center gap-1.5 whitespace-nowrap"
+                                    return (
+                                        <Link
+                                            key={item.path}
+                                            to={item.path}
+                                            onMouseEnter={() => setHoveredNav(item.path)}
+                                            className={`relative rounded-full font-bold transition-colors duration-200 z-10 flex items-center select-none ${
+                                                isScrolled 
+                                                    ? 'px-3.5 py-1.5 text-xs' 
+                                                    : 'px-4 lg:px-5 py-2 lg:py-2.5 text-xs lg:text-[15px]'
+                                            } ${
+                                                isActive 
+                                                    ? 'text-white font-extrabold' 
+                                                    : 'text-nature-900/80 hover:text-emerald-800'
+                                            }`}
                                         >
-                                            <span>{item.label}</span>
+                                            {/* Active Pill (Vibrant Emerald Gradient with soft glow) */}
                                             {isActive && (
-                                                <motion.span 
-                                                    layoutId="activeNavDot"
-                                                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                                    className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.95)] inline-block" 
+                                                <motion.div
+                                                    layoutId="activeNavPill"
+                                                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                                    className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-nature-600 to-emerald-700 rounded-full shadow-[0_3px_14px_rgba(22,163,74,0.38)] border border-emerald-500/40 -z-10"
                                                 />
                                             )}
-                                        </motion.span>
-                                    </Link>
-                                );
-                            })}
-                        </div>
 
-                        {/* User Actions Pill */}
+                                            {/* Hover Pill (when hovering over another link) */}
+                                            {isHovered && !isActive && (
+                                                <motion.div
+                                                    layoutId="hoverNavPill"
+                                                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                                                    className="absolute inset-0 bg-nature-200/60 rounded-full -z-10 shadow-2xs border border-nature-300/40"
+                                                />
+                                            )}
+
+                                            <motion.span 
+                                                animate={{ 
+                                                    scale: isHovered ? 1.05 : 1,
+                                                    y: isHovered ? -0.5 : 0 
+                                                }}
+                                                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                                className="relative z-10 flex items-center gap-2 whitespace-nowrap"
+                                            >
+                                                <span>{item.label}</span>
+                                                {isActive && (
+                                                    <motion.span 
+                                                        layoutId="activeNavDot"
+                                                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                                        className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.95)] inline-block" 
+                                                    />
+                                                )}
+                                            </motion.span>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </nav>
+                    </div>
+
+                    {/* Right: Desktop User Actions Pill (Profile, Balance, Cart) */}
+                    <div className="hidden md:flex items-center flex-shrink-0">
                         <div className={`
                             bg-nature-50 border border-nature-100 rounded-full shadow-xs flex items-center transition-all duration-300 hover:shadow-md hover:border-nature-200
                             ${isScrolled ? 'py-1 pl-1.5 pr-2 gap-2' : 'py-1.5 pl-2 pr-2.5 gap-2.5'}
@@ -493,7 +500,7 @@ export const Header = () => {
                                 </AnimatePresence>
                             </Link>
                         </div>
-                    </nav>
+                    </div>
 
                     {/* Mobile Actions: Cart & Burger */}
                     <div className="md:hidden flex items-center gap-3 relative z-50 pr-2">
