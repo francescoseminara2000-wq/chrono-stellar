@@ -193,8 +193,13 @@ export class AuthController {
                     civic: user.civic,
                     city: user.city,
                     zipCode: user.zipCode,
+                    avatar: user.avatar,
+                    latitude: user.latitude,
+                    longitude: user.longitude,
                     role: user.role,
-                    walletBalance: user.walletBalance || 0
+                    walletBalance: user.walletBalance || 0,
+                    isEmailVerified: user.isEmailVerified,
+                    notificationPreference: user.notificationPreference
                 },
                 token
             });
@@ -386,6 +391,46 @@ export class AuthController {
                     notificationPreference: user.notificationPreference
                 }
             });
+        } catch (error: any) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async changePassword(req: Request, res: Response) {
+        try {
+            // @ts-ignore - userId added by middleware
+            const userId = req.user?.userId;
+            const { currentPassword, newPassword } = req.body;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'Non autorizzato' });
+            }
+
+            if (!currentPassword || !newPassword) {
+                return res.status(400).json({ error: 'Password attuale e nuova password sono richieste' });
+            }
+
+            if (newPassword.length < 6) {
+                return res.status(400).json({ error: 'La nuova password deve contenere almeno 6 caratteri' });
+            }
+
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            if (!user || !user.password) {
+                return res.status(404).json({ error: 'Utente non trovato' });
+            }
+
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ error: 'La password attuale non è corretta' });
+            }
+
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await prisma.user.update({
+                where: { id: userId },
+                data: { password: hashedPassword }
+            });
+
+            res.json({ message: 'Password aggiornata con successo!' });
         } catch (error: any) {
             res.status(500).json({ error: error.message });
         }

@@ -16,6 +16,7 @@ interface User {
     role: 'ADMIN' | 'CUSTOMER';
     notificationPreference?: 'EMAIL' | 'WHATSAPP';
     walletBalance?: number;
+    isEmailVerified?: boolean;
 }
 
 interface AuthState {

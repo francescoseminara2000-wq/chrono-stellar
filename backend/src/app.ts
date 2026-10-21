@@ -210,6 +210,7 @@ app.post('/api/auth/forgot-password', (req, res) => authController.forgotPasswor
 app.post('/api/auth/reset-password', (req, res) => authController.resetPassword(req, res));
 app.post('/api/auth/verify-reset-token', (req, res) => authController.verifyResetToken(req, res));
 app.put('/api/auth/update', authenticateToken, (req, res) => authController.update(req, res));
+app.put('/api/auth/change-password', authenticateToken, (req, res) => authController.changePassword(req, res));
 app.get('/api/auth/me', authenticateToken, (req, res) => authController.me(req, res));
 
 import { orderEventBus } from './services/OrderEventBus';

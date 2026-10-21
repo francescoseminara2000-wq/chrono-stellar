@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 
 import { useAuthStore } from '../store/useAuthStore';
-import { ChevronDown, ChevronRight, Package, User as UserIcon, LogOut, Settings, Bell, BellOff, Home, Apple, MapPin, Gift } from 'lucide-react';
+import { ChevronDown, ChevronRight, Package, User as UserIcon, LogOut, Settings, Bell, BellOff, Home, Apple, MapPin, Gift, Wallet } from 'lucide-react';
 import { subscribeToPushNotifications, checkPushSubscription } from '../services/pushNotification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sanitizeImageUrl } from '../utils/imageUrl';
@@ -33,15 +33,18 @@ const AuthMenu = ({
     }, []);
 
     if (user) {
+        const formattedBalance = ((user.walletBalance || 0) / 100).toFixed(2);
+
         return (
             <div className="relative" ref={dropdownRef}>
+                {/* Trigger Button */}
                 <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center gap-2 group"
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white hover:bg-emerald-50/60 border border-gray-200/80 hover:border-emerald-300 transition-all shadow-xs group cursor-pointer"
                 >
-                    <div className="w-9 h-9 bg-gradient-to-br from-nature-100 to-nature-200 rounded-full flex items-center justify-center text-nature-700 shadow-sm border border-nature-100 group-hover:shadow-md transition-all duration-300 overflow-hidden">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 shadow-2xs border border-emerald-200/60 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
                         {user.avatar ? (
                             <img
                                 src={sanitizeImageUrl(user.avatar)}
@@ -49,85 +52,216 @@ const AuthMenu = ({
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <UserIcon size={18} />
+                            <UserIcon size={16} />
                         )}
                     </div>
-                    <span className="hidden lg:inline text-nature-900 font-bold group-hover:text-nature-700 transition-colors">{user.name}</span>
-                    <ChevronDown size={16} className={`text-nature-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <div className="hidden lg:flex flex-col text-left">
+                        <span className="text-xs font-black text-gray-900 group-hover:text-emerald-700 transition-colors leading-tight truncate max-w-[120px]">
+                            {user.name || 'Account'}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 leading-tight">
+                            € {formattedBalance}
+                        </span>
+                    </div>
+                    <ChevronDown size={14} className={`text-gray-400 group-hover:text-emerald-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                 </motion.button>
 
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95, filter: "blur(10px)" }}
-                            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95, filter: "blur(10px)" }}
-                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                            className="absolute right-0 mt-3 w-56 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 py-2 z-50 overflow-hidden"
+                            initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className="absolute right-0 mt-2.5 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 ring-1 ring-black/5 p-3.5 z-50 overflow-hidden space-y-3"
                         >
-                            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                                <p className="text-sm text-gray-500">Accesso effettuato come</p>
-                                <p className="text-sm font-bold text-nature-900 truncate">{user.email}</p>
+                            {/* 1. Header con Profilo Utente */}
+                            <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50/80 border border-gray-100">
+                                <div className="w-11 h-11 rounded-2xl bg-nature-800 flex items-center justify-center text-white shadow-sm overflow-hidden shrink-0 border border-white">
+                                    {user.avatar ? (
+                                        <img
+                                            src={sanitizeImageUrl(user.avatar)}
+                                            alt={user.name || 'User'}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <UserIcon size={20} className="text-emerald-300" />
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm font-black text-gray-900 truncate">
+                                            {user.name || 'Cliente'}
+                                        </span>
+                                        {user.role === 'ADMIN' ? (
+                                            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[9px] font-black rounded uppercase tracking-wider">
+                                                Admin
+                                            </span>
+                                        ) : (
+                                            <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-black rounded uppercase tracking-wider">
+                                                Cliente
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-gray-500 truncate mt-0.5" title={user.email}>
+                                        {user.email}
+                                    </p>
+                                </div>
                             </div>
 
-                            {/* Wallet Balance in Auth Dropdown */}
-                            <div className="px-4 py-2 border-b border-gray-100 bg-emerald-50/70 flex items-center justify-between">
-                                <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">Saldo Account</span>
-                                <span className="text-xs font-black text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
-                                    € {((user.walletBalance || 0) / 100).toFixed(2)}
-                                </span>
+                            {/* 2. Card Saldo Portafoglio Premium */}
+                            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-nature-950 via-emerald-950 to-nature-900 text-white p-3.5 shadow-md border border-emerald-800/40">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                                <div className="relative z-10 flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-500/30">
+                                            <Wallet size={16} />
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300/80 block leading-tight">
+                                                Saldo Portafoglio
+                                            </span>
+                                            <span className="text-lg font-black text-white leading-tight">
+                                                € {formattedBalance}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <Link
+                                        to="/profile"
+                                        onClick={() => setIsOpen(false)}
+                                        className="text-[11px] font-bold bg-white/15 hover:bg-white/25 active:scale-95 text-white px-2.5 py-1.5 rounded-xl transition border border-white/10"
+                                    >
+                                        Ricarica →
+                                    </Link>
+                                </div>
                             </div>
 
-                            <div className="py-1">
+                            {/* 3. Link Azioni con Icone Colorate & Effetti Hover */}
+                            <div className="space-y-1 pt-1">
                                 <Link
                                     to="/profile"
-                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-nature-50 hover:text-nature-700 transition-colors mx-1 rounded-lg"
                                     onClick={() => setIsOpen(false)}
+                                    className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition group cursor-pointer"
                                 >
-                                    <UserIcon size={16} className="text-nature-400" /> Il mio Profilo
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 group-hover:scale-105 transition-transform shrink-0">
+                                            <UserIcon size={16} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <span className="text-xs font-black text-gray-800 group-hover:text-emerald-700 transition-colors block">
+                                                Il Mio Profilo
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 block truncate">
+                                                Dati, indirizzo e sicurezza
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={14} className="text-gray-300 group-hover:text-emerald-600 transition-colors shrink-0" />
                                 </Link>
+
                                 <Link
                                     to="/orders"
-                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-nature-50 hover:text-nature-700 transition-colors mx-1 rounded-lg"
                                     onClick={() => setIsOpen(false)}
+                                    className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition group cursor-pointer"
                                 >
-                                    <Package size={16} className="text-nature-400" /> I miei Ordini
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100 group-hover:scale-105 transition-transform shrink-0">
+                                            <Package size={16} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <span className="text-xs font-black text-gray-800 group-hover:text-blue-700 transition-colors block">
+                                                I Miei Ordini
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 block truncate">
+                                                Tracciamento e ricevute
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={14} className="text-gray-300 group-hover:text-blue-600 transition-colors shrink-0" />
                                 </Link>
+
                                 <Link
                                     to="/gift-cards"
-                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-nature-50 hover:text-nature-700 transition-colors mx-1 rounded-lg"
                                     onClick={() => setIsOpen(false)}
+                                    className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition group cursor-pointer"
                                 >
-                                    <Gift size={16} className="text-nature-400" /> Regala Gift Card
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-100 group-hover:scale-105 transition-transform shrink-0">
+                                            <Gift size={16} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <span className="text-xs font-black text-gray-800 group-hover:text-purple-700 transition-colors block">
+                                                Buoni & Gift Card
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 block truncate">
+                                                Regala o riscatta credito
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={14} className="text-gray-300 group-hover:text-purple-600 transition-colors shrink-0" />
                                 </Link>
 
                                 <button
+                                    type="button"
                                     onClick={handleTogglePush}
                                     disabled={pushEnabled || isPushLoading}
-                                    className={`w-[calc(100%-8px)] flex items-center gap-3 px-4 py-2.5 text-sm transition-colors mx-1 rounded-lg ${pushEnabled ? 'text-green-600 bg-green-50/50' : 'text-gray-700 hover:bg-nature-50 hover:text-nature-700'}`}
+                                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 transition group cursor-pointer text-left"
                                 >
-                                    {pushEnabled ? <Bell size={16} className="text-green-500" /> : <BellOff size={16} className="text-nature-400" />}
-                                    {pushEnabled ? 'Notifiche Attive' : isPushLoading ? 'Attivazione...' : 'Attiva Notifiche Push'}
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center border group-hover:scale-105 transition-transform shrink-0 ${
+                                            pushEnabled
+                                                ? 'bg-green-50 text-green-700 border-green-200'
+                                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                                        }`}>
+                                            {pushEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <span className="text-xs font-black text-gray-800 group-hover:text-amber-800 transition-colors block">
+                                                Notifiche Push
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 block truncate">
+                                                {pushEnabled ? 'Notifiche attive' : isPushLoading ? 'Attivazione...' : 'Attiva per pesatura e offerte'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                        pushEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                                    }`}>
+                                        {pushEnabled ? 'ON' : 'OFF'}
+                                    </span>
                                 </button>
+
                                 {user.role === 'ADMIN' && (
                                     <Link
                                         to="/admin"
-                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors mx-1 rounded-lg font-medium"
                                         onClick={() => setIsOpen(false)}
+                                        className="flex items-center justify-between p-2 rounded-xl bg-indigo-50/70 hover:bg-indigo-100/70 border border-indigo-100 transition group cursor-pointer"
                                     >
-                                        <Settings size={16} className="text-blue-400" /> Dashboard Admin
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                                                <Settings size={16} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <span className="text-xs font-black text-indigo-950 block">
+                                                    Dashboard Admin
+                                                </span>
+                                                <span className="text-[10px] text-indigo-600 block truncate">
+                                                    Gestione negozio e ordini
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={14} className="text-indigo-400 group-hover:text-indigo-700 transition-colors shrink-0" />
                                     </Link>
                                 )}
                             </div>
 
-                            <div className="border-t border-gray-100 my-1"></div>
-
-                            <div className="px-1 pb-1">
+                            {/* 4. Logout Footer */}
+                            <div className="pt-2 border-t border-gray-100">
                                 <button
                                     onClick={() => { logout(); setIsOpen(false); }}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors rounded-lg text-left"
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black text-red-600 hover:bg-red-50 active:scale-[0.98] transition cursor-pointer"
                                 >
-                                    <LogOut size={16} className="text-red-400" /> Esci
+                                    <LogOut size={15} /> Esci dall'account
                                 </button>
                             </div>
                         </motion.div>
