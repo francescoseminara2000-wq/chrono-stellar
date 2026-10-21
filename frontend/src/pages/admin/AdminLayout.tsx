@@ -1,11 +1,54 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, LogOut, Package, Users, Menu, X, Settings, FileText, Map as MapIcon, Maximize, Minimize, ChevronLeft, ChevronRight, BarChart3, Gift, Mail, Tag } from 'lucide-react';
+import {
+    LayoutDashboard,
+    ShoppingBag,
+    LogOut,
+    Package,
+    Users,
+    Menu,
+    X,
+    Settings,
+    FileText,
+    Map as MapIcon,
+    Maximize,
+    Minimize,
+    ChevronLeft,
+    ChevronRight,
+    ChevronDown,
+    BarChart3,
+    Gift,
+    Mail,
+    Tag,
+    Sparkles,
+    SlidersHorizontal
+} from 'lucide-react';
 import { WhatsAppStatus } from '../../components/admin/WhatsAppStatus';
 import { NotificationCenter } from '../../components/admin/NotificationCenter';
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { useAppState } from '../../store/useAppState';
+
+type NavSingleItem = {
+    type: 'link';
+    path: string;
+    icon: React.ReactNode;
+    label: string;
+};
+
+type NavGroupItem = {
+    type: 'group';
+    id: string;
+    label: string;
+    icon: React.ReactNode;
+    children: Array<{
+        path: string;
+        icon: React.ReactNode;
+        label: string;
+    }>;
+};
+
+type NavItem = NavSingleItem | NavGroupItem;
 
 export const AdminLayout = () => {
     const { user } = useAuthStore();
@@ -16,6 +59,18 @@ export const AdminLayout = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
 
+    // Accordion state for collapsible groups
+    const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+        const initial: Record<string, boolean> = {};
+        if (['/admin/coupons', '/admin/gift-cards', '/admin/newsletter'].some(p => location.pathname.startsWith(p))) {
+            initial['marketing'] = true;
+        }
+        if (['/admin/logistics', '/admin/pages', '/admin/settings'].some(p => location.pathname.startsWith(p))) {
+            initial['config'] = true;
+        }
+        return initial;
+    });
+
     useEffect(() => {
         const onFullscreenChange = () => {
             setIsFullscreen(!!document.fullscreenElement);
@@ -23,6 +78,20 @@ export const AdminLayout = () => {
         document.addEventListener('fullscreenchange', onFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
     }, []);
+
+    // Auto-open groups when navigating to child pages
+    useEffect(() => {
+        if (['/admin/coupons', '/admin/gift-cards', '/admin/newsletter'].some(p => location.pathname.startsWith(p))) {
+            setOpenGroups(prev => ({ ...prev, marketing: true }));
+        }
+        if (['/admin/logistics', '/admin/pages', '/admin/settings'].some(p => location.pathname.startsWith(p))) {
+            setOpenGroups(prev => ({ ...prev, config: true }));
+        }
+    }, [location.pathname]);
+
+    const toggleGroup = (groupId: string) => {
+        setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+    };
 
     const toggleFullscreen = async () => {
         if (!document.fullscreenElement) {
@@ -36,18 +105,34 @@ export const AdminLayout = () => {
 
     const isActive = (path: string) => location.pathname === path;
 
-    const navLinks = [
-        { path: '/admin', icon: <LayoutDashboard size={20} />, label: 'Panoramica' },
-        { path: '/admin/analytics', icon: <BarChart3 size={20} />, label: 'Statistiche Accessi' },
-        { path: '/admin/orders', icon: <ShoppingBag size={20} />, label: 'Ordini' },
-        { path: '/admin/coupons', icon: <Tag size={20} />, label: 'Codici Sconto' },
-        { path: '/admin/gift-cards', icon: <Gift size={20} />, label: 'Gift Card & Saldi' },
-        { path: '/admin/newsletter', icon: <Mail size={20} />, label: 'Newsletter' },
-        { path: '/admin/logistics', icon: <MapIcon size={20} />, label: 'Logistica' },
-        { path: '/admin/pages', icon: <FileText size={20} />, label: 'Pagine' },
-        { path: '/admin/products', icon: <Package size={20} />, label: 'Prodotti' },
-        { path: '/admin/customers', icon: <Users size={20} />, label: 'Clienti' },
-        { path: '/admin/settings', icon: <Settings size={20} />, label: 'Impostazioni' },
+    const navItems: NavItem[] = [
+        { type: 'link', path: '/admin', icon: <LayoutDashboard size={20} />, label: 'Panoramica' },
+        { type: 'link', path: '/admin/analytics', icon: <BarChart3 size={20} />, label: 'Statistiche Accessi' },
+        { type: 'link', path: '/admin/orders', icon: <ShoppingBag size={20} />, label: 'Ordini' },
+        { type: 'link', path: '/admin/products', icon: <Package size={20} />, label: 'Prodotti' },
+        { type: 'link', path: '/admin/customers', icon: <Users size={20} />, label: 'Clienti' },
+        {
+            type: 'group',
+            id: 'marketing',
+            label: 'Marketing & Promo',
+            icon: <Sparkles size={20} />,
+            children: [
+                { path: '/admin/coupons', icon: <Tag size={17} />, label: 'Codici Sconto' },
+                { path: '/admin/gift-cards', icon: <Gift size={17} />, label: 'Gift Card & Saldi' },
+                { path: '/admin/newsletter', icon: <Mail size={17} />, label: 'Newsletter' },
+            ],
+        },
+        {
+            type: 'group',
+            id: 'config',
+            label: 'Sito & Configurazione',
+            icon: <SlidersHorizontal size={20} />,
+            children: [
+                { path: '/admin/logistics', icon: <MapIcon size={17} />, label: 'Logistica' },
+                { path: '/admin/pages', icon: <FileText size={17} />, label: 'Pagine' },
+                { path: '/admin/settings', icon: <Settings size={17} />, label: 'Impostazioni' },
+            ],
+        },
     ];
 
     const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -86,7 +171,7 @@ export const AdminLayout = () => {
                 {/* Decorative glow */}
                 <div className="absolute top-0 right-0 w-48 h-48 bg-nature-500 rounded-full blur-[80px] opacity-20 pointer-events-none transition-all duration-300"></div>
 
-                <div className={`p-4 lg:px-4 lg:py-6 hidden lg:flex items-center ${isSidebarCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'} border-b border-white/5 relative z-20 transition-all duration-300`}>
+                <div className={`p-4 lg:px-4 lg:py-5 hidden lg:flex items-center ${isSidebarCollapsed ? 'justify-center flex-col gap-4' : 'justify-between'} border-b border-white/5 relative z-20 transition-all duration-300 shrink-0`}>
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-11 h-11 flex items-center justify-center shrink-0">
                             <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain filter drop-shadow-md hover:scale-105 transition-transform" />
@@ -109,32 +194,142 @@ export const AdminLayout = () => {
                     </button>
                 </div>
 
-                <nav className="flex-1 px-4 py-8 space-y-2 overflow-hidden relative z-10">
-                    {navLinks.map((link) => {
-                        const active = isActive(link.path);
-                        return (
-                            <Link
-                                key={link.path}
-                                to={link.path}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                title={isSidebarCollapsed ? link.label : undefined}
-                                className={`group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all duration-300 font-medium ${isSidebarCollapsed ? 'justify-center' : ''} ${active
-                                    ? 'bg-white/10 text-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-white/10 backdrop-blur-md'
-                                    : 'text-nature-300/80 hover:bg-white/5 hover:text-white hover:translate-x-1 border border-transparent'
-                                    }`}
-                            >
-                                <div className={`flex items-center justify-center transition-transform duration-300 ${active ? 'scale-110 text-nature-300' : 'group-hover:scale-110'} shrink-0`}>
-                                    {link.icon}
-                                </div>
-                                {!isSidebarCollapsed && (
-                                    <>
-                                        <span className="tracking-wide whitespace-nowrap animate-in fade-in duration-300">{link.label}</span>
-                                        {active && (
-                                            <div className="ml-auto w-1.5 h-6 bg-nature-400 rounded-full shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+                {/* Navigation with scrollable list and Option A Collapsible Submenus */}
+                <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto overflow-x-hidden dark-sidebar-scrollbar relative z-10">
+                    {navItems.map((item) => {
+                        if (item.type === 'link') {
+                            const active = isActive(item.path);
+                            return (
+                                <Link
+                                    key={item.path}
+                                    to={item.path}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    title={isSidebarCollapsed ? item.label : undefined}
+                                    className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-2xl transition-all duration-200 font-medium ${isSidebarCollapsed ? 'justify-center p-3' : ''} ${active
+                                        ? 'bg-white/12 text-white shadow-[0_8px_25px_rgba(0,0,0,0.15)] border border-white/15 backdrop-blur-md'
+                                        : 'text-nature-300/80 hover:bg-white/5 hover:text-white hover:translate-x-0.5 border border-transparent'
+                                        }`}
+                                >
+                                    <div className={`flex items-center justify-center transition-transform duration-200 ${active ? 'scale-110 text-nature-300' : 'group-hover:scale-110'} shrink-0`}>
+                                        {item.icon}
+                                    </div>
+                                    {!isSidebarCollapsed && (
+                                        <>
+                                            <span className="tracking-wide text-sm whitespace-nowrap animate-in fade-in duration-200">{item.label}</span>
+                                            {active && (
+                                                <div className="ml-auto w-1.5 h-5 bg-nature-400 rounded-full shadow-[0_0_10px_rgba(74,222,128,0.6)]"></div>
+                                            )}
+                                        </>
+                                    )}
+                                </Link>
+                            );
+                        }
+
+                        // Collapsible Group
+                        const isChildActive = item.children.some(c => isActive(c.path));
+                        const isOpen = openGroups[item.id] ?? false;
+
+                        if (isSidebarCollapsed) {
+                            return (
+                                <div key={item.id} className="relative group/collapsed">
+                                    <button
+                                        onClick={() => toggleGroup(item.id)}
+                                        className={`w-full flex items-center justify-center p-3 rounded-2xl transition-all duration-200 font-medium ${isChildActive
+                                            ? 'bg-white/12 text-white shadow-md border border-white/15'
+                                            : 'text-nature-300/80 hover:bg-white/5 hover:text-white'
+                                            }`}
+                                        title={item.label}
+                                    >
+                                        <div className={`transition-transform duration-200 ${isChildActive ? 'scale-110 text-nature-300' : 'group-hover/collapsed:scale-110'} shrink-0`}>
+                                            {item.icon}
+                                        </div>
+                                        {isChildActive && (
+                                            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-nature-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
                                         )}
-                                    </>
+                                    </button>
+
+                                    {/* Flyout Popover for Collapsed Sidebar */}
+                                    <div className="hidden group-hover/collapsed:block absolute left-full top-0 ml-2 w-52 bg-nature-950/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-2 z-[120] animate-in fade-in slide-in-from-left-2 duration-150">
+                                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-nature-400 border-b border-white/10 mb-1">
+                                            {item.label}
+                                        </div>
+                                        <div className="space-y-1">
+                                            {item.children.map(child => {
+                                                const active = isActive(child.path);
+                                                return (
+                                                    <Link
+                                                        key={child.path}
+                                                        to={child.path}
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${active
+                                                            ? 'bg-nature-500/25 text-white font-bold border border-nature-400/30'
+                                                            : 'text-nature-200/80 hover:bg-white/10 hover:text-white'
+                                                            }`}
+                                                    >
+                                                        <div className={`shrink-0 ${active ? 'text-nature-300' : ''}`}>
+                                                            {child.icon}
+                                                        </div>
+                                                        <span className="truncate">{child.label}</span>
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div key={item.id} className="space-y-1">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleGroup(item.id)}
+                                    className={`w-full group flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 font-medium text-left ${isChildActive
+                                        ? 'bg-white/8 text-white border border-white/10'
+                                        : 'text-nature-300/80 hover:bg-white/5 hover:text-white'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className={`flex items-center justify-center transition-transform duration-200 ${isChildActive ? 'scale-110 text-nature-300' : 'group-hover:scale-110'} shrink-0`}>
+                                            {item.icon}
+                                        </div>
+                                        <span className="tracking-wide text-sm font-semibold truncate animate-in fade-in duration-200">{item.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 text-white/50">
+                                        <span className="text-[10px] bg-white/10 text-nature-300 px-1.5 py-0.5 rounded-md font-bold">
+                                            {item.children.length}
+                                        </span>
+                                        <ChevronDown size={15} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-nature-300' : ''}`} />
+                                    </div>
+                                </button>
+
+                                {isOpen && (
+                                    <div className="pl-3 pr-1 py-0.5 space-y-1 relative ml-4 border-l-2 border-white/10 my-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        {item.children.map(child => {
+                                            const active = isActive(child.path);
+                                            return (
+                                                <Link
+                                                    key={child.path}
+                                                    to={child.path}
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                    className={`group/child flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${active
+                                                        ? 'bg-nature-500/25 text-white shadow-sm border border-nature-400/30'
+                                                        : 'text-nature-200/70 hover:bg-white/5 hover:text-white hover:translate-x-0.5'
+                                                        }`}
+                                                >
+                                                    <div className={`transition-transform duration-200 ${active ? 'scale-110 text-nature-300' : 'group-hover/child:scale-110'} shrink-0`}>
+                                                        {child.icon}
+                                                    </div>
+                                                    <span className="truncate">{child.label}</span>
+                                                    {active && (
+                                                        <div className="ml-auto w-1.5 h-1.5 bg-nature-400 rounded-full shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
+                                                    )}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
                                 )}
-                            </Link>
+                            </div>
                         );
                     })}
                 </nav>
@@ -234,25 +429,38 @@ export const AdminLayout = () => {
             </main>
 
             {/* Mobile Bottom Navigation (Docked full-width bar) */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[50] bg-white/95 backdrop-blur-xl border-t border-gray-200 px-2 py-2 flex items-center justify-around h-16 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                {navLinks.slice(0, 5).map((link) => {
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[50] bg-white/95 backdrop-blur-xl border-t border-gray-200 px-3 py-2 flex items-center justify-around h-16 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                {[
+                    { path: '/admin', icon: <LayoutDashboard size={19} />, label: 'Home' },
+                    { path: '/admin/orders', icon: <ShoppingBag size={19} />, label: 'Ordini' },
+                    { path: '/admin/products', icon: <Package size={19} />, label: 'Prodotti' },
+                    { path: '/admin/customers', icon: <Users size={19} />, label: 'Clienti' },
+                ].map((link) => {
                     const active = isActive(link.path);
                     return (
                         <Link
                             key={link.path}
                             to={link.path}
-                            className={`relative flex items-center gap-2 py-2 px-3 sm:px-4 rounded-full transition-all duration-300 ${active ? 'bg-nature-900 text-white shadow-md' : 'text-gray-500 hover:text-gray-900'
+                            className={`relative flex items-center gap-1.5 py-2 px-3 rounded-full transition-all duration-300 ${active ? 'bg-nature-900 text-white shadow-md' : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             <div className={`transition-transform duration-300 ${active ? 'scale-110' : ''}`}>
-                                {React.cloneElement(link.icon, { size: 18 })}
+                                {link.icon}
                             </div>
                             {active && (
                                 <span className="text-[11px] font-bold whitespace-nowrap">{link.label}</span>
                             )}
                         </Link>
-                    )
+                    );
                 })}
+                <button
+                    onClick={toggleMenu}
+                    className={`relative flex items-center gap-1.5 py-2 px-3 rounded-full transition-all duration-300 ${isMobileMenuOpen ? 'bg-nature-900 text-white shadow-md' : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                >
+                    <Menu size={19} />
+                    <span className="text-[11px] font-bold">Altro</span>
+                </button>
             </div>
 
         </div>

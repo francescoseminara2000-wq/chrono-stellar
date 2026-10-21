@@ -144,4 +144,23 @@ body {
 .quill-content.quill-invert em,
 .quill-content.quill-invert a {
     color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Custom scrollbar for dark sidebars */
+.dark-sidebar-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.dark-sidebar-scrollbar::-webkit-scrollbar {
+    width: 5px;
+}
+.dark-sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.dark-sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+}
+.dark-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
 }
