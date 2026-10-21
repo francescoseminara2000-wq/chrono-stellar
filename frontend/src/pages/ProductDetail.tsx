@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { 
     ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, 
-    Leaf, Info, Check, Share2, CornerDownRight, Globe, Ruler, Award, ShieldCheck
+    Leaf, Info, Share2, CornerDownRight, ShieldCheck, ChevronDown
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
@@ -40,6 +40,7 @@ export const ProductDetail = () => {
     const [selectedProductForWeight, setSelectedProductForWeight] = useState<Product | null>(null);
     const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
 
     const cartItem = product ? items.find(i => i.id === product.id) : null;
     const [selectedUnit, setSelectedUnit] = useState<'KG' | 'PZ' | 'BOX'>('KG');
@@ -178,155 +179,128 @@ export const ProductDetail = () => {
                 {/* Main Product Showcase Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
 
-                    {/* Left Column: Image Showcase with Radial Feather Dissolve (Option 2) */}
+                    {/* Left Column: Clean Gourmet Photo Showcase (Cortilia / Eataly Style) */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="lg:col-span-6 lg:sticky lg:top-28 self-start flex flex-col items-center"
+                        transition={{ duration: 0.4 }}
+                        className="lg:col-span-6 lg:sticky lg:top-24 self-start"
                     >
-                        {/* Top Badges Bar */}
-                        <div className="w-full max-w-[500px] flex items-center justify-between gap-2 mb-2 px-2">
-                            <div className="flex items-center gap-2">
-                                {product.unitType === 'KG' && (
-                                    <span className="bg-white/90 backdrop-blur-md text-emerald-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-2xs flex items-center gap-1.5 border border-emerald-150">
-                                        <Scale size={13} className="text-emerald-600" /> PESO VARIABILE AL KG
-                                    </span>
+                        <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-100 group">
+                            <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-gray-50/50 to-white">
+                                {product.imageUrl ? (
+                                    <img
+                                        src={sanitizeImageUrl(product.imageUrl)}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 ease-out"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl">
+                                        <span>{product.name[0]}</span>
+                                    </div>
                                 )}
-                                {product.unitType === 'PZ' && (
-                                    <span className="bg-white/90 backdrop-blur-md text-nature-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-2xs flex items-center gap-1.5 border border-nature-150">
-                                        <ShoppingBasket size={13} className="text-fruit-600" /> VENDITA A PEZZI
+
+                                {/* Subtle Discreet Badges */}
+                                <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+                                    <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-gray-800 shadow-xs border border-gray-200/60 flex items-center gap-1.5">
+                                        {product.unitType === 'KG' ? (
+                                            <>
+                                                <Scale size={13} className="text-emerald-700" />
+                                                <span>Peso Variabile</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ShoppingBasket size={13} className="text-gray-700" />
+                                                <span>Vendita a Pezzi</span>
+                                            </>
+                                        )}
                                     </span>
-                                )}
+
+                                    {product.isAvailable ? (
+                                        <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-emerald-800 shadow-xs border border-emerald-200/60 flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                                            <span>Disponibile</span>
+                                        </span>
+                                    ) : (
+                                        <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-red-700 shadow-xs border border-red-200 flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-red-600"></span>
+                                            <span>Esaurito</span>
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
-                            {product.isAvailable ? (
-                                <span className="bg-emerald-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full shadow-2xs uppercase tracking-wider flex items-center gap-1">
-                                    <Check size={12} strokeWidth={3} /> Disponibile
+                            {/* Minimal Bottom Bar */}
+                            <div className="px-5 py-3.5 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
+                                <span className="flex items-center gap-1.5">
+                                    <Leaf size={14} className="text-emerald-700" />
+                                    <span>Filiera corta garantita</span>
                                 </span>
-                            ) : (
-                                <span className="bg-red-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full shadow-2xs uppercase tracking-wider">
-                                    Esaurito
+                                <span className="text-emerald-800 font-bold">
+                                    Fresco di giornata
                                 </span>
-                            )}
-                        </div>
-
-                        {/* Image Container with Radial Feather Mask (No box, No borders, Edges fade into 0% opacity) */}
-                        <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center group">
-                            {product.imageUrl ? (
-                                <img
-                                    src={sanitizeImageUrl(product.imageUrl)}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 select-none"
-                                    style={{
-                                        maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 45%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.4) 80%, transparent 95%)',
-                                        WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 45%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.4) 80%, transparent 95%)'
-                                    }}
-                                />
-                            ) : (
-                                <div 
-                                    className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl"
-                                    style={{
-                                        maskImage: 'radial-gradient(ellipse at center, black 45%, transparent 95%)',
-                                        WebkitMaskImage: 'radial-gradient(ellipse at center, black 45%, transparent 95%)'
-                                    }}
-                                >
-                                    <span>{product.name[0]}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Soft Natural Ground Contact Shadow */}
-                        <div className="w-3/5 h-6 bg-nature-950/15 rounded-[100%] blur-xl -mt-4 pointer-events-none" />
-
-                        {/* Bottom Tag Bar */}
-                        <div className="flex items-center justify-center gap-3 text-xs font-bold text-nature-900 mt-4">
-                            <span className="flex items-center gap-1.5 bg-white/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-nature-200/70 shadow-2xs">
-                                <Leaf size={14} className="text-emerald-600" /> Filiera Corta Garantita
-                            </span>
-                            <span className="bg-emerald-50 text-emerald-800 font-extrabold px-3 py-1.5 rounded-full border border-emerald-200/70 shadow-2xs">
-                                Fresco di Giornata
-                            </span>
+                            </div>
                         </div>
                     </motion.div>
 
-                    {/* Right Column: Hero Buy Box & Full Details */}
+                    {/* Right Column: Bottega Gourmet & Minimal Chic */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="lg:col-span-6 flex flex-col space-y-5"
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                        className="lg:col-span-6 flex flex-col"
                     >
-                        {/* Top Meta: Category, Commercial Category, Article Code */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-                                <span 
-                                    className="px-3 py-1 font-extrabold rounded-full text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-2xs border"
-                                    style={product.category ? {
-                                        backgroundColor: `${product.category.color}18`,
-                                        color: product.category.color,
-                                        borderColor: `${product.category.color}35`
-                                    } : {
-                                        backgroundColor: '#ecfdf5',
-                                        color: '#065f46',
-                                        borderColor: '#a7f3d0'
-                                    }}
-                                >
-                                    <Leaf size={11} />
-                                    {product.category?.name || 'Ortofrutta di Stagione'}
-                                </span>
-
-                                {product.commercialCategory && (
-                                    <span className="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 font-extrabold rounded-full text-xs uppercase tracking-wider flex items-center gap-1 shadow-2xs">
-                                        <Award size={12} className="text-amber-600" />
-                                        Categoria: {product.commercialCategory}
-                                    </span>
-                                )}
-
-                                <span className="px-2.5 py-1 bg-gray-100 text-gray-500 font-mono text-[11px] font-extrabold rounded-full border border-gray-200/80 shadow-2xs">
-                                    Art. #{product.id}
-                                </span>
-                            </div>
-
-                            {/* Title */}
-                            <h1 className="text-3xl sm:text-5xl font-black text-nature-950 tracking-tight leading-tight">
+                        {/* Category & Title Header */}
+                        <div className="mb-4">
+                            <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-800 block mb-1">
+                                {product.category?.name || 'Ortofrutta di Stagione'}
+                            </span>
+                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-950 tracking-tight leading-tight mb-2">
                                 {product.name}
                             </h1>
+                            <p className="text-sm text-gray-500 font-medium flex items-center gap-2">
+                                <span>Origine: <strong className="text-gray-800">{product.origin || 'Italia'}</strong></span>
+                                {product.commercialCategory && (
+                                    <>
+                                        <span>•</span>
+                                        <span>Categoria <strong className="text-gray-800">{product.commercialCategory}</strong></span>
+                                    </>
+                                )}
+                            </p>
                         </div>
 
-                        {/* HERO BUY BOX (ABOVE THE FOLD - INSTANT PURCHASE) */}
-                        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-emerald-200/80 shadow-[0_4px_25px_-5px_rgba(20,83,45,0.08)] space-y-4">
-                            {/* Price & info header */}
-                            <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
+                        {/* Hero Buy Box (Cortilia/Eataly Style) */}
+                        <div className="bg-emerald-50/60 rounded-3xl p-5 sm:p-6 border border-emerald-200/70 shadow-xs mb-6 space-y-4">
+                            {/* Price Row */}
+                            <div className="flex items-baseline justify-between pb-3.5 border-b border-emerald-200/60">
                                 <div>
-                                    <span className="text-[11px] font-black text-emerald-700 uppercase tracking-widest block mb-0.5">
-                                        Prezzo di Listino
+                                    <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block mb-0.5">
+                                        Prezzo al pubblico
                                     </span>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl sm:text-4xl font-black text-nature-950 tracking-tight">
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-3xl sm:text-4xl font-black text-gray-950 tracking-tight">
                                             €{formattedPrice}
                                         </span>
-                                        <span className="text-sm font-bold text-gray-500">
-                                            / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
+                                        <span className="text-sm font-semibold text-gray-600">
+                                            / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : 'pz')}
                                         </span>
                                     </div>
                                 </div>
 
                                 {product.isVariableWeight && selectedUnit === 'PZ' && product.stepAmount > 0 && (
-                                    <div className="bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/60 text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                                        <Info size={14} className="text-emerald-600 shrink-0" />
-                                        <span>~{product.stepAmount} kg a pezzo</span>
-                                    </div>
+                                    <span className="text-xs font-bold text-emerald-900 bg-emerald-100/80 px-3 py-1.5 rounded-xl border border-emerald-200">
+                                        Circa {product.stepAmount} kg a pezzo
+                                    </span>
                                 )}
                             </div>
 
-                            {/* Unit Selector (Kg / Pezzi) if applicable */}
+                            {/* Unit Switcher (if variable weight) */}
                             {product.unitType === 'KG' && product.isVariableWeight && product.stepAmount > 0 && (
                                 <div>
-                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
-                                        Modalità d'Acquisto
+                                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-wider mb-1.5">
+                                        Come preferisci acquistare?
                                     </label>
-                                    <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1 rounded-2xl border border-gray-200/70 text-xs font-bold">
+                                    <div className="grid grid-cols-2 gap-2 bg-white p-1 rounded-2xl border border-emerald-200/70 text-xs font-bold">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -334,7 +308,9 @@ export const ProductDetail = () => {
                                                 else setSelectedUnit('KG');
                                             }}
                                             className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                                selectedUnit === 'KG' ? 'bg-white text-emerald-800 shadow-xs font-black' : 'text-gray-500 hover:text-gray-900'
+                                                selectedUnit === 'KG' 
+                                                    ? 'bg-emerald-800 text-white shadow-xs font-black' 
+                                                    : 'text-gray-600 hover:text-gray-900'
                                             }`}
                                         >
                                             <Scale size={14} />
@@ -347,42 +323,44 @@ export const ProductDetail = () => {
                                                 else setSelectedUnit('PZ');
                                             }}
                                             className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                                selectedUnit === 'PZ' ? 'bg-white text-emerald-800 shadow-xs font-black' : 'text-gray-500 hover:text-gray-900'
+                                                selectedUnit === 'PZ' 
+                                                    ? 'bg-emerald-800 text-white shadow-xs font-black' 
+                                                    : 'text-gray-600 hover:text-gray-900'
                                             }`}
                                         >
                                             <ShoppingBasket size={14} />
-                                            <span>A Pezzi</span>
+                                            <span>Al Pezzo</span>
                                         </button>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Primary Action Button / Stepper */}
-                            <div className="space-y-3">
+                            {/* Action Button */}
+                            <div className="space-y-2.5">
                                 {selectedUnit === 'KG' ? (
                                     <button
                                         type="button"
                                         onClick={() => setSelectedProductForWeight(product)}
-                                        className="w-full bg-gradient-to-r from-emerald-700 via-nature-700 to-emerald-800 hover:from-emerald-800 hover:to-nature-800 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-700/25 transition-all hover:scale-[1.01] active:scale-98 flex items-center justify-between group cursor-pointer"
+                                        className="w-full bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white py-3.5 px-6 rounded-2xl font-bold text-base shadow-md shadow-emerald-900/15 transition-all flex items-center justify-between group cursor-pointer"
                                     >
                                         <div className="flex items-center gap-2.5">
-                                            <Scale size={22} className="group-hover:rotate-12 transition-transform" />
+                                            <Scale size={20} className="group-hover:rotate-12 transition-transform" />
                                             <span>{currentQty > 0 ? `${currentQty} kg nel Carrello` : 'Scegli il Peso & Aggiungi'}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold backdrop-blur-xs">
+                                        <div className="flex items-center gap-1.5 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">
                                             <span>€{formattedEstimatedTotal} stimati</span>
-                                            <CornerDownRight size={14} />
+                                            <CornerDownRight size={13} />
                                         </div>
                                     </button>
                                 ) : (
                                     currentQty > 0 ? (
-                                        <div className="flex items-center justify-between bg-emerald-50 rounded-2xl p-2 border border-emerald-200/80 shadow-inner">
+                                        <div className="flex items-center justify-between bg-white rounded-2xl p-1.5 border border-emerald-200/80 shadow-2xs">
                                             <button
                                                 type="button"
                                                 onClick={() => updateQuantity(product.id, Math.max(0, currentQty - 1))}
-                                                className="w-12 h-12 bg-white rounded-xl shadow-xs text-emerald-900 flex items-center justify-center hover:bg-emerald-100 transition-all active:scale-90 cursor-pointer"
+                                                className="w-11 h-11 bg-gray-100 rounded-xl text-emerald-950 flex items-center justify-center hover:bg-gray-200 transition-all active:scale-90 cursor-pointer"
                                             >
-                                                <Minus strokeWidth={3} size={20} />
+                                                <Minus strokeWidth={2.5} size={18} />
                                             </button>
                                             <button
                                                 type="button"
@@ -390,116 +368,112 @@ export const ProductDetail = () => {
                                                 className="flex flex-col items-center justify-center py-1 px-4 cursor-pointer"
                                             >
                                                 <span className="font-black text-2xl text-emerald-950 leading-none">{currentQty}</span>
-                                                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">pezzi nel carrello</span>
+                                                <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">pezzi nel carrello</span>
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => updateQuantity(product.id, currentQty + 1)}
-                                                className="w-12 h-12 bg-emerald-700 rounded-xl shadow-xs text-white flex items-center justify-center hover:bg-emerald-800 transition-all active:scale-90 cursor-pointer"
+                                                className="w-11 h-11 bg-emerald-800 rounded-xl text-white flex items-center justify-center hover:bg-emerald-900 transition-all active:scale-90 cursor-pointer"
                                             >
-                                                <Plus strokeWidth={3} size={20} />
+                                                <Plus strokeWidth={2.5} size={18} />
                                             </button>
                                         </div>
                                     ) : (
                                         <button
                                             type="button"
                                             onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
-                                            className="w-full bg-gradient-to-r from-emerald-700 via-nature-700 to-emerald-800 hover:from-emerald-800 hover:to-nature-800 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-700/25 transition-all hover:scale-[1.01] active:scale-98 flex items-center justify-between group cursor-pointer"
+                                            className="w-full bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white py-3.5 px-6 rounded-2xl font-bold text-base shadow-md shadow-emerald-900/15 transition-all flex items-center justify-between group cursor-pointer"
                                         >
                                             <div className="flex items-center gap-2.5">
-                                                <ShoppingBasket size={22} className="group-hover:scale-110 transition-transform" />
+                                                <ShoppingBasket size={20} className="group-hover:scale-110 transition-transform" />
                                                 <span>Aggiungi al Carrello</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold backdrop-blur-xs">
+                                            <div className="flex items-center gap-1.5 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">
                                                 <span>€{formattedPrice}</span>
-                                                <CornerDownRight size={14} />
+                                                <CornerDownRight size={13} />
                                             </div>
                                         </button>
                                     )
                                 )}
 
-                                {/* Weighing Reassurance Notice */}
-                                <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200/70 flex items-center gap-2.5 text-xs text-gray-500 font-medium">
-                                    <Info size={15} className="text-emerald-600 shrink-0" />
-                                    <span>Il peso esatto e l'importo finale vengono verificati alla pesatura prima della spedizione.</span>
-                                </div>
+                                <p className="text-[11px] text-gray-500 text-center flex items-center justify-center gap-1.5 pt-1">
+                                    <Info size={13} className="text-emerald-700 shrink-0" />
+                                    <span>Importo verificato con scontrino alla pesatura prima della consegna</span>
+                                </p>
                             </div>
                         </div>
 
-                        {/* Product Description */}
-                        <div className="bg-white p-5 rounded-3xl border border-gray-150 shadow-2xs">
-                            <h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                                <Leaf size={16} className="text-emerald-600" /> Descrizione del Prodotto
+                        {/* Natural Flowing Description */}
+                        <div className="mb-6">
+                            <h3 className="text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
+                                Descrizione
                             </h3>
-                            <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                                {product.description || "Raccolto fresco selezionato a mano con cura. Garantiamo il massimo del sapore naturale ed autentico direttamente dai nostri produttori di fiducia."}
+                            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+                                {product.description || "Frutta e verdura fresca raccolta ogni giorno direttamente dai produttori di fiducia, garantendo gusto autentico e massima freschezza."}
                             </p>
                         </div>
 
-                        {/* Scheda Tracciabilità & Caratteristiche Ortofrutta */}
-                        {(product.origin || product.caliber || product.commercialCategory || product.category) && (
-                            <div className="bg-gradient-to-br from-emerald-50/70 via-white to-nature-50/50 p-4 sm:p-5 rounded-3xl border border-emerald-150 shadow-2xs space-y-3">
-                                <div className="flex items-center justify-between border-b border-emerald-100/80 pb-2">
-                                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
-                                        <ShieldCheck size={15} className="text-emerald-600" /> Scheda & Tracciabilità Ortofrutta
-                                    </h4>
-                                    <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200">
-                                        Qualità Garantita
+                        {/* Chef's Advice (Refined Culinary Note, not an orange box) */}
+                        {product.seasonalTips && (
+                            <div className="p-4 rounded-2xl bg-amber-50/70 border-l-4 border-amber-500 mb-6 flex items-start gap-3.5">
+                                <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                                    <ChefHat size={16} />
+                                </div>
+                                <div>
+                                    <span className="text-xs font-extrabold uppercase tracking-wider text-amber-950 block mb-0.5">
+                                        Il Consiglio in Cucina
+                                    </span>
+                                    <p className="text-xs sm:text-sm text-amber-900/90 italic leading-relaxed">
+                                        "{product.seasonalTips}"
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Traceability & Harvest Details Accordion (Discreet & Collapsible) */}
+                        <div className="border-t border-b border-gray-200 py-3 mt-auto">
+                            <button
+                                type="button"
+                                onClick={() => setShowDetails(!showDetails)}
+                                className="w-full flex items-center justify-between text-left py-1 group cursor-pointer"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck size={17} className="text-emerald-800" />
+                                    <span className="font-bold text-sm text-gray-900 group-hover:text-emerald-800 transition-colors">
+                                        Tracciabilità e Dettagli del Raccolto
                                     </span>
                                 </div>
+                                <ChevronDown 
+                                    size={17} 
+                                    className={`text-gray-400 group-hover:text-emerald-800 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`} 
+                                />
+                            </button>
 
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
-                                    {/* Provenienza */}
-                                    <div className="bg-white/90 p-3 rounded-2xl border border-emerald-100/80 shadow-2xs">
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-0.5 flex items-center gap-1">
-                                            <Globe size={11} className="text-emerald-600" /> Provenienza
-                                        </span>
-                                        <p className="font-extrabold text-nature-950 text-sm truncate" title={product.origin || "Italia"}>
-                                            {product.origin || "Italia"}
-                                        </p>
+                            {showDetails && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="pt-3 pb-2 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"
+                                >
+                                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-150">
+                                        <span className="text-gray-400 font-medium block mb-0.5 text-[10px] uppercase tracking-wider">Provenienza</span>
+                                        <span className="font-bold text-gray-900">{product.origin || 'Italia'}</span>
                                     </div>
-
-                                    {/* Calibro */}
-                                    <div className="bg-white/90 p-3 rounded-2xl border border-emerald-100/80 shadow-2xs">
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-0.5 flex items-center gap-1">
-                                            <Ruler size={11} className="text-emerald-600" /> Calibro
-                                        </span>
-                                        <p className="font-extrabold text-nature-950 text-sm truncate" title={product.caliber || "Standard"}>
-                                            {product.caliber || "Standard"}
-                                        </p>
+                                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-150">
+                                        <span className="text-gray-400 font-medium block mb-0.5 text-[10px] uppercase tracking-wider">Calibro</span>
+                                        <span className="font-bold text-gray-900">{product.caliber || 'Standard'}</span>
                                     </div>
-
-                                    {/* Categoria Commerciale */}
-                                    <div className="bg-white/90 p-3 rounded-2xl border border-emerald-100/80 shadow-2xs col-span-2 sm:col-span-1">
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-0.5 flex items-center gap-1">
-                                            <Award size={11} className="text-amber-600" /> Categoria
-                                        </span>
-                                        <p className="font-extrabold text-nature-950 text-sm truncate" title={product.commercialCategory || "Cat. I"}>
-                                            {product.commercialCategory || "Cat. I"}
-                                        </p>
+                                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-150">
+                                        <span className="text-gray-400 font-medium block mb-0.5 text-[10px] uppercase tracking-wider">Categoria</span>
+                                        <span className="font-bold text-gray-900">{product.commercialCategory ? `Cat. ${product.commercialCategory}` : 'Cat. I'}</span>
                                     </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Expert Seasonal Advice Box */}
-                        {product.seasonalTips && (
-                            <div className="bg-gradient-to-br from-amber-50 to-orange-50/60 p-5 rounded-3xl border border-amber-200/80 relative overflow-hidden shadow-2xs">
-                                <div className="flex items-start gap-3.5 relative z-10">
-                                    <div className="bg-amber-500 text-white p-2.5 rounded-2xl shadow-md shrink-0">
-                                        <ChefHat size={22} />
+                                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-150">
+                                        <span className="text-gray-400 font-medium block mb-0.5 text-[10px] uppercase tracking-wider">Codice Articolo</span>
+                                        <span className="font-bold text-gray-600 font-mono">#{product.id}</span>
                                     </div>
-                                    <div>
-                                        <h4 className="font-extrabold text-amber-950 text-sm mb-1">
-                                            Consigli in Cucina & Conservazione
-                                        </h4>
-                                        <p className="text-amber-900/90 text-xs sm:text-sm italic leading-relaxed">
-                                            "{product.seasonalTips}"
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                                </motion.div>
+                            )}
+                        </div>
                     </motion.div>
                 </div>
 
