@@ -1109,6 +1109,7 @@ export const OrderManager = () => {
                     const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
                     const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
                     const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
+                    const unitLabel = isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase();
 
                     const isWeighed = weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined);
                     const currentQty = typeof fulfillmentData[item.id] === 'number'
@@ -1134,11 +1135,11 @@ export const OrderManager = () => {
                                     : 'bg-amber-50/25 border-amber-300/80 hover:border-amber-400 ring-1 ring-amber-400/20'
                             }`}
                         >
-                            {/* MOBILE COMPACT ROW (flex sm:hidden): Thumb + Details on Left, Big Thumb-Friendly Weigh Button on Right */}
-                            <div className="flex sm:hidden items-center justify-between p-2.5 gap-2.5">
-                                {/* Left part: compact thumbnail + details */}
-                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                    <div className="w-12 h-12 rounded-xl bg-emerald-50/70 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
+                            {/* MOBILE 2-ROW FLUID LAYOUT (flex sm:hidden): Full width name on row 1, details + button on row 2 */}
+                            <div className="flex sm:hidden flex-col p-3 gap-2.5">
+                                {/* ROW 1: Thumbnail + Full Name + Status Badge */}
+                                <div className="flex items-center gap-2.5 w-full">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-50/70 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
                                         {item.product.imageUrl ? (
                                             <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
                                         ) : (
@@ -1155,51 +1156,61 @@ export const OrderManager = () => {
                                     </div>
 
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5">
-                                            <h4 className="font-black text-xs text-gray-900 truncate leading-snug">
-                                                {item.product.name}
-                                            </h4>
-                                            {!isWeighed && (
-                                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded shrink-0">
-                                                    Da pesare
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                            <span className="text-[10px] font-extrabold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-md">
-                                                Ord: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                        <h4 className="font-black text-sm text-gray-900 leading-snug break-words">
+                                            {item.product.name}
+                                        </h4>
+                                    </div>
+
+                                    <div className="shrink-0">
+                                        {isWeighed ? (
+                                            <span className="px-2 py-0.5 rounded-md font-black text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-200 flex items-center gap-1">
+                                                ✓ Pesato
                                             </span>
-                                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
-                                                isWeighed ? 'text-emerald-900 bg-emerald-100/70' : 'text-gray-700 bg-gray-100'
-                                            }`}>
-                                                {isWeighed ? `${currentQty} ${isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()} • ` : ''}€ {itemActualCost.toFixed(2)}
+                                        ) : (
+                                            <span className="px-2 py-0.5 rounded-md font-black text-[10px] uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs">
+                                                ⚖ Da Pesare
                                             </span>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Right part: Mobile Big Action Button */}
-                                {selectedOrder.status === 'PENDING' ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleOpenSingleItemWeighing(item)}
-                                        className={`h-11 px-3.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shrink-0 active:scale-95 ${
+                                {/* ROW 2: Ordered Qty & Subtotal on Left, Ergonomic Action Button on Right */}
+                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100/90 w-full">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[11px] font-extrabold text-gray-700 bg-gray-100 px-2 py-1 rounded-lg">
+                                            Ord: <strong className="text-gray-900">{item.quantityOrdered} {item.product.unitType.toLowerCase()}</strong>
+                                        </span>
+                                        <span className={`text-[11px] font-black px-2 py-1 rounded-lg border ${
                                             isWeighed
-                                                ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
-                                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 ring-2 ring-emerald-500/20'
-                                        }`}
-                                    >
-                                        <Scale size={16} />
-                                        <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
-                                    </button>
-                                ) : (
-                                    <div className="text-right shrink-0">
-                                        <span className="text-[10px] font-bold text-gray-400 block">Pesato</span>
-                                        <span className="text-xs font-black text-gray-900">
-                                            {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                ? 'text-emerald-950 bg-emerald-50 border-emerald-250'
+                                                : 'text-gray-800 bg-gray-50 border-gray-200'
+                                        }`}>
+                                            {isWeighed ? `${currentQty} ${unitLabel} • ` : ''}€ {itemActualCost.toFixed(2)}
                                         </span>
                                     </div>
-                                )}
+
+                                    {/* Right part: Mobile Action Button */}
+                                    {selectedOrder.status === 'PENDING' ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenSingleItemWeighing(item)}
+                                            className={`h-9 px-4 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shrink-0 active:scale-95 ${
+                                                isWeighed
+                                                    ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
+                                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 ring-2 ring-emerald-500/20'
+                                            }`}
+                                        >
+                                            <Scale size={15} />
+                                            <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
+                                        </button>
+                                    ) : (
+                                        <div className="text-right shrink-0">
+                                            <span className="text-xs font-black text-gray-900">
+                                                {currentQty} {unitLabel}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* DESKTOP EXPANDED ROW (hidden sm:flex): Full details and stats */}
@@ -1312,7 +1323,7 @@ export const OrderManager = () => {
 
                 {/* Sub-component: Products List Card */}
                 const renderProductsCard = () => (
-                    <div className="bg-white border border-gray-200/90 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
+                    <div className="bg-transparent sm:bg-white border-0 sm:border sm:border-gray-200/90 rounded-none sm:rounded-3xl p-0 sm:p-5 shadow-none sm:shadow-xs space-y-4">
                         {/* Header with Title + Progress */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
                             <div>
@@ -1570,9 +1581,9 @@ export const OrderManager = () => {
                 );
 
                 return (
-                    <div className="w-full space-y-6 pb-28 sm:pb-32 animate-in fade-in duration-200">
-                        {/* Main White Order Card */}
-                        <div className="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-7 space-y-6">
+                    <div className="-mx-5 sm:mx-0 -mt-2 sm:mt-0 w-[calc(100%+2.5rem)] sm:w-full space-y-4 sm:space-y-6 pb-28 sm:pb-32 animate-in fade-in duration-200">
+                        {/* Main White Order Card: edge-to-edge full width on smartphone */}
+                        <div className="bg-white rounded-none sm:rounded-3xl shadow-none sm:shadow-sm border-0 sm:border sm:border-gray-200/80 p-3 sm:p-6 lg:p-7 space-y-4 sm:space-y-6">
                             {/* MOBILE HEADER (flex sm:hidden): Compact 1-Row Ergonomic Header */}
                             <div className="flex sm:hidden items-center justify-between gap-2 pb-3 border-b border-gray-100">
                                 <div className="flex items-center gap-2 min-w-0">
