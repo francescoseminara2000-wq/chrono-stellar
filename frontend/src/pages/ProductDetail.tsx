@@ -178,71 +178,75 @@ export const ProductDetail = () => {
                 {/* Main Product Showcase Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
 
-                    {/* Left Column: Image Showcase with Organic Aura (Sticky on Desktop) */}
+                    {/* Left Column: Image Showcase with Radial Feather Dissolve (Option 2) */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="lg:col-span-6 lg:sticky lg:top-28 self-start"
+                        className="lg:col-span-6 lg:sticky lg:top-28 self-start flex flex-col items-center"
                     >
-                        <div className="relative group">
-                            {/* Organic Ambient Glow Aura behind image */}
-                            <div className="absolute -inset-3 sm:-inset-6 bg-gradient-to-tr from-emerald-500/25 via-amber-400/20 to-emerald-400/25 rounded-[3rem] blur-3xl -z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                            {/* Image Frame - Borderless with ambient shadow and floating feel */}
-                            <div className="relative aspect-[4/3] sm:aspect-square rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-15px_rgba(20,83,45,0.22)] bg-gradient-to-b from-white/90 to-nature-50/50">
-                                {product.imageUrl ? (
-                                    <img
-                                        src={sanitizeImageUrl(product.imageUrl)}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl bg-gradient-to-br from-emerald-50 to-nature-100">
-                                        <span>{product.name[0]}</span>
-                                    </div>
+                        {/* Top Badges Bar */}
+                        <div className="w-full max-w-[500px] flex items-center justify-between gap-2 mb-2 px-2">
+                            <div className="flex items-center gap-2">
+                                {product.unitType === 'KG' && (
+                                    <span className="bg-white/90 backdrop-blur-md text-emerald-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-2xs flex items-center gap-1.5 border border-emerald-150">
+                                        <Scale size={13} className="text-emerald-600" /> PESO VARIABILE AL KG
+                                    </span>
                                 )}
-
-                                {/* Smooth Vignette Overlay to blend seamlessly with floating glass pills */}
-                                <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/40 via-black/10 to-transparent pointer-events-none" />
-                                <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/30 via-transparent to-transparent pointer-events-none" />
-
-                                {/* Badges Overlay - Floating Glass Pills */}
-                                <div className="absolute top-4 sm:top-5 left-4 sm:left-5 right-4 sm:right-5 flex items-center justify-between gap-2 pointer-events-none">
-                                    <div className="flex flex-wrap gap-2">
-                                        {product.unitType === 'KG' && (
-                                            <span className="bg-white/90 backdrop-blur-md text-emerald-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 border border-white/60">
-                                                <Scale size={13} className="text-emerald-600" /> PESO VARIABILE AL KG
-                                            </span>
-                                        )}
-                                        {product.unitType === 'PZ' && (
-                                            <span className="bg-white/90 backdrop-blur-md text-nature-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 border border-white/60">
-                                                <ShoppingBasket size={13} className="text-fruit-600" /> VENDITA A PEZZI
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {product.isAvailable ? (
-                                        <span className="bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-black px-3 py-1 rounded-full shadow-sm uppercase tracking-wider flex items-center gap-1 border border-white/20">
-                                            <Check size={12} strokeWidth={3} /> Disponibile
-                                        </span>
-                                    ) : (
-                                        <span className="bg-red-600/90 backdrop-blur-md text-white text-[11px] font-black px-3 py-1 rounded-full shadow-sm uppercase tracking-wider border border-white/20">
-                                            Esaurito
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Bottom Floating Glass Pill */}
-                                <div className="absolute bottom-4 sm:bottom-5 left-4 sm:left-5 right-4 sm:right-5 bg-white/90 backdrop-blur-md py-2.5 px-4 rounded-2xl border border-white/60 shadow-md flex items-center justify-between text-xs font-bold text-nature-950">
-                                    <span className="flex items-center gap-1.5">
-                                        <Leaf size={15} className="text-emerald-600" /> Filiera Corta Garantita
+                                {product.unitType === 'PZ' && (
+                                    <span className="bg-white/90 backdrop-blur-md text-nature-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-2xs flex items-center gap-1.5 border border-nature-150">
+                                        <ShoppingBasket size={13} className="text-fruit-600" /> VENDITA A PEZZI
                                     </span>
-                                    <span className="text-emerald-700 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-100/60">
-                                        Fresco di Giornata
-                                    </span>
-                                </div>
+                                )}
                             </div>
+
+                            {product.isAvailable ? (
+                                <span className="bg-emerald-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full shadow-2xs uppercase tracking-wider flex items-center gap-1">
+                                    <Check size={12} strokeWidth={3} /> Disponibile
+                                </span>
+                            ) : (
+                                <span className="bg-red-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full shadow-2xs uppercase tracking-wider">
+                                    Esaurito
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Image Container with Radial Feather Mask (No box, No borders, Edges fade into 0% opacity) */}
+                        <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center group">
+                            {product.imageUrl ? (
+                                <img
+                                    src={sanitizeImageUrl(product.imageUrl)}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 select-none"
+                                    style={{
+                                        maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 45%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.4) 80%, transparent 95%)',
+                                        WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 45%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0.4) 80%, transparent 95%)'
+                                    }}
+                                />
+                            ) : (
+                                <div 
+                                    className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl"
+                                    style={{
+                                        maskImage: 'radial-gradient(ellipse at center, black 45%, transparent 95%)',
+                                        WebkitMaskImage: 'radial-gradient(ellipse at center, black 45%, transparent 95%)'
+                                    }}
+                                >
+                                    <span>{product.name[0]}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Soft Natural Ground Contact Shadow */}
+                        <div className="w-3/5 h-6 bg-nature-950/15 rounded-[100%] blur-xl -mt-4 pointer-events-none" />
+
+                        {/* Bottom Tag Bar */}
+                        <div className="flex items-center justify-center gap-3 text-xs font-bold text-nature-900 mt-4">
+                            <span className="flex items-center gap-1.5 bg-white/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-nature-200/70 shadow-2xs">
+                                <Leaf size={14} className="text-emerald-600" /> Filiera Corta Garantita
+                            </span>
+                            <span className="bg-emerald-50 text-emerald-800 font-extrabold px-3 py-1.5 rounded-full border border-emerald-200/70 shadow-2xs">
+                                Fresco di Giornata
+                            </span>
                         </div>
                     </motion.div>
 
