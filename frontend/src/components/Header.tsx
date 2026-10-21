@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShoppingBasket, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 
 import { useAuthStore } from '../store/useAuthStore';
@@ -286,18 +286,24 @@ const AuthMenu = ({
     );
 };
 
-const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => {
-    return (
-        <Link to={to} className="relative text-nature-900 font-medium group py-2">
-            {children}
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-nature-500 transition-all duration-300 group-hover:w-full rounded-full"></span>
-        </Link>
-    );
-};
+interface NavItemConfig {
+    label: string;
+    path: string;
+    matchPrefix?: string[];
+}
+
+const NAV_ITEMS: NavItemConfig[] = [
+    { label: 'Home', path: '/' },
+    { label: 'Nostri Prodotti', path: '/shop', matchPrefix: ['/shop', '/product'] },
+    { label: 'I Nostri Mercati', path: '/mercati' },
+    { label: 'Gift Card', path: '/gift-cards' },
+];
 
 import { useAppState } from '../store/useAppState';
 
 export const Header = () => {
+    const location = useLocation();
+    const [hoveredNav, setHoveredNav] = React.useState<string | null>(null);
     const { items } = useCartStore();
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -343,7 +349,7 @@ export const Header = () => {
     // Close menu when route changes
     React.useEffect(() => {
         setIsMenuOpen(false);
-    }, [window.location.pathname]);
+    }, [location.pathname]);
 
     return (
         <header className={`${isMenuOpen ? 'fixed inset-0 z-[9999] bg-transparent' : `bg-white/90 backdrop-blur-md sticky top-0 z-[100] border-b border-gray-100 ${isScrolled ? 'py-1.5 shadow-md' : 'py-3.5 shadow-sm'}`} transition-all duration-300`}>
@@ -368,7 +374,7 @@ export const Header = () => {
                             <h1 className={`font-script text-nature-900 leading-none whitespace-nowrap transition-all duration-500 ${isScrolled ? 'text-xl md:text-2xl' : 'text-2xl sm:text-3xl md:text-4xl'}`}>
                                 {settings?.siteName ? (
                                     <>
-                                        <span className="text-nature-600">{settings.siteName.split(' ')[0]}</span>{' '}
+                                         <span className="text-nature-600">{settings.siteName.split(' ')[0]}</span>{' '}
                                         {settings.siteName.substring(settings.siteName.indexOf(' ') + 1)}
                                     </>
                                 ) : (
@@ -382,12 +388,72 @@ export const Header = () => {
                     </Link>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-12">
-                        <div className="flex items-center gap-8">
-                            <NavLink to="/">Home</NavLink>
-                            <NavLink to="/shop">Nostri Prodotti</NavLink>
-                            <NavLink to="/mercati">I Nostri Mercati</NavLink>
-                            <NavLink to="/gift-cards">Gift Card</NavLink>
+                    <nav className="hidden md:flex items-center gap-6 lg:gap-8">
+                        <div 
+                            onMouseLeave={() => setHoveredNav(null)}
+                            className={`relative bg-nature-50/90 backdrop-blur-md border border-nature-200/70 rounded-full shadow-[0_2px_12px_-4px_rgba(20,83,45,0.07)] flex items-center transition-all duration-300 ${
+                                isScrolled ? 'p-1 gap-0.5' : 'p-1.5 gap-1'
+                            }`}
+                        >
+                            {NAV_ITEMS.map((item) => {
+                                const isActive = item.path === '/'
+                                    ? location.pathname === '/'
+                                    : (item.matchPrefix
+                                        ? item.matchPrefix.some(p => location.pathname.startsWith(p))
+                                        : location.pathname.startsWith(item.path));
+                                const isHovered = hoveredNav === item.path;
+
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        onMouseEnter={() => setHoveredNav(item.path)}
+                                        className={`relative rounded-full font-semibold transition-colors duration-200 z-10 flex items-center select-none ${
+                                            isScrolled ? 'px-3.5 py-1 text-xs' : 'px-4 py-1.5 text-sm'
+                                        } ${
+                                            isActive 
+                                                ? 'text-nature-950 font-bold' 
+                                                : 'text-nature-800/80 hover:text-nature-950'
+                                        }`}
+                                    >
+                                        {/* Active Pill (Floating white card with subtle glow and shadow) */}
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="activeNavPill"
+                                                transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                                                className="absolute inset-0 bg-white rounded-full shadow-[0_2px_8px_rgba(20,83,45,0.12)] border border-nature-200/60 -z-10"
+                                            />
+                                        )}
+
+                                        {/* Hover Pill (when hovering over another link) */}
+                                        {isHovered && !isActive && (
+                                            <motion.div
+                                                layoutId="hoverNavPill"
+                                                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                                                className="absolute inset-0 bg-white/70 rounded-full -z-10 shadow-2xs border border-nature-100/60"
+                                            />
+                                        )}
+
+                                        <motion.span 
+                                            animate={{ 
+                                                scale: isHovered ? 1.05 : 1,
+                                                y: isHovered ? -0.5 : 0 
+                                            }}
+                                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                            className="relative z-10 flex items-center gap-1.5 whitespace-nowrap"
+                                        >
+                                            <span>{item.label}</span>
+                                            {isActive && (
+                                                <motion.span 
+                                                    layoutId="activeNavDot"
+                                                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                                    className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.9)] inline-block" 
+                                                />
+                                            )}
+                                        </motion.span>
+                                    </Link>
+                                );
+                            })}
                         </div>
 
                         {/* User Actions Pill */}
