@@ -412,16 +412,16 @@ export const Header = () => {
                                             isScrolled ? 'px-3.5 py-1 text-xs' : 'px-4 py-1.5 text-sm'
                                         } ${
                                             isActive 
-                                                ? 'text-nature-950 font-bold' 
-                                                : 'text-nature-800/80 hover:text-nature-950'
+                                                ? 'text-white font-bold' 
+                                                : 'text-nature-900/80 hover:text-emerald-800'
                                         }`}
                                     >
-                                        {/* Active Pill (Floating white card with subtle glow and shadow) */}
+                                        {/* Active Pill (Vibrant Emerald Gradient with soft glow) */}
                                         {isActive && (
                                             <motion.div
                                                 layoutId="activeNavPill"
                                                 transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                                                className="absolute inset-0 bg-white rounded-full shadow-[0_2px_8px_rgba(20,83,45,0.12)] border border-nature-200/60 -z-10"
+                                                className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-nature-600 to-emerald-700 rounded-full shadow-[0_3px_12px_rgba(22,163,74,0.35)] border border-emerald-500/40 -z-10"
                                             />
                                         )}
 
@@ -430,7 +430,7 @@ export const Header = () => {
                                             <motion.div
                                                 layoutId="hoverNavPill"
                                                 transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                                                className="absolute inset-0 bg-white/70 rounded-full -z-10 shadow-2xs border border-nature-100/60"
+                                                className="absolute inset-0 bg-nature-200/50 rounded-full -z-10 shadow-2xs border border-nature-300/30"
                                             />
                                         )}
 
@@ -447,7 +447,7 @@ export const Header = () => {
                                                 <motion.span 
                                                     layoutId="activeNavDot"
                                                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                                    className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.9)] inline-block" 
+                                                    className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.95)] inline-block" 
                                                 />
                                             )}
                                         </motion.span>
