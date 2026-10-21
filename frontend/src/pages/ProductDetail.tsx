@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { 
     ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, 
-    Leaf, Info, Check, Share2, CornerDownRight, Globe, Ruler, Award, ShieldCheck, Barcode
+    Leaf, Info, Check, Share2, CornerDownRight, Globe, Ruler, Award, ShieldCheck
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
@@ -146,7 +146,7 @@ export const ProductDetail = () => {
             
             {/* Sticky Navigation Bar - Flush against main header */}
             <div className="sticky top-[56px] sm:top-[60px] md:top-[64px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs transition-all">
-                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
+                <div className="max-w-[1650px] mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
                         className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-700 hover:text-emerald-700 bg-gray-100 hover:bg-emerald-50 px-3.5 py-1.5 rounded-xl transition-all border border-gray-200/70"
@@ -173,131 +173,257 @@ export const ProductDetail = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div className="max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
 
                 {/* Main Product Showcase Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
 
-                    {/* Left Column: Image Showcase & Value Badges (5 cols on lg) */}
+                    {/* Left Column: Image Showcase with Organic Aura (Sticky on Desktop) */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="lg:col-span-6 space-y-6"
+                        className="lg:col-span-6 lg:sticky lg:top-28 self-start"
                     >
-                        <div className="relative aspect-[4/3] sm:aspect-square rounded-3xl overflow-hidden shadow-xl bg-white border border-gray-150 group">
-                            {product.imageUrl ? (
-                                <img
-                                    src={sanitizeImageUrl(product.imageUrl)}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl bg-gradient-to-br from-emerald-50 to-nature-100">
-                                    <span>{product.name[0]}</span>
-                                </div>
-                            )}
+                        <div className="relative group">
+                            {/* Organic Ambient Glow Aura behind image */}
+                            <div className="absolute -inset-3 sm:-inset-6 bg-gradient-to-tr from-emerald-500/25 via-amber-400/20 to-emerald-400/25 rounded-[3rem] blur-3xl -z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                            {/* Gradient Overlay for Top Badges */}
-                            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
-
-                            {/* Badges Overlay */}
-                            <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 pointer-events-none">
-                                <div className="flex flex-wrap gap-2">
-                                    {product.unitType === 'KG' && (
-                                        <span className="bg-white/95 backdrop-blur-md text-emerald-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-emerald-100">
-                                            <Scale size={13} className="text-emerald-600" /> PESO VARIABILE AL KG
-                                        </span>
-                                    )}
-                                    {product.unitType === 'PZ' && (
-                                        <span className="bg-white/95 backdrop-blur-md text-nature-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-nature-100">
-                                            <ShoppingBasket size={13} className="text-fruit-600" /> VENDITA A PEZZI
-                                        </span>
-                                    )}
-                                </div>
-
-                                {product.isAvailable ? (
-                                    <span className="bg-emerald-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1">
-                                        <Check size={12} strokeWidth={3} /> Disponibile
-                                    </span>
+                            {/* Image Frame - Borderless with ambient shadow and floating feel */}
+                            <div className="relative aspect-[4/3] sm:aspect-square rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-15px_rgba(20,83,45,0.22)] bg-gradient-to-b from-white/90 to-nature-50/50">
+                                {product.imageUrl ? (
+                                    <img
+                                        src={sanitizeImageUrl(product.imageUrl)}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                    />
                                 ) : (
-                                    <span className="bg-red-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-md uppercase tracking-wider">
-                                        Esaurito
-                                    </span>
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl bg-gradient-to-br from-emerald-50 to-nature-100">
+                                        <span>{product.name[0]}</span>
+                                    </div>
                                 )}
-                            </div>
 
-                            <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-white/40 shadow-lg flex items-center justify-between text-xs font-bold text-nature-900">
-                                <span className="flex items-center gap-1.5">
-                                    <Leaf size={15} className="text-emerald-600" /> Filiera Corta Garantita
-                                </span>
-                                <span className="text-gray-500 font-medium">Fresco di Giornata</span>
+                                {/* Smooth Vignette Overlay to blend seamlessly with floating glass pills */}
+                                <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/40 via-black/10 to-transparent pointer-events-none" />
+                                <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/30 via-transparent to-transparent pointer-events-none" />
+
+                                {/* Badges Overlay - Floating Glass Pills */}
+                                <div className="absolute top-4 sm:top-5 left-4 sm:left-5 right-4 sm:right-5 flex items-center justify-between gap-2 pointer-events-none">
+                                    <div className="flex flex-wrap gap-2">
+                                        {product.unitType === 'KG' && (
+                                            <span className="bg-white/90 backdrop-blur-md text-emerald-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 border border-white/60">
+                                                <Scale size={13} className="text-emerald-600" /> PESO VARIABILE AL KG
+                                            </span>
+                                        )}
+                                        {product.unitType === 'PZ' && (
+                                            <span className="bg-white/90 backdrop-blur-md text-nature-950 text-xs font-black px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 border border-white/60">
+                                                <ShoppingBasket size={13} className="text-fruit-600" /> VENDITA A PEZZI
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {product.isAvailable ? (
+                                        <span className="bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-black px-3 py-1 rounded-full shadow-sm uppercase tracking-wider flex items-center gap-1 border border-white/20">
+                                            <Check size={12} strokeWidth={3} /> Disponibile
+                                        </span>
+                                    ) : (
+                                        <span className="bg-red-600/90 backdrop-blur-md text-white text-[11px] font-black px-3 py-1 rounded-full shadow-sm uppercase tracking-wider border border-white/20">
+                                            Esaurito
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Bottom Floating Glass Pill */}
+                                <div className="absolute bottom-4 sm:bottom-5 left-4 sm:left-5 right-4 sm:right-5 bg-white/90 backdrop-blur-md py-2.5 px-4 rounded-2xl border border-white/60 shadow-md flex items-center justify-between text-xs font-bold text-nature-950">
+                                    <span className="flex items-center gap-1.5">
+                                        <Leaf size={15} className="text-emerald-600" /> Filiera Corta Garantita
+                                    </span>
+                                    <span className="text-emerald-700 font-extrabold bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-100/60">
+                                        Fresco di Giornata
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Right Column: Information & Purchase Box (7 cols on lg) */}
+                    {/* Right Column: Hero Buy Box & Full Details */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="lg:col-span-6 flex flex-col h-full"
+                        className="lg:col-span-6 flex flex-col space-y-5"
                     >
-                        {/* Subtitle / Category & Commercial Category Pills */}
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span 
-                                className="px-3 py-1 font-extrabold rounded-full text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-2xs border"
-                                style={product.category ? {
-                                    backgroundColor: `${product.category.color}18`,
-                                    color: product.category.color,
-                                    borderColor: `${product.category.color}35`
-                                } : {
-                                    backgroundColor: '#ecfdf5',
-                                    color: '#065f46',
-                                    borderColor: '#a7f3d0'
-                                }}
-                            >
-                                <Leaf size={11} />
-                                {product.category?.name || 'Ortofrutta di Stagione'}
-                            </span>
-
-                            {product.commercialCategory && (
-                                <span className="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 font-extrabold rounded-full text-xs uppercase tracking-wider flex items-center gap-1 shadow-2xs">
-                                    <Award size={12} className="text-amber-600" />
-                                    Categoria: {product.commercialCategory}
+                        {/* Top Meta: Category, Commercial Category, Article Code */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                                <span 
+                                    className="px-3 py-1 font-extrabold rounded-full text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-2xs border"
+                                    style={product.category ? {
+                                        backgroundColor: `${product.category.color}18`,
+                                        color: product.category.color,
+                                        borderColor: `${product.category.color}35`
+                                    } : {
+                                        backgroundColor: '#ecfdf5',
+                                        color: '#065f46',
+                                        borderColor: '#a7f3d0'
+                                    }}
+                                >
+                                    <Leaf size={11} />
+                                    {product.category?.name || 'Ortofrutta di Stagione'}
                                 </span>
-                            )}
-                        </div>
 
-                        {/* Title */}
-                        <h1 className="font-script text-4xl sm:text-6xl text-nature-950 mb-3 leading-tight">
-                            {product.name}
-                        </h1>
+                                {product.commercialCategory && (
+                                    <span className="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 font-extrabold rounded-full text-xs uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                                        <Award size={12} className="text-amber-600" />
+                                        Categoria: {product.commercialCategory}
+                                    </span>
+                                )}
 
-                        {/* Price Card Container */}
-                        <div className="bg-gradient-to-r from-emerald-900 via-nature-900 to-emerald-950 text-white p-5 rounded-3xl shadow-xl mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-emerald-800/40">
-                            <div>
-                                <span className="text-xs font-bold text-emerald-300 uppercase tracking-widest block mb-0.5">Prezzo di Listino</span>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                                        €{formattedPrice}
-                                    </span>
-                                    <span className="text-sm font-bold text-emerald-200">
-                                        / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
-                                    </span>
-                                </div>
+                                <span className="px-2.5 py-1 bg-gray-100 text-gray-500 font-mono text-[11px] font-extrabold rounded-full border border-gray-200/80 shadow-2xs">
+                                    Art. #{product.id}
+                                </span>
                             </div>
 
-                            {product.isVariableWeight && selectedUnit === 'PZ' && product.stepAmount > 0 && (
-                                <div className="bg-white/15 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/20 text-xs font-bold text-emerald-100 flex items-center gap-2">
-                                    <Info size={16} className="text-amber-300 shrink-0" />
-                                    <span>Pezzo da circa <strong className="text-white">{product.stepAmount} kg</strong></span>
+                            {/* Title */}
+                            <h1 className="text-3xl sm:text-5xl font-black text-nature-950 tracking-tight leading-tight">
+                                {product.name}
+                            </h1>
+                        </div>
+
+                        {/* HERO BUY BOX (ABOVE THE FOLD - INSTANT PURCHASE) */}
+                        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-emerald-200/80 shadow-[0_4px_25px_-5px_rgba(20,83,45,0.08)] space-y-4">
+                            {/* Price & info header */}
+                            <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
+                                <div>
+                                    <span className="text-[11px] font-black text-emerald-700 uppercase tracking-widest block mb-0.5">
+                                        Prezzo di Listino
+                                    </span>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl sm:text-4xl font-black text-nature-950 tracking-tight">
+                                            €{formattedPrice}
+                                        </span>
+                                        <span className="text-sm font-bold text-gray-500">
+                                            / {product.isVariableWeight ? 'kg' : (product.unitType === 'BOX' ? 'conf.' : product.unitType.toLowerCase())}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {product.isVariableWeight && selectedUnit === 'PZ' && product.stepAmount > 0 && (
+                                    <div className="bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/60 text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                                        <Info size={14} className="text-emerald-600 shrink-0" />
+                                        <span>~{product.stepAmount} kg a pezzo</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Unit Selector (Kg / Pezzi) if applicable */}
+                            {product.unitType === 'KG' && product.isVariableWeight && product.stepAmount > 0 && (
+                                <div>
+                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
+                                        Modalità d'Acquisto
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1 rounded-2xl border border-gray-200/70 text-xs font-bold">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (cartItem) updateItemUnit(product.id, 'KG', 1);
+                                                else setSelectedUnit('KG');
+                                            }}
+                                            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                                selectedUnit === 'KG' ? 'bg-white text-emerald-800 shadow-xs font-black' : 'text-gray-500 hover:text-gray-900'
+                                            }`}
+                                        >
+                                            <Scale size={14} />
+                                            <span>Al Chilo (Kg)</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (cartItem) updateItemUnit(product.id, 'PZ', 1);
+                                                else setSelectedUnit('PZ');
+                                            }}
+                                            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                                selectedUnit === 'PZ' ? 'bg-white text-emerald-800 shadow-xs font-black' : 'text-gray-500 hover:text-gray-900'
+                                            }`}
+                                        >
+                                            <ShoppingBasket size={14} />
+                                            <span>A Pezzi</span>
+                                        </button>
+                                    </div>
                                 </div>
                             )}
+
+                            {/* Primary Action Button / Stepper */}
+                            <div className="space-y-3">
+                                {selectedUnit === 'KG' ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedProductForWeight(product)}
+                                        className="w-full bg-gradient-to-r from-emerald-700 via-nature-700 to-emerald-800 hover:from-emerald-800 hover:to-nature-800 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-700/25 transition-all hover:scale-[1.01] active:scale-98 flex items-center justify-between group cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <Scale size={22} className="group-hover:rotate-12 transition-transform" />
+                                            <span>{currentQty > 0 ? `${currentQty} kg nel Carrello` : 'Scegli il Peso & Aggiungi'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold backdrop-blur-xs">
+                                            <span>€{formattedEstimatedTotal} stimati</span>
+                                            <CornerDownRight size={14} />
+                                        </div>
+                                    </button>
+                                ) : (
+                                    currentQty > 0 ? (
+                                        <div className="flex items-center justify-between bg-emerald-50 rounded-2xl p-2 border border-emerald-200/80 shadow-inner">
+                                            <button
+                                                type="button"
+                                                onClick={() => updateQuantity(product.id, Math.max(0, currentQty - 1))}
+                                                className="w-12 h-12 bg-white rounded-xl shadow-xs text-emerald-900 flex items-center justify-center hover:bg-emerald-100 transition-all active:scale-90 cursor-pointer"
+                                            >
+                                                <Minus strokeWidth={3} size={20} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedProductForUnit(product)}
+                                                className="flex flex-col items-center justify-center py-1 px-4 cursor-pointer"
+                                            >
+                                                <span className="font-black text-2xl text-emerald-950 leading-none">{currentQty}</span>
+                                                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">pezzi nel carrello</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => updateQuantity(product.id, currentQty + 1)}
+                                                className="w-12 h-12 bg-emerald-700 rounded-xl shadow-xs text-white flex items-center justify-center hover:bg-emerald-800 transition-all active:scale-90 cursor-pointer"
+                                            >
+                                                <Plus strokeWidth={3} size={20} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
+                                            className="w-full bg-gradient-to-r from-emerald-700 via-nature-700 to-emerald-800 hover:from-emerald-800 hover:to-nature-800 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-700/25 transition-all hover:scale-[1.01] active:scale-98 flex items-center justify-between group cursor-pointer"
+                                        >
+                                            <div className="flex items-center gap-2.5">
+                                                <ShoppingBasket size={22} className="group-hover:scale-110 transition-transform" />
+                                                <span>Aggiungi al Carrello</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold backdrop-blur-xs">
+                                                <span>€{formattedPrice}</span>
+                                                <CornerDownRight size={14} />
+                                            </div>
+                                        </button>
+                                    )
+                                )}
+
+                                {/* Weighing Reassurance Notice */}
+                                <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200/70 flex items-center gap-2.5 text-xs text-gray-500 font-medium">
+                                    <Info size={15} className="text-emerald-600 shrink-0" />
+                                    <span>Il peso esatto e l'importo finale vengono verificati alla pesatura prima della spedizione.</span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Product Description */}
-                        <div className="mb-4 bg-white p-5 rounded-3xl border border-gray-150 shadow-2xs">
+                        <div className="bg-white p-5 rounded-3xl border border-gray-150 shadow-2xs">
                             <h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2">
                                 <Leaf size={16} className="text-emerald-600" /> Descrizione del Prodotto
                             </h3>
@@ -306,29 +432,9 @@ export const ProductDetail = () => {
                             </p>
                         </div>
 
-                        {/* Box Dedicato Codice Articolo */}
-                        <div className="mb-6 bg-white p-3.5 px-4.5 rounded-2xl border border-gray-150 shadow-2xs flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shadow-2xs">
-                                    <Barcode size={20} />
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block leading-tight">
-                                        Codice Articolo
-                                    </span>
-                                    <span className="text-sm font-extrabold text-nature-950 font-mono tracking-wider">
-                                        #{product.id}
-                                    </span>
-                                </div>
-                            </div>
-                            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50/80 px-2.5 py-1 rounded-xl border border-emerald-200/60">
-                                Rif. Univoco
-                            </span>
-                        </div>
-
                         {/* Scheda Tracciabilità & Caratteristiche Ortofrutta */}
                         {(product.origin || product.caliber || product.commercialCategory || product.category) && (
-                            <div className="mb-6 bg-gradient-to-br from-emerald-50/70 via-white to-nature-50/50 p-4 sm:p-5 rounded-3xl border border-emerald-150 shadow-2xs space-y-3">
+                            <div className="bg-gradient-to-br from-emerald-50/70 via-white to-nature-50/50 p-4 sm:p-5 rounded-3xl border border-emerald-150 shadow-2xs space-y-3">
                                 <div className="flex items-center justify-between border-b border-emerald-100/80 pb-2">
                                     <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
                                         <ShieldCheck size={15} className="text-emerald-600" /> Scheda & Tracciabilità Ortofrutta
@@ -374,7 +480,7 @@ export const ProductDetail = () => {
 
                         {/* Expert Seasonal Advice Box */}
                         {product.seasonalTips && (
-                            <div className="bg-gradient-to-br from-amber-50 to-orange-50/60 p-5 rounded-3xl border border-amber-200/80 mb-6 relative overflow-hidden shadow-2xs">
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50/60 p-5 rounded-3xl border border-amber-200/80 relative overflow-hidden shadow-2xs">
                                 <div className="flex items-start gap-3.5 relative z-10">
                                     <div className="bg-amber-500 text-white p-2.5 rounded-2xl shadow-md shrink-0">
                                         <ChefHat size={22} />
@@ -390,117 +496,6 @@ export const ProductDetail = () => {
                                 </div>
                             </div>
                         )}
-
-                        {/* Interactive Unit Switcher & Cart Action Box */}
-                        <div className="mt-auto bg-white p-5 sm:p-6 rounded-3xl border border-emerald-200/80 shadow-xl space-y-4">
-                            
-                            {/* Dual Unit Selector Switcher */}
-                            {product.unitType === 'KG' && product.isVariableWeight && product.stepAmount > 0 && (
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                        Modalità d'Acquisto
-                                    </label>
-                                    <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200/80 text-xs font-bold">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (cartItem) {
-                                                    updateItemUnit(product.id, 'KG', 1);
-                                                } else {
-                                                    setSelectedUnit('KG');
-                                                }
-                                            }}
-                                            className={`flex-1 py-2.5 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${selectedUnit === 'KG' ? 'bg-emerald-700 text-white shadow-md font-extrabold' : 'text-gray-600 hover:text-gray-900'}`}
-                                        >
-                                            <Scale size={15} />
-                                            <span>Vendita al Kg</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (cartItem) {
-                                                    updateItemUnit(product.id, 'PZ', 1);
-                                                } else {
-                                                    setSelectedUnit('PZ');
-                                                }
-                                            }}
-                                            className={`flex-1 py-2.5 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${selectedUnit === 'PZ' ? 'bg-emerald-700 text-white shadow-md font-extrabold' : 'text-gray-600 hover:text-gray-900'}`}
-                                        >
-                                            <ShoppingBasket size={15} />
-                                            <span>Vendita a Pezzi</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Stepper / Action Controls */}
-                            <div className="space-y-3">
-                                {selectedUnit === 'KG' ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedProductForWeight(product)}
-                                        className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-between group"
-                                    >
-                                        <div className="flex items-center gap-2.5">
-                                            <Scale size={22} className="group-hover:rotate-12 transition-transform" />
-                                            <span>{currentQty > 0 ? `${currentQty} kg nel Carrello` : 'Scegli Peso & Aggiungi'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">
-                                            <span>€{formattedEstimatedTotal} stimati</span>
-                                            <CornerDownRight size={14} />
-                                        </div>
-                                    </button>
-                                ) : (
-                                    currentQty > 0 ? (
-                                        <div className="flex items-center justify-between bg-emerald-50 rounded-2xl p-2 border border-emerald-200 shadow-inner">
-                                            <button
-                                                type="button"
-                                                onClick={() => updateQuantity(product.id, Math.max(0, currentQty - 1))}
-                                                className="w-12 h-12 bg-white rounded-xl shadow-md text-emerald-900 flex items-center justify-center hover:bg-emerald-100 transition-all active:scale-90"
-                                            >
-                                                <Minus strokeWidth={3} size={20} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedProductForUnit(product)}
-                                                className="flex flex-col items-center justify-center py-1 px-4 cursor-pointer"
-                                            >
-                                                <span className="font-black text-2xl text-emerald-950 leading-none">{currentQty}</span>
-                                                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">pezzi nel carrello</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => updateQuantity(product.id, currentQty + 1)}
-                                                className="w-12 h-12 bg-emerald-800 rounded-xl shadow-md text-white flex items-center justify-center hover:bg-emerald-900 transition-all active:scale-90"
-                                            >
-                                                <Plus strokeWidth={3} size={20} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => addItem({ ...product, unitType: selectedUnit }, 1)}
-                                            className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-4 px-6 rounded-2xl font-black text-base sm:text-lg shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-between group"
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <ShoppingBasket size={22} className="group-hover:scale-110 transition-transform" />
-                                                <span>Aggiungi al Carrello</span>
-                                            </div>
-                                            <span className="text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">
-                                                €{formattedPrice}
-                                            </span>
-                                        </button>
-                                    )
-                                )}
-                            </div>
-
-                            {/* Weighing Reassurance Notice */}
-                            <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200/80 flex items-center gap-2.5 text-xs text-gray-600 font-medium">
-                                <Info size={16} className="text-emerald-600 shrink-0" />
-                                <span>Il peso esatto e l'importo finale vengono verificati alla pesatura prima della spedizione.</span>
-                            </div>
-                        </div>
-
                     </motion.div>
                 </div>
 
