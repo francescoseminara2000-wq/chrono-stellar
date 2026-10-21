@@ -229,7 +229,7 @@ export const OrderManager = () => {
                     parent.style.overflow = 'auto';
                     parent.style.height = 'auto';
                     parent.style.maxHeight = 'none';
-                    parent.style.paddingBottom = '2.5rem';
+                    parent.style.paddingBottom = isMobile ? '80px' : '0px';
                 }
             };
 
@@ -1411,7 +1411,7 @@ export const OrderManager = () => {
                 );
 
                 return (
-                    <div className="w-full space-y-6 pb-20 animate-in fade-in duration-200">
+                    <div className="w-full space-y-6 pb-6 animate-in fade-in duration-200">
                         {/* Main White Order Card */}
                         <div className="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-7 space-y-6">
                             {/* Header: Back Button + Order ID + Status + Payment Method + Total Pill */}
@@ -1518,13 +1518,13 @@ export const OrderManager = () => {
                             </div>
 
                             {/* MOBILE CONTENT (< lg): Renders selected tab content */}
-                            <div className="lg:hidden space-y-4">
+                            <div className="lg:hidden space-y-4 pb-12">
                                 {activeTab === 'items' && renderProductsCard()}
                                 {activeTab === 'customer' && renderCustomerSidebar()}
                             </div>
 
                             {/* DESKTOP 2-COLUMN VIEW (lg:): Products on Left, Sidebar on Right */}
-                            <div className="hidden lg:flex flex-row items-start gap-6">
+                            <div className="hidden lg:flex flex-row items-start gap-6 pb-12">
                                 {/* Left Column: Products Card */}
                                 <div className="flex-1 min-w-0">
                                     {renderProductsCard()}
@@ -1536,8 +1536,8 @@ export const OrderManager = () => {
                                 </div>
                             </div>
 
-                            {/* Action Footer (Docked at the very bottom of the card - never overlapping products) */}
-                            <div className="bg-gray-50/90 border-t border-gray-200/90 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 lg:-mx-7 lg:-mb-7 p-4 sm:p-5 rounded-b-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6">
+                            {/* Action Footer (Sticky at bottom-0, docked cleanly with no gap) */}
+                            <div className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 lg:-mx-7 lg:-mb-7 p-4 sm:p-5 rounded-b-3xl shadow-[0_-8px_25px_rgba(0,0,0,0.08)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
                                 <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
                                     <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
                                     <span className="text-xl font-black text-white leading-none mt-1">
