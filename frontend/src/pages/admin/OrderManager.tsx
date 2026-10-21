@@ -203,7 +203,7 @@ export const OrderManager = () => {
         }
     }, [searchParams, orders]);
 
-    // Suppress parent layout scroll for this page and manage exact height
+    // Suppress parent layout scroll only for list view; unlock natural scrolling when order is selected
     useEffect(() => {
         const parent = document.querySelector('main');
         if (parent) {
@@ -214,15 +214,22 @@ export const OrderManager = () => {
 
             const handleResize = () => {
                 const isMobile = window.innerWidth < 1024;
-                parent.style.overflow = 'hidden';
-                if (isMobile) {
-                    parent.style.height = 'calc(100vh - 72px)';
-                    parent.style.maxHeight = 'calc(100vh - 72px)';
-                    parent.style.paddingBottom = '80px'; // Space for mobile floating nav
+                if (!selectedOrder) {
+                    parent.style.overflow = 'hidden';
+                    if (isMobile) {
+                        parent.style.height = 'calc(100vh - 72px)';
+                        parent.style.maxHeight = 'calc(100vh - 72px)';
+                        parent.style.paddingBottom = '80px'; // Space for mobile floating nav
+                    } else {
+                        parent.style.height = '100vh';
+                        parent.style.maxHeight = '100vh';
+                        parent.style.paddingBottom = '2rem'; // Match padding of lg:p-8
+                    }
                 } else {
-                    parent.style.height = '100vh';
-                    parent.style.maxHeight = '100vh';
-                    parent.style.paddingBottom = '2rem'; // Match padding of lg:p-8
+                    parent.style.overflow = 'auto';
+                    parent.style.height = 'auto';
+                    parent.style.maxHeight = 'none';
+                    parent.style.paddingBottom = '2.5rem';
                 }
             };
 
@@ -237,7 +244,7 @@ export const OrderManager = () => {
                 window.removeEventListener('resize', handleResize);
             };
         }
-    }, []);
+    }, [selectedOrder]);
 
     const prevOrdersRef = useRef<Order[]>([]);
 
@@ -1407,9 +1414,9 @@ export const OrderManager = () => {
                     <div className="w-full space-y-6 pb-20 animate-in fade-in duration-200">
                         {/* Main White Order Card */}
                         <div className="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-7 space-y-6">
-                            {/* Header: Back Button + Order ID + Status + Payment Method */}
+                            {/* Header: Back Button + Order ID + Status + Payment Method + Total Pill */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     <button
                                         type="button"
                                         onClick={() => setSelectedOrder(null)}
@@ -1432,7 +1439,13 @@ export const OrderManager = () => {
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    <span className="text-xs font-black text-gray-400 uppercase tracking-wider">Stato Attuale:</span>
+                                    <div className="bg-[#052e16] text-white px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-2 border border-emerald-900">
+                                        <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider">Totale</span>
+                                        <span className="text-sm font-black text-white">
+                                            € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs font-black text-gray-400 uppercase tracking-wider hidden sm:inline">Stato:</span>
                                     <StatusBadge status={selectedOrder.status} />
                                 </div>
                             </div>
@@ -1522,93 +1535,93 @@ export const OrderManager = () => {
                                     {renderCustomerSidebar()}
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Floating Action Bar (Sticky at bottom-4) */}
-                        <div className="sticky bottom-4 z-40 bg-white/95 backdrop-blur-md border border-gray-200/90 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
-                                <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
-                                <span className="text-xl font-black text-white leading-none mt-1">
-                                    € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
-                                </span>
-                            </div>
+                            {/* Action Footer (Docked at the very bottom of the card - never overlapping products) */}
+                            <div className="bg-gray-50/90 border-t border-gray-200/90 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 lg:-mx-7 lg:-mb-7 p-4 sm:p-5 rounded-b-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6">
+                                <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
+                                    <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
+                                    <span className="text-xl font-black text-white leading-none mt-1">
+                                        € {((selectedOrder.finalTotal || calculateCurrentTotal()) / 100).toFixed(2)}
+                                    </span>
+                                </div>
 
-                            <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
-                                {/* WhatsApp Button */}
-                                {selectedOrder.customerPhone && (
-                                    <a
-                                        href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                                        title="Apri Chat WhatsApp col Cliente"
-                                    >
-                                        <MessageCircle size={18} /> WhatsApp
-                                    </a>
-                                )}
-
-                                {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
-                                {selectedOrder.status === 'PENDING' && (
-                                    selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
-                                        <button
-                                            onClick={handleFulfill}
-                                            className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer animate-in zoom-in-95"
+                                <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
+                                    {/* WhatsApp Button */}
+                                    {selectedOrder.customerPhone && (
+                                        <a
+                                            href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="px-3.5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                                            title="Apri Chat WhatsApp col Cliente"
                                         >
-                                            <Scale size={18} /> Conferma Pesatura Generale & Notifica
+                                            <MessageCircle size={18} /> WhatsApp
+                                        </a>
+                                    )}
+
+                                    {/* Action button in PENDING status: Unlocks ONLY when all items are weighed */}
+                                    {selectedOrder.status === 'PENDING' && (
+                                        selectedOrder.items.every(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)) ? (
+                                            <button
+                                                onClick={handleFulfill}
+                                                className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer animate-in zoom-in-95"
+                                            >
+                                                <Scale size={18} /> Conferma Pesatura Generale & Notifica
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
+                                                }}
+                                                className="px-3.5 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+                                                title="Clicca per aprire la pesatura del prossimo articolo"
+                                            >
+                                                <span className="relative flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                                </span>
+                                                Pesa prodotti rimanenti ({unweighedItems.length})
+                                            </button>
+                                        )
+                                    )}
+
+                                    {selectedOrder.status === 'WEIGHING_COMPLETED' && (
+                                        (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
+                                            <div className="px-4 py-3 bg-amber-50 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90" title="Spedizione bloccata fino all'approvazione del cliente dal link WhatsApp/Email">
+                                                <span className="relative flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                                </span>
+                                                🔒 Spedisci Bloccato (In Attesa Approvazione Cliente)
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                                <Truck size={18} /> Spedisci
+                                            </button>
+                                        )
+                                    )}
+
+                                    {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
+                                        <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
+                                            <CheckCircle size={18} /> Concludi
                                         </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
-                                            }}
-                                            className="px-3.5 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
-                                            title="Clicca per aprire la pesatura del prossimo articolo"
-                                        >
-                                            <span className="relative flex h-2 w-2">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                            </span>
-                                            Pesa prodotti rimanenti ({unweighedItems.length})
+                                    )}
+
+                                    {/* Annulla Ordine Button */}
+                                    {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
+                                        <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                            <Ban size={16} /> Annulla
                                         </button>
-                                    )
-                                )}
+                                    )}
 
-                                {selectedOrder.status === 'WEIGHING_COMPLETED' && (
-                                    (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' ? (
-                                        <div className="px-4 py-3 bg-amber-50 text-amber-950 border border-amber-300 rounded-2xl font-black text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90" title="Spedizione bloccata fino all'approvazione del cliente dal link WhatsApp/Email">
-                                            <span className="relative flex h-2 w-2">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                            </span>
-                                            🔒 Spedisci Bloccato (In Attesa Approvazione Cliente)
-                                        </div>
-                                    ) : (
-                                        <button onClick={() => handleUpdateStatus('OUT_FOR_DELIVERY')} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                            <Truck size={18} /> Spedisci
+                                    {/* Elimina Ordine Button */}
+                                    {selectedOrder.status === 'CANCELLED' && (
+                                        <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                            <Trash2 size={18} /> Elimina Ordine
                                         </button>
-                                    )
-                                )}
-
-                                {selectedOrder.status === 'OUT_FOR_DELIVERY' && (
-                                    <button onClick={() => handleUpdateStatus('DELIVERED')} className="px-4 py-3 bg-emerald-800 hover:bg-emerald-900 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial cursor-pointer">
-                                        <CheckCircle size={18} /> Concludi
-                                    </button>
-                                )}
-
-                                {/* Annulla Ordine Button */}
-                                {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
-                                    <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                                        <Ban size={16} /> Annulla
-                                    </button>
-                                )}
-
-                                {/* Elimina Ordine Button */}
-                                {selectedOrder.status === 'CANCELLED' && (
-                                    <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                                        <Trash2 size={18} /> Elimina Ordine
-                                    </button>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
