@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft } from 'lucide-react';
+import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, Phone, Mail, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -1062,41 +1062,378 @@ export const OrderManager = () => {
                 </div>
 
             {/* Dedicated Detail View: Full width on desktop and original drawer on smartphone */}
-            {selectedOrder && (
-                <div className="h-full min-h-0 flex fixed inset-0 z-[60] lg:relative lg:inset-auto lg:z-auto bg-white flex-col overflow-hidden w-full">
-                    <div className="bg-white lg:rounded-2xl lg:shadow-xl lg:border lg:border-nature-100 flex flex-col overflow-hidden h-full relative">
-                        {/* Mobile Back Header (100% original) */}
-                        <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-950 text-white shrink-0 shadow-lg">
-                            <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 px-3 py-2 bg-nature-800/90 rounded-2xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-black shadow-inner">
-                                <X size={20} /> Chiudi
-                            </button>
-                            <div className="flex items-center gap-2.5">
-                                <span className="font-black text-base tracking-wide">Ordine #{selectedOrder.id}</span>
-                                <StatusBadge status={selectedOrder.status} />
+            {/* Dedicated Detail View: 2-Column Desktop Layout (Option A) & Responsive Mobile Tabs */}
+            {selectedOrder && (() => {
+                const weighedCount = selectedOrder.items.filter(item => weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined)).length;
+                const totalItemsCount = selectedOrder.items.length;
+                const weighingPercentage = totalItemsCount > 0 ? Math.round((weighedCount / totalItemsCount) * 100) : 0;
+                const unweighedItems = selectedOrder.items.filter(i => !weighedItemIds.includes(i.id) && i.quantityFulfilled === null);
+
+                {/* Sub-component: Products List Card */}
+                const renderProductsCard = () => (
+                    <div className="bg-white border border-gray-200/90 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
+                        {/* Header with Title + Progress */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm sm:text-base font-black text-gray-900 uppercase tracking-wider">
+                                        Elenco Prodotti Ordinati ({totalItemsCount})
+                                    </h3>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-black ${
+                                        weighedCount === totalItemsCount
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : 'bg-amber-100 text-amber-900'
+                                    }`}>
+                                        {weighedCount}/{totalItemsCount} Pesati
+                                    </span>
+                                </div>
+                                <p className="text-xs font-medium text-gray-400 mt-0.5">
+                                    Verifica, pesa e modifica i consuntivi articolo per articolo
+                                </p>
+                            </div>
+
+                            {/* Progress Bar & Quick Action */}
+                            <div className="flex items-center gap-3">
+                                <div className="w-32 sm:w-40">
+                                    <div className="flex justify-between text-[10px] font-bold text-gray-400 mb-1">
+                                        <span>Avanzamento</span>
+                                        <span>{weighingPercentage}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                        <div
+                                            className="bg-emerald-600 h-full rounded-full transition-all duration-300"
+                                            style={{ width: `${weighingPercentage}%` }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {selectedOrder.status === 'PENDING' && unweighedItems.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenSingleItemWeighing(unweighedItems[0])}
+                                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                                        title="Pesa subito il prossimo articolo"
+                                    >
+                                        <Scale size={13} />
+                                        <span>Pesa Prossimo</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
 
-                        {/* Main content wrapper - flex layout */}
-                        <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0 overflow-y-auto lg:overflow-visible relative z-30">
-                            {/* Desktop Header: Back Button + Order ID + Status + Payment Method */}
-                            <div className="hidden lg:flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
-                                <div className="flex items-center gap-3">
+                        {/* Product Rows List */}
+                        <div className="space-y-2.5">
+                            {selectedOrder.items.map(item => {
+                                const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+                                const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
+                                const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
+
+                                const isWeighed = weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined);
+                                const currentQty = typeof fulfillmentData[item.id] === 'number'
+                                    ? fulfillmentData[item.id]
+                                    : (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? Number(item.quantityFulfilled) : itemEstQtyKg);
+
+                                const currentUnitPrice = typeof fulfillmentPriceData[item.id] === 'number'
+                                    ? fulfillmentPriceData[item.id]
+                                    : ((item.priceAtPurchase || item.product.priceCents) / 100);
+
+                                const isPriceModified = currentUnitPrice !== (item.product.priceCents / 100);
+                                const itemActualCost = currentQty * currentUnitPrice;
+
+                                const qtyDiff = Number((currentQty - itemEstQtyKg).toFixed(2));
+                                const priceDiff = Number((itemActualCost - itemEstCost).toFixed(2));
+
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className={`group flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-2xl border transition-all duration-200 gap-3 shadow-2xs ${
+                                            isWeighed
+                                                ? 'bg-emerald-50/40 border-emerald-250 hover:border-emerald-300'
+                                                : 'bg-white border-gray-200/90 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        {/* Left part: compact thumbnail + details */}
+                                        <div className="flex items-center gap-3.5 min-w-0 flex-1 w-full sm:w-auto">
+                                            {/* Compact Thumbnail with status badge */}
+                                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-50/60 border border-emerald-100 shrink-0 overflow-hidden relative flex items-center justify-center">
+                                                {item.product.imageUrl ? (
+                                                    <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                ) : (
+                                                    <span className="text-2xl select-none">🍏</span>
+                                                )}
+                                                <span
+                                                    className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-xs ${
+                                                        isWeighed ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'
+                                                    }`}
+                                                    title={isWeighed ? 'Prodotto Pesato' : 'Da Pesare'}
+                                                >
+                                                    {isWeighed ? '✓' : '⚖'}
+                                                </span>
+                                            </div>
+
+                                            {/* Details */}
+                                            <div className="min-w-0 flex-1 space-y-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-mono text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md border border-gray-200">
+                                                        #{item.product.id}
+                                                    </span>
+                                                    <h4 className="font-black text-sm sm:text-base text-gray-900 truncate" title={item.product.name}>
+                                                        {item.product.name}
+                                                    </h4>
+                                                    {item.product.category?.name && (
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+                                                            {item.product.category.name}
+                                                        </span>
+                                                    )}
+                                                    {item.product.origin && (
+                                                        <span className="text-[10px] font-medium text-gray-500">
+                                                            Origine: <strong className="text-gray-700">{item.product.origin}</strong>
+                                                        </span>
+                                                    )}
+                                                    {isPriceModified && (
+                                                        <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-900 text-[9px] font-black rounded-md border border-indigo-200 uppercase tracking-wider">
+                                                            Prezzo Modificato
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-xs text-gray-600 font-bold flex-wrap">
+                                                    <span className="bg-gray-100 px-2 py-0.5 rounded-lg text-gray-800 font-black text-[11px]">
+                                                        Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
+                                                    </span>
+                                                    <span className="text-gray-400 text-[11px] font-medium">
+                                                        (Base: € {(item.product.priceCents / 100).toFixed(2)}/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right part: metric card + action button */}
+                                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                                            {/* Consuntivo / Stima Box */}
+                                            <div className="text-right bg-white px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                                                <span className="text-[9px] font-black uppercase tracking-wider block text-gray-400">
+                                                    {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
+                                                </span>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    {isWeighed && qtyDiff !== 0 && (
+                                                        <span className="line-through text-red-400 font-bold text-xs" title={`Richiesto: ${itemEstQtyKg}`}>
+                                                            {itemEstQtyKg}
+                                                        </span>
+                                                    )}
+                                                    <span className="font-black text-xs sm:text-sm text-gray-900">
+                                                        {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
+                                                    </span>
+                                                    <span className={`font-black text-xs px-2 py-0.5 rounded-lg border ${
+                                                        isWeighed
+                                                            ? 'text-emerald-900 bg-emerald-50 border-emerald-200'
+                                                            : 'text-gray-700 bg-gray-50 border-gray-200'
+                                                    }`}>
+                                                        € {itemActualCost.toFixed(2)}
+                                                    </span>
+                                                    {isWeighed && priceDiff > 0 && <span className="text-[10px] font-black text-emerald-700">↑</span>}
+                                                    {isWeighed && priceDiff < 0 && <span className="text-[10px] font-black text-amber-800">↓</span>}
+                                                </div>
+                                            </div>
+
+                                            {/* Action Button (PENDING only) */}
+                                            {selectedOrder.status === 'PENDING' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenSingleItemWeighing(item)}
+                                                    className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 ${
+                                                        isWeighed
+                                                            ? 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
+                                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50 active:scale-95'
+                                                    }`}
+                                                >
+                                                    <Scale size={14} />
+                                                    <span>{isWeighed ? 'Modifica' : 'Pesa'}</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+
+                {/* Sub-component: Customer, Schedule & Notes Sidebar Panel */}
+                const renderCustomerSidebar = () => (
+                    <div className="space-y-4">
+                        {/* Customer Information Card */}
+                        <div className="bg-white rounded-3xl p-5 border border-emerald-150/80 shadow-xs space-y-3.5">
+                            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                <span className="text-xs font-black uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                                    <span>👤</span> Dati Cliente
+                                </span>
+                                {selectedOrder.customerPhone && (
+                                    <a
+                                        href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] rounded-xl flex items-center gap-1 shadow-2xs transition-all"
+                                        title="Chatta su WhatsApp"
+                                    >
+                                        <MessageCircle size={13} /> WhatsApp
+                                    </a>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <div>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Nome Cliente</span>
+                                    <p className="font-black text-base text-gray-900">{selectedOrder.customerName || selectedOrder.user?.name || 'Cliente'}</p>
+                                </div>
+
+                                {selectedOrder.customerPhone && (
+                                    <div>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Telefono</span>
+                                        <a href={`tel:${selectedOrder.customerPhone}`} className="text-xs font-black text-emerald-700 hover:underline flex items-center gap-1.5">
+                                            <Phone size={13} /> {selectedOrder.customerPhone}
+                                        </a>
+                                    </div>
+                                )}
+
+                                {(selectedOrder.customerEmail || selectedOrder.user?.email) && (
+                                    <div>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Email</span>
+                                        <a href={`mailto:${selectedOrder.customerEmail || selectedOrder.user?.email}`} className="text-xs font-bold text-gray-600 hover:underline flex items-center gap-1.5 truncate">
+                                            <Mail size={13} /> {selectedOrder.customerEmail || selectedOrder.user?.email}
+                                        </a>
+                                    </div>
+                                )}
+
+                                <div className="pt-2 border-t border-gray-100">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Destinazione</span>
+                                    <div className="flex items-start gap-1.5 mt-0.5">
+                                        <MapPin size={14} className="text-emerald-700 shrink-0 mt-0.5" />
+                                        <span className="text-xs font-black text-gray-800 leading-snug">
+                                            {selectedOrder.shippingAddress || (selectedOrder.deliveryMethod === 'PICKUP' ? 'Ritiro in Negozio' : 'Indirizzo non specificato')}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Scheduling & Slot Card */}
+                        <div className="bg-white rounded-3xl p-5 border border-blue-150/80 shadow-xs space-y-3.5">
+                            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                <span className="text-xs font-black uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+                                    <span>🗓️</span> Consegna / Ritiro
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setTempModalDate(editDate);
+                                        setTempModalTime(editTime);
+                                        setIsScheduleModalOpen(true);
+                                    }}
+                                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] rounded-xl shadow-2xs transition-all cursor-pointer"
+                                >
+                                    Pianifica
+                                </button>
+                            </div>
+
+                            <div className="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100">
+                                <span className="text-[10px] font-black text-blue-800/80 uppercase tracking-wider block">Fascia Oraria Pianificata</span>
+                                <span className="font-black text-sm text-blue-950 block mt-0.5">
+                                    {editDate ? `🗓️ ${editDate.split('-').reverse().join('/')} ${editTime ? `(${editTime})` : ''}` : 'Non Programmato'}
+                                </span>
+                            </div>
+
+                            <div className="text-[11px] text-gray-500 font-medium">
+                                Modalità: <strong className="text-gray-800">{selectedOrder.deliveryMethod === 'DELIVERY' ? '🚚 Consegna a Domicilio' : '🏪 Ritiro in Negozio'}</strong>
+                            </div>
+                        </div>
+
+                        {/* Internal Admin Notes Card */}
+                        <div className="bg-white rounded-3xl p-5 border border-amber-150/80 shadow-xs space-y-3">
+                            <span className="text-xs font-black uppercase tracking-wider text-amber-900 block">
+                                📝 Note Interne Admin
+                            </span>
+                            <textarea
+                                className="w-full p-3 bg-amber-50/40 border border-amber-200/90 rounded-2xl text-xs focus:ring-2 focus:ring-amber-400 outline-none resize-y min-h-[75px] text-gray-800 font-bold leading-relaxed"
+                                placeholder="Note ad uso esclusivo dello staff..."
+                                value={editNotes}
+                                onChange={(e) => setEditNotes(e.target.value)}
+                            />
+                            {selectedOrder && (editDate !== (selectedOrder.scheduledDate || '') || editTime !== (selectedOrder.scheduledTime || '') || editNotes !== (selectedOrder.adminNotes || '')) && (
+                                <div className="pt-2 flex items-center justify-between gap-2">
+                                    <span className="text-[10px] font-black text-amber-800">Modifiche non salvate</span>
                                     <button
                                         type="button"
-                                        onClick={() => setSelectedOrder(null)}
-                                        className="flex items-center gap-2 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-black text-xs rounded-xl border border-gray-200 transition-all cursor-pointer shadow-2xs hover:border-gray-300"
-                                        title="Torna all'elenco ordini"
+                                        onClick={handleSaveAllEdits}
+                                        disabled={isSavingEdits}
+                                        className="px-3 py-1.5 bg-nature-600 hover:bg-nature-700 text-white font-black text-xs rounded-xl shadow-2xs cursor-pointer transition-all disabled:opacity-50"
                                     >
-                                        <ArrowLeft size={16} /> Torna agli Ordini
+                                        {isSavingEdits ? 'Salvataggio...' : 'Salva Note'}
                                     </button>
-                                    <h2 className="text-3xl font-black text-gray-900 leading-none tracking-tight">Ordine #{selectedOrder.id}</h2>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Order Info & Payment Card */}
+                        <div className="bg-white rounded-3xl p-5 border border-gray-200/80 shadow-xs space-y-2.5 text-xs">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-gray-400 block pb-2 border-b border-gray-100">
+                                Dettagli Pagamento
+                            </span>
+                            <div className="flex items-center justify-between">
+                                <span className="text-gray-500 font-medium">Metodo</span>
+                                {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
+                                    <span className="font-black text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg text-[11px]">
+                                        💳 Revolut Pay Online
+                                    </span>
+                                ) : (
+                                    <span className="font-black text-emerald-950 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg text-[11px]">
+                                        💵 Contanti / POS
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center justify-between border-t border-gray-100 pt-2">
+                                <span className="text-gray-500 font-medium">Ricezione</span>
+                                <span className="font-bold text-gray-800 text-[11px]">{new Date(selectedOrder.createdAt).toLocaleString('it-IT')}</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+                return (
+                    <div className="min-h-full flex fixed inset-0 z-[60] lg:relative lg:inset-auto lg:z-auto bg-gray-50/50 flex-col w-full">
+                        <div className="bg-white lg:rounded-3xl lg:shadow-md lg:border lg:border-gray-200/80 flex flex-col w-full relative">
+                            {/* Mobile Back Header */}
+                            <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-nature-950 text-white shrink-0 shadow-lg">
+                                <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 px-3 py-2 bg-nature-800/90 rounded-2xl hover:bg-nature-700 active:scale-95 transition-all text-xs font-black shadow-inner cursor-pointer">
+                                    <X size={20} /> Chiudi
+                                </button>
+                                <div className="flex items-center gap-2.5">
+                                    <span className="font-black text-base tracking-wide">Ordine #{selectedOrder.id}</span>
+                                    <StatusBadge status={selectedOrder.status} />
+                                </div>
+                            </div>
+
+                            {/* Main Content Area */}
+                            <div className="flex-1 p-4 md:p-6 flex flex-col relative z-30">
+                                {/* Desktop Header: Back Button + Order ID + Status + Payment Method */}
+                                <div className="hidden lg:flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedOrder(null)}
+                                            className="flex items-center gap-2 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-black text-xs rounded-xl border border-gray-200 transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                                            title="Torna all'elenco ordini"
+                                        >
+                                            <ArrowLeft size={16} /> Torna agli Ordini
+                                        </button>
+                                        <h2 className="text-3xl font-black text-gray-900 leading-none tracking-tight">Ordine #{selectedOrder.id}</h2>
                                         {/* Payment Method Badge */}
                                         {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
-                                            <span className="px-3.5 py-1.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                            <span className="px-3.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-2xs">
                                                 💳 Revolut Pay Online
                                             </span>
                                         ) : (
-                                            <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-950 border border-emerald-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-sm">
+                                            <span className="px-3.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-200 rounded-full font-black text-xs flex items-center gap-1.5 shadow-2xs">
                                                 💵 Contanti / POS alla Consegna
                                             </span>
                                         )}
@@ -1108,372 +1445,95 @@ export const OrderManager = () => {
                                     </div>
                                 </div>
 
-                                {/* TAB NAVIGATION HEADER (Generous sizing & crisp styling) */}
-                                <div className="flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-2xl mb-5 shrink-0 border border-gray-200/70 shadow-inner">
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab('overview')}
-                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                                            activeTab === 'overview'
-                                                ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
-                                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
-                                        }`}
-                                    >
-                                        <span className="text-base">📋</span> Riepilogo
-                                    </button>
+                                {/* Customer Approval Status Alert Box (if active) */}
+                                {(selectedOrder as any).approvalStatus && ['AWAITING_CUSTOMER_APPROVAL', 'CUSTOMER_APPROVED', 'CUSTOMER_REJECTED'].includes((selectedOrder as any).approvalStatus) && (
+                                    <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs mb-4 ${
+                                        (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL'
+                                            ? 'bg-amber-50 border-amber-300 text-amber-950'
+                                            : (selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED'
+                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                                            : 'bg-red-50 border-red-300 text-red-950'
+                                    }`}>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-2xl shrink-0">
+                                                {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && '⏳'}
+                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && '✅'}
+                                                {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && '❌'}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-sm leading-snug">
+                                                    {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'In Attesa Approvazione Pesatura Cliente'}
+                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && 'Pesatura Approvata dal Cliente'}
+                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Pesatura Contestata dal Cliente'}
+                                                </h4>
+                                                <p className="text-xs font-bold opacity-80 mt-0.5">
+                                                    {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'La variazione supera la soglia di tolleranza. In attesa che il cliente confermi dal link WhatsApp.'}
+                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && `Confermata il ${(selectedOrder as any).customerApprovedAt ? new Date((selectedOrder as any).customerApprovedAt).toLocaleString('it-IT') : 'recente'}.`}
+                                                    {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Il cliente ha richiesto assistenza o contestato la variazione.'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleResendApproval(selectedOrder.id)}
+                                                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-xs transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
+                                            >
+                                                📲 Sollecita WhatsApp
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* MOBILE TABS (< lg only) */}
+                                <div className="lg:hidden flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-2xl mb-4 shrink-0 border border-gray-200/70 shadow-inner">
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab('items')}
-                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                        className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                             activeTab === 'items'
                                                 ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
                                                 : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                                         }`}
                                     >
-                                        <span className="text-base">🛒</span> Prodotti ({selectedOrder.items.length})
+                                        <span>🛒</span> Prodotti ({totalItemsCount})
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab('customer')}
-                                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                        className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                             activeTab === 'customer'
                                                 ? 'bg-white text-nature-950 shadow-md border border-gray-200/80 scale-[1.01]'
                                                 : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                                         }`}
                                     >
-                                        <span className="text-base">👤</span> Cliente & Consegna
+                                        <span>👤</span> Cliente
                                     </button>
                                 </div>
 
-                                {/* TAB 1: RIEPILOGO (OVERVIEW) */}
-                                {activeTab === 'overview' && (
-                                    <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
-                                        {/* Customer Approval Status Box */}
-                                        {(selectedOrder as any).approvalStatus && ['AWAITING_CUSTOMER_APPROVAL', 'CUSTOMER_APPROVED', 'CUSTOMER_REJECTED'].includes((selectedOrder as any).approvalStatus) && (
-                                            <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm ${
-                                                (selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL'
-                                                    ? 'bg-amber-50 border-amber-300 text-amber-950'
-                                                    : (selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED'
-                                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-                                                    : 'bg-red-50 border-red-300 text-red-950'
-                                            }`}>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="text-2xl shrink-0">
-                                                        {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && '⏳'}
-                                                        {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && '✅'}
-                                                        {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && '❌'}
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-black text-sm leading-snug">
-                                                            {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'In Attesa Approvazione Pesatura Cliente'}
-                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && 'Pesatura Approvata dal Cliente'}
-                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Pesatura Contestata dal Cliente'}
-                                                        </h4>
-                                                        <p className="text-xs font-bold opacity-80 mt-0.5">
-                                                            {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && 'La variazione supera la soglia di tolleranza. In attesa che il cliente confermi dal link WhatsApp.'}
-                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_APPROVED' && `Confermata il ${(selectedOrder as any).customerApprovedAt ? new Date((selectedOrder as any).customerApprovedAt).toLocaleString('it-IT') : 'recente'}.`}
-                                                            {(selectedOrder as any).approvalStatus === 'CUSTOMER_REJECTED' && 'Il cliente ha richiesto assistenza o contestato la variazione.'}
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                {/* MOBILE CONTENT: Renders tab content */}
+                                <div className="lg:hidden space-y-4">
+                                    {activeTab === 'items' && renderProductsCard()}
+                                    {activeTab === 'customer' && renderCustomerSidebar()}
+                                </div>
 
-                                                {(selectedOrder as any).approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleResendApproval(selectedOrder.id)}
-                                                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-md transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
-                                                    >
-                                                        📲 Sollecita WhatsApp
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Status & Payment Overview Card */}
-                                        <div className="bg-gradient-to-br from-nature-50/90 via-emerald-50/40 to-white p-5 rounded-2xl border border-nature-200/80 shadow-sm space-y-3.5">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Stato Attuale</span>
-                                                <StatusBadge status={selectedOrder.status} />
-                                            </div>
-                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
-                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Pagamento</span>
-                                                {((selectedOrder as any).transactions?.[0]?.gateway === 'REVOLUT' || (selectedOrder as any).paymentMethod === 'REVOLUT') ? (
-                                                    <span className="font-black text-xs text-indigo-900 bg-indigo-100 px-3 py-1 rounded-full border border-indigo-200 shadow-xs">
-                                                        💳 Revolut Pay Online
-                                                    </span>
-                                                ) : (
-                                                    <span className="font-black text-xs text-emerald-950 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-200 shadow-xs">
-                                                        💵 Contanti / POS alla Consegna
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
-                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Modalità Ordine</span>
-                                                <span className="font-black text-xs text-nature-900 bg-nature-100/80 px-3 py-1 rounded-full border border-nature-200">
-                                                    {selectedOrder.deliveryMethod === 'DELIVERY' ? '🚚 Consegna a Domicilio' : '🏪 Ritiro in Negozio'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
-                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Data Ricezione</span>
-                                                <span className="font-black text-sm text-gray-800">{new Date(selectedOrder.createdAt).toLocaleString()}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between border-t border-nature-100/80 pt-3">
-                                                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Fascia Oraria Pianificata</span>
-                                                <span className="font-black text-sm text-blue-700">
-                                                    {editDate ? `🗓️ ${editDate.split('-').reverse().join('/')} ${editTime ? `(${editTime})` : ''}` : 'Non Programmato'}
-                                                </span>
-                                            </div>
-                                        </div>
+                                {/* DESKTOP 2-COLUMN VIEW (Option A): Products on Left, Sidebar on Right */}
+                                <div className="hidden lg:flex flex-row items-start gap-6">
+                                    {/* Left Column: Products Card */}
+                                    <div className="flex-1 min-w-0">
+                                        {renderProductsCard()}
                                     </div>
-                                )}
 
-                                {/* TAB 2: PRODOTTI ORDINATI (ITEMS) */}
-                                {activeTab === 'items' && (
-                                    <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200/90 rounded-2xl p-4 sm:p-5 overflow-hidden shadow-sm animate-in fade-in duration-200">
-                                        <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-gray-100 shrink-0">
-                                            <div>
-                                                <span className="text-sm font-black text-gray-900 uppercase tracking-wider block">Elenco Prodotti Ordinati ({selectedOrder.items.length})</span>
-                                                <span className="text-xs font-bold text-gray-500">Stato pesatura e consuntivo articolo per articolo</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 custom-scrollbar">
-                                            {selectedOrder.items.map(item => {
-                                                const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
-                                                const itemEstQtyKg = isPieceVariableWeight ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1) : Number(item.quantityOrdered);
-                                                const itemEstCost = (item.product.priceCents * itemEstQtyKg) / 100;
-
-                                                const isWeighed = weighedItemIds.includes(item.id) || (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined);
-                                                const currentQty = typeof fulfillmentData[item.id] === 'number'
-                                                    ? fulfillmentData[item.id]
-                                                    : (item.quantityFulfilled !== null && item.quantityFulfilled !== undefined ? Number(item.quantityFulfilled) : itemEstQtyKg);
-
-                                                const currentUnitPrice = typeof fulfillmentPriceData[item.id] === 'number'
-                                                    ? fulfillmentPriceData[item.id]
-                                                    : ((item.priceAtPurchase || item.product.priceCents) / 100);
-
-                                                const isPriceModified = currentUnitPrice !== (item.product.priceCents / 100);
-                                                const itemActualCost = currentQty * currentUnitPrice;
-
-                                                const qtyDiff = Number((currentQty - itemEstQtyKg).toFixed(2));
-                                                const priceDiff = Number((itemActualCost - itemEstCost).toFixed(2));
-
-                                                return (
-                                                    <div key={item.id} className={`group flex flex-col sm:flex-row items-stretch justify-between rounded-2xl sm:rounded-3xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md ${
-                                                        isWeighed ? 'bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 border-emerald-300' : 'bg-white border-gray-200/90 hover:border-gray-300'
-                                                    }`}>
-                                                        {/* Left Part: Full-bleed Integrated Image + Details */}
-                                                        <div className="flex items-stretch gap-4 flex-1 min-w-0">
-                                                            {/* Full-bleed Integrated Thumbnail Image */}
-                                                            <div className="w-24 sm:w-28 min-h-[96px] bg-gray-100 shrink-0 overflow-hidden relative flex items-center justify-center border-r border-gray-200/60">
-                                                                {item.product.imageUrl ? (
-                                                                    <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                                                ) : (
-                                                                    <span className="text-4xl select-none">🍏</span>
-                                                                )}
-                                                                {/* Status Icon Badge overlay on image */}
-                                                                <div className="absolute top-2 left-2 shadow-sm">
-                                                                    {isWeighed ? (
-                                                                        <span className="w-7 h-7 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-white" title="Prodotto Pesato">
-                                                                            ✓
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="w-7 h-7 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-white" title="Da Pesare">
-                                                                            ⚖️
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Product Details Content */}
-                                                            <div className="py-3.5 pr-2 flex flex-col justify-center min-w-0 space-y-1.5 flex-1">
-                                                                <div className="flex items-center gap-2 flex-wrap">
-                                                                    <h4 className="font-black text-base sm:text-lg text-gray-900 leading-snug truncate" title={item.product.name}>
-                                                                        {item.product.name}
-                                                                    </h4>
-                                                                    {isPriceModified && (
-                                                                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-900 text-[10px] font-black rounded-full border border-indigo-200 uppercase tracking-wider shrink-0">
-                                                                            Prezzo Modificato
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                
-                                                                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-gray-600 font-bold flex-wrap">
-                                                                    <span className="bg-gray-100/90 px-2.5 py-1 rounded-xl text-gray-800 font-black border border-gray-200/80">
-                                                                        Richiesto: {item.quantityOrdered} {item.product.unitType.toLowerCase()}
-                                                                    </span>
-                                                                    <span className="text-gray-500 font-extrabold">
-                                                                        (Prezzo base: € {(item.product.priceCents / 100).toFixed(2)}/{isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()})
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Right Part: Modern Horizontal Metric Card */}
-                                                        <div className="p-3 sm:p-4 flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 border-gray-100 bg-gray-50/40 sm:bg-transparent shrink-0">
-                                                            {/* Horizontal Metric Box */}
-                                                            <div className="bg-gradient-to-r from-emerald-50/70 via-white to-gray-50 px-4 py-2 rounded-2xl border border-emerald-100 shadow-xs flex items-center justify-between gap-4">
-                                                                <div className="text-right">
-                                                                    <span className="text-[9px] font-black uppercase tracking-wider block text-emerald-800/80">
-                                                                        {isWeighed ? 'Consuntivo Pesato' : 'Stima Richiesta'}
-                                                                    </span>
-
-                                                                    {isWeighed ? (
-                                                                        <div className="flex items-center gap-2 mt-0.5">
-                                                                            {/* Quantity */}
-                                                                            <div className="flex items-center gap-1">
-                                                                                {qtyDiff !== 0 && (
-                                                                                    <span className="line-through text-red-400 font-bold text-xs" title={`Richiesto: ${itemEstQtyKg}`}>
-                                                                                        {itemEstQtyKg}
-                                                                                    </span>
-                                                                                )}
-                                                                                <span className="font-black text-xs sm:text-sm text-gray-900">
-                                                                                    {currentQty} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                                                </span>
-                                                                            </div>
-
-                                                                            {/* Cost Pill */}
-                                                                            <div className="flex items-center gap-1 pl-2 border-l border-emerald-100">
-                                                                                {priceDiff !== 0 && (
-                                                                                    <span className="line-through text-red-400 font-bold text-[11px]" title={`Stimato: € ${itemEstCost.toFixed(2)}`}>
-                                                                                        € {itemEstCost.toFixed(2)}
-                                                                                    </span>
-                                                                                )}
-                                                                                <span className="font-black text-xs text-emerald-800 bg-white px-2 py-0.5 rounded-lg border border-emerald-200 shadow-2xs">
-                                                                                    € {itemActualCost.toFixed(2)}
-                                                                                </span>
-                                                                                {priceDiff > 0 && <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-1 py-0.5 rounded-md border border-emerald-200">↑</span>}
-                                                                                {priceDiff < 0 && <span className="text-[10px] font-black text-amber-800 bg-amber-100 px-1 py-0.5 rounded-md border border-amber-200">↓</span>}
-                                                                            </div>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="flex items-center gap-2 mt-0.5">
-                                                                            <span className="font-black text-xs sm:text-sm text-gray-800">
-                                                                                {itemEstQtyKg} {isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase()}
-                                                                            </span>
-                                                                            <span className="text-xs font-bold text-gray-600 bg-white px-2 py-0.5 rounded-lg border border-gray-200">
-                                                                                ~ € {itemEstCost.toFixed(2)}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Action Button (Visible in PENDING status) */}
-                                                            {selectedOrder.status === 'PENDING' && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleOpenSingleItemWeighing(item)}
-                                                                    className={`px-4 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-sm shrink-0 ${
-                                                                        isWeighed
-                                                                            ? 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-300'
-                                                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 shadow-emerald-200'
-                                                                    }`}
-                                                                >
-                                                                    {isWeighed ? <span className="flex items-center gap-1.5"><Scale size={16} /> Modifica</span> : <span className="flex items-center gap-1.5"><Scale size={16} /> Pesa Prodotto</span>}
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                                    {/* Right Column: Customer & Delivery Sidebar */}
+                                    <div className="w-80 xl:w-96 shrink-0 sticky top-4 self-start">
+                                        {renderCustomerSidebar()}
                                     </div>
-                                )}
-
-                                {/* TAB 3: CLIENTE & CONSEGNA (CUSTOMER & DELIVERY) */}
-                                {activeTab === 'customer' && (
-                                    <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1 custom-scrollbar animate-in fade-in duration-200">
-                                        {/* Customer Details Card */}
-                                        <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 text-xs space-y-3 shadow-xs">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-black uppercase tracking-wider text-emerald-900 block">👤 Dati Anagrafici & Contatto</span>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <p className="font-black text-lg text-emerald-950">{selectedOrder.customerName || selectedOrder.user?.name}</p>
-                                                <p className="text-emerald-800 text-xs font-bold">{selectedOrder.customerEmail || selectedOrder.user?.email}</p>
-                                                {selectedOrder.customerPhone && (
-                                                    <p className="text-emerald-900 text-xs font-black">📞 {selectedOrder.customerPhone}</p>
-                                                )}
-                                                <p className="text-emerald-950 text-xs font-black pt-1">
-                                                    📍 {selectedOrder.shippingAddress || 'Ritiro in Negozio'}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Appointment Scheduling Card */}
-                                        <div className="bg-blue-50/90 p-5 rounded-2xl border border-blue-200/90 text-xs space-y-3 shadow-xs">
-                                            <span className="text-xs font-black uppercase tracking-wider text-blue-800 block">🗓️ Pianificazione Consegna / Ritiro</span>
-                                            <div className="bg-white p-3.5 rounded-2xl border border-blue-100 flex items-center justify-between shadow-xs">
-                                                <div>
-                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Data e Fascia Oraria</span>
-                                                    <span className="font-black text-gray-900 text-sm">
-                                                        {editDate ? `${editDate.split('-').reverse().join('/')} ${editTime || ''}` : 'Non Programmato'}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setTempModalDate(editDate);
-                                                        setTempModalTime(editTime);
-                                                        setIsScheduleModalOpen(true);
-                                                    }}
-                                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black rounded-xl transition-all text-xs uppercase tracking-wide cursor-pointer shadow-sm"
-                                                >
-                                                    Pianifica
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Internal Notes Card */}
-                                        <div className="bg-yellow-50/90 p-5 rounded-2xl border border-yellow-200/90 text-xs space-y-2.5 shadow-xs">
-                                            <span className="text-xs font-black uppercase tracking-wider text-yellow-900 block">📝 Note Interne Admin</span>
-                                            <textarea
-                                                className="w-full p-3.5 bg-white border border-yellow-300 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-yellow-400 outline-none resize-y min-h-[85px] text-gray-800 font-bold leading-relaxed"
-                                                placeholder="Note ad uso esclusivo dello staff..."
-                                                value={editNotes}
-                                                onChange={(e) => setEditNotes(e.target.value)}
-                                            />
-                                        </div>
-
-                                        {/* Save Changes Button */}
-                                        {selectedOrder && (editDate !== (selectedOrder.scheduledDate || '') || editTime !== (selectedOrder.scheduledTime || '') || editNotes !== (selectedOrder.adminNotes || '')) && (
-                                            <div className="bg-nature-50 border border-nature-200 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shrink-0 shadow-md">
-                                                <span className="text-nature-900 text-xs font-black flex items-center gap-2">
-                                                    <span className="relative flex h-2.5 w-2.5">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nature-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-nature-500"></span>
-                                                    </span>
-                                                    Modifiche non salvate
-                                                </span>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setEditDate(selectedOrder.scheduledDate || '');
-                                                            setEditTime(selectedOrder.scheduledTime || '');
-                                                            setEditNotes(selectedOrder.adminNotes || '');
-                                                        }}
-                                                        className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-black text-xs rounded-xl transition-all"
-                                                    >
-                                                        Annulla
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleSaveAllEdits}
-                                                        disabled={isSavingEdits}
-                                                        className="px-4 py-2 bg-nature-600 hover:bg-nature-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-sm transition-all flex items-center gap-1"
-                                                    >
-                                                        {isSavingEdits ? 'Salvataggio...' : 'Salva Modifiche'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                </div>
                             </div>
 
                             {/* Action Footer (Sticky) */}
-                            <div className="bg-white border-t border-gray-200 p-3.5 sm:p-4 shadow-[0_-8px_25px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20">
+                            <div className="bg-white border-t border-gray-200 p-3.5 sm:p-4 shadow-[0_-8px_25px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 sticky bottom-0">
                                 <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
                                     <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
                                     <span className="text-xl font-black text-white leading-none mt-1">
@@ -1482,7 +1542,7 @@ export const OrderManager = () => {
                                 </div>
 
                                 <div className="flex items-center gap-2 justify-end flex-1 w-full sm:w-auto flex-wrap">
-                                    {/* WhatsApp Button: Fixed inside action bar on the left of Pesatura & Prezzi */}
+                                    {/* WhatsApp Button */}
                                     {selectedOrder.customerPhone && (
                                         <a
                                             href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
@@ -1505,13 +1565,20 @@ export const OrderManager = () => {
                                                 <Scale size={18} /> Conferma Pesatura Generale & Notifica
                                             </button>
                                         ) : (
-                                            <div className="px-3.5 py-2.5 bg-amber-50 text-amber-900 border border-amber-200/90 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-not-allowed opacity-90">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (unweighedItems.length > 0) handleOpenSingleItemWeighing(unweighedItems[0]);
+                                                }}
+                                                className="px-3.5 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+                                                title="Clicca per aprire la pesatura del prossimo articolo"
+                                            >
                                                 <span className="relative flex h-2 w-2">
                                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                                                 </span>
-                                                Pesa tutti i prodotti ({selectedOrder.items.filter(i => !weighedItemIds.includes(i.id) && i.quantityFulfilled === null).length} rimanenti)
-                                            </div>
+                                                Pesa prodotti rimanenti ({unweighedItems.length})
+                                            </button>
                                         )
                                     )}
 
@@ -1537,14 +1604,14 @@ export const OrderManager = () => {
                                         </button>
                                     )}
 
-                                    {/* Annulla Ordine Button: Visible for non-cancelled & non-delivered orders */}
+                                    {/* Annulla Ordine Button */}
                                     {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && (
                                         <button onClick={() => handleUpdateStatus('CANCELLED')} className="px-3.5 py-3 text-red-600 font-extrabold hover:bg-red-50 text-xs sm:text-sm rounded-2xl border border-red-200 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
                                             <Ban size={16} /> Annulla
                                         </button>
                                     )}
 
-                                    {/* Elimina Ordine Button: Visible ONLY when order status is CANCELLED */}
+                                    {/* Elimina Ordine Button */}
                                     {selectedOrder.status === 'CANCELLED' && (
                                         <button onClick={() => handleDeleteOrder()} className="px-4 py-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
                                             <Trash2 size={18} /> Elimina Ordine
@@ -1554,7 +1621,8 @@ export const OrderManager = () => {
                             </div>
                         </div>
                     </div>
-                )}
+                );
+            })()}
             </div>
             {isScheduleModalOpen && selectedOrder && (
                 <div className="fixed inset-0 bg-nature-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
