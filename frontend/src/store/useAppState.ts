@@ -2,6 +2,16 @@ import { create } from 'zustand';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
+export interface PageBackgroundConfig {
+    imageUrl: string;
+    opacity?: number; // 0 to 100
+    blur?: number; // 0 to 20 px
+    isFixed?: boolean;
+    isActive?: boolean;
+}
+
+export type PageBackgroundsMap = Record<string, PageBackgroundConfig>;
+
 interface StoreSettings {
     siteName: string;
     tagline: string;
@@ -21,6 +31,7 @@ interface StoreSettings {
     revolutApiKey?: string;
     revolutEnvironment?: string;
     revolutEnabled?: boolean;
+    pageBackgrounds?: string | PageBackgroundsMap;
 }
 
 interface AppState {

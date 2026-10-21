@@ -117,9 +117,11 @@ app.post('/api/admin/whatsapp/reset', authenticateToken, requireAdmin, (req, res
 
 // Settings (Global Store Info)
 import { SettingsController } from './controllers/SettingsController';
+import { backgroundUpload } from './middleware/backgroundUpload';
 const settingsController = new SettingsController();
 app.get('/api/settings', (req, res) => settingsController.get(req, res));
 app.put('/api/admin/settings', authenticateToken, requireAdmin, (req, res) => settingsController.update(req, res));
+app.post('/api/admin/backgrounds/upload', authenticateToken, requireAdmin, backgroundUpload.single('image'), (req, res) => settingsController.uploadBackground(req, res));
 
 // Admin - Pages (CMS)
 import { PageController } from './controllers/PageController';

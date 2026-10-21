@@ -31,6 +31,7 @@ import { CustomerOrderApproval } from './pages/CustomerOrderApproval';
 
 import { AlertBanner } from './components/AlertBanner';
 import { Toaster } from './components/ui/Toaster';
+import { PageBackground } from './components/ui/PageBackground';
 import { useAppState } from './store/useAppState';
 import { getThemeColors } from './utils/themeHelper';
 import { sanitizeImageUrl } from './utils/imageUrl';
@@ -53,7 +54,8 @@ const RouteTracker = () => {
 };
 
 const Layout = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen flex flex-col font-sans text-nature-900">
+    <div className="min-h-screen flex flex-col font-sans text-nature-900 relative">
+        <PageBackground />
         <RouteTracker />
         <AlertBanner />
         <Header />

@@ -13,7 +13,8 @@ export class SettingsController {
             `ALTER TABLE Order ADD COLUMN approvalToken VARCHAR(255)`,
             `ALTER TABLE Order ADD COLUMN approvalStatus VARCHAR(255) DEFAULT 'NONE'`,
             `ALTER TABLE Order ADD COLUMN customerApprovedAt DATETIME`,
-            `ALTER TABLE Transaction MODIFY COLUMN gateway VARCHAR(255) DEFAULT 'COD'`
+            `ALTER TABLE Transaction MODIFY COLUMN gateway VARCHAR(255) DEFAULT 'COD'`,
+            `ALTER TABLE StoreSettings ADD COLUMN pageBackgrounds LONGTEXT`
         ];
 
         for (const statement of sqlStatements) {
@@ -188,6 +189,11 @@ export class SettingsController {
             if (weighingTolerancePercent !== undefined) {
                 updateData.weighingTolerancePercent = Number(weighingTolerancePercent);
             }
+            if (req.body.pageBackgrounds !== undefined) {
+                updateData.pageBackgrounds = typeof req.body.pageBackgrounds === 'string'
+                    ? req.body.pageBackgrounds
+                    : JSON.stringify(req.body.pageBackgrounds);
+            }
 
             const updatedSettings = await prisma.storeSettings.update({
                 where: { id: 1 },
@@ -198,6 +204,19 @@ export class SettingsController {
         } catch (error) {
             console.error('Error updating settings:', error);
             res.status(500).json({ error: 'Errore durante il salvataggio delle impostazioni' });
+        }
+    }
+
+    public async uploadBackground(req: Request, res: Response) {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nessun file caricato' });
+            }
+            const publicUrl = `/uploads/backgrounds/${req.file.filename}`;
+            res.json({ url: publicUrl, filename: req.file.filename });
+        } catch (error: any) {
+            console.error('Error uploading background:', error);
+            res.status(500).json({ error: error.message || 'Errore durante il caricamento dello sfondo' });
         }
     }
 }

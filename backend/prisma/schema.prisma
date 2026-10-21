@@ -170,6 +170,7 @@ model StoreSettings {
   registrationCouponCode      String?  @default("BENVENUTO5")
   newsletterDiscountEnabled   Boolean  @default(true)
   newsletterCouponCode        String?  @default("NEWSLETTER10")
+  pageBackgrounds             String?  @db.LongText
 }
 
 model Transaction {

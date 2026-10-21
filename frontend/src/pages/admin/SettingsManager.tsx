@@ -3,12 +3,14 @@ import { useAuthStore } from '../../store/useAuthStore';
 import {
     Save, Globe, Phone, MapPin, Megaphone,
     MessageSquare, User as UserIcon, Upload, Trash2,
-    Plus, Edit2, X, Tag, CreditCard, Scale
+    Plus, Edit2, X, Tag, CreditCard, Scale,
+    Image as ImageIcon
 } from 'lucide-react';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
-import { useAppState } from '../../store/useAppState';
+import { useAppState, PageBackgroundConfig, PageBackgroundsMap } from '../../store/useAppState';
+import { AVAILABLE_PAGE_TARGETS } from '../../components/ui/PageBackground';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -68,7 +70,8 @@ export const SettingsManager = () => {
         revolutApiKey: '',
         revolutEnvironment: 'sandbox',
         revolutEnabled: false,
-        weighingTolerancePercent: 10
+        weighingTolerancePercent: 10,
+        pageBackgrounds: {} as PageBackgroundsMap
     });
 
     const refs = {
@@ -152,7 +155,10 @@ export const SettingsManager = () => {
                 revolutApiKey: data.revolutApiKey || '',
                 revolutEnvironment: data.revolutEnvironment || 'sandbox',
                 revolutEnabled: Boolean(data.revolutEnabled),
-                weighingTolerancePercent: data.weighingTolerancePercent !== undefined ? data.weighingTolerancePercent : 10
+                weighingTolerancePercent: data.weighingTolerancePercent !== undefined ? data.weighingTolerancePercent : 10,
+                pageBackgrounds: typeof data.pageBackgrounds === 'string'
+                    ? (() => { try { return JSON.parse(data.pageBackgrounds); } catch (e) { return {}; } })()
+                    : (data.pageBackgrounds || {})
             });
         }
     };
@@ -184,6 +190,65 @@ export const SettingsManager = () => {
             setIsUploadingLogo(false);
             e.target.value = '';
         }
+    };
+
+    const [uploadingBgKey, setUploadingBgKey] = useState<string | null>(null);
+
+    const handleBackgroundUpload = async (pageKey: string, file: File) => {
+        setUploadingBgKey(pageKey);
+        const data = new FormData();
+        data.append('image', file);
+        try {
+            const res = await fetch(`${API_URL}/api/admin/backgrounds/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: data
+            });
+            if (res.ok) {
+                const result = await res.json();
+                setFormData(prev => ({
+                    ...prev,
+                    pageBackgrounds: {
+                        ...prev.pageBackgrounds,
+                        [pageKey]: {
+                            ...(prev.pageBackgrounds[pageKey] || { opacity: 30, blur: 0, isFixed: false, isActive: true }),
+                            imageUrl: result.url,
+                            isActive: true
+                        }
+                    }
+                }));
+                addToast('🖼️ Sfondo caricato! Clicca su "Salva Sfondi" per confermare.', 'success');
+            } else {
+                const err = await res.json().catch(() => ({}));
+                addToast(`Errore caricamento sfondo: ${err.error || 'Errore server'}`, 'error');
+            }
+        } catch (err) {
+            addToast('Errore di connessione durante il caricamento dello sfondo.', 'error');
+        } finally {
+            setUploadingBgKey(null);
+        }
+    };
+
+    const updatePageBackground = (pageKey: string, updates: Partial<PageBackgroundConfig>) => {
+        setFormData(prev => ({
+            ...prev,
+            pageBackgrounds: {
+                ...prev.pageBackgrounds,
+                [pageKey]: {
+                    ...(prev.pageBackgrounds[pageKey] || { imageUrl: '', opacity: 30, blur: 0, isFixed: false, isActive: true }),
+                    ...updates
+                }
+            }
+        }));
+    };
+
+    const removePageBackground = (pageKey: string) => {
+        setFormData(prev => {
+            const updated = { ...prev.pageBackgrounds };
+            delete updated[pageKey];
+            return { ...prev, pageBackgrounds: updated };
+        });
+        addToast('Sfondo rimosso.', 'info');
     };
 
     const handleInsertTag = (field: keyof typeof formData, tag: string) => {
@@ -365,6 +430,7 @@ export const SettingsManager = () => {
 
     const tabs = [
         { id: 'general', label: 'Generale', icon: <Globe size={18} /> },
+        { id: 'backgrounds', label: 'Sfondi Pagine', icon: <ImageIcon size={18} /> },
         { id: 'revolut', label: 'Pagamenti Revolut', icon: <CreditCard size={18} /> },
         { id: 'whatsapp', label: 'WhatsApp', icon: <MessageSquare size={18} /> },
         { id: 'zones', label: 'Zone', icon: <MapPin size={18} /> },
@@ -674,6 +740,212 @@ export const SettingsManager = () => {
                             </button>
                         </div>
                     </form>
+                )}
+
+                {activeTab === 'backgrounds' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        {/* Header Box */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-xl font-bold flex items-center gap-2 text-nature-800">
+                                    <ImageIcon size={22} className="text-emerald-600" /> Sfondi Personalizzati Pagine
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-1 max-w-2xl">
+                                    Carica immagini di sfondo per ciascuna rotta del sito o imposta uno sfondo globale. 
+                                    Puoi regolare opacità, sfocatura ed effetto parallasse fisso per garantire la massima leggibilità di testi e prodotti.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSettingsSubmit}
+                                disabled={isSaving}
+                                className="px-6 py-3 bg-nature-900 hover:bg-black text-white font-bold text-sm rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0"
+                            >
+                                {isSaving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : <Save size={16} />}
+                                <span>Salva Modifiche Sfondi</span>
+                            </button>
+                        </div>
+
+                        {/* Grid of Pages */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {AVAILABLE_PAGE_TARGETS.map(target => {
+                                const bg = formData.pageBackgrounds[target.key];
+                                const hasImage = Boolean(bg?.imageUrl);
+                                const isUploading = uploadingBgKey === target.key;
+
+                                return (
+                                    <div
+                                        key={target.key}
+                                        className={`bg-white rounded-3xl p-5 shadow-sm border transition-all flex flex-col justify-between ${
+                                            target.key === 'default'
+                                                ? 'border-emerald-300 ring-2 ring-emerald-500/20 md:col-span-2 lg:col-span-3'
+                                                : 'border-gray-150 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <div className="space-y-3">
+                                            {/* Page Title & Path */}
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <h4 className="font-black text-sm text-gray-900">{target.label}</h4>
+                                                    <span className="text-[11px] font-mono text-gray-400">{target.path}</span>
+                                                </div>
+                                                {hasImage && (
+                                                    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                                                        <span className="text-[11px] font-bold text-gray-500">
+                                                            {bg.isActive !== false ? 'Attivo' : 'Spento'}
+                                                        </span>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={bg.isActive !== false}
+                                                            onChange={e => updatePageBackground(target.key, { isActive: e.target.checked })}
+                                                            className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                                                        />
+                                                    </label>
+                                                )}
+                                            </div>
+
+                                            {/* Preview Box or Upload Dropzone */}
+                                            {hasImage ? (
+                                                <div className="space-y-3">
+                                                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner group">
+                                                        {/* Simulated page background preview */}
+                                                        <div
+                                                            className="absolute inset-0 bg-cover bg-center transition-all"
+                                                            style={{
+                                                                backgroundImage: `url("${sanitizeImageUrl(bg.imageUrl)}")`,
+                                                                opacity: (bg.opacity !== undefined ? bg.opacity : 30) / 100,
+                                                                filter: bg.blur ? `blur(${bg.blur}px)` : undefined,
+                                                            }}
+                                                        />
+                                                        {/* Simulated text card for contrast check */}
+                                                        <div className="relative z-10 m-3 p-2 rounded-xl bg-white/90 backdrop-blur-xs border border-white/60 shadow-xs max-w-[200px]">
+                                                            <div className="w-12 h-2 rounded bg-emerald-700/80 mb-1" />
+                                                            <div className="w-24 h-1.5 rounded bg-gray-400 mb-0.5" />
+                                                            <div className="w-16 h-1.5 rounded bg-gray-300" />
+                                                        </div>
+
+                                                        {/* Overlay actions on hover */}
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                            <label className="px-3 py-1.5 bg-white text-gray-800 rounded-xl text-xs font-bold cursor-pointer hover:bg-gray-100 shadow">
+                                                                Sostituisci
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    className="hidden"
+                                                                    onChange={e => {
+                                                                        const f = e.target.files?.[0];
+                                                                        if (f) handleBackgroundUpload(target.key, f);
+                                                                    }}
+                                                                />
+                                                            </label>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removePageBackground(target.key)}
+                                                                className="px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 shadow flex items-center gap-1 cursor-pointer"
+                                                            >
+                                                                <Trash2 size={13} /> Rimuovi
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Controls: Opacity, Blur, Fixed */}
+                                                    <div className="space-y-2.5 pt-1 text-xs">
+                                                        <div>
+                                                            <div className="flex justify-between font-bold text-gray-700 mb-1">
+                                                                <span>Opacità Sfondo</span>
+                                                                <span className="font-mono text-emerald-700">
+                                                                    {bg.opacity !== undefined ? bg.opacity : 30}%
+                                                                </span>
+                                                            </div>
+                                                            <input
+                                                                type="range"
+                                                                min="5"
+                                                                max="90"
+                                                                step="5"
+                                                                value={bg.opacity !== undefined ? bg.opacity : 30}
+                                                                onChange={e => updatePageBackground(target.key, { opacity: Number(e.target.value) })}
+                                                                className="w-full accent-emerald-600 cursor-pointer"
+                                                            />
+                                                        </div>
+
+                                                        <div>
+                                                            <div className="flex justify-between font-bold text-gray-700 mb-1">
+                                                                <span>Sfocatura (Blur)</span>
+                                                                <span className="font-mono text-emerald-700">{bg.blur || 0}px</span>
+                                                            </div>
+                                                            <input
+                                                                type="range"
+                                                                min="0"
+                                                                max="15"
+                                                                step="1"
+                                                                value={bg.blur || 0}
+                                                                onChange={e => updatePageBackground(target.key, { blur: Number(e.target.value) })}
+                                                                className="w-full accent-emerald-600 cursor-pointer"
+                                                            />
+                                                        </div>
+
+                                                        <label className="flex items-center gap-2 pt-1 font-bold text-gray-700 cursor-pointer select-none">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={Boolean(bg.isFixed)}
+                                                                onChange={e => updatePageBackground(target.key, { isFixed: e.target.checked })}
+                                                                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                                                            />
+                                                            <span>Effetto Parallasse (Fisso allo scorrimento)</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <label className="border-2 border-dashed border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition group min-h-[160px]">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        disabled={isUploading}
+                                                        onChange={e => {
+                                                            const f = e.target.files?.[0];
+                                                            if (f) handleBackgroundUpload(target.key, f);
+                                                        }}
+                                                    />
+                                                    {isUploading ? (
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-600" />
+                                                            <span className="text-xs font-bold text-gray-500">Caricamento in corso...</span>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="w-10 h-10 rounded-xl bg-gray-100 group-hover:bg-emerald-100 text-gray-400 group-hover:text-emerald-700 flex items-center justify-center mb-2 transition-colors">
+                                                                <Upload size={20} />
+                                                            </div>
+                                                            <span className="text-xs font-bold text-gray-700 group-hover:text-emerald-800">
+                                                                Carica Sfondo
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-400 mt-0.5">
+                                                                JPG, PNG, WEBP fino a 8MB
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </label>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Sticky Save Button */}
+                        <div className="flex justify-end p-4 sticky bottom-6 z-20">
+                            <button
+                                type="button"
+                                onClick={handleSettingsSubmit}
+                                disabled={isSaving}
+                                className="bg-nature-900 text-white px-10 py-4 rounded-2xl font-bold shadow-2xl hover:bg-black transition-all flex items-center gap-2 cursor-pointer"
+                            >
+                                {isSaving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> : <Save size={20} />}
+                                <span>Salva Modifiche Sfondi</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
 
                 {activeTab === 'revolut' && (
