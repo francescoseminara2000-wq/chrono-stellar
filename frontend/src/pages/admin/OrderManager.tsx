@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, Phone, Mail, MapPin, MoreVertical } from 'lucide-react';
+import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, Phone, Mail, MapPin, MoreVertical, Plus, Minus, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -2368,89 +2368,280 @@ export const OrderManager = () => {
                 )}
             </AnimatePresence>
 
-            {/* Single Product Weighing Modal */}
-            {weighingItemModal.isOpen && weighingItemModal.item && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-[99] animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-4">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-2xl overflow-hidden shrink-0">
-                                    {weighingItemModal.item.product.imageUrl ? (
-                                        <img src={weighingItemModal.item.product.imageUrl} alt="" className="w-full h-full object-cover" />
+            {/* Single Product Weighing Modal - Ergonomic Digital Stepper Layout */}
+            {weighingItemModal.isOpen && weighingItemModal.item && (() => {
+                const item = weighingItemModal.item;
+                const isPieceVariableWeight = item.product.isVariableWeight && (item.orderedUnit || item.product.unitType) === 'PZ';
+                const requestedQty = isPieceVariableWeight
+                    ? Number(item.quantityOrdered) * Number(item.product.stepAmount || 1)
+                    : Number(item.quantityOrdered);
+                const unitLabel = isPieceVariableWeight ? 'kg' : item.product.unitType.toLowerCase();
+                const currentWeight = parseFloat(String(weighingItemModal.tempWeight)) || 0;
+                const currentPrice = parseFloat(String(weighingItemModal.tempUnitPrice)) || 0;
+                const catalogPrice = (item.product.priceCents / 100);
+                const isPriceCustom = Math.abs(currentPrice - catalogPrice) > 0.001;
+
+                const diffWeight = Number((currentWeight - requestedQty).toFixed(2));
+                const diffPercent = requestedQty > 0 ? Math.round(((currentWeight - requestedQty) / requestedQty) * 100) : 0;
+                const totalCost = Number((currentWeight * currentPrice).toFixed(2));
+                const estInitialCost = Number((requestedQty * catalogPrice).toFixed(2));
+                const diffCost = Number((totalCost - estInitialCost).toFixed(2));
+
+                const adjustWeight = (delta: number) => {
+                    const next = Math.max(0, parseFloat((currentWeight + delta).toFixed(2)));
+                    setWeighingItemModal(prev => ({ ...prev, tempWeight: next }));
+                };
+
+                const adjustPrice = (delta: number) => {
+                    const next = Math.max(0, parseFloat((currentPrice + delta).toFixed(2)));
+                    setWeighingItemModal(prev => ({ ...prev, tempUnitPrice: next }));
+                };
+
+                return (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-[99] animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-2xl overflow-hidden shrink-0 shadow-2xs">
+                                        {item.product.imageUrl ? (
+                                            <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            '🍏'
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="font-black text-base text-gray-900 truncate leading-tight">{item.product.name}</h3>
+                                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                            <span className="text-[11px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                                                Richiesto: <strong className="text-gray-800">{requestedQty} {unitLabel}</strong>
+                                            </span>
+                                            {isPieceVariableWeight && (
+                                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
+                                                    {item.quantityOrdered} pz × ~{item.product.stepAmount} kg
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setWeighingItemModal({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' })}
+                                    className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors shrink-0 cursor-pointer"
+                                    title="Chiudi"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Section 1: Ergonomic Weight Stepper */}
+                            <div className="bg-gray-50/70 border border-gray-200/90 rounded-2xl p-3.5 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-black text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Scale size={14} className="text-emerald-700" />
+                                        Peso Effettivo Pesato
+                                    </span>
+                                    {/* Real-time Diff Badge */}
+                                    {diffWeight === 0 ? (
+                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+                                            🎯 Peso Esatto
+                                        </span>
+                                    ) : diffWeight > 0 ? (
+                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-200">
+                                            +{diffWeight} {unitLabel} (+{diffPercent}%)
+                                        </span>
                                     ) : (
-                                        '🍏'
+                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
+                                            {diffWeight} {unitLabel} ({diffPercent}%)
+                                        </span>
                                     )}
                                 </div>
-                                <div>
-                                    <h3 className="font-black text-base text-gray-900 leading-tight">{weighingItemModal.item.product.name}</h3>
-                                    <p className="text-xs font-bold text-gray-500 mt-0.5">
-                                        Richiesto: {weighingItemModal.item.quantityOrdered} {weighingItemModal.item.product.unitType.toLowerCase()}
-                                    </p>
+
+                                {/* Main Stepper Controls: [-]  Display  [+] */}
+                                <div className="flex items-center justify-between gap-3">
+                                    {/* Decrement Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustWeight(item.product.unitType === 'PZ' ? -1 : -0.05)}
+                                        className="w-13 h-13 rounded-2xl bg-white hover:bg-gray-100 active:scale-90 text-gray-800 flex items-center justify-center shrink-0 border border-gray-200 shadow-2xs transition-all cursor-pointer select-none"
+                                        title="Diminuisci peso"
+                                    >
+                                        <Minus size={22} className="stroke-[2.5]" />
+                                    </button>
+
+                                    {/* Digital Display Input */}
+                                    <div className="flex-1 min-w-0 bg-white rounded-2xl border-2 border-emerald-500/80 px-3 py-2 flex items-baseline justify-center gap-1.5 shadow-inner focus-within:ring-2 focus-within:ring-emerald-400">
+                                        <input
+                                            type="number"
+                                            step={item.product.unitType === 'PZ' ? '1' : '0.01'}
+                                            min="0"
+                                            value={weighingItemModal.tempWeight}
+                                            onChange={(e) => setWeighingItemModal({ ...weighingItemModal, tempWeight: e.target.value })}
+                                            className="w-28 text-center bg-transparent font-black text-2xl sm:text-3xl text-gray-900 outline-none leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            placeholder="0.00"
+                                        />
+                                        <span className="text-base font-black text-emerald-800 select-none">
+                                            {unitLabel}
+                                        </span>
+                                    </div>
+
+                                    {/* Increment Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustWeight(item.product.unitType === 'PZ' ? 1 : 0.05)}
+                                        className="w-13 h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-90 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/30 transition-all cursor-pointer select-none"
+                                        title="Aumenta peso"
+                                    >
+                                        <Plus size={22} className="stroke-[2.5]" />
+                                    </button>
+                                </div>
+
+                                {/* Quick Calibration Chips */}
+                                <div className="flex items-center gap-1.5 pt-1 overflow-x-auto pb-0.5 custom-scrollbar">
+                                    <button
+                                        type="button"
+                                        onClick={() => setWeighingItemModal(prev => ({ ...prev, tempWeight: requestedQty }))}
+                                        className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-850 font-black text-[10px] rounded-xl border border-emerald-250 flex items-center gap-1 shrink-0 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                                        title="Reimposta al peso ordinato"
+                                    >
+                                        <RotateCcw size={11} /> Reset {requestedQty} {unitLabel}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustWeight(0.05)}
+                                        className="px-2 py-1 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-[10px] rounded-xl border border-gray-200 shrink-0 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                                    >
+                                        +0.05
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustWeight(0.10)}
+                                        className="px-2 py-1 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-[10px] rounded-xl border border-gray-200 shrink-0 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                                    >
+                                        +0.10
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustWeight(0.50)}
+                                        className="px-2 py-1 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-[10px] rounded-xl border border-gray-200 shrink-0 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                                    >
+                                        +0.50
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustWeight(-0.10)}
+                                        className="px-2 py-1 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-[10px] rounded-xl border border-gray-200 shrink-0 active:scale-95 shadow-2xs transition-all cursor-pointer"
+                                    >
+                                        -0.10
+                                    </button>
                                 </div>
                             </div>
-                            <button onClick={() => setWeighingItemModal({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' })} className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
-                                <X size={20} />
-                            </button>
-                        </div>
 
-                        <div className="space-y-3.5">
-                            <div>
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider block mb-1">
-                                    Peso Effettivo Pesato (kg / pz)
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.05"
-                                    min="0"
-                                    value={weighingItemModal.tempWeight}
-                                    onChange={(e) => setWeighingItemModal({ ...weighingItemModal, tempWeight: e.target.value })}
-                                    className="w-full p-3 bg-gray-50 border border-emerald-300 rounded-2xl text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 outline-none"
-                                    placeholder="Inserisci peso..."
-                                />
+                            {/* Section 2: Unit Price Adjuster */}
+                            <div className="bg-gray-50/70 border border-gray-200/90 rounded-2xl p-3.5 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-black text-gray-700 uppercase tracking-wider">
+                                        Prezzo Unitario al {unitLabel}
+                                    </span>
+                                    {isPriceCustom ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setWeighingItemModal(prev => ({ ...prev, tempUnitPrice: catalogPrice }))}
+                                            className="text-[10px] font-black text-blue-700 hover:underline flex items-center gap-1 cursor-pointer"
+                                            title="Ripristina prezzo di catalogo"
+                                        >
+                                            <RotateCcw size={10} /> Ripristina € {catalogPrice.toFixed(2)}
+                                        </button>
+                                    ) : (
+                                        <span className="text-[10px] font-bold text-gray-400">
+                                            Catalogo: € {catalogPrice.toFixed(2)}/{unitLabel}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustPrice(-0.10)}
+                                        className="w-10 h-10 rounded-xl bg-white hover:bg-gray-100 active:scale-90 text-gray-800 flex items-center justify-center shrink-0 border border-gray-200 shadow-2xs transition-all cursor-pointer select-none"
+                                    >
+                                        <Minus size={16} />
+                                    </button>
+
+                                    <div className="flex-1 bg-white rounded-xl border border-blue-300 px-3 py-1.5 flex items-center justify-center gap-1 focus-within:ring-2 focus-within:ring-blue-400">
+                                        <span className="text-sm font-black text-blue-700">€</span>
+                                        <input
+                                            type="number"
+                                            step="0.05"
+                                            min="0"
+                                            value={weighingItemModal.tempUnitPrice}
+                                            onChange={(e) => setWeighingItemModal({ ...weighingItemModal, tempUnitPrice: e.target.value })}
+                                            className="w-20 text-center bg-transparent font-black text-base text-blue-950 outline-none leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            placeholder="0.00"
+                                        />
+                                        <span className="text-xs font-bold text-blue-700 select-none">
+                                            /{unitLabel}
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => adjustPrice(0.10)}
+                                        className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-90 text-white flex items-center justify-center shrink-0 shadow-xs transition-all cursor-pointer select-none"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
                             </div>
 
-                            <div>
-                                <label className="text-xs font-black text-gray-700 uppercase tracking-wider block mb-1">
-                                    Prezzo Unitario (€ / kg o pz)
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.10"
-                                    min="0"
-                                    value={weighingItemModal.tempUnitPrice}
-                                    onChange={(e) => setWeighingItemModal({ ...weighingItemModal, tempUnitPrice: e.target.value })}
-                                    className="w-full p-3 bg-gray-50 border border-blue-300 rounded-2xl text-base font-black text-blue-950 focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Inserisci prezzo..."
-                                />
+                            {/* Section 3: High-Impact Total Calculated Card */}
+                            <div className="bg-gradient-to-br from-[#06331a] to-[#042010] p-4 rounded-2xl border border-emerald-800 text-white shadow-md flex items-center justify-between">
+                                <div>
+                                    <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">
+                                        Nuovo Costo Totale
+                                    </span>
+                                    <div className="text-xs text-emerald-100/80 font-bold mt-0.5">
+                                        {currentWeight} {unitLabel} × € {currentPrice.toFixed(2)}
+                                    </div>
+                                    {diffCost !== 0 && (
+                                        <div className="text-[10px] font-extrabold mt-1 text-emerald-300/90">
+                                            Variazione: {diffCost > 0 ? `+€ ${diffCost.toFixed(2)}` : `-€ ${Math.abs(diffCost).toFixed(2)}`}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="text-right">
+                                    <span className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight block">
+                                        € {totalCost.toFixed(2)}
+                                    </span>
+                                    <span className="text-[10px] text-gray-300/70 font-semibold mt-1 block">
+                                        Stima iniziale: € {estInitialCost.toFixed(2)}
+                                    </span>
+                                </div>
                             </div>
 
-                            <div className="bg-nature-950 text-white p-3.5 rounded-2xl flex items-center justify-between">
-                                <span className="text-xs font-bold text-nature-300">Costo Totale Prodotto</span>
-                                <span className="text-lg font-black">
-                                    € {((Number(weighingItemModal.tempWeight) || 0) * (Number(weighingItemModal.tempUnitPrice) || 0)).toFixed(2)}
-                                </span>
+                            {/* Section 4: Modal Action Buttons */}
+                            <div className="flex items-center gap-2.5 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setWeighingItemModal({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' })}
+                                    className="py-3 px-4 bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-700 font-extrabold text-xs rounded-2xl transition-all cursor-pointer"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveSingleItemWeighing}
+                                    className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    <CheckCircle size={18} />
+                                    <span>Conferma & Salva Peso</span>
+                                </button>
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setWeighingItemModal({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' })}
-                                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs rounded-2xl transition-all"
-                            >
-                                Annulla
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSaveSingleItemWeighing}
-                                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                            >
-                                <CheckCircle size={16} /> Conferma & Blocca
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
         </div>
     );
 };
