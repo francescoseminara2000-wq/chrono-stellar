@@ -392,8 +392,8 @@ export const Header = () => {
 
                         {/* User Actions Pill */}
                         <div className={`
-                            bg-nature-50 border border-nature-100 rounded-full shadow-sm flex items-center transition-all duration-500 hover:shadow-md hover:border-nature-200
-                            ${isScrolled ? 'py-1 pl-2 pr-3.5 gap-2.5' : 'py-1.5 pl-2.5 pr-4.5 gap-3.5'}
+                            bg-nature-50 border border-nature-100 rounded-full shadow-xs flex items-center transition-all duration-300 hover:shadow-md hover:border-nature-200
+                            ${isScrolled ? 'py-1 pl-1.5 pr-2 gap-2' : 'py-1.5 pl-2 pr-2.5 gap-2.5'}
                         `}>
                             <AuthMenu
                                 pushEnabled={pushEnabled}
@@ -401,11 +401,17 @@ export const Header = () => {
                                 isPushLoading={isPushLoading}
                             />
 
-                            <div className={`w-px bg-nature-200 transition-all duration-500 ${isScrolled ? 'h-5' : 'h-7'}`}></div>
+                            <div className="w-px bg-nature-200/90 transition-all duration-300 self-stretch my-1"></div>
 
-                            <Link to="/cart" className="relative p-2 text-nature-900 hover:text-nature-600 transition-colors group">
-                                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}>
-                                    <ShoppingBasket size={isScrolled ? 19 : 23} className="transition-all duration-500" />
+                            <Link 
+                                to="/cart" 
+                                className={`relative flex items-center justify-center rounded-full hover:bg-white/80 active:scale-95 text-nature-900 hover:text-emerald-700 transition-all group shrink-0 ${
+                                    isScrolled ? 'w-9 h-9' : 'w-10 h-10'
+                                }`}
+                                title="Carrello"
+                            >
+                                <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} className="flex items-center justify-center">
+                                    <ShoppingBasket size={isScrolled ? 19 : 22} className="transition-all duration-300" />
                                 </motion.div>
                                 <AnimatePresence>
                                     {itemCount > 0 && (
@@ -413,7 +419,7 @@ export const Header = () => {
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
                                             exit={{ scale: 0 }}
-                                            className="absolute -bottom-1 -right-1 bg-fruit-500 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-md border-2 border-white select-none pointer-events-none"
+                                            className="absolute -top-1 -right-1 bg-fruit-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md border-2 border-white select-none pointer-events-none"
                                         >
                                             {itemCount}
                                         </motion.span>
@@ -432,7 +438,7 @@ export const Header = () => {
                                 <motion.span
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute -bottom-0.5 -right-0.5 bg-fruit-500 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-md border-2 border-white select-none pointer-events-none"
+                                    className="absolute -top-1 -right-1 bg-fruit-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md border-2 border-white select-none pointer-events-none"
                                 >
                                     {itemCount}
                                 </motion.span>
