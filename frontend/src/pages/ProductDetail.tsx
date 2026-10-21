@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { 
     ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, 
-    Leaf, Info, Check, Share2, CornerDownRight, Globe, Ruler, Award, ShieldCheck
+    Leaf, Info, Check, Share2, CornerDownRight, Globe, Ruler, Award, ShieldCheck, Barcode
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
@@ -267,8 +267,6 @@ export const ProductDetail = () => {
                                     Categoria: {product.commercialCategory}
                                 </span>
                             )}
-
-                            <span className="text-xs text-gray-400 font-medium">• Codice #{product.id}</span>
                         </div>
 
                         {/* Title */}
@@ -299,13 +297,33 @@ export const ProductDetail = () => {
                         </div>
 
                         {/* Product Description */}
-                        <div className="mb-6 bg-white p-5 rounded-3xl border border-gray-150 shadow-2xs">
+                        <div className="mb-4 bg-white p-5 rounded-3xl border border-gray-150 shadow-2xs">
                             <h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2">
                                 <Leaf size={16} className="text-emerald-600" /> Descrizione del Prodotto
                             </h3>
                             <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                                 {product.description || "Raccolto fresco selezionato a mano con cura. Garantiamo il massimo del sapore naturale ed autentico direttamente dai nostri produttori di fiducia."}
                             </p>
+                        </div>
+
+                        {/* Box Dedicato Codice Articolo */}
+                        <div className="mb-6 bg-white p-3.5 px-4.5 rounded-2xl border border-gray-150 shadow-2xs flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shadow-2xs">
+                                    <Barcode size={20} />
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block leading-tight">
+                                        Codice Articolo
+                                    </span>
+                                    <span className="text-sm font-extrabold text-nature-950 font-mono tracking-wider">
+                                        #{product.id}
+                                    </span>
+                                </div>
+                            </div>
+                            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50/80 px-2.5 py-1 rounded-xl border border-emerald-200/60">
+                                Rif. Univoco
+                            </span>
                         </div>
 
                         {/* Scheda Tracciabilità & Caratteristiche Ortofrutta */}
