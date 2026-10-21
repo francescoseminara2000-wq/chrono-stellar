@@ -37,33 +37,33 @@ const AuthMenu = ({
 
         return (
             <div className="relative" ref={dropdownRef}>
-                {/* Trigger Button */}
+                {/* Trigger Button seamlessly integrated into Header Pill */}
                 <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white hover:bg-emerald-50/60 border border-gray-200/80 hover:border-emerald-300 transition-all shadow-xs group cursor-pointer"
+                    className="flex items-center gap-2.5 py-0.5 px-1 rounded-full group cursor-pointer transition-all"
                 >
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 shadow-2xs border border-emerald-200/60 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center text-emerald-800 shadow-2xs border border-nature-200/80 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
                         {user.avatar ? (
                             <img
                                 src={sanitizeImageUrl(user.avatar)}
                                 alt={user.name || 'User'}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain p-0.5"
                             />
                         ) : (
                             <UserIcon size={16} />
                         )}
                     </div>
-                    <div className="hidden lg:flex flex-col text-left">
-                        <span className="text-xs font-black text-gray-900 group-hover:text-emerald-700 transition-colors leading-tight truncate max-w-[120px]">
+                    <div className="flex flex-col text-left">
+                        <span className="text-xs font-black text-nature-900 group-hover:text-emerald-700 transition-colors leading-tight truncate max-w-[130px]">
                             {user.name || 'Account'}
                         </span>
                         <span className="text-[10px] font-bold text-emerald-700 leading-tight">
                             € {formattedBalance}
                         </span>
                     </div>
-                    <ChevronDown size={14} className={`text-gray-400 group-hover:text-emerald-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`text-nature-400 group-hover:text-emerald-700 transition-transform duration-300 ml-0.5 ${isOpen ? 'rotate-180' : ''}`} />
                 </motion.button>
 
                 <AnimatePresence>
@@ -350,18 +350,22 @@ export const Header = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2 md:gap-3 group relative z-50 flex-shrink-0">
+                    <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group relative z-50 flex-shrink-0">
                         <motion.div
                             layout
-                            className={`relative flex items-center justify-center transition-all duration-500 ${isScrolled ? 'w-8 h-8' : 'w-12 h-12 md:w-16 md:h-16'}`}
+                            className={`relative flex items-center justify-center transition-all duration-500 ${isScrolled ? 'w-10 h-10 md:w-12 md:h-12' : 'w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22'}`}
                         >
-                            <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt={`${settings?.siteName || 'Chrono Stellar'} Logo`} className="w-full h-full object-contain drop-shadow-sm group-hover:scale-110 transition-transform duration-300" />
+                            <img
+                                src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"}
+                                alt={`${settings?.siteName || 'Chrono Stellar'} Logo`}
+                                className="w-full h-full object-contain scale-115 drop-shadow-sm group-hover:scale-125 transition-transform duration-300 origin-center"
+                            />
                         </motion.div>
                         <motion.div
                             layout
-                            className={`flex flex-col justify-center origin-left transition-all duration-500`}
+                            className="flex flex-col justify-center origin-left transition-all duration-500"
                         >
-                            <h1 className={`font-script text-nature-900 leading-none whitespace-nowrap transition-all duration-500 ${isScrolled ? 'text-lg' : 'text-2xl md:text-3xl'}`}>
+                            <h1 className={`font-script text-nature-900 leading-none whitespace-nowrap transition-all duration-500 ${isScrolled ? 'text-xl md:text-2xl' : 'text-2xl sm:text-3xl md:text-4xl'}`}>
                                 {settings?.siteName ? (
                                     <>
                                         <span className="text-nature-600">{settings.siteName.split(' ')[0]}</span>{' '}
@@ -371,7 +375,7 @@ export const Header = () => {
                                     <><span className="text-nature-600">Ortofrutta</span> Butti</>
                                 )}
                             </h1>
-                            <p className={`text-nature-500 font-sans tracking-[0.2em] uppercase font-bold transition-all duration-500 ${isScrolled ? 'text-[8px]' : 'text-[10px] md:text-xs'}`}>
+                            <p className={`text-nature-600/90 font-sans tracking-[0.22em] uppercase font-bold transition-all duration-500 mt-1 ${isScrolled ? 'text-[8px] md:text-[9px]' : 'text-[9px] sm:text-[10px] md:text-xs'}`}>
                                 {settings?.tagline || 'FRESCHEZZA DI QUALITÀ'}
                             </p>
                         </motion.div>
@@ -475,8 +479,8 @@ export const Header = () => {
                         {/* Drawer Header with Store Logo & RED Close Button */}
                         <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-white p-1 shadow-sm border border-gray-150 flex items-center justify-center shrink-0">
-                                    <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain" />
+                                <div className="w-14 h-14 rounded-2xl bg-white p-1.5 shadow-sm border border-gray-150 flex items-center justify-center shrink-0">
+                                    <img src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"} alt="Logo" className="w-full h-full object-contain scale-115" />
                                 </div>
                                 <div>
                                     <span className="font-black text-lg text-gray-900 block leading-tight">{settings?.siteName || 'Ortofrutta'}</span>

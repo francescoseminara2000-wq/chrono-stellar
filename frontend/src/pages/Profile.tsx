@@ -419,12 +419,12 @@ export const Profile = () => {
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 relative z-10 text-center sm:text-left">
                         {/* Avatar Display with Active Selected Preview */}
                         <div className="relative group shrink-0">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-emerald-900/60 p-1 backdrop-blur-md shadow-2xl border border-white/20 overflow-hidden flex items-center justify-center">
+                            <div className="w-22 h-22 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white/10 p-1.5 backdrop-blur-md shadow-2xl border border-white/20 overflow-hidden flex items-center justify-center">
                                 {formData.avatar ? (
                                     <img
                                         src={sanitizeImageUrl(formData.avatar)}
                                         alt="Avatar"
-                                        className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
+                                        className="w-full h-full object-contain rounded-xl sm:rounded-2xl"
                                     />
                                 ) : (
                                     <div className="w-full h-full rounded-xl sm:rounded-2xl bg-nature-800 flex items-center justify-center text-emerald-300">
@@ -632,7 +632,7 @@ export const Profile = () => {
                             {avatars.length === 0 ? (
                                 <p className="text-xs text-gray-400 italic">Nessun avatar preimpostato disponibile.</p>
                             ) : (
-                                <div className="flex sm:grid sm:grid-cols-6 gap-2.5 overflow-x-auto pb-2 pt-1 scrollbar-thin no-scrollbar">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 sm:gap-4 pt-1">
                                     {avatars.map((avatarUrl, idx) => {
                                         const isSelected = formData.avatar === avatarUrl;
                                         return (
@@ -640,20 +640,20 @@ export const Profile = () => {
                                                 key={idx}
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, avatar: avatarUrl })}
-                                                className={`relative w-16 h-16 sm:w-auto sm:aspect-square rounded-2xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                                                className={`relative aspect-square rounded-2xl sm:rounded-3xl p-2 transition-all cursor-pointer flex items-center justify-center ${
                                                     isSelected
-                                                        ? 'border-emerald-600 ring-4 ring-emerald-500/25 shadow-md scale-105'
-                                                        : 'border-gray-200 hover:border-emerald-400 opacity-75 hover:opacity-100'
+                                                        ? 'border-2 border-emerald-600 bg-emerald-50/90 ring-4 ring-emerald-500/25 shadow-lg scale-105'
+                                                        : 'border-2 border-gray-100 bg-slate-50/70 hover:border-emerald-300 hover:bg-emerald-50/40 hover:scale-105 shadow-2xs'
                                                 }`}
                                             >
                                                 <img
                                                     src={sanitizeImageUrl(avatarUrl)}
                                                     alt={`Avatar ${idx + 1}`}
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-full object-contain drop-shadow-xs"
                                                 />
                                                 {isSelected && (
-                                                    <div className="absolute top-1 right-1 w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow">
-                                                        <Check size={11} strokeWidth={3} />
+                                                    <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white">
+                                                        <Check size={13} strokeWidth={3} />
                                                     </div>
                                                 )}
                                             </button>
