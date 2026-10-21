@@ -247,6 +247,28 @@ export const OrderManager = () => {
     }, [selectedOrder]);
 
     const prevOrdersRef = useRef<Order[]>([]);
+    const [sidebarWidth, setSidebarWidth] = useState(280);
+
+    useEffect(() => {
+        const updateSidebarWidth = () => {
+            const aside = document.querySelector('aside');
+            if (aside) {
+                setSidebarWidth(aside.getBoundingClientRect().width);
+            }
+        };
+        updateSidebarWidth();
+        window.addEventListener('resize', updateSidebarWidth);
+        const aside = document.querySelector('aside');
+        let observer: MutationObserver | null = null;
+        if (aside) {
+            observer = new MutationObserver(updateSidebarWidth);
+            observer.observe(aside, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+        return () => {
+            window.removeEventListener('resize', updateSidebarWidth);
+            if (observer) observer.disconnect();
+        };
+    }, []);
 
     const fetchOrders = (isSilent = false) => {
         fetch(`${API_URL}/api/admin/orders`, {
@@ -1411,7 +1433,7 @@ export const OrderManager = () => {
                 );
 
                 return (
-                    <div className="w-full space-y-6 pb-6 animate-in fade-in duration-200">
+                    <div className="w-full space-y-6 pb-28 sm:pb-32 animate-in fade-in duration-200">
                         {/* Main White Order Card */}
                         <div className="bg-white rounded-3xl shadow-sm border border-gray-200/80 p-4 sm:p-6 lg:p-7 space-y-6">
                             {/* Header: Back Button + Order ID + Status + Payment Method + Total Pill */}
@@ -1536,8 +1558,15 @@ export const OrderManager = () => {
                                 </div>
                             </div>
 
-                            {/* Action Footer (Sticky at bottom-0, docked cleanly with no gap) */}
-                            <div className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 lg:-mx-7 lg:-mb-7 p-4 sm:p-5 rounded-b-3xl shadow-[0_-8px_25px_rgba(0,0,0,0.08)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+                            {/* FIXED BOTTOM ACTION BAR: ALWAYS VISIBLE AT BOTTOM OF SCREEN WHILE SCROLLING */}
+                            <div
+                                style={{
+                                    left: typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${sidebarWidth}px` : '0px',
+                                    right: 0,
+                                    bottom: typeof window !== 'undefined' && window.innerWidth < 1024 ? '64px' : '0px',
+                                }}
+                                className="fixed z-50 bg-white/95 backdrop-blur-md border-t border-gray-200/90 px-4 sm:px-8 py-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
+                            >
                                 <div className="bg-[#052e16] text-white px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between sm:flex-col sm:justify-center sm:items-start min-w-[140px] shrink-0 border border-emerald-900">
                                     <span className="text-[10px] text-emerald-300 font-black uppercase tracking-wider block">Totale {selectedOrder.finalTotal ? 'Finale' : 'Stimato'}</span>
                                     <span className="text-xl font-black text-white leading-none mt-1">
