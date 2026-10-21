@@ -353,7 +353,7 @@ export const Header = () => {
 
     return (
         <header className={`${isMenuOpen ? 'fixed inset-0 z-[9999] bg-transparent' : `bg-white/90 backdrop-blur-md sticky top-0 z-[100] border-b border-gray-100 ${isScrolled ? 'py-1.5 shadow-md' : 'py-3.5 shadow-sm'}`} transition-all duration-300`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group relative z-50 flex-shrink-0">

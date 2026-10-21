@@ -227,7 +227,7 @@ export const Shop = () => {
         <div className="bg-gray-50/50 min-h-screen pb-24">
             {/* STICKY SEARCH & CONTROL BAR - Soft emerald non-white container background, clean white inputs */}
             <div className="sticky top-[56px] sm:top-[60px] md:top-[64px] z-30 bg-emerald-50/95 backdrop-blur-md border-b border-emerald-200/80 shadow-xs transition-all">
-                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2">
+                <div className="max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 py-2">
                     <div className="flex items-center gap-2">
                         {/* Search Input - Clean White Card */}
                         <div className="relative flex-1 min-w-0">
@@ -284,7 +284,7 @@ export const Shop = () => {
 
             {/* Compact Intro Header */}
             <div className="bg-gradient-to-r from-nature-900 via-nature-850 to-emerald-950 text-white py-4 sm:py-5 border-b border-nature-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+                <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                     <div>
                         <h1 className="font-script text-2xl sm:text-4xl text-nature-100 leading-tight">Il Nostro Raccolto</h1>
                         <p className="text-nature-200 text-[11px] sm:text-xs font-medium mt-0.5">
@@ -295,7 +295,7 @@ export const Shop = () => {
             </div>
 
             {/* Main Content Area: Products on Left, Filters Sidebar on Right on Desktop */}
-            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-4">
+            <div className="max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 mt-4">
                 <div className="flex flex-col lg:flex-row items-start gap-6">
                     {/* LEFT COLUMN: Products Grid & Active Filter Pills */}
                     <main className="flex-1 min-w-0 w-full">
@@ -323,7 +323,7 @@ export const Shop = () => {
                         {/* Product List / Grid */}
                         {products.length > 0 ? (
                             <div className={viewMode === 'grid'
-                                ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-2.5 sm:gap-4"
+                                ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5"
                                 : "flex flex-col gap-2.5"
                             }>
                                 {products.map(product => (
