@@ -10,9 +10,26 @@ export interface PageBackgroundConfig {
     isActive?: boolean;
 }
 
+export interface CustomNavItem {
+    id: string;
+    label: string;
+    type: 'PAGE' | 'CATEGORY' | 'CUSTOM';
+    target: string;
+    url: string;
+    isActive: boolean;
+    order: number;
+}
+
+export const DEFAULT_NAV_ITEMS: CustomNavItem[] = [
+    { id: 'default-1', label: 'Home', type: 'PAGE', target: '/', url: '/', isActive: true, order: 1 },
+    { id: 'default-2', label: 'Nostri Prodotti', type: 'PAGE', target: '/shop', url: '/shop', isActive: true, order: 2 },
+    { id: 'default-3', label: 'I Nostri Mercati', type: 'PAGE', target: '/mercati', url: '/mercati', isActive: true, order: 3 },
+    { id: 'default-4', label: 'Gift Card', type: 'PAGE', target: '/gift-cards', url: '/gift-cards', isActive: true, order: 4 },
+];
+
 export type PageBackgroundsMap = Record<string, PageBackgroundConfig>;
 
-interface StoreSettings {
+export interface StoreSettings {
     siteName: string;
     tagline: string;
     contactEmail: string;
@@ -32,6 +49,7 @@ interface StoreSettings {
     revolutEnvironment?: string;
     revolutEnabled?: boolean;
     pageBackgrounds?: string | PageBackgroundsMap;
+    customNavItems?: string | CustomNavItem[];
 }
 
 interface AppState {

@@ -4,12 +4,13 @@ import {
     Save, Globe, Phone, MapPin, Megaphone,
     MessageSquare, User as UserIcon, Upload, Trash2,
     Plus, Edit2, X, Tag, CreditCard, Scale,
-    Image as ImageIcon
+    Image as ImageIcon, Compass, ArrowUp, ArrowDown,
+    ExternalLink, BookOpen, CheckCircle2
 } from 'lucide-react';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
-import { useAppState, PageBackgroundConfig, PageBackgroundsMap } from '../../store/useAppState';
+import { useAppState, PageBackgroundConfig, PageBackgroundsMap, CustomNavItem, DEFAULT_NAV_ITEMS } from '../../store/useAppState';
 import { AVAILABLE_PAGE_TARGETS } from '../../components/ui/PageBackground';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
@@ -71,7 +72,26 @@ export const SettingsManager = () => {
         revolutEnvironment: 'sandbox',
         revolutEnabled: false,
         weighingTolerancePercent: 10,
-        pageBackgrounds: {} as PageBackgroundsMap
+        pageBackgrounds: {} as PageBackgroundsMap,
+        customNavItems: DEFAULT_NAV_ITEMS as CustomNavItem[]
+    });
+
+    // --- Navigation Management State ---
+    const [cmsPages, setCmsPages] = useState<any[]>([]);
+    const [isNavModalOpen, setIsNavModalOpen] = useState(false);
+    const [editingNavId, setEditingNavId] = useState<string | null>(null);
+    const [navForm, setNavForm] = useState<{
+        label: string;
+        type: 'PAGE' | 'CATEGORY' | 'CUSTOM';
+        target: string;
+        url: string;
+        isActive: boolean;
+    }>({
+        label: '',
+        type: 'PAGE',
+        target: '/',
+        url: '/',
+        isActive: true
     });
 
     const refs = {
@@ -113,12 +133,22 @@ export const SettingsManager = () => {
                 fetchSettings(),
                 fetchZones(),
                 fetchAvatars(),
-                fetchCategories()
+                fetchCategories(),
+                fetchCmsPages()
             ]);
         } catch (err) {
             console.error(err);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchCmsPages = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/admin/pages`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) setCmsPages(await res.json());
+        } catch (e) {
+            console.error('Error fetching CMS pages:', e);
         }
     };
 
@@ -158,7 +188,10 @@ export const SettingsManager = () => {
                 weighingTolerancePercent: data.weighingTolerancePercent !== undefined ? data.weighingTolerancePercent : 10,
                 pageBackgrounds: typeof data.pageBackgrounds === 'string'
                     ? (() => { try { return JSON.parse(data.pageBackgrounds); } catch (e) { return {}; } })()
-                    : (data.pageBackgrounds || {})
+                    : (data.pageBackgrounds || {}),
+                customNavItems: typeof data.customNavItems === 'string'
+                    ? (() => { try { return JSON.parse(data.customNavItems); } catch (e) { return DEFAULT_NAV_ITEMS; } })()
+                    : (Array.isArray(data.customNavItems) && data.customNavItems.length > 0 ? data.customNavItems : DEFAULT_NAV_ITEMS)
             });
         }
     };
@@ -420,6 +453,174 @@ export const SettingsManager = () => {
         }
     };
 
+    // --- Navigation Items Logic ---
+    const handleOpenAddNavModal = () => {
+        setEditingNavId(null);
+        setNavForm({
+            label: '',
+            type: 'PAGE',
+            target: '/',
+            url: '/',
+            isActive: true
+        });
+        setIsNavModalOpen(true);
+    };
+
+    const handleOpenEditNavModal = (item: CustomNavItem) => {
+        setEditingNavId(item.id);
+        setNavForm({
+            label: item.label,
+            type: item.type,
+            target: item.target,
+            url: item.url,
+            isActive: item.isActive !== false
+        });
+        setIsNavModalOpen(true);
+    };
+
+    const handleNavFormTypeChange = (type: 'PAGE' | 'CATEGORY' | 'CUSTOM') => {
+        if (type === 'PAGE') {
+            setNavForm(prev => ({
+                ...prev,
+                type,
+                target: '/',
+                url: '/',
+                label: prev.label || 'Home'
+            }));
+        } else if (type === 'CATEGORY') {
+            const firstCat = categories[0]?.name || '';
+            setNavForm(prev => ({
+                ...prev,
+                type,
+                target: firstCat,
+                url: firstCat ? `/shop?category=${encodeURIComponent(firstCat)}` : '/shop',
+                label: prev.label || firstCat
+            }));
+        } else {
+            setNavForm(prev => ({
+                ...prev,
+                type,
+                target: '',
+                url: '',
+                label: prev.label || ''
+            }));
+        }
+    };
+
+    const handleNavPageTargetChange = (target: string) => {
+        let label = navForm.label;
+        if (target === '/') label = 'Home';
+        else if (target === '/shop') label = 'Nostri Prodotti';
+        else if (target === '/mercati') label = 'I Nostri Mercati';
+        else if (target === '/gift-cards') label = 'Gift Card';
+        else {
+            const cms = cmsPages.find(p => `/page/${p.slug}` === target);
+            if (cms) label = cms.title;
+        }
+        setNavForm(prev => ({ ...prev, target, url: target, label: prev.label ? prev.label : label }));
+    };
+
+    const handleNavCategoryTargetChange = (categoryName: string) => {
+        const computedUrl = `/shop?category=${encodeURIComponent(categoryName)}`;
+        setNavForm(prev => ({
+            ...prev,
+            target: categoryName,
+            url: computedUrl,
+            label: prev.label ? prev.label : categoryName
+        }));
+    };
+
+    const handleSaveNavModal = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!navForm.label.trim()) {
+            addToast('Inserisci un nome visualizzato per la voce del menu.', 'error');
+            return;
+        }
+        if (!navForm.url.trim()) {
+            addToast('Specificare una destinazione o un URL valido.', 'error');
+            return;
+        }
+
+        const currentItems = [...(formData.customNavItems || DEFAULT_NAV_ITEMS)];
+
+        if (editingNavId) {
+            const updated = currentItems.map(item => {
+                if (item.id === editingNavId) {
+                    return {
+                        ...item,
+                        label: navForm.label.trim(),
+                        type: navForm.type,
+                        target: navForm.target,
+                        url: navForm.url.trim(),
+                        isActive: navForm.isActive
+                    };
+                }
+                return item;
+            });
+            setFormData(prev => ({ ...prev, customNavItems: updated }));
+            addToast('Voce menu aggiornata!', 'success');
+        } else {
+            const newItem: CustomNavItem = {
+                id: `nav-${Date.now()}`,
+                label: navForm.label.trim(),
+                type: navForm.type,
+                target: navForm.target,
+                url: navForm.url.trim(),
+                isActive: navForm.isActive,
+                order: currentItems.length + 1
+            };
+            setFormData(prev => ({ ...prev, customNavItems: [...currentItems, newItem] }));
+            addToast('Nuova voce aggiunta al menu!', 'success');
+        }
+
+        setIsNavModalOpen(false);
+    };
+
+    const handleMoveNavItem = (index: number, direction: 'up' | 'down') => {
+        const currentItems = [...(formData.customNavItems || DEFAULT_NAV_ITEMS)];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= currentItems.length) return;
+
+        const temp = currentItems[index];
+        currentItems[index] = currentItems[targetIndex];
+        currentItems[targetIndex] = temp;
+
+        const reordered = currentItems.map((item, idx) => ({ ...item, order: idx + 1 }));
+        setFormData(prev => ({ ...prev, customNavItems: reordered }));
+    };
+
+    const handleToggleNavActive = (id: string) => {
+        const currentItems = [...(formData.customNavItems || DEFAULT_NAV_ITEMS)];
+        const updated = currentItems.map(item => item.id === id ? { ...item, isActive: !item.isActive } : item);
+        setFormData(prev => ({ ...prev, customNavItems: updated }));
+    };
+
+    const handleDeleteNavItem = (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Elimina Voce Menu',
+            message: 'Sei sicuro di voler rimuovere questa voce dal menu di navigazione?',
+            onConfirm: () => {
+                const currentItems = [...(formData.customNavItems || DEFAULT_NAV_ITEMS)];
+                const filtered = currentItems.filter(item => item.id !== id).map((item, idx) => ({ ...item, order: idx + 1 }));
+                setFormData(prev => ({ ...prev, customNavItems: filtered }));
+                addToast('Voce rimossa dal menu.', 'success');
+            }
+        });
+    };
+
+    const handleResetDefaultNav = () => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Ripristina Menu Predefinito',
+            message: 'Tutte le voci attuali verranno sostituite con quelle iniziali (Home, Nostri Prodotti, I Nostri Mercati, Gift Card). Continuare?',
+            onConfirm: () => {
+                setFormData(prev => ({ ...prev, customNavItems: DEFAULT_NAV_ITEMS }));
+                addToast('Menu reimpostato sui valori predefiniti.', 'success');
+            }
+        });
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -430,6 +631,7 @@ export const SettingsManager = () => {
 
     const tabs = [
         { id: 'general', label: 'Generale', icon: <Globe size={18} /> },
+        { id: 'navigation', label: 'Menu Navigazione', icon: <Compass size={18} /> },
         { id: 'backgrounds', label: 'Sfondi Pagine', icon: <ImageIcon size={18} /> },
         { id: 'revolut', label: 'Pagamenti Revolut', icon: <CreditCard size={18} /> },
         { id: 'whatsapp', label: 'WhatsApp', icon: <MessageSquare size={18} /> },
@@ -740,6 +942,198 @@ export const SettingsManager = () => {
                             </button>
                         </div>
                     </form>
+                )}
+
+                {activeTab === 'navigation' && (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        {/* Header Box */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-xl font-bold flex items-center gap-2 text-nature-800">
+                                    <Compass size={22} className="text-emerald-600" /> Menu di Navigazione Personalizzato
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-1 max-w-2xl leading-relaxed">
+                                    Personalizza le voci della barra menu in alto. Puoi collegare <strong>pagine</strong> (Home, Mercati, Gift Card, pagine CMS), <strong>categorie di prodotti</strong> (es. Frutta, Verdura con filtro diretto sullo shop) oppure <strong>link personalizzati</strong>.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                                <button
+                                    type="button"
+                                    onClick={handleResetDefaultNav}
+                                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition cursor-pointer"
+                                    title="Ripristina le 4 voci originali"
+                                >
+                                    Ripristina Predefinito
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenAddNavModal}
+                                    className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
+                                >
+                                    <Plus size={16} /> Aggiungi Voce
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Interactive Live Preview */}
+                        <div className="bg-gradient-to-br from-nature-50/80 via-white to-nature-50/50 rounded-3xl p-6 border border-nature-200/80 shadow-xs space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                                    <CheckCircle2 size={14} className="text-emerald-700" /> Anteprima Barra Desktop (Live)
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-bold">
+                                    {(formData.customNavItems || []).filter(i => i.isActive !== false).length} voci attive
+                                </span>
+                            </div>
+                            <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-gray-150 flex items-center justify-start overflow-x-auto shadow-2xs">
+                                <div className="bg-nature-50/90 border border-nature-200/80 rounded-full p-2 flex items-center gap-1.5 shadow-sm">
+                                    {(formData.customNavItems || [])
+                                        .filter(i => i.isActive !== false)
+                                        .map((item, idx) => (
+                                            <div
+                                                key={item.id}
+                                                className={`px-5 py-2 rounded-full text-xs font-bold transition-all select-none flex items-center gap-2 ${
+                                                    idx === 0 
+                                                        ? 'bg-gradient-to-r from-emerald-600 via-nature-600 to-emerald-700 text-white shadow-md' 
+                                                        : 'text-nature-900/80 hover:text-emerald-800 bg-transparent'
+                                                }`}
+                                            >
+                                                <span>{item.label}</span>
+                                                {idx === 0 && (
+                                                    <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.95)]" />
+                                                )}
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Nav Items List */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-4">
+                            <h4 className="text-sm font-black text-gray-400 uppercase tracking-wider">
+                                Voci del Menu e Ordinamento
+                            </h4>
+
+                            <div className="space-y-2.5">
+                                {(formData.customNavItems || []).map((item, index) => (
+                                    <div
+                                        key={item.id}
+                                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border transition-all gap-3 ${
+                                            item.isActive !== false
+                                                ? 'bg-gray-50/70 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30'
+                                                : 'bg-gray-100/60 border-gray-200/70 opacity-60'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            {/* Reorder Buttons */}
+                                            <div className="flex flex-col gap-1 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    disabled={index === 0}
+                                                    onClick={() => handleMoveNavItem(index, 'up')}
+                                                    className="w-7 h-7 bg-white hover:bg-emerald-100 text-gray-600 hover:text-emerald-800 disabled:opacity-30 disabled:pointer-events-none rounded-lg border border-gray-200 flex items-center justify-center transition cursor-pointer"
+                                                    title="Sposta su"
+                                                >
+                                                    <ArrowUp size={13} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={index === (formData.customNavItems || []).length - 1}
+                                                    onClick={() => handleMoveNavItem(index, 'down')}
+                                                    className="w-7 h-7 bg-white hover:bg-emerald-100 text-gray-600 hover:text-emerald-800 disabled:opacity-30 disabled:pointer-events-none rounded-lg border border-gray-200 flex items-center justify-center transition cursor-pointer"
+                                                    title="Sposta giù"
+                                                >
+                                                    <ArrowDown size={13} />
+                                                </button>
+                                            </div>
+
+                                            {/* Number Order */}
+                                            <span className="w-7 h-7 rounded-lg bg-gray-200/80 text-gray-700 text-xs font-black flex items-center justify-center shrink-0">
+                                                #{index + 1}
+                                            </span>
+
+                                            {/* Info */}
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-black text-gray-900 text-base">
+                                                        {item.label}
+                                                    </span>
+                                                    {/* Type Badge */}
+                                                    {item.type === 'PAGE' && (
+                                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
+                                                            <BookOpen size={11} /> Pagina
+                                                        </span>
+                                                    )}
+                                                    {item.type === 'CATEGORY' && (
+                                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                                            <Tag size={11} /> Categoria
+                                                        </span>
+                                                    )}
+                                                    {item.type === 'CUSTOM' && (
+                                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
+                                                            <ExternalLink size={11} /> Link Custom
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-500 font-mono truncate mt-0.5" title={item.url}>
+                                                    {item.url}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                            {/* Active Switch */}
+                                            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-gray-200 hover:border-emerald-300 transition text-xs font-bold text-gray-700">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={item.isActive !== false}
+                                                    onChange={() => handleToggleNavActive(item.id)}
+                                                    className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
+                                                />
+                                                <span className={item.isActive !== false ? 'text-emerald-800' : 'text-gray-400'}>
+                                                    {item.isActive !== false ? 'Attivo' : 'Nascosto'}
+                                                </span>
+                                            </label>
+
+                                            {/* Edit */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleOpenEditNavModal(item)}
+                                                className="w-9 h-9 rounded-xl bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-700 border border-gray-200 flex items-center justify-center transition cursor-pointer"
+                                                title="Modifica voce"
+                                            >
+                                                <Edit2 size={15} />
+                                            </button>
+
+                                            {/* Delete */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteNavItem(item.id)}
+                                                className="w-9 h-9 rounded-xl bg-white hover:bg-red-50 text-gray-600 hover:text-red-700 border border-gray-200 flex items-center justify-center transition cursor-pointer"
+                                                title="Elimina voce"
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Sticky Save Button */}
+                        <div className="flex justify-end p-4 sticky bottom-6 z-20">
+                            <button
+                                type="button"
+                                onClick={handleSettingsSubmit}
+                                disabled={isSaving}
+                                className="bg-nature-900 text-white px-10 py-4 rounded-2xl font-bold shadow-2xl hover:bg-black transition-all flex items-center gap-2 cursor-pointer active:scale-98"
+                            >
+                                {isSaving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> : <Save size={20} />}
+                                <span>Salva Menu di Navigazione</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
 
                 {activeTab === 'backgrounds' && (
@@ -1237,6 +1631,199 @@ export const SettingsManager = () => {
                             <div className="p-6 border-t bg-gray-50/50 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="px-6 py-2 font-bold text-gray-500">Annulla</button>
                                 <button type="submit" className="bg-nature-600 text-white px-8 py-2 rounded-xl font-bold shadow-lg shadow-nature-100">Salva Categoria</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Aggiungi / Modifica Voce Menu */}
+            {isNavModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-gray-100 relative my-8">
+                        <button
+                            type="button"
+                            onClick={() => setIsNavModalOpen(false)}
+                            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition cursor-pointer"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                                <Compass size={22} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-gray-900">
+                                    {editingNavId ? 'Modifica Voce Menu' : 'Nuova Voce Menu'}
+                                </h3>
+                                <p className="text-xs text-gray-500">
+                                    Configura l'etichetta e la destinazione del link
+                                </p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSaveNavModal} className="space-y-5">
+                            {/* Nome Visualizzato */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-black uppercase tracking-wider text-gray-600 block">
+                                    Nome Visualizzato nel Menu
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Es. Frutta di Stagione, Offerte..."
+                                    value={navForm.label}
+                                    onChange={e => setNavForm(prev => ({ ...prev, label: e.target.value }))}
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 text-sm font-bold text-gray-900 outline-none"
+                                />
+                            </div>
+
+                            {/* Tipo di Link (3 Pills) */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-black uppercase tracking-wider text-gray-600 block">
+                                    Tipo di Collegamento
+                                </label>
+                                <div className="grid grid-cols-3 gap-2 bg-gray-100 p-1 rounded-2xl">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleNavFormTypeChange('PAGE')}
+                                        className={`py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                                            navForm.type === 'PAGE'
+                                                ? 'bg-white text-blue-900 shadow-xs'
+                                                : 'text-gray-600 hover:text-gray-900'
+                                        }`}
+                                    >
+                                        <BookOpen size={13} />
+                                        <span>Pagina</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleNavFormTypeChange('CATEGORY')}
+                                        className={`py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                                            navForm.type === 'CATEGORY'
+                                                ? 'bg-white text-emerald-900 shadow-xs'
+                                                : 'text-gray-600 hover:text-gray-900'
+                                        }`}
+                                    >
+                                        <Tag size={13} />
+                                        <span>Categoria</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleNavFormTypeChange('CUSTOM')}
+                                        className={`py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                                            navForm.type === 'CUSTOM'
+                                                ? 'bg-white text-purple-900 shadow-xs'
+                                                : 'text-gray-600 hover:text-gray-900'
+                                        }`}
+                                    >
+                                        <ExternalLink size={13} />
+                                        <span>Link Custom</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Destinazione in base al tipo */}
+                            {navForm.type === 'PAGE' && (
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-black uppercase tracking-wider text-gray-600 block">
+                                        Seleziona Pagina
+                                    </label>
+                                    <select
+                                        value={navForm.target}
+                                        onChange={e => handleNavPageTargetChange(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 text-sm font-bold text-gray-900 outline-none bg-white cursor-pointer"
+                                    >
+                                        <optgroup label="Pagine Principali">
+                                            <option value="/">🏠 Home Page (/)</option>
+                                            <option value="/shop">🍎 Catalogo Ortofrutta (/shop)</option>
+                                            <option value="/mercati">📍 I Nostri Mercati (/mercati)</option>
+                                            <option value="/gift-cards">🎁 Buoni Regalo & Gift Card (/gift-cards)</option>
+                                        </optgroup>
+                                        {cmsPages.length > 0 && (
+                                            <optgroup label="Pagine Personalizzate CMS">
+                                                {cmsPages.map(p => (
+                                                    <option key={p.id} value={`/page/${p.slug}`}>
+                                                        📄 {p.title} (/page/{p.slug})
+                                                    </option>
+                                                ))}
+                                            </optgroup>
+                                        )}
+                                    </select>
+                                </div>
+                            )}
+
+                            {navForm.type === 'CATEGORY' && (
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-black uppercase tracking-wider text-gray-600 block">
+                                        Seleziona Categoria Prodotti
+                                    </label>
+                                    <select
+                                        value={navForm.target}
+                                        onChange={e => handleNavCategoryTargetChange(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 text-sm font-bold text-gray-900 outline-none bg-white cursor-pointer"
+                                    >
+                                        {categories.length === 0 ? (
+                                            <option value="">Nessuna categoria trovata</option>
+                                        ) : (
+                                            categories.map(c => (
+                                                <option key={c.id} value={c.name}>
+                                                    🏷️ {c.name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                    <p className="text-[11px] text-gray-500 mt-1">
+                                        Genera automaticamente il link filtrato: <code className="font-mono text-emerald-800">{navForm.url}</code>
+                                    </p>
+                                </div>
+                            )}
+
+                            {navForm.type === 'CUSTOM' && (
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-black uppercase tracking-wider text-gray-600 block">
+                                        URL / Percorso
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Es. /offerte o https://..."
+                                        value={navForm.url}
+                                        onChange={e => setNavForm(prev => ({ ...prev, target: e.target.value, url: e.target.value }))}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 text-sm font-mono text-gray-900 outline-none"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Attivo Checkbox */}
+                            <div className="pt-2">
+                                <label className="flex items-center gap-2.5 cursor-pointer text-sm font-bold text-gray-800">
+                                    <input
+                                        type="checkbox"
+                                        checked={navForm.isActive}
+                                        onChange={e => setNavForm(prev => ({ ...prev, isActive: e.target.checked }))}
+                                        className="w-5 h-5 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
+                                    />
+                                    <span>Mostra questa voce nella barra di navigazione</span>
+                                </label>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsNavModalOpen(false)}
+                                    className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition cursor-pointer"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm shadow-md transition cursor-pointer active:scale-95"
+                                >
+                                    {editingNavId ? 'Aggiorna Voce' : 'Aggiungi Voce'}
+                                </button>
                             </div>
                         </form>
                     </div>

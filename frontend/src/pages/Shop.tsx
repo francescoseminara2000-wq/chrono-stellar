@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { Search, X, LayoutGrid, List, SlidersHorizontal, Check, RotateCcw } from 'lucide-react';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
@@ -32,6 +33,7 @@ interface Product {
 const API_URL = '';
 
 export const Shop = () => {
+    const [searchParams] = useSearchParams();
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
@@ -80,6 +82,19 @@ export const Shop = () => {
             .then(data => { if (Array.isArray(data)) setCategories(data); })
             .catch(() => { });
     }, []);
+
+    useEffect(() => {
+        const catName = searchParams.get('category');
+        const catId = searchParams.get('categoryId');
+        if (catId) {
+            setFilterCategory(catId);
+        } else if (catName && categories.length > 0) {
+            const found = categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+            if (found) {
+                setFilterCategory(found.id.toString());
+            }
+        }
+    }, [searchParams, categories]);
 
     useEffect(() => {
         fetchProducts();

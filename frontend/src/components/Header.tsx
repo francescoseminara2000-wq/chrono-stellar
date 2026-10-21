@@ -286,20 +286,7 @@ const AuthMenu = ({
     );
 };
 
-interface NavItemConfig {
-    label: string;
-    path: string;
-    matchPrefix?: string[];
-}
-
-const NAV_ITEMS: NavItemConfig[] = [
-    { label: 'Home', path: '/' },
-    { label: 'Nostri Prodotti', path: '/shop', matchPrefix: ['/shop', '/product'] },
-    { label: 'I Nostri Mercati', path: '/mercati' },
-    { label: 'Gift Card', path: '/gift-cards' },
-];
-
-import { useAppState } from '../store/useAppState';
+import { useAppState, DEFAULT_NAV_ITEMS, CustomNavItem } from '../store/useAppState';
 
 export const Header = () => {
     const location = useLocation();
@@ -309,6 +296,23 @@ export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
     const { settings } = useAppState();
+
+    const dynamicNavItems: CustomNavItem[] = React.useMemo(() => {
+        let list: CustomNavItem[] = DEFAULT_NAV_ITEMS;
+        if (settings?.customNavItems) {
+            try {
+                const parsed = typeof settings.customNavItems === 'string'
+                    ? JSON.parse(settings.customNavItems)
+                    : settings.customNavItems;
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    list = parsed;
+                }
+            } catch (e) {
+                console.error("Error parsing customNavItems:", e);
+            }
+        }
+        return list.filter(item => item.isActive !== false).sort((a, b) => (a.order || 0) - (b.order || 0));
+    }, [settings?.customNavItems]);
 
     const itemCount = items.length;
     const { user, logout, token } = useAuthStore();
@@ -397,29 +401,24 @@ export const Header = () => {
                                     isScrolled ? 'p-1 gap-1' : 'p-1.5 lg:p-2 gap-1 lg:gap-1.5'
                                 }`}
                             >
-                                {NAV_ITEMS.map((item) => {
-                                    const isActive = item.path === '/'
-                                        ? location.pathname === '/'
-                                        : (item.matchPrefix
-                                            ? item.matchPrefix.some(p => location.pathname.startsWith(p))
-                                            : location.pathname.startsWith(item.path));
-                                    const isHovered = hoveredNav === item.path;
+                                {dynamicNavItems.map((item) => {
+                                    const currentPath = location.pathname;
+                                    const currentSearch = location.search;
+                                    const fullCurrent = currentPath + currentSearch;
 
-                                    return (
-                                        <Link
-                                            key={item.path}
-                                            to={item.path}
-                                            onMouseEnter={() => setHoveredNav(item.path)}
-                                            className={`relative rounded-full font-bold transition-colors duration-200 z-10 flex items-center select-none ${
-                                                isScrolled 
-                                                    ? 'px-3.5 py-1.5 text-xs' 
-                                                    : 'px-4 lg:px-5 py-2 lg:py-2.5 text-xs lg:text-[15px]'
-                                            } ${
-                                                isActive 
-                                                    ? 'text-white font-extrabold' 
-                                                    : 'text-nature-900/80 hover:text-emerald-800'
-                                            }`}
-                                        >
+                                    const isActive = item.url === '/'
+                                        ? (currentPath === '/' && !currentSearch)
+                                        : (item.url.includes('?')
+                                            ? fullCurrent === item.url
+                                            : (item.url === '/shop'
+                                                ? ((currentPath === '/shop' && !currentSearch) || currentPath.startsWith('/product'))
+                                                : (currentPath === item.url || currentPath.startsWith(item.url + '/'))));
+
+                                    const isHovered = hoveredNav === item.id;
+                                    const isExternal = item.url.startsWith('http://') || item.url.startsWith('https://');
+
+                                    const linkContent = (
+                                        <>
                                             {/* Active Pill (Vibrant Emerald Gradient with soft glow) */}
                                             {isActive && (
                                                 <motion.div
@@ -455,6 +454,38 @@ export const Header = () => {
                                                     />
                                                 )}
                                             </motion.span>
+                                        </>
+                                    );
+
+                                    const itemClass = `relative rounded-full font-bold transition-colors duration-200 z-10 flex items-center select-none ${
+                                        isScrolled 
+                                            ? 'px-3.5 py-1.5 text-xs' 
+                                            : 'px-4 lg:px-5 py-2 lg:py-2.5 text-xs lg:text-[15px]'
+                                    } ${
+                                        isActive 
+                                            ? 'text-white font-extrabold' 
+                                            : 'text-nature-900/80 hover:text-emerald-800'
+                                    }`;
+
+                                    return isExternal ? (
+                                        <a
+                                            key={item.id}
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onMouseEnter={() => setHoveredNav(item.id)}
+                                            className={itemClass}
+                                        >
+                                            {linkContent}
+                                        </a>
+                                    ) : (
+                                        <Link
+                                            key={item.id}
+                                            to={item.url}
+                                            onMouseEnter={() => setHoveredNav(item.id)}
+                                            className={itemClass}
+                                        >
+                                            {linkContent}
                                         </Link>
                                     );
                                 })}

@@ -14,7 +14,8 @@ export class SettingsController {
             `ALTER TABLE Order ADD COLUMN approvalStatus VARCHAR(255) DEFAULT 'NONE'`,
             `ALTER TABLE Order ADD COLUMN customerApprovedAt DATETIME`,
             `ALTER TABLE Transaction MODIFY COLUMN gateway VARCHAR(255) DEFAULT 'COD'`,
-            `ALTER TABLE StoreSettings ADD COLUMN pageBackgrounds LONGTEXT`
+            `ALTER TABLE StoreSettings ADD COLUMN pageBackgrounds LONGTEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN customNavItems LONGTEXT`
         ];
 
         for (const statement of sqlStatements) {
@@ -193,6 +194,11 @@ export class SettingsController {
                 updateData.pageBackgrounds = typeof req.body.pageBackgrounds === 'string'
                     ? req.body.pageBackgrounds
                     : JSON.stringify(req.body.pageBackgrounds);
+            }
+            if (req.body.customNavItems !== undefined) {
+                updateData.customNavItems = typeof req.body.customNavItems === 'string'
+                    ? req.body.customNavItems
+                    : JSON.stringify(req.body.customNavItems);
             }
 
             const updatedSettings = await prisma.storeSettings.update({
