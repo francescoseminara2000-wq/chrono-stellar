@@ -42,9 +42,9 @@ const AuthMenu = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center gap-2.5 py-0.5 px-1 rounded-full group cursor-pointer transition-all"
+                    className="flex items-center gap-2.5 sm:gap-3 py-1 px-1.5 rounded-full group cursor-pointer transition-all"
                 >
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center text-emerald-800 shadow-2xs border border-nature-200/80 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white flex items-center justify-center text-emerald-800 shadow-sm border border-nature-200/90 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
                         {user.avatar ? (
                             <img
                                 src={sanitizeImageUrl(user.avatar)}
@@ -52,18 +52,18 @@ const AuthMenu = ({
                                 className="w-full h-full object-contain p-0.5"
                             />
                         ) : (
-                            <UserIcon size={16} />
+                            <UserIcon size={18} />
                         )}
                     </div>
                     <div className="flex flex-col text-left">
-                        <span className="text-xs font-black text-nature-900 group-hover:text-emerald-700 transition-colors leading-tight truncate max-w-[130px]">
+                        <span className="text-sm sm:text-[15px] font-black text-nature-950 group-hover:text-emerald-700 transition-colors leading-tight truncate max-w-[160px]">
                             {user.name || 'Account'}
                         </span>
-                        <span className="text-[10px] font-bold text-emerald-700 leading-tight">
+                        <span className="text-xs font-black text-emerald-700 leading-tight mt-0.5">
                             € {formattedBalance}
                         </span>
                     </div>
-                    <ChevronDown size={14} className={`text-nature-400 group-hover:text-emerald-700 transition-transform duration-300 ml-0.5 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={16} className={`text-nature-400 group-hover:text-emerald-700 transition-transform duration-300 ml-0.5 ${isOpen ? 'rotate-180' : ''}`} />
                 </motion.button>
 
                 <AnimatePresence>
@@ -393,7 +393,7 @@ export const Header = () => {
                         {/* User Actions Pill */}
                         <div className={`
                             bg-nature-50 border border-nature-100 rounded-full shadow-sm flex items-center transition-all duration-500 hover:shadow-md hover:border-nature-200
-                            ${isScrolled ? 'py-1 pl-2 pr-4 gap-2' : 'py-2 pl-3 pr-5 gap-3'}
+                            ${isScrolled ? 'py-1 pl-2 pr-3.5 gap-2.5' : 'py-1.5 pl-2.5 pr-4.5 gap-3.5'}
                         `}>
                             <AuthMenu
                                 pushEnabled={pushEnabled}
@@ -401,26 +401,11 @@ export const Header = () => {
                                 isPushLoading={isPushLoading}
                             />
 
-
-                            <div className={`w-px bg-nature-200 transition-all duration-500 ${isScrolled ? 'h-4' : 'h-6'}`}></div>
-
-                            {user && (
-                                <>
-                                    <button
-                                        onClick={handleTogglePush}
-                                        disabled={isPushLoading}
-                                        className="p-2 text-nature-900 hover:text-nature-600 transition-colors group relative"
-                                        title={pushEnabled ? "Notifiche Attive" : "Attiva Notifiche Push"}
-                                    >
-                                        {pushEnabled ? <Bell size={isScrolled ? 18 : 20} className="transition-all duration-500 text-green-500" /> : <BellOff size={isScrolled ? 18 : 20} className="transition-all duration-500" />}
-                                    </button>
-                                    <div className={`w-px bg-nature-200 transition-all duration-500 ${isScrolled ? 'h-4' : 'h-6'}`}></div>
-                                </>
-                            )}
+                            <div className={`w-px bg-nature-200 transition-all duration-500 ${isScrolled ? 'h-5' : 'h-7'}`}></div>
 
                             <Link to="/cart" className="relative p-2 text-nature-900 hover:text-nature-600 transition-colors group">
                                 <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}>
-                                    <ShoppingBasket size={isScrolled ? 18 : 22} className="transition-all duration-500" />
+                                    <ShoppingBasket size={isScrolled ? 19 : 23} className="transition-all duration-500" />
                                 </motion.div>
                                 <AnimatePresence>
                                     {itemCount > 0 && (
