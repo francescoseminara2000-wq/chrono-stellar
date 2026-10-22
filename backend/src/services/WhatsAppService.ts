@@ -8,6 +8,8 @@ export class WhatsAppService {
     private client!: Client;
     private qrCode: string | null = null;
     private isReady: boolean = false;
+    private isAuthenticated: boolean = false;
+    private loadingPercent: number | null = null;
     private pingInterval: any = null;
     private isReconnecting: boolean = false;
     private static instance: WhatsAppService;
@@ -89,6 +91,8 @@ export class WhatsAppService {
     public async resetConnection() {
         console.log('[WhatsApp] Resetting WhatsApp connection and session...');
         this.isReady = false;
+        this.isAuthenticated = false;
+        this.loadingPercent = null;
         this.qrCode = null;
 
         if (this.pingInterval) {
@@ -226,27 +230,70 @@ export class WhatsAppService {
                 console.error('[WhatsApp] Error converting QR to data URL:', err);
             }
             this.isReady = false;
+            this.isAuthenticated = false;
+            this.loadingPercent = null;
+        });
+
+        this.client.on('authenticated', async () => {
+            console.log('[WhatsApp] Authenticated successfully with mobile device!');
+            // Immediately clear the QR code so the UI doesn't keep showing it after scan
+            this.qrCode = null;
+            this.isAuthenticated = true;
+
+            // Fast-track readiness check: check getState() while waiting for Store injection
+            let checks = 0;
+            const authCheckInterval = setInterval(async () => {
+                checks++;
+                if (this.isReady) {
+                    clearInterval(authCheckInterval);
+                    return;
+                }
+                try {
+                    const state: any = await this.client.getState().catch(() => null);
+                    if (state === 'CONNECTED') {
+                        console.log('[WhatsApp] Connection state confirmed as CONNECTED via post-auth check!');
+                        this.isReady = true;
+                        this.isAuthenticated = true;
+                        this.qrCode = null;
+                        this.startHeartbeat();
+                        clearInterval(authCheckInterval);
+                    }
+                } catch (e) {}
+
+                if (checks >= 25) { // 25 * 1.5s = ~37s
+                    clearInterval(authCheckInterval);
+                }
+            }, 1500);
+        });
+
+        this.client.on('loading_screen', (percent: number, message: string) => {
+            console.log(`[WhatsApp] Loading screen: ${percent}% - ${message}`);
+            this.qrCode = null;
+            this.isAuthenticated = true;
+            this.loadingPercent = percent;
         });
 
         this.client.on('ready', () => {
             console.log('[WhatsApp] Client is READY and fully connected!');
             this.isReady = true;
+            this.isAuthenticated = true;
+            this.loadingPercent = null;
             this.qrCode = null;
             this.startHeartbeat();
-        });
-
-        this.client.on('authenticated', () => {
-            console.log('[WhatsApp] Authenticated successfully with mobile device!');
         });
 
         this.client.on('auth_failure', msg => {
             console.error('[WhatsApp] Auth failure:', msg);
             this.isReady = false;
+            this.isAuthenticated = false;
+            this.loadingPercent = null;
         });
 
         this.client.on('disconnected', (reason: any) => {
             console.log('[WhatsApp] Client disconnected:', reason);
             this.isReady = false;
+            this.isAuthenticated = false;
+            this.loadingPercent = null;
             // Ignore transient navigation events
             if (reason !== 'NAVIGATION') {
                 this.reconnect();
@@ -256,12 +303,15 @@ export class WhatsAppService {
         this.client.initialize().catch(err => {
             console.error('[WhatsApp] Failed to initialize client:', err);
             this.isReady = false;
+            this.isAuthenticated = false;
         });
     }
 
     public getStatus() {
         return {
             isConnected: this.isReady,
+            isAuthenticated: this.isAuthenticated,
+            loadingPercent: this.loadingPercent,
             qrCode: this.qrCode
         };
     }
