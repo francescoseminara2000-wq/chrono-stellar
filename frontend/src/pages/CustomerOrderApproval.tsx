@@ -193,18 +193,18 @@ export const CustomerOrderApproval: React.FC = () => {
                         </p>
                     </div>
                 ) : isRejected ? (
-                    <div className="bg-gradient-to-br from-amber-600 to-rose-700 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-rose-500/30 space-y-2 animate-in zoom-in-95">
+                    <div className="bg-gradient-to-br from-rose-700 to-rose-950 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-rose-500/30 space-y-2 animate-in zoom-in-95">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0">
                                 <XCircle size={28} className="text-white" />
                             </div>
                             <div>
-                                <h2 className="font-black text-lg sm:text-xl leading-tight">Richiesta di Revisione</h2>
-                                <p className="text-xs font-semibold text-rose-100">Hai segnalato la pesatura per verifica</p>
+                                <h2 className="font-black text-lg sm:text-xl leading-tight">Ordine Annullato</h2>
+                                <p className="text-xs font-semibold text-rose-200">Pesatura rifiutata e fondi sbloccati</p>
                             </div>
                         </div>
-                        <p className="text-xs text-rose-50/90 leading-relaxed pt-1">
-                            Il negozio è stato notificato. Puoi contattarci via WhatsApp o telefonicamente per concordare eventuali modifiche ai prodotti.
+                        <p className="text-xs text-rose-100/90 leading-relaxed pt-1">
+                            Come da te confermato, l'ordine #{order.id} è stato annullato. L'importo pre-autorizzato o bloccato sulla tua carta è stato sbloccato senza alcun addebito.
                         </p>
                     </div>
                 ) : requiresCustomerAction ? (
@@ -285,6 +285,20 @@ export const CustomerOrderApproval: React.FC = () => {
                             {variableItems.length} {variableItems.length === 1 ? 'articolo a peso' : 'articoli a peso'}
                         </span>
                     </div>
+
+                    {/* Pre-auth & Guarantee info */}
+                    {requiresCustomerAction && (
+                        <div className="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-3 text-[11px] text-amber-900 space-y-1">
+                            <div className="flex items-center gap-1.5 font-black text-amber-950">
+                                <ShieldCheck size={14} className="text-amber-600" />
+                                <span>Trasparenza e Garanzia Pagamento</span>
+                            </div>
+                            <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                                Se <strong>approvi</strong>, verrà addebitato l'importo effettivo esatto di <strong>€ {finalTotalEur.toFixed(2)}</strong> e l'eventuale eccedenza autorizzata verrà rilasciata automaticamente.<br />
+                                Se <strong>rifiuti</strong>, l'ordine verrà annullato e l'intero importo bloccato sulla carta verrà sbloccato all'istante a costo zero.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* 3. Delivery / Pickup Context Card */}
@@ -442,40 +456,59 @@ export const CustomerOrderApproval: React.FC = () => {
             {/* 6. FIXED THUMB-FRIENDLY BOTTOM ACTION BAR (Smartphones & Mobile Devices) */}
             {requiresCustomerAction && (
                 <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 sm:py-4 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] animate-in slide-in-from-bottom duration-300">
-                    <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
-                        <div className="shrink-0">
-                            <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 block leading-none">Totale Pesato</span>
-                            <span className="text-lg sm:text-xl font-black text-emerald-950 leading-tight block">
-                                € {finalTotalEur.toFixed(2)}
-                            </span>
+                    <div className="max-w-xl mx-auto space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="shrink-0">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 block leading-none">Totale Pesato</span>
+                                <span className="text-lg sm:text-xl font-black text-emerald-950 leading-tight block">
+                                    € {finalTotalEur.toFixed(2)}
+                                </span>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                                {order.paymentMethod === 'REVOLUT' ? (
+                                    <button
+                                        type="button"
+                                        disabled={submitting}
+                                        onClick={() => handleAction('ACCEPT')}
+                                        className="w-full h-11 sm:h-12 bg-emerald-600 hover:bg-emerald-700 active:scale-98 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-emerald-600/30 truncate"
+                                    >
+                                        <CheckCircle2 size={18} className="shrink-0" />
+                                        <span className="truncate">
+                                            {submitting ? 'Elaborazione...' : `Approva Pesatura (€ ${finalTotalEur.toFixed(2)})`}
+                                        </span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        disabled={submitting}
+                                        onClick={() => handleAction('ACCEPT')}
+                                        className="w-full h-11 sm:h-12 bg-emerald-600 hover:bg-emerald-700 active:scale-98 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-emerald-600/30 truncate"
+                                    >
+                                        <CheckCircle2 size={18} className="shrink-0" />
+                                        <span className="truncate">
+                                            {submitting ? 'Conferma in corso...' : 'Approva & Conferma Pesatura'}
+                                        </span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                            {order.paymentMethod === 'REVOLUT' ? (
-                                <button
-                                    type="button"
-                                    disabled={submitting}
-                                    onClick={() => handleAction('ACCEPT')}
-                                    className="w-full h-12 bg-indigo-900 hover:bg-indigo-950 active:scale-98 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-indigo-900/30 truncate"
-                                >
-                                    <CreditCard size={18} className="text-amber-400 shrink-0" />
-                                    <span className="truncate">
-                                        {submitting ? 'Elaborazione...' : `Paga Online (€ ${finalTotalEur.toFixed(2)})`}
-                                    </span>
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    disabled={submitting}
-                                    onClick={() => handleAction('ACCEPT')}
-                                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 active:scale-98 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-emerald-600/30 truncate"
-                                >
-                                    <CheckCircle2 size={18} className="shrink-0" />
-                                    <span className="truncate">
-                                        {submitting ? 'Conferma in corso...' : 'Approva & Conferma Pesatura'}
-                                    </span>
-                                </button>
-                            )}
+                        {/* Rifiuta & Sblocca Fondi */}
+                        <div className="flex items-center justify-center pt-1 border-t border-gray-100">
+                            <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={() => {
+                                    if (window.confirm("Sei sicuro di voler rifiutare la pesatura? L'ordine verrà annullato e l'importo autorizzato sulla tua carta verrà sbloccato immediatamente (senza alcun addebito).")) {
+                                        handleAction('REJECT');
+                                    }
+                                }}
+                                className="text-xs font-bold text-rose-600 hover:text-rose-700 active:text-rose-800 py-1 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            >
+                                <XCircle size={14} className="shrink-0" />
+                                <span>Rifiuta pesatura ed annulla ordine (Sblocca fondi)</span>
+                            </button>
                         </div>
                     </div>
                 </div>

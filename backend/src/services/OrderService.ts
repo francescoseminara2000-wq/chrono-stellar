@@ -281,19 +281,26 @@ export class OrderService {
                     }
                 };
             } else if (hasVariableWeight && paymentMethod === 'REVOLUT') {
-                console.log(`[OrderService] Order #${newOrder.id} contains variable weight products. Deferring online payment until post-weighing.`);
-                transactionPartial = {
-                    orderId: newOrder.id,
-                    amount: remainingToPay,
-                    currency: 'EUR',
-                    gateway: PaymentGateway.REVOLUT,
-                    status: TransactionStatus.PENDING,
-                    gatewayTxId: `REV-DEF-${newOrder.id}-${Date.now()}`,
-                    metadata: {
-                        deferredPayment: true,
-                        hasVariableWeight: true,
-                        walletAmountUsed
-                    }
+                // Modello Pre-Autorizzazione con Buffer di Tolleranza
+                const settings = await tx.storeSettings.findFirst();
+                const tolerance = (settings as any)?.weighingTolerancePercent ?? 10;
+                const bufferMultiplier = 1 + (tolerance / 100);
+                const preAuthAmount = Math.round(remainingToPay * bufferMultiplier);
+
+                console.log(`[OrderService] Order #${newOrder.id} has variable weight. Initiating Pre-Authorization of €${(preAuthAmount / 100).toFixed(2)} (base: €${(remainingToPay / 100).toFixed(2)}, tolerance: +${tolerance}%)`);
+
+                transactionPartial = await strategy.initiate({
+                    ...newOrder,
+                    hasVariableWeight: true
+                } as any, preAuthAmount);
+
+                transactionPartial.metadata = {
+                    ...(transactionPartial.metadata || {}),
+                    isPreAuth: true,
+                    estimatedBaseAmount: remainingToPay,
+                    preAuthAmount: preAuthAmount,
+                    tolerancePercent: tolerance,
+                    walletAmountUsed
                 };
             } else {
                 transactionPartial = await strategy.initiate(newOrder as any, remainingToPay);

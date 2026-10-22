@@ -239,6 +239,9 @@ export class OrderController {
                 }
             }
 
+            const { RevolutPaymentStrategy } = require('../infrastructure/payment/RevolutStrategy');
+            const revolutStrategy = new RevolutPaymentStrategy();
+
             if (action === 'ACCEPT') {
                 const updated = await prisma.order.update({
                     where: { id },
@@ -247,6 +250,13 @@ export class OrderController {
                         customerApprovedAt: new Date()
                     } as any
                 });
+
+                // Esegui la cattura definitiva del pagamento Revolut se presente
+                try {
+                    await revolutStrategy.capture(id, order.finalTotal || order.estimatedTotal);
+                } catch (payErr) {
+                    console.error('[OrderController] Revolut capture error:', payErr);
+                }
 
                 // Notify admin via Notification
                 try {
@@ -271,19 +281,40 @@ export class OrderController {
 
                 return res.json({ message: 'Pesatura approvata con successo!', approvalStatus: 'CUSTOMER_APPROVED', order: updated });
             } else if (action === 'REJECT') {
+                // Sblocca l'intero importo sulla carta Revolut ed annulla l'ordine
+                try {
+                    await revolutStrategy.cancel(id);
+                } catch (payErr) {
+                    console.error('[OrderController] Revolut pre-auth release error:', payErr);
+                }
+
                 const updated = await prisma.order.update({
                     where: { id },
                     data: {
+                        status: 'CANCELLED',
                         approvalStatus: 'CUSTOMER_REJECTED'
                     } as any
                 });
+
+                // Invia notifica WhatsApp di conferma annullamento e sblocco fondi
+                const customerPhone = order.customerPhone || order.user?.phone;
+                if (customerPhone) {
+                    try {
+                        const { WhatsAppService } = require('../services/WhatsAppService');
+                        const waService = WhatsAppService.getInstance();
+                        const cancelMsg = `Ciao ${order.customerName || 'Cliente'}, come da te richiesto l'ordine #${id} è stato annullato. ❌\n\nL'importo pre-autorizzato sulla tua carta è stato completamente sbloccato senza alcun addebito.\n\nPer qualsiasi informazione siamo a tua disposizione!`;
+                        await waService.sendMessage(customerPhone, cancelMsg);
+                    } catch (waErr) {
+                        console.error('[OrderController] Failed to send cancellation WhatsApp:', waErr);
+                    }
+                }
 
                 try {
                     await prisma.notification.create({
                         data: {
                             type: 'APPROVAL_REJECTED',
-                            title: `Pesatura Rifiutata per Ordine #${id}`,
-                            message: `Il cliente ${order.customerName || ''} ha contestato la variazione di pesatura dell'ordine #${id}.`
+                            title: `Ordine #${id} Annullato dal Cliente (Fondi Sbloccati)`,
+                            message: `Il cliente ${order.customerName || ''} ha rifiutato la pesatura dell'ordine #${id}. L'ordine è stato annullato e la pre-autorizzazione sulla carta è stata sbloccata.`
                         }
                     });
                 } catch (e) {
@@ -298,7 +329,7 @@ export class OrderController {
                     console.error('Failed to emit order:approval_changed:', e);
                 }
 
-                return res.json({ message: 'Richiesta di variazione contestata.', approvalStatus: 'CUSTOMER_REJECTED', order: updated });
+                return res.json({ message: 'Ordine annullato con successo. I fondi autorizzati sulla tua carta sono stati completamente sbloccati.', approvalStatus: 'CUSTOMER_REJECTED', order: updated });
             } else {
                 return res.status(400).json({ error: 'Azione non valida' });
             }

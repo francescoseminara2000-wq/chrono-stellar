@@ -48,6 +48,17 @@ export class AdminController {
 
             const order = await adminService.fulfillOrder(Number(id), items);
 
+            // Se l'ordine è entro la tolleranza (AUTO_APPROVED), cattura subito l'importo esatto del pagamento Revolut pre-autorizzato
+            if (order.approvalStatus === 'AUTO_APPROVED') {
+                try {
+                    const { RevolutPaymentStrategy } = require('../infrastructure/payment/RevolutStrategy');
+                    const revolutStrategy = new RevolutPaymentStrategy();
+                    await revolutStrategy.capture(order.id, order.finalTotal || order.estimatedTotal);
+                } catch (payErr) {
+                    console.error('[AdminController] Pre-auth auto-capture error on fulfill:', payErr);
+                }
+            }
+
             // Auto-send WhatsApp/Email notification
             await notifyClientOfStatusUpdate(order, 'WEIGHING_COMPLETED');
 
