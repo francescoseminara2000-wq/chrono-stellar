@@ -602,8 +602,11 @@ export class WhatsAppService {
                             const myMsgs = chat.msgs.filter((m: any) => m.id && m.id.fromMe);
                             const last = myMsgs[myMsgs.length - 1];
                             if (last && last.id) {
+                                const fullKey = (last.id && typeof last.id._serialized === 'string' && last.id._serialized)
+                                    || (last.id && typeof last.id.toString === 'function' ? last.id.toString() : '')
+                                    || `true_${cId}_${last.id.id || last.id}`;
                                 return {
-                                    id: last.id._serialized || last.id.id,
+                                    id: fullKey,
                                     ack: typeof last.ack === 'number' ? last.ack : 1
                                 };
                             }
@@ -663,8 +666,11 @@ export class WhatsAppService {
                         const myMsgs = chat.msgs.filter((m: any) => m.id && m.id.fromMe);
                         const last = myMsgs[myMsgs.length - 1];
                         if (last && last.id) {
+                            const fullKey = (last.id && typeof last.id._serialized === 'string' && last.id._serialized)
+                                || (last.id && typeof last.id.toString === 'function' ? last.id.toString() : '')
+                                || `true_${cId}_${last.id.id || last.id}`;
                             return {
-                                id: last.id._serialized || last.id.id,
+                                id: fullKey,
                                 ack: typeof last.ack === 'number' ? last.ack : 1
                             };
                         }
@@ -874,7 +880,7 @@ export class WhatsAppService {
                                 return;
                             }
 
-                            const pageAck = await this.checkMessageAckInPage(messageId, currentEntry.rawMessageId);
+                            const pageAck = await this.checkMessageAckInPage(messageId, currentEntry.rawMessageId, phone);
                             console.log(`[WhatsApp Track] 🔍 Poll #${currentEntry.pollCount} per Ordine #${order.id} (msg: ${messageId}): ACK=${pageAck}`);
                             if (pageAck >= 2) {
                                 console.log(`[WhatsApp Track] 🎯 Doppia spunta rilevata (ACK=${pageAck}) per Ordine #${order.id}!`);
@@ -931,49 +937,99 @@ export class WhatsAppService {
         }
     }
 
-    public async checkMessageAckInPage(messageId: string, rawId: string): Promise<number> {
+    public async checkMessageAckInPage(messageId: string, rawId: string, phone?: string): Promise<number> {
         if (!this.client) return -1;
 
-        try {
-            const msgObj: any = await this.client.getMessageById(messageId).catch(() => null);
-            if (msgObj && typeof msgObj.ack === 'number' && msgObj.ack >= 0) {
-                return msgObj.ack;
-            }
-        } catch (e) {}
+        const effectiveRawId = rawId || (messageId.includes('_') ? messageId.split('_').pop() || messageId : messageId);
+
+        // Try official getMessageById only if messageId has valid serialized format
+        if (messageId && messageId.includes('_')) {
+            try {
+                const msgObj: any = await this.client.getMessageById(messageId).catch(() => null);
+                if (msgObj && typeof msgObj.ack === 'number' && msgObj.ack >= 0) {
+                    return msgObj.ack;
+                }
+            } catch (e) {}
+        }
 
         const page = (this.client as any).pupPage;
         if (!page) return -1;
 
         try {
-            const ack = await page.evaluate(async (fullId: string, rId: string) => {
+            const ack = await page.evaluate(async (fullId: string, rId: string, rawPhone?: string) => {
                 try {
                     const store = (window as any).Store;
                     if (!store) return -1;
-                    let msg = store.Msg ? store.Msg.get(fullId) : null;
-                    if (!msg && store.Msg?.getMessagesById) {
-                        try {
-                            const res = await store.Msg.getMessagesById([fullId]);
-                            if (res && res.messages && res.messages.length) {
-                                msg = res.messages[0];
+
+                    const getAckVal = (m: any) => {
+                        if (!m) return -1;
+                        if (typeof m.ack === 'number') return m.ack;
+                        if (typeof m._ack === 'number') return m._ack;
+                        return -1;
+                    };
+
+                    // 1. Try Store.Msg if fullId has proper serialization
+                    if (fullId && fullId.includes('_') && store.Msg) {
+                        let m = store.Msg.get(fullId);
+                        if (m) {
+                            const val = getAckVal(m);
+                            if (val >= 0) return val;
+                        }
+                        if (store.Msg.getMessagesById) {
+                            try {
+                                const res = await store.Msg.getMessagesById([fullId]);
+                                if (res && res.messages && res.messages.length) {
+                                    const val = getAckVal(res.messages[0]);
+                                    if (val >= 0) return val;
+                                }
+                            } catch (e) {}
+                        }
+                    }
+
+                    // 2. Search in Chat messages (where messages reside in WhatsApp Web)
+                    let cleanPhone = (rawPhone || '').replace(/[^0-9]/g, '');
+                    if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) cleanPhone = '39' + cleanPhone;
+                    else if (cleanPhone.startsWith('0039')) cleanPhone = cleanPhone.substring(2);
+
+                    const chatsToScan: any[] = [];
+                    if (cleanPhone && store.Chat) {
+                        const cId = cleanPhone + '@c.us';
+                        let targetChat = store.Chat.get(cId);
+                        if (!targetChat && store.Chat.find && store.WidFactory) {
+                            try { targetChat = await store.Chat.find(store.WidFactory.createWid(cId)); } catch (e) {}
+                        }
+                        if (targetChat) chatsToScan.push(targetChat);
+                    }
+
+                    if (store.Chat?.getModelsArray) {
+                        const all = store.Chat.getModelsArray();
+                        for (const c of all) { if (c && !chatsToScan.includes(c)) chatsToScan.push(c); }
+                    } else if (store.Chat?.models) {
+                        for (const c of store.Chat.models) { if (c && !chatsToScan.includes(c)) chatsToScan.push(c); }
+                    }
+
+                    for (const chat of chatsToScan) {
+                        if (!chat || !chat.msgs) continue;
+                        let msgs: any[] = [];
+                        if (typeof chat.msgs.getModelsArray === 'function') msgs = chat.msgs.getModelsArray();
+                        else if (Array.isArray(chat.msgs.models)) msgs = chat.msgs.models;
+                        else if (Array.isArray(chat.msgs)) msgs = chat.msgs;
+
+                        for (let i = msgs.length - 1; i >= 0; i--) {
+                            const m = msgs[i];
+                            if (!m || !m.id) continue;
+                            const mId = m.id.id || (typeof m.id === 'string' ? m.id : '');
+                            const mFull = m.id._serialized || (typeof m.id === 'string' ? m.id : '');
+
+                            if ((rId && (mId === rId || mFull.includes(rId))) || (fullId && (mFull === fullId || mFull.includes(fullId)))) {
+                                const val = getAckVal(m);
+                                if (val >= 0) return val;
                             }
-                        } catch (e) {}
-                    }
-                    if (!msg && store.Msg?.models) {
-                        msg = store.Msg.models.find((m: any) => {
-                            const idObj = m?.id;
-                            if (!idObj) return false;
-                            if (idObj._serialized === fullId || idObj._serialized === rId) return true;
-                            if (idObj.id === fullId || idObj.id === rId) return true;
-                            if (typeof idObj === 'string' && (idObj === fullId || idObj === rId)) return true;
-                            return false;
-                        });
-                    }
-                    if (msg && typeof msg.ack === 'number') {
-                        return msg.ack;
+                        }
                     }
                 } catch (e) {}
                 return -1;
-            }, messageId, rawId).catch(() => -1);
+            }, messageId, effectiveRawId, phone).catch(() => -1);
 
             return typeof ack === 'number' ? ack : -1;
         } catch (e) {

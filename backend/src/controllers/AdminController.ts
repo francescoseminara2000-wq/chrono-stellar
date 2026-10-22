@@ -272,7 +272,7 @@ export class AdminController {
             }
 
             const rawId = msgId.split('_').pop() || msgId;
-            const ack = await whatsAppService.checkMessageAckInPage(msgId, rawId);
+            const ack = await whatsAppService.checkMessageAckInPage(msgId, rawId, targetPhone);
             console.log(`[WhatsApp Track] 🔎 Controllo manuale per Ordine #${order.id} (msg: ${msgId}): ACK=${ack}`);
             whatsAppService.log('info', `[AdminController] Manual checkWhatsAppStatus for Order #${order.id} (msg: ${msgId}): ack=${ack}`);
 
