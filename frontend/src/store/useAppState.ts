@@ -54,6 +54,7 @@ export interface StoreSettings {
     navHoverColor?: string;
     appleLoaderPlaybackRate?: number;
     appleLoaderMinDuration?: number;
+    appleLoaderVideoUrl?: string | null;
 }
 
 interface AppState {

@@ -19,7 +19,8 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN navHoverOpacity INT DEFAULT 75`,
             `ALTER TABLE StoreSettings ADD COLUMN navHoverColor VARCHAR(50) DEFAULT '#bbf7d0'`,
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderPlaybackRate FLOAT DEFAULT 1.0`,
-            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderMinDuration INT DEFAULT 2`
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderMinDuration INT DEFAULT 2`,
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderVideoUrl TEXT`
         ];
 
         for (const statement of sqlStatements) {
@@ -216,6 +217,9 @@ export class SettingsController {
             if (req.body.appleLoaderMinDuration !== undefined) {
                 updateData.appleLoaderMinDuration = Number(req.body.appleLoaderMinDuration);
             }
+            if (req.body.appleLoaderVideoUrl !== undefined) {
+                updateData.appleLoaderVideoUrl = req.body.appleLoaderVideoUrl ? String(req.body.appleLoaderVideoUrl).trim() : null;
+            }
 
             const updatedSettings = await prisma.storeSettings.update({
                 where: { id: 1 },
@@ -239,6 +243,26 @@ export class SettingsController {
         } catch (error: any) {
             console.error('Error uploading background:', error);
             res.status(500).json({ error: error.message || 'Errore durante il caricamento dello sfondo' });
+        }
+    }
+
+    public async uploadLoaderVideo(req: Request, res: Response) {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ error: 'Nessun file video caricato' });
+            }
+            const publicUrl = `/uploads/loaders/${req.file.filename}`;
+            
+            // Aggiorna subito le impostazioni con la nuova URL
+            const updated = await prisma.storeSettings.update({
+                where: { id: 1 },
+                data: { appleLoaderVideoUrl: publicUrl }
+            });
+
+            res.json({ url: publicUrl, filename: req.file.filename, settings: updated });
+        } catch (error: any) {
+            console.error('Error uploading loader video:', error);
+            res.status(500).json({ error: error.message || 'Errore durante il caricamento del video' });
         }
     }
 }

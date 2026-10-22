@@ -89,7 +89,8 @@ export const SettingsManager = () => {
         navHoverOpacity: 75,
         navHoverColor: '#bbf7d0',
         appleLoaderPlaybackRate: 1.0,
-        appleLoaderMinDuration: 2
+        appleLoaderMinDuration: 2,
+        appleLoaderVideoUrl: null as string | null
     });
 
     // --- Navigation Management State ---
@@ -129,6 +130,7 @@ export const SettingsManager = () => {
     const [avatars, setAvatars] = useState<string[]>([]);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+    const [isUploadingLoaderVideo, setIsUploadingLoaderVideo] = useState(false);
 
     // --- Categories State ---
     const [categories, setCategories] = useState<any[]>([]);
@@ -211,8 +213,66 @@ export const SettingsManager = () => {
                 navHoverOpacity: data.navHoverOpacity !== undefined && data.navHoverOpacity !== null ? Number(data.navHoverOpacity) : 75,
                 navHoverColor: data.navHoverColor || '#bbf7d0',
                 appleLoaderPlaybackRate: data.appleLoaderPlaybackRate !== undefined && data.appleLoaderPlaybackRate !== null ? Number(data.appleLoaderPlaybackRate) : 1.0,
-                appleLoaderMinDuration: data.appleLoaderMinDuration !== undefined && data.appleLoaderMinDuration !== null ? Number(data.appleLoaderMinDuration) : 2
+                appleLoaderMinDuration: data.appleLoaderMinDuration !== undefined && data.appleLoaderMinDuration !== null ? Number(data.appleLoaderMinDuration) : 2,
+                appleLoaderVideoUrl: data.appleLoaderVideoUrl || null
             });
+        }
+    };
+
+    const handleLoaderVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const validExts = ['.mp4', '.webm', '.mov'];
+        const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
+        if (!validExts.includes(fileExt) && !file.type.startsWith('video/')) {
+            addToast('Seleziona un file video valido (.mp4, .webm, .mov)', 'error');
+            return;
+        }
+
+        setIsUploadingLoaderVideo(true);
+        const uploadData = new FormData();
+        uploadData.append('video', file);
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/loader-video/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: uploadData
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                setFormData(prev => ({ ...prev, appleLoaderVideoUrl: result.url }));
+                refreshGlobalSettings();
+                addToast('🎬 Video animazione caricato e salvato con successo!', 'success', 5000);
+            } else {
+                const err = await res.json().catch(() => ({}));
+                addToast(`Errore caricamento video: ${err.error || 'Errore server'}`, 'error');
+            }
+        } catch (err) {
+            console.error('Error uploading loader video:', err);
+            addToast('Errore di connessione durante il caricamento del video.', 'error');
+        } finally {
+            setIsUploadingLoaderVideo(false);
+            e.target.value = '';
+        }
+    };
+
+    const handleResetLoaderVideo = async () => {
+        setFormData(prev => ({ ...prev, appleLoaderVideoUrl: null }));
+        try {
+            const res = await fetch(`${API_URL}/api/admin/settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ ...formData, appleLoaderVideoUrl: null })
+            });
+            if (res.ok) {
+                refreshGlobalSettings();
+                addToast('🍎 Video originale della mela ripristinato!', 'success');
+            }
+        } catch (e) {
+            addToast('Errore durante il ripristino del video predefinito.', 'error');
         }
     };
 
@@ -997,13 +1057,101 @@ export const SettingsManager = () => {
                             <AppleLoader
                                 size="lg"
                                 playbackRate={formData.appleLoaderPlaybackRate}
+                                videoUrl={formData.appleLoaderVideoUrl || undefined}
                                 text="Caricamento in corso..."
                                 subtext={`Velocità: ${formData.appleLoaderPlaybackRate}x • Durata minima: ${formData.appleLoaderMinDuration}s`}
                             />
 
                             <p className="text-xs text-gray-500 font-medium mt-4">
-                                Questa anteprima reagisce in tempo reale alle regolazioni sottostanti.
+                                Questa anteprima reagisce in tempo reale alle regolazioni sottostanti e al video caricato.
                             </p>
+                        </div>
+
+                        {/* File Upload / Video Replacement Card */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+                                <div>
+                                    <h4 className="font-extrabold text-gray-900 text-base flex items-center gap-2">
+                                        <Upload size={20} className="text-emerald-600" /> Sostituzione Video Animazione (MP4 / WebM)
+                                    </h4>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Carica una nuova animazione video per sostituire quella predefinita della mela.
+                                    </p>
+                                </div>
+                                {formData.appleLoaderVideoUrl ? (
+                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-black text-emerald-800">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Video Personalizzato Attivo
+                                    </div>
+                                ) : (
+                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200 text-xs font-bold text-gray-600">
+                                        Video Predefinito Attivo (/apple-loader.mp4)
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                {/* Upload Actions */}
+                                <div className="space-y-4">
+                                    <div className="flex flex-wrap gap-3 items-center">
+                                        <input
+                                            type="file"
+                                            id="loader-video-upload-input"
+                                            className="hidden"
+                                            accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                                            onChange={handleLoaderVideoUpload}
+                                            disabled={isUploadingLoaderVideo}
+                                        />
+                                        <label
+                                            htmlFor="loader-video-upload-input"
+                                            className={`inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-bold text-sm text-white bg-emerald-800 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95 ${
+                                                isUploadingLoaderVideo ? 'opacity-50 pointer-events-none' : ''
+                                            }`}
+                                        >
+                                            {isUploadingLoaderVideo ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                    <span>Caricamento video in corso...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Upload size={18} />
+                                                    <span>Carica Nuovo Video MP4</span>
+                                                </>
+                                            )}
+                                        </label>
+
+                                        {formData.appleLoaderVideoUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={handleResetLoaderVideo}
+                                                className="inline-flex items-center gap-2 px-4 py-3.5 rounded-2xl font-bold text-xs text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all cursor-pointer active:scale-95"
+                                            >
+                                                <Trash2 size={16} /> Ripristina Video Originale Mela
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {formData.appleLoaderVideoUrl && (
+                                        <p className="text-xs text-gray-400 font-mono break-all">
+                                            Percorso attivo: <span className="text-gray-700 font-semibold">{formData.appleLoaderVideoUrl}</span>
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Guidelines note */}
+                                <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 text-xs text-gray-600 space-y-1.5 leading-relaxed">
+                                    <p className="font-extrabold text-emerald-900 flex items-center gap-1.5">
+                                        <Sparkles size={14} className="text-emerald-700" /> Linee guida consigliate:
+                                    </p>
+                                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-gray-500">
+                                        <li><strong>Formato</strong>: MP4 (H.264), WebM o MOV.</li>
+                                        <li><strong>Risoluzione</strong>: Quadrato 1:1 (es. 720x720 o 500x500 px).</li>
+                                        <li><strong>Sfondo</strong>: Bianco puro (<code>#FFFFFF</code>) per la trasparenza automatica.</li>
+                                        <li><strong>Durata</strong>: Da 2 a 4 secondi (ottimale boomerang o loop continuo).</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Controls Grid */}

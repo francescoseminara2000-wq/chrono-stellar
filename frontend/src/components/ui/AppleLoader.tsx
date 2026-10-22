@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useAppState } from '../../store/useAppState';
+import { sanitizeImageUrl } from '../../utils/imageUrl';
 
 export interface AppleLoaderProps {
     size?: 'sm' | 'md' | 'lg' | 'xl' | number;
@@ -8,6 +9,7 @@ export interface AppleLoaderProps {
     inline?: boolean;
     className?: string;
     playbackRate?: number;
+    videoUrl?: string;
 }
 
 export const AppleLoader: React.FC<AppleLoaderProps> = ({
@@ -17,10 +19,12 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
     inline = false,
     className = '',
     playbackRate,
+    videoUrl,
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const { settings } = useAppState();
     const effectivePlaybackRate = playbackRate ?? (settings?.appleLoaderPlaybackRate && settings.appleLoaderPlaybackRate > 0 ? settings.appleLoaderPlaybackRate : 1.0);
+    const videoSrc = videoUrl || (settings?.appleLoaderVideoUrl ? sanitizeImageUrl(settings.appleLoaderVideoUrl) : '/apple-loader.mp4?v=4');
 
     // Risoluzione dimensioni ottimali per il video (mela grande e ben visibile)
     let dimension = 200;
@@ -59,7 +63,8 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
                 */}
                 <video
                     ref={videoRef}
-                    src="/apple-loader.mp4?v=4"
+                    key={videoSrc}
+                    src={videoSrc}
                     autoPlay
                     loop
                     muted

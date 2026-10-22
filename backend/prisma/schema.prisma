@@ -180,6 +180,7 @@ model StoreSettings {
   navHoverColor               String?  @default("#bbf7d0")
   appleLoaderPlaybackRate     Float?   @default(1.0)
   appleLoaderMinDuration      Int?     @default(2)
+  appleLoaderVideoUrl         String?  @db.Text
 }
 
 model Transaction {
