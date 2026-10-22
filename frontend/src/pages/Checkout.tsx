@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAppState } from '../store/useAppState';
-import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock, CreditCard, CheckCircle2, Tag } from 'lucide-react';
+import { Truck, Store, LogIn, User, ShoppingBag, Scale, AlertTriangle, X as XIcon, Clock, CreditCard, CheckCircle2, Tag, Package, Sparkles, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToastStore } from '../store/useToastStore';
 
@@ -88,6 +88,18 @@ export const Checkout = () => {
     const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
     const [shippingCost, setShippingCost] = useState(0);
     const [submitted, setSubmitted] = useState(false);
+    const [submittedSummary, setSubmittedSummary] = useState<{
+        orderId?: number;
+        deliveryMethod: 'PICKUP' | 'DELIVERY';
+        address: string;
+        date: string;
+        timeSlot?: string;
+        total: number;
+        itemsCount: number;
+        customerName: string;
+        customerPhone: string;
+        paymentMethod: string;
+    } | null>(null);
     const [availableDates, setAvailableDates] = useState<Array<{ date: string; label: string }>>([]);
 
     // Save states to localStorage
@@ -426,8 +438,24 @@ export const Checkout = () => {
                     setRevolutCheckoutUrl(revolutUrl);
                 }
 
-                // Keep the loading screen for a minimum of 1.5s for a premium feel
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // Salva lo snapshot dell'ordine per la schermata di conferma potenziata
+                setSubmittedSummary({
+                    orderId: createdOrder?.id,
+                    deliveryMethod,
+                    address: deliveryMethod === 'DELIVERY'
+                        ? `${formData.street}, ${formData.civic} - ${formData.zip} ${formData.city}`
+                        : 'Via don Giovanni Minzoni, 9 - Sirone (LC)',
+                    date: selectedDate,
+                    timeSlot: selectedTimeSlot,
+                    total: total,
+                    itemsCount: items.length,
+                    customerName: user?.name || formData.name,
+                    customerPhone: user?.phone || formData.phone,
+                    paymentMethod: paymentMethod,
+                });
+
+                // Attesa di 3.2s per consentire al video della mela di completare il ciclo con ritmo armonico
+                await new Promise(resolve => setTimeout(resolve, 3200));
                 setIsSubmitting(false);
                 setSubmitted(true);
                 clearCart();
@@ -472,174 +500,244 @@ export const Checkout = () => {
     }
 
     if (submitted) {
+        const orderIdDisplay = submittedSummary?.orderId || lastOrderId;
+        const displayTotal = submittedSummary?.total !== undefined 
+            ? ((submittedSummary.total) / 100).toFixed(2)
+            : ((getEstimatedTotal() / 100) + shippingCost).toFixed(2);
+
         return (
-            <div className="min-h-screen bg-nature-50 flex items-center justify-center p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-nature-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            <div className="min-h-screen bg-gradient-to-br from-nature-50 via-gray-50 to-emerald-50/40 py-10 sm:py-16 px-4 flex items-center justify-center">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="max-w-2xl w-full bg-white/95 backdrop-blur-md rounded-3xl shadow-xl border border-emerald-100/90 overflow-hidden"
+                >
+                    {/* Header di Successo Celebrativo */}
+                    <div className="relative p-6 sm:p-8 text-center bg-gradient-to-b from-emerald-50/90 via-white to-transparent border-b border-emerald-100/60 overflow-hidden">
+                        {/* Glow decorativo */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-36 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none" />
+
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.1 }}
+                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 shadow-inner border-4 border-white"
+                        >
+                            <CheckCircle2 size={46} className="stroke-[2.5]" />
+                        </motion.div>
+
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-850 text-xs font-black uppercase tracking-wider mb-2">
+                            <Sparkles size={13} className="text-emerald-700" /> Ordine Ricevuto con Successo
+                        </div>
+
+                        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                            Grazie per il tuo ordine!
+                        </h1>
+
+                        <p className="text-gray-500 text-xs sm:text-sm font-medium mt-1.5 max-w-md mx-auto leading-relaxed">
+                            Abbiamo preso in carico la tua spesa. I nostri operatori selezioneranno i migliori prodotti freschi di giornata.
+                        </p>
+
+                        {orderIdDisplay && (
+                            <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-100/90 border border-gray-200 text-xs font-black text-gray-800 shadow-2xs">
+                                <span>Codice Ordine:</span>
+                                <span className="font-mono text-emerald-700 font-bold">#{orderIdDisplay}</span>
+                            </div>
+                        )}
                     </div>
-                    <h2 className="font-script text-4xl text-nature-900 mb-4">Grazie per il tuo ordine!</h2>
-                    <p className="text-gray-600 mb-6">
-                        Abbiamo ricevuto la tua richiesta. {deliveryMethod === 'DELIVERY' ? 'Ti consegneremo la spesa' : 'Ti aspettiamo in negozio'} il prima possibile.
-                        {user && <br />}
-                        {user && <span className="text-sm font-bold text-nature-600">Puoi seguire lo stato dell'ordine nel tuo profilo.</span>}
-                    </p>
 
-                    {revolutCheckoutUrl && (
-                        simulatedSuccess ? (
-                            <div className="mb-6 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 animate-in fade-in duration-300">
-                                <div className="font-extrabold text-emerald-800 text-sm flex items-center justify-center gap-2">
-                                    <CheckCircle2 size={18} className="text-emerald-600" /> Pagamento Ricevuto con Successo!
-                                </div>
-                                <p className="text-xs text-emerald-700 font-medium">
-                                    La transazione Revolut Pay è stata verificata e l'ordine è in preparazione.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="mb-6 p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-3 text-left">
-                                <div className="font-extrabold text-nature-900 text-sm flex items-center gap-2">
-                                    <CreditCard size={18} className="text-nature-600" /> Completa il Pagamento Online
-                                </div>
-                                <p className="text-xs text-gray-600 leading-relaxed">
-                                    Clicca sul pulsante sottostante per aprire la finestra di pagamento sicuro **Revolut Pay Modal**:
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowRevolutModal(true)}
-                                    className="inline-flex items-center justify-center gap-2 bg-nature-700 hover:bg-nature-800 text-white px-6 py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-all w-full cursor-pointer active:scale-[0.98]"
-                                >
-                                    💳 Apri Finestra di Pagamento Revolut
-                                </button>
-                            </div>
-                        )
-                    )}
-
-                    {/* Revolut Pay Popup Modal Overlay */}
-                    {showRevolutModal && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-                            <div className="bg-white max-w-md w-full rounded-3xl shadow-2xl overflow-hidden border border-nature-100 animate-in zoom-in-95 duration-200">
-                                {/* Modal Header */}
-                                <div className="bg-nature-900 text-white p-5 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-2xl bg-emerald-500 text-nature-950 font-black text-sm flex items-center justify-center shadow-md">R</div>
-                                        <div>
-                                            <h3 className="font-extrabold text-sm text-white leading-tight">Revolut Pay Checkout</h3>
-                                            <p className="text-[10px] text-nature-300">Ortofrutta Butti • Pagamento Sicuro SSL</p>
-                                        </div>
+                    <div className="p-6 sm:p-8 space-y-6">
+                        {/* Revolut Pay Integration se attiva */}
+                        {revolutCheckoutUrl && (
+                            simulatedSuccess ? (
+                                <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 animate-in fade-in duration-300">
+                                    <div className="font-extrabold text-emerald-800 text-sm flex items-center justify-center gap-2">
+                                        <CheckCircle2 size={18} className="text-emerald-600" /> Pagamento Ricevuto con Successo!
                                     </div>
+                                    <p className="text-xs text-emerald-700 font-medium">
+                                        La transazione Revolut Pay è stata verificata e l'ordine è in preparazione.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-3 text-left">
+                                    <div className="font-extrabold text-nature-900 text-sm flex items-center gap-2">
+                                        <CreditCard size={18} className="text-nature-600" /> Completa il Pagamento Online
+                                    </div>
+                                    <p className="text-xs text-gray-600 leading-relaxed">
+                                        Clicca sul pulsante sottostante per aprire la finestra di pagamento sicuro **Revolut Pay**:
+                                    </p>
                                     <button
                                         type="button"
-                                        onClick={() => setShowRevolutModal(false)}
-                                        className="w-8 h-8 rounded-full bg-nature-800 hover:bg-nature-700 text-nature-200 flex items-center justify-center transition-colors cursor-pointer"
+                                        onClick={() => setShowRevolutModal(true)}
+                                        className="inline-flex items-center justify-center gap-2 bg-emerald-800 hover:bg-emerald-700 text-white px-6 py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-all w-full cursor-pointer active:scale-[0.98]"
                                     >
-                                        <XIcon size={16} />
+                                        💳 Apri Finestra di Pagamento Revolut
                                     </button>
                                 </div>
+                            )
+                        )}
 
-                                {/* Modal Body */}
-                                <div className="p-6 space-y-5">
-                                    <div className="bg-nature-50/70 p-4 rounded-2xl border border-nature-200/70 flex items-center justify-between">
-                                        <span className="text-xs font-bold text-gray-600">Importo Ordine</span>
-                                        <span className="text-lg font-black text-nature-900">€ {(getEstimatedTotal() / 100 + shippingCost).toFixed(2)}</span>
-                                    </div>
-
-                                    {/* Revolut 1-Click Option */}
-                                    <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-7 h-7 rounded-xl bg-nature-900 text-white font-black text-xs flex items-center justify-center">R</div>
-                                                <span className="font-extrabold text-xs text-nature-900">Paga con App Revolut</span>
-                                            </div>
-                                            <span className="text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full font-bold">1-Click</span>
+                        {/* Card Dettagli Riepilogo Consegna / Ritiro */}
+                        <div className="bg-slate-50/90 rounded-2xl p-5 border border-gray-200/70 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/70">
+                                <div className="flex items-center gap-3">
+                                    {deliveryMethod === 'DELIVERY' ? (
+                                        <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                                            <Truck size={20} />
                                         </div>
-                                        <p className="text-[11px] text-gray-600 leading-snug">
-                                            Autorizza l'addebito istantaneo dall'applicazione Revolut sul tuo smartphone.
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                                            <Store size={20} />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block">
+                                            Modalità Scelta
+                                        </span>
+                                        <p className="text-sm font-black text-gray-900">
+                                            {deliveryMethod === 'DELIVERY' ? 'Consegna a Domicilio' : 'Ritiro in Negozio (Sirone)'}
                                         </p>
                                     </div>
+                                </div>
 
-                                    <div className="text-center text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">— Oppure Carta di Credito / Debito —</div>
+                                <div className="sm:text-right bg-white sm:bg-transparent p-2.5 sm:p-0 rounded-xl border sm:border-0 border-gray-100">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block">
+                                        Data Prevista
+                                    </span>
+                                    <span className="text-sm font-black text-emerald-800 flex items-center sm:justify-end gap-1.5">
+                                        <Clock size={13} className="text-emerald-600 shrink-0" />
+                                        {submittedSummary?.date || selectedDate || 'In preparazione'}
+                                    </span>
+                                </div>
+                            </div>
 
-                                    {/* Credit Card Input Mock */}
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-gray-700 mb-1">Numero Carta di Credito</label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    readOnly
-                                                    value="4532 •••• •••• 8892"
-                                                    className="w-full bg-gray-50 text-nature-900 font-mono text-xs px-3.5 py-3 rounded-xl border border-gray-200 outline-none shadow-inner"
-                                                />
-                                                <span className="absolute right-3.5 top-3 text-xs font-black text-nature-700">VISA</span>
-                                            </div>
-                                        </div>
+                            {/* Dettagli Indirizzo & Fascia */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                                <div>
+                                    <span className="font-bold text-gray-400 block mb-0.5 text-[11px]">Destinazione:</span>
+                                    <p className="font-extrabold text-gray-800 flex items-start gap-1.5">
+                                        <MapPin size={14} className="text-emerald-700 shrink-0 mt-0.5" />
+                                        <span>{submittedSummary?.address || (deliveryMethod === 'DELIVERY' ? `${formData.street}, ${formData.civic} - ${formData.city}` : 'Via don Giovanni Minzoni, 9 - Sirone (LC)')}</span>
+                                    </p>
+                                </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-[11px] font-bold text-gray-700 mb-1">Scadenza</label>
-                                                <input
-                                                    type="text"
-                                                    readOnly
-                                                    value="12 / 28"
-                                                    className="w-full bg-gray-50 text-nature-900 font-mono text-xs px-3.5 py-3 rounded-xl border border-gray-200 outline-none shadow-inner"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[11px] font-bold text-gray-700 mb-1">CVC / CVV</label>
-                                                <input
-                                                    type="text"
-                                                    readOnly
-                                                    value="•••"
-                                                    className="w-full bg-gray-50 text-nature-900 font-mono text-xs px-3.5 py-3 rounded-xl border border-gray-200 outline-none shadow-inner"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Button */}
-                                    <button
-                                        type="button"
-                                        disabled={isPayingRevolut}
-                                        onClick={async () => {
-                                            setIsPayingRevolut(true);
-                                            await new Promise(r => setTimeout(r, 1200));
-                                            if (lastOrderId) {
-                                                await fetch('/api/revolut/simulate', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ orderId: lastOrderId })
-                                                });
-                                                setSimulatedSuccess(true);
-                                            }
-                                            setIsPayingRevolut(false);
-                                            setShowRevolutModal(false);
-                                        }}
-                                        className="w-full bg-nature-700 hover:bg-nature-800 text-white font-extrabold py-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50 active:scale-[0.98]"
-                                    >
-                                        {isPayingRevolut ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                Conferma Pagamento in corso...
-                                            </>
-                                        ) : (
-                                            <>
-                                                🔒 Conferma e Paga Ordine
-                                            </>
-                                        )}
-                                    </button>
-
-                                    <p className="text-[10px] text-gray-400 text-center font-medium">
-                                        Transazione crittografata gestita da Revolut Merchant API
+                                <div>
+                                    <span className="font-bold text-gray-400 block mb-0.5 text-[11px]">Fascia Oraria Consegna:</span>
+                                    <p className="font-extrabold text-gray-800 flex items-center gap-1.5">
+                                        <Clock size={14} className="text-emerald-700 shrink-0" />
+                                        <span>{submittedSummary?.timeSlot || selectedTimeSlot || 'Mattina'}</span>
                                     </p>
                                 </div>
                             </div>
                         </div>
-                    )}
 
-                    <a href="/shop" className="bg-nature-600 text-white px-8 py-3 rounded-full font-bold hover:bg-nature-700 transition-colors inline-block mt-2">
-                        Torna allo Shop
-                    </a>
-                </div>
+                        {/* Cosa succede adesso (Timeline 3 step rassicurante) */}
+                        <div className="space-y-3">
+                            <h4 className="text-xs font-black uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                                <Sparkles size={14} className="text-emerald-600" /> Cosa succede adesso?
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-1.5">
+                                    <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-2xs">1</div>
+                                    <h5 className="font-black text-xs text-gray-900">Conferma Spesa</h5>
+                                    <p className="text-[11px] text-gray-500 leading-snug">Riceverai un riepilogo su WhatsApp ed email con i dettagli.</p>
+                                </div>
+                                <div className="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-1.5">
+                                    <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-2xs">2</div>
+                                    <h5 className="font-black text-xs text-gray-900">Selezione & Pesatura</h5>
+                                    <p className="text-[11px] text-gray-500 leading-snug">Raccogliamo e pesiamo i prodotti freschi per calcolare il totale esatto.</p>
+                                </div>
+                                <div className="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-1.5">
+                                    <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-2xs">3</div>
+                                    <h5 className="font-black text-xs text-gray-900">Consegna o Ritiro</h5>
+                                    <p className="text-[11px] text-gray-500 leading-snug">Ti avvisiamo non appena la spesa è in partenza per la consegna.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pulsanti Azione Primari */}
+                        <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                            <Link 
+                                to="/orders" 
+                                className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-emerald-800 hover:bg-emerald-700 active:scale-[0.99] text-white font-black text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                            >
+                                <Package size={17} /> I Miei Ordini
+                            </Link>
+
+                            <Link 
+                                to="/shop" 
+                                className="w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-white hover:bg-gray-50 active:scale-[0.99] text-gray-800 font-extrabold text-sm flex items-center justify-center gap-2 border border-gray-200 transition-all cursor-pointer shadow-xs"
+                            >
+                                <ShoppingBag size={17} className="text-emerald-700" /> Torna allo Shop
+                            </Link>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Revolut Pay Popup Modal Overlay */}
+                {showRevolutModal && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-white max-w-md w-full rounded-3xl shadow-2xl overflow-hidden border border-nature-100 animate-in zoom-in-95 duration-200">
+                            {/* Modal Header */}
+                            <div className="bg-nature-900 text-white p-5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-2xl bg-emerald-500 text-nature-950 font-black text-sm flex items-center justify-center shadow-md">R</div>
+                                    <div>
+                                        <h3 className="font-extrabold text-sm text-white leading-tight">Revolut Pay Checkout</h3>
+                                        <p className="text-[10px] text-nature-300">Ortofrutta Butti • Pagamento Sicuro SSL</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowRevolutModal(false)}
+                                    className="w-8 h-8 rounded-full bg-nature-800 hover:bg-nature-700 text-nature-200 flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                    <XIcon size={16} />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-6 space-y-5">
+                                <div className="bg-nature-50/70 p-4 rounded-2xl border border-nature-200/70 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-gray-600">Importo Ordine</span>
+                                    <span className="text-lg font-black text-nature-900">€ {displayTotal}</span>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    disabled={isPayingRevolut}
+                                    onClick={async () => {
+                                        setIsPayingRevolut(true);
+                                        await new Promise(r => setTimeout(r, 1200));
+                                        if (lastOrderId) {
+                                            await fetch('/api/revolut/simulate', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ orderId: lastOrderId })
+                                            });
+                                            setSimulatedSuccess(true);
+                                        }
+                                        setIsPayingRevolut(false);
+                                        setShowRevolutModal(false);
+                                    }}
+                                    className="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+                                >
+                                    {isPayingRevolut ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            Conferma Pagamento in corso...
+                                        </>
+                                    ) : (
+                                        <>
+                                            🔒 Conferma e Paga Ordine
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
