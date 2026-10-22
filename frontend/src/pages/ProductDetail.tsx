@@ -778,11 +778,11 @@ export const ProductDetail = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6"
+                        className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 sm:p-6 select-none"
                         onClick={() => setIsLightboxOpen(false)}
                     >
-                        {/* Top bar */}
-                        <div className="flex items-center justify-between text-white z-10" onClick={e => e.stopPropagation()}>
+                        {/* Top bar with Prominent Close Button */}
+                        <div className="flex items-center justify-between text-white z-20 w-full pt-1 px-1">
                             <div className="flex items-center gap-3">
                                 <span className="font-bold text-sm sm:text-base text-gray-200 truncate max-w-[200px] sm:max-w-md">
                                     {product?.name}
@@ -793,20 +793,25 @@ export const ProductDetail = () => {
                                     </span>
                                 )}
                             </div>
+
+                            {/* Ultra-visible High Contrast Close Button */}
                             <button
                                 type="button"
-                                onClick={() => setIsLightboxOpen(false)}
-                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95"
-                                title="Chiudi (Esc)"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsLightboxOpen(false);
+                                }}
+                                className="px-4 py-2 rounded-full bg-white text-gray-900 hover:bg-gray-100 shadow-2xl flex items-center gap-1.5 font-bold text-xs sm:text-sm transition-transform active:scale-95 cursor-pointer z-30 border border-gray-200"
+                                title="Chiudi visualizzazione (Esc)"
                             >
-                                <X size={20} />
+                                <X size={18} className="text-gray-900" />
+                                <span>Chiudi</span>
                             </button>
                         </div>
 
-                        {/* Center Stage Image */}
+                        {/* Center Stage Image - Clicking the background CLOSES the modal */}
                         <div 
-                            className="relative flex-1 flex items-center justify-center my-4 overflow-hidden" 
-                            onClick={e => e.stopPropagation()}
+                            className="relative flex-1 flex items-center justify-center my-3 overflow-hidden cursor-zoom-out"
                             onTouchStart={handleTouchStart}
                             onTouchEnd={handleTouchEnd}
                         >
@@ -814,7 +819,7 @@ export const ProductDetail = () => {
                                 <button
                                     type="button"
                                     onClick={handlePrevImage}
-                                    className="absolute left-2 sm:left-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-90"
+                                    className="absolute left-2 sm:left-4 z-20 w-11 h-11 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-90 cursor-pointer"
                                     aria-label="Precedente"
                                 >
                                     <ChevronLeft size={26} className="-ml-0.5" />
@@ -829,14 +834,15 @@ export const ProductDetail = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ duration: 0.2 }}
-                                className="max-h-[80vh] max-w-full object-contain rounded-2xl shadow-2xl select-none"
+                                onClick={(e) => e.stopPropagation()}
+                                className="max-h-[75vh] max-w-[95vw] object-contain rounded-2xl shadow-2xl select-none cursor-default"
                             />
 
                             {galleryImages.length > 1 && (
                                 <button
                                     type="button"
                                     onClick={handleNextImage}
-                                    className="absolute right-2 sm:right-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-90"
+                                    className="absolute right-2 sm:right-4 z-20 w-11 h-11 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-90 cursor-pointer"
                                     aria-label="Successiva"
                                 >
                                     <ChevronRight size={26} className="-mr-0.5" />
@@ -845,9 +851,9 @@ export const ProductDetail = () => {
                         </div>
 
                         {/* Bottom Thumbnail Strip in Lightbox */}
-                        {galleryImages.length > 1 && (
+                        {galleryImages.length > 1 ? (
                             <div 
-                                className="flex items-center justify-center gap-2 overflow-x-auto py-2 z-10 scrollbar-none"
+                                className="flex items-center justify-center gap-2 overflow-x-auto py-2 z-20 scrollbar-none"
                                 onClick={e => e.stopPropagation()}
                             >
                                 {galleryImages.map((imgUrl, idx) => (
@@ -855,7 +861,7 @@ export const ProductDetail = () => {
                                         key={idx}
                                         type="button"
                                         onClick={() => setActiveImageIndex(idx)}
-                                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
+                                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
                                             idx === activeImageIndex
                                                 ? 'border-emerald-400 scale-110 shadow-lg ring-2 ring-emerald-400/50'
                                                 : 'border-white/20 opacity-50 hover:opacity-100'
@@ -868,6 +874,10 @@ export const ProductDetail = () => {
                                         />
                                     </button>
                                 ))}
+                            </div>
+                        ) : (
+                            <div className="text-center text-xs text-white/50 pb-2 pointer-events-none">
+                                Clicca ovunque sullo sfondo o premi Esc per chiudere
                             </div>
                         )}
                     </motion.div>
