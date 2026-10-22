@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Delete, Minus, Plus } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 interface WeightSelectorDrawerProps {
@@ -68,7 +68,9 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
             if (newVal === '0') {
                 newVal = key;
             } else {
-                newVal = newVal + key;
+                if (newVal.replace('.', '').length < 4) {
+                    newVal = newVal + key;
+                }
             }
         }
 
@@ -99,15 +101,18 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[32px] z-[70] p-5 sm:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] max-w-md mx-auto max-h-[92vh] flex flex-col justify-between overflow-y-auto border-t border-gray-100"
+                        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[32px] z-[70] p-5 sm:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] max-w-md mx-auto max-h-[94vh] flex flex-col justify-between overflow-y-auto border-t border-gray-100"
                     >
                         {/* Mobile Pull Handle Pill */}
                         <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-3 shrink-0" />
 
+                        {/* Modal Header */}
                         <div className="flex justify-between items-center mb-4 shrink-0">
                             <div>
                                 <h3 className="text-lg sm:text-xl font-black text-nature-900">{productName}</h3>
-                                <p className="text-xs text-gray-500 font-bold">Seleziona la quantità in kg desiderata</p>
+                                <p className="text-xs text-gray-500 font-bold">
+                                    Prezzo: € {(unitPrice / 100).toFixed(2)} / kg
+                                </p>
                             </div>
                             <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors cursor-pointer shrink-0">
                                 <X size={20} className="text-gray-600" />
@@ -115,33 +120,68 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                         </div>
 
                         {/* Tab Selector */}
-                        <div className="flex bg-gray-100/80 p-1 rounded-xl mb-6 border border-gray-200/30">
+                        <div className="flex bg-gray-100/90 p-1 rounded-2xl mb-4 border border-gray-200/40">
                             <button
                                 type="button"
                                 onClick={() => setShowKeypad(false)}
-                                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${!showKeypad ? 'bg-white text-nature-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                    !showKeypad ? 'bg-white text-emerald-950 shadow-sm font-extrabold' : 'text-gray-500 hover:text-gray-800'
+                                }`}
                             >
                                 Valori Rapidi
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setShowKeypad(true)}
-                                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${showKeypad ? 'bg-white text-nature-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                    showKeypad ? 'bg-white text-emerald-950 shadow-sm font-extrabold' : 'text-gray-500 hover:text-gray-800'
+                                }`}
                             >
                                 Tastiera Numerica
                             </button>
                         </div>
 
-                        {/* Presets or Keypad Content */}
+                        {/* Digital Scale Display Box (Sopra tastiera / presets) */}
+                        <div className="flex items-center justify-between bg-gradient-to-br from-emerald-50/80 via-white to-nature-50/50 p-4 sm:p-5 rounded-2xl mb-4 border border-emerald-100/90 shadow-xs">
+                            <button
+                                type="button"
+                                onClick={() => handleStepWeight(-0.1)}
+                                className="w-12 h-12 bg-white hover:bg-emerald-50 text-emerald-800 rounded-xl shadow-xs border border-emerald-200/70 font-bold text-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer"
+                                title="Diminuisci 0.1 kg"
+                            >
+                                <Minus size={20} className="stroke-[2.5]" />
+                            </button>
+
+                            <div className="text-center px-2">
+                                <div className="text-4xl sm:text-5xl font-black text-nature-950 font-mono tracking-tight leading-none flex items-baseline justify-center gap-1.5">
+                                    <span>{showKeypad ? (keypadInput || '0') : selectedWeight.toFixed(1)}</span>
+                                    <span className="text-xl sm:text-2xl font-bold text-emerald-700 font-sans">kg</span>
+                                </div>
+                                <div className="text-xs sm:text-sm font-semibold text-gray-500 mt-1.5">
+                                    Totale stimato: <span className="text-emerald-900 font-extrabold font-mono">€ {((selectedWeight * unitPrice) / 100).toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => handleStepWeight(0.1)}
+                                className="w-12 h-12 bg-white hover:bg-emerald-50 text-emerald-800 rounded-xl shadow-xs border border-emerald-200/70 font-bold text-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer"
+                                title="Aumenta 0.1 kg"
+                            >
+                                <Plus size={20} className="stroke-[2.5]" />
+                            </button>
+                        </div>
+
+                        {/* Presets or Full-Width Keypad Content */}
                         {showKeypad ? (
-                            <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 mb-6 max-w-[280px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
-                                <div className="grid grid-cols-3 gap-2">
+                            <div className="w-full mb-4 animate-in fade-in zoom-in-95 duration-150">
+                                <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                                         <button
                                             key={num}
                                             type="button"
                                             onClick={() => handleKeypadPress(String(num))}
-                                            className="h-12 rounded-xl bg-white border border-gray-200/60 hover:bg-nature-50 hover:border-nature-300 text-lg font-bold text-gray-800 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                                            className="h-13 sm:h-14 rounded-2xl bg-white border border-gray-200/80 hover:bg-emerald-50/50 hover:border-emerald-300 text-xl font-bold text-gray-800 active:scale-95 transition-all shadow-xs flex items-center justify-center cursor-pointer"
                                         >
                                             {num}
                                         </button>
@@ -149,69 +189,45 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => handleKeypadPress('.')}
-                                        className="h-12 rounded-xl bg-white border border-gray-200/60 hover:bg-nature-50 hover:border-nature-300 text-lg font-black text-gray-805 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                                        className="h-13 sm:h-14 rounded-2xl bg-gray-50 border border-gray-200/80 hover:bg-emerald-50/50 hover:border-emerald-300 text-2xl font-black text-gray-800 active:scale-95 transition-all shadow-xs flex items-center justify-center cursor-pointer"
                                     >
                                         .
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => handleKeypadPress('0')}
-                                        className="h-12 rounded-xl bg-white border border-gray-200/60 hover:bg-nature-50 hover:border-nature-300 text-lg font-bold text-gray-800 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                                        className="h-13 sm:h-14 rounded-2xl bg-white border border-gray-200/80 hover:bg-emerald-50/50 hover:border-emerald-300 text-xl font-bold text-gray-800 active:scale-95 transition-all shadow-xs flex items-center justify-center cursor-pointer"
                                     >
                                         0
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => handleKeypadPress('backspace')}
-                                        className="h-12 rounded-xl bg-red-50 border border-red-100 hover:bg-red-105 hover:border-red-200 text-lg font-bold text-red-600 flex items-center justify-center active:scale-95 transition-all shadow-sm"
+                                        className="h-13 sm:h-14 rounded-2xl bg-rose-50 border border-rose-200/80 hover:bg-rose-100 text-rose-600 flex items-center justify-center active:scale-95 transition-all shadow-xs cursor-pointer"
+                                        title="Cancella cifra"
                                     >
-                                        ⌫
+                                        <Delete size={22} />
                                     </button>
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-3 gap-3 mb-6">
+                            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 mb-4 w-full">
                                 {displayWeights.map(weight => (
                                     <button
                                         key={weight}
                                         type="button"
                                         onClick={() => handleSelectWeight(weight)}
-                                        className={`py-3 rounded-xl font-bold text-lg border-2 transition-all ${selectedWeight === weight
-                                                ? 'border-nature-600 bg-nature-50 text-nature-700'
-                                                : 'border-gray-100 bg-white text-gray-600 hover:border-nature-200 shadow-sm'
-                                            }`}
+                                        className={`py-3.5 sm:py-4 rounded-2xl font-black text-base sm:text-lg border-2 transition-all cursor-pointer ${
+                                            selectedWeight === weight
+                                                ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-sm ring-2 ring-emerald-600/20'
+                                                : 'border-gray-100 bg-white text-gray-700 hover:border-emerald-200 hover:bg-gray-50 shadow-xs'
+                                        }`}
                                     >
                                         {weight} kg
                                     </button>
                                 ))}
                             </div>
                         )}
-
-                        {/* Custom Input (Stepper) */}
-                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl mb-8 border border-gray-100">
-                            <button
-                                type="button"
-                                onClick={() => handleStepWeight(-0.1)}
-                                className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center font-bold text-xl text-nature-600 active:scale-95 transition-transform"
-                            >
-                                -
-                            </button>
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-nature-900 leading-none">
-                                    {showKeypad ? (keypadInput || '0') : selectedWeight.toFixed(1)} <span className="text-base text-gray-500 font-normal">kg</span>
-                                </div>
-                                <div className="text-xs text-gray-400 mt-1">
-                                    Circa € {((selectedWeight * unitPrice) / 100).toFixed(2)}
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => handleStepWeight(0.1)}
-                                className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center font-bold text-xl text-nature-600 active:scale-95 transition-transform"
-                            >
-                                +
-                            </button>
-                        </div>
 
                         {/* Confirm Button */}
                         <button
@@ -220,10 +236,12 @@ export const WeightSelectorDrawer: React.FC<WeightSelectorDrawerProps> = ({
                                 onConfirm(selectedWeight);
                                 onClose();
                             }}
-                            className="w-full bg-nature-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-nature-700 active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
+                            className="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-extrabold py-4 rounded-2xl shadow-lg transition-all text-base sm:text-lg flex items-center justify-center gap-2 cursor-pointer mt-1"
                         >
-                            <Check size={24} />
-                            Conferma {selectedWeight} kg
+                            <Check size={22} className="stroke-[3]" />
+                            <span>Conferma {selectedWeight} kg</span>
+                            <span className="opacity-60">•</span>
+                            <span>€ {((selectedWeight * unitPrice) / 100).toFixed(2)}</span>
                         </button>
                     </motion.div>
                 </>
