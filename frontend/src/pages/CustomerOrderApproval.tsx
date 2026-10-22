@@ -86,8 +86,8 @@ export const CustomerOrderApproval: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-emerald-950 flex items-center justify-center p-4">
-                <div className="bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white/20 flex flex-col items-center max-w-sm w-full text-center space-y-4 animate-in fade-in zoom-in-95">
+            <div className="min-h-screen bg-gradient-to-b from-emerald-50/50 to-slate-50 flex items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-3xl shadow-xl border border-emerald-100 flex flex-col items-center max-w-sm w-full text-center space-y-4 animate-in fade-in zoom-in-95">
                     <div className="w-14 h-14 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
                     <div>
                         <h3 className="font-black text-gray-900 text-base">Ortofrutta Butti</h3>
@@ -139,35 +139,35 @@ export const CustomerOrderApproval: React.FC = () => {
     const displayedItems = showAllItems ? items : items.slice(0, 4);
 
     return (
-        <div className="min-h-screen bg-slate-900 text-gray-900 flex flex-col justify-between selection:bg-emerald-200">
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 via-emerald-50/25 to-slate-50 text-gray-900 flex flex-col justify-between selection:bg-emerald-200">
             {/* Top Store Header */}
-            <header className="sticky top-0 z-40 bg-emerald-950/95 backdrop-blur-md border-b border-emerald-900/60 text-white px-4 py-3 sm:py-4 shadow-lg">
+            <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200/80 text-gray-900 px-4 py-3 sm:py-4 shadow-xs">
                 <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                         {storeInfo.logoUrl ? (
                             <img 
                                 src={storeInfo.logoUrl} 
                                 alt={storeInfo.siteName} 
-                                className="h-9 sm:h-10 w-auto object-contain rounded-lg bg-white/10 p-1"
+                                className="h-9 sm:h-10 w-auto object-contain rounded-xl bg-gray-50 p-1 border border-gray-100"
                             />
                         ) : (
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-xl shrink-0">
+                            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xl shrink-0 shadow-xs">
                                 🍏
                             </div>
                         )}
                         <div className="min-w-0">
-                            <h1 className="font-black text-sm sm:text-base leading-tight truncate text-white">
+                            <h1 className="font-black text-sm sm:text-base leading-tight truncate text-gray-900">
                                 {storeInfo.siteName || 'Ortofrutta Butti'}
                             </h1>
-                            <p className="text-[10px] sm:text-[11px] font-bold text-emerald-300 flex items-center gap-1">
-                                <ShieldCheck size={12} className="text-emerald-400 shrink-0" /> Negozio Verificato
+                            <p className="text-[10px] sm:text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                                <ShieldCheck size={12} className="text-emerald-600 shrink-0" /> Negozio Verificato
                             </p>
                         </div>
                     </div>
 
                     <div className="text-right shrink-0">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-emerald-300/80 block">Ordine</span>
-                        <span className="font-black text-xs sm:text-sm text-white bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 block">Ordine</span>
+                        <span className="font-black text-xs sm:text-sm text-emerald-950 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
                             #{order.id}
                         </span>
                     </div>
@@ -178,7 +178,7 @@ export const CustomerOrderApproval: React.FC = () => {
             <main className="flex-1 max-w-xl w-full mx-auto p-3 sm:p-5 pb-32 sm:pb-36 space-y-4 sm:space-y-5 animate-in fade-in duration-300">
                 {/* 1. Status Alert Hero Banner */}
                 {isApproved ? (
-                    <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-emerald-500/30 space-y-2 animate-in zoom-in-95">
+                    <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 sm:p-6 rounded-3xl shadow-lg border border-emerald-500/30 space-y-2 animate-in zoom-in-95">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0">
                                 <CheckCircle2 size={28} className="text-white" />
@@ -193,17 +193,17 @@ export const CustomerOrderApproval: React.FC = () => {
                         </p>
                     </div>
                 ) : isRejected ? (
-                    <div className="bg-gradient-to-br from-rose-700 to-rose-950 text-white p-5 sm:p-6 rounded-3xl shadow-xl border border-rose-500/30 space-y-2 animate-in zoom-in-95">
+                    <div className="bg-gradient-to-br from-rose-500 to-rose-600 text-white p-5 sm:p-6 rounded-3xl shadow-lg border border-rose-400/30 space-y-2 animate-in zoom-in-95">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0">
                                 <XCircle size={28} className="text-white" />
                             </div>
                             <div>
                                 <h2 className="font-black text-lg sm:text-xl leading-tight">Ordine Annullato</h2>
-                                <p className="text-xs font-semibold text-rose-200">Pesatura rifiutata e fondi sbloccati</p>
+                                <p className="text-xs font-semibold text-rose-100">Pesatura rifiutata e fondi sbloccati</p>
                             </div>
                         </div>
-                        <p className="text-xs text-rose-100/90 leading-relaxed pt-1">
+                        <p className="text-xs text-rose-50/90 leading-relaxed pt-1">
                             Come da te confermato, l'ordine #{order.id} è stato annullato. L'importo pre-autorizzato o bloccato sulla tua carta è stato sbloccato senza alcun addebito.
                         </p>
                     </div>
@@ -445,11 +445,11 @@ export const CustomerOrderApproval: React.FC = () => {
                 </div>
 
                 {/* Footer Security Badges */}
-                <footer className="pt-2 text-center text-[11px] font-bold text-gray-400 space-y-1">
-                    <p className="flex items-center justify-center gap-1 text-emerald-400">
+                <footer className="pt-2 text-center text-[11px] font-bold text-gray-500 space-y-1">
+                    <p className="flex items-center justify-center gap-1 text-emerald-700">
                         <ShieldCheck size={13} /> Scontrino e transazione protetti da crittografia SSL
                     </p>
-                    <p>{storeInfo.siteName} · {storeInfo.contactAddress || 'Freschezza Garantita'}</p>
+                    <p className="text-gray-400">{storeInfo.siteName} · {storeInfo.contactAddress || 'Freschezza Garantita'}</p>
                 </footer>
             </main>
 
