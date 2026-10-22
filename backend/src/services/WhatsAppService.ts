@@ -396,27 +396,8 @@ export class WhatsAppService {
                         this.startHeartbeat();
                     }
                 } else if (info.hasChatList || state === 'CONNECTED') {
-                    this.log('info', '[WhatsAppService] Chat list is active in DOM! Triggering Store recovery attempt...');
-                    try {
-                        const storeInjected = await (this.client as any).pupPage.evaluate(() => {
-                            if (typeof (window as any).Store === 'undefined' && typeof (window as any).require === 'function') {
-                                try {
-                                    (window as any).Store = Object.assign({}, (window as any).require('WAWebCollections'));
-                                } catch (e) {}
-                            }
-                            return typeof (window as any).Store !== 'undefined';
-                        }).catch(() => false);
-
-                        if (storeInjected) {
-                            this.log('info', '[WhatsAppService] Manual Store recovery succeeded! Setting isReady = true.');
-                            this.isReady = true;
-                            this.isAuthenticated = true;
-                            this.qrCode = null;
-                            this.startHeartbeat();
-                        }
-                    } catch (injErr: any) {
-                        this.log('warn', `[WhatsAppService] Store recovery failed: ${injErr?.message}`);
-                    }
+                    this.log('info', '[WhatsAppService] Chat list is active in DOM! Ensuring Store and WWebJS injection...');
+                    await this.ensureInjected();
                 }
             }
         } catch (err: any) {
@@ -424,6 +405,72 @@ export class WhatsAppService {
         }
 
         return this.getStatus();
+    }
+
+    public async ensureInjected(): Promise<boolean> {
+        if (!this.client) return false;
+        const pupPage = (this.client as any).pupPage;
+        if (!pupPage) return false;
+
+        try {
+            const status = await pupPage.evaluate(() => {
+                const wwebjs = (window as any).WWebJS;
+                const store = (window as any).Store;
+                return {
+                    hasStore: typeof store !== 'undefined' && typeof store.Chat !== 'undefined',
+                    hasWWebJS: typeof wwebjs !== 'undefined' && typeof wwebjs.getChat === 'function' && typeof wwebjs.sendMessage === 'function'
+                };
+            }).catch(() => ({ hasStore: false, hasWWebJS: false }));
+
+            if (status.hasStore && status.hasWWebJS) {
+                this.isReady = true;
+                this.isAuthenticated = true;
+                return true;
+            }
+
+            this.log('info', `[WhatsAppService] Page injection required (hasStore=${status.hasStore}, hasWWebJS=${status.hasWWebJS}). Injecting modules...`);
+
+            // @ts-ignore
+            const { ExposeStore } = require('whatsapp-web.js/src/util/Injected/Store');
+            // @ts-ignore
+            const { LoadUtils } = require('whatsapp-web.js/src/util/Injected/Utils');
+            // @ts-ignore
+            const InterfaceController = require('whatsapp-web.js/src/util/InterfaceController');
+
+            if (!status.hasStore) {
+                await pupPage.evaluate(ExposeStore).catch((e: any) => this.log('warn', `ExposeStore injection: ${e?.message}`));
+                await new Promise(r => setTimeout(r, 400));
+            }
+
+            if (!status.hasWWebJS) {
+                await pupPage.evaluate(LoadUtils).catch((e: any) => this.log('warn', `LoadUtils injection: ${e?.message}`));
+            }
+
+            if (!(this.client as any).interface) {
+                (this.client as any).interface = new InterfaceController(this.client);
+            }
+
+            const recheck = await pupPage.evaluate(() => {
+                const wwebjs = (window as any).WWebJS;
+                const store = (window as any).Store;
+                return {
+                    hasStore: typeof store !== 'undefined',
+                    hasWWebJS: typeof wwebjs !== 'undefined' && typeof wwebjs.getChat === 'function' && typeof wwebjs.sendMessage === 'function'
+                };
+            }).catch(() => ({ hasStore: false, hasWWebJS: false }));
+
+            if (recheck.hasWWebJS) {
+                this.log('info', '[WhatsAppService] Store & WWebJS verified in page!');
+                this.isReady = true;
+                this.isAuthenticated = true;
+                return true;
+            } else {
+                this.log('warn', `[WhatsAppService] Post-injection status: hasStore=${recheck.hasStore}, hasWWebJS=${recheck.hasWWebJS}`);
+            }
+        } catch (err: any) {
+            this.log('error', `[WhatsAppService] ensureInjected error: ${err?.message || err}`);
+        }
+        return false;
     }
 
     public getStatus() {
@@ -438,19 +485,14 @@ export class WhatsAppService {
     public async sendMessage(phoneNumber: string, message: string): Promise<any> {
         this.log('info', `sendMessage requested for number: "${phoneNumber}"`);
 
-        // Check if puppeteer page has injected WWebJS & Store
-        if (!this.isReady) {
-            try {
-                const isPageReady = await (this.client as any).pupPage?.evaluate(() => {
-                    return typeof (window as any).WWebJS !== 'undefined' && typeof (window as any).Store !== 'undefined';
-                }).catch(() => false);
+        // Guarantee Store and WWebJS are injected before calling client.sendMessage
+        await this.ensureInjected();
 
-                if (isPageReady) {
-                    this.log('info', 'Page Store/WWebJS verified online on on-demand check');
-                    this.isReady = true;
-                }
-            } catch (e: any) {
-                this.log('warn', `On-demand page check failed: ${e?.message}`);
+        if (!this.isReady) {
+            const state = await this.client.getState().catch(() => null);
+            if (state === 'CONNECTED') {
+                this.isReady = true;
+                this.isAuthenticated = true;
             }
         }
 
@@ -494,7 +536,18 @@ export class WhatsAppService {
             }
 
             this.log('info', `Calling client.sendMessage to ${chatId}... (Length: ${message.length} chars)`);
-            const sentResult = await this.client.sendMessage(chatId, message);
+            let sentResult: any;
+            try {
+                sentResult = await this.client.sendMessage(chatId, message);
+            } catch (firstErr: any) {
+                if (firstErr?.message?.includes('getChat') || firstErr?.message?.includes('WWebJS')) {
+                    this.log('warn', `getChat error on first attempt, re-injecting WWebJS and retrying...`);
+                    await this.ensureInjected();
+                    sentResult = await this.client.sendMessage(chatId, message);
+                } else {
+                    throw firstErr;
+                }
+            }
             
             if (sentResult) {
                 this.log('info', `Message successfully sent to ${chatId}! ID: ${sentResult.id?._serialized || 'OK'}`);
