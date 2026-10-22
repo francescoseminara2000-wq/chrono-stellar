@@ -80,8 +80,8 @@ export const Markets: React.FC = () => {
                         className="flex-shrink-0 flex items-center justify-center"
                     >
                         <img 
-                            src="/market-van.png" 
-                            alt="Ortofrutta Itinerante Ape Car" 
+                            src="/market-van.png?v=2" 
+                            alt="Ortofrutta Itinerante" 
                             className="w-64 sm:w-72 md:w-80 lg:w-96 h-auto object-contain transition-transform duration-500 hover:scale-105 select-none"
                         />
                     </motion.div>
