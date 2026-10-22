@@ -328,12 +328,11 @@ export const OrderManager = () => {
                 prevOrdersRef.current = data;
                 setOrders(data);
 
-                if (selectedOrder) {
-                    const freshSelected = data.find((o: any) => o.id === selectedOrder.id);
-                    if (freshSelected) {
-                        setSelectedOrder(freshSelected);
-                    }
-                }
+                setSelectedOrder(prev => {
+                    if (!prev) return prev;
+                    const freshSelected = data.find((o: any) => o.id === prev.id);
+                    return freshSelected || prev;
+                });
             })
             .catch(err => {
                 console.error('Fetch error:', err);
@@ -397,7 +396,16 @@ export const OrderManager = () => {
                 }
             });
 
-            eventSource.addEventListener('order_updated', () => {
+            eventSource.addEventListener('order_updated', (e: MessageEvent) => {
+                try {
+                    if (e.data) {
+                        const updated = JSON.parse(e.data);
+                        if (updated && updated.id) {
+                            setSelectedOrder(prev => (prev && prev.id === updated.id ? { ...prev, ...updated } : prev));
+                            setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, ...updated } : o));
+                        }
+                    }
+                } catch (err) {}
                 fetchOrders(true);
             });
         } catch (sseErr) {

@@ -248,6 +248,7 @@ app.get('/api/admin/events/stream', (req, res) => {
     orderEventBus.on('order:created', handleCreated);
     orderEventBus.on('order:approval_changed', handleApproval);
     orderEventBus.on('order:updated', handleUpdated);
+    orderEventBus.on('order:notification_updated', handleUpdated);
 
     const heartbeat = setInterval(() => {
         res.write(': heartbeat\n\n');
@@ -258,6 +259,7 @@ app.get('/api/admin/events/stream', (req, res) => {
         orderEventBus.removeListener('order:created', handleCreated);
         orderEventBus.removeListener('order:approval_changed', handleApproval);
         orderEventBus.removeListener('order:updated', handleUpdated);
+        orderEventBus.removeListener('order:notification_updated', handleUpdated);
     });
 });
 

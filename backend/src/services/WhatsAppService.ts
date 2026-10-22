@@ -10,13 +10,17 @@ export interface WhatsAppLogEntry {
     message: string;
 }
 
-export interface WatchdogEntry {
+export interface ActiveOrderWatchdog {
     orderId: number;
+    messageId: string;
+    rawMessageId: string;
     customerEmail?: string;
     order: any;
     status: string;
     timer: any;
+    pollInterval: any;
     sentAt: Date;
+    pollCount: number;
 }
 
 export class WhatsAppService {
@@ -28,7 +32,7 @@ export class WhatsAppService {
     private pingInterval: any = null;
     private isReconnecting: boolean = false;
     private logBuffer: WhatsAppLogEntry[] = [];
-    private watchdogMap: Map<string, WatchdogEntry> = new Map();
+    private activeOrderWatchdogs: Map<number, ActiveOrderWatchdog> = new Map();
     private static instance: WhatsAppService;
 
     public log(level: 'info' | 'warn' | 'error', message: string, meta?: any) {
@@ -690,12 +694,39 @@ export class WhatsAppService {
         message += `\n\n_${settings?.siteName || 'Ortofrutta'}_`;
 
         try {
+            // Cancel any previous watchdog for this order so we strictly monitor ONLY the latest communication
+            this.cancelWatchdogForOrder(order.id);
+
             const sentResult = await this.sendMessage(phone, message);
             const messageId = sentResult?.id?._serialized || (typeof sentResult === 'string' ? sentResult : null);
+            const rawMessageId = sentResult?.id?.id || (typeof messageId === 'string' ? messageId.split('_').pop() || messageId : '');
+            const initialAck = typeof sentResult?.ack === 'number' ? sentResult.ack : 1;
+            const nowTime = new Date().toLocaleTimeString('it-IT');
 
             if (order.id) {
-                const nowTime = new Date().toLocaleTimeString('it-IT');
-                await prisma.order.update({
+                if (initialAck >= 2) {
+                    // Message delivered immediately!
+                    const newStatus = initialAck === 3 ? 'WHATSAPP_READ' : 'WHATSAPP_DELIVERED';
+                    const detailsText = initialAck === 3
+                        ? `Visualizzato dal cliente su WhatsApp (spunte blu) alle ${nowTime}`
+                        : `Consegnato sul telefono del cliente (doppia spunta) alle ${nowTime}`;
+
+                    const updated = await prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            notificationStatus: newStatus,
+                            notificationDetails: detailsText,
+                            whatsappMessageId: messageId
+                        } as any
+                    });
+
+                    this.log('info', `[WhatsAppWatchdog] Order #${order.id} was immediately delivered (ack=${initialAck})!`);
+                    this.notifyOrderUpdated(updated);
+                    return sentResult;
+                }
+
+                // Initial state: Sent to WhatsApp server, waiting for customer device delivery
+                const updated = await prisma.order.update({
                     where: { id: order.id },
                     data: {
                         notificationStatus: 'WHATSAPP_SENT',
@@ -703,23 +734,55 @@ export class WhatsAppService {
                         whatsappMessageId: messageId
                     } as any
                 });
+                this.notifyOrderUpdated(updated);
 
                 if (messageId) {
-                    // Set 3-minute Watchdog timer (180,000 ms)
                     const fallbackTimeoutMs = 3 * 60 * 1000;
-                    const timer = setTimeout(async () => {
-                        await this.triggerFallbackEmail(messageId);
-                    }, fallbackTimeoutMs);
-
-                    this.watchdogMap.set(messageId, {
+                    const watchdogEntry: ActiveOrderWatchdog = {
                         orderId: order.id,
+                        messageId,
+                        rawMessageId,
                         customerEmail: order.customerEmail || order.user?.email,
                         order,
                         status: type,
-                        timer,
-                        sentAt: new Date()
-                    });
-                    this.log('info', `[WhatsAppWatchdog] Started 3-minute delivery watchdog for Order #${order.id} (msg: ${messageId})`);
+                        timer: null,
+                        pollInterval: null,
+                        sentAt: new Date(),
+                        pollCount: 0
+                    };
+
+                    // 1. Fallback timer (3 minutes)
+                    watchdogEntry.timer = setTimeout(async () => {
+                        await this.triggerFallbackEmailForOrder(order.id);
+                    }, fallbackTimeoutMs);
+
+                    // 2. Active poll: inspects Store.Msg in the Puppeteer page every 5s (up to 36 times = 3 mins)
+                    watchdogEntry.pollInterval = setInterval(async () => {
+                        try {
+                            const currentEntry = this.activeOrderWatchdogs.get(order.id);
+                            if (!currentEntry || currentEntry.messageId !== messageId) {
+                                if (watchdogEntry.pollInterval) clearInterval(watchdogEntry.pollInterval);
+                                return;
+                            }
+
+                            currentEntry.pollCount++;
+                            if (currentEntry.pollCount > 36) {
+                                if (currentEntry.pollInterval) clearInterval(currentEntry.pollInterval);
+                                return;
+                            }
+
+                            const pageAck = await this.checkMessageAckInPage(messageId, rawMessageId);
+                            if (pageAck >= 2) {
+                                this.log('info', `[WhatsAppWatchdog] Active page poll detected ack=${pageAck} for Order #${order.id}!`);
+                                await this.handleMessageAck(messageId, pageAck);
+                            }
+                        } catch (pErr: any) {
+                            // Poll check silent error
+                        }
+                    }, 5000);
+
+                    this.activeOrderWatchdogs.set(order.id, watchdogEntry);
+                    this.log('info', `[WhatsAppWatchdog] Started 3-minute delivery watchdog exclusively for Order #${order.id} (latest msg: ${messageId})`);
                 }
             }
 
@@ -729,20 +792,21 @@ export class WhatsAppService {
             
             // Immediate fallback to email if WhatsApp send fails
             const customerEmail = order.customerEmail || order.user?.email;
-            if (customerEmail) {
+            if (customerEmail && order.id) {
                 try {
                     const { EmailService } = require('./EmailService');
                     const emailService = new EmailService();
                     await emailService.sendOrderStatusUpdateEmail(customerEmail, order, type, true);
                     this.log('info', `[WhatsAppService] Immediate email fallback successfully sent to ${customerEmail} for Order #${order.id}`);
 
-                    await prisma.order.update({
+                    const updated = await prisma.order.update({
                         where: { id: order.id },
                         data: {
                             notificationStatus: 'EMAIL_FALLBACK_SENT',
                             notificationDetails: `Invio WhatsApp fallito (${error?.message || 'Offline'}). Inviata email di fallback a ${customerEmail} alle ${new Date().toLocaleTimeString('it-IT')}`
                         } as any
                     });
+                    this.notifyOrderUpdated(updated);
                 } catch (eErr: any) {
                     this.log('error', `[WhatsAppService] Immediate email fallback also failed: ${eErr?.message || eErr}`);
                 }
@@ -751,31 +815,99 @@ export class WhatsAppService {
         }
     }
 
+    public cancelWatchdogForOrder(orderId: number) {
+        const existing = this.activeOrderWatchdogs.get(orderId);
+        if (existing) {
+            if (existing.timer) clearTimeout(existing.timer);
+            if (existing.pollInterval) clearInterval(existing.pollInterval);
+            this.activeOrderWatchdogs.delete(orderId);
+            this.log('info', `[WhatsAppWatchdog] Cancelled previous watchdog for Order #${orderId}`);
+        }
+    }
+
+    public async checkMessageAckInPage(messageId: string, rawId: string): Promise<number> {
+        if (!this.client) return -1;
+        const page = (this.client as any).pupPage;
+        if (!page) return -1;
+
+        try {
+            const ack = await page.evaluate((fullId: string, rId: string) => {
+                try {
+                    const store = (window as any).Store;
+                    if (!store) return -1;
+                    let msg = store.Msg ? store.Msg.get(fullId) : null;
+                    if (!msg && store.Msg?.models) {
+                        msg = store.Msg.models.find((m: any) => {
+                            const idObj = m?.id;
+                            if (!idObj) return false;
+                            if (idObj._serialized === fullId || idObj._serialized === rId) return true;
+                            if (idObj.id === fullId || idObj.id === rId) return true;
+                            if (typeof idObj === 'string' && (idObj === fullId || idObj === rId)) return true;
+                            return false;
+                        });
+                    }
+                    if (msg && typeof msg.ack === 'number') {
+                        return msg.ack;
+                    }
+                } catch (e) {}
+                return -1;
+            }, messageId, rawId).catch(() => -1);
+
+            return typeof ack === 'number' ? ack : -1;
+        } catch (e) {
+            return -1;
+        }
+    }
+
     public async handleMessageAck(messageId: string, ack: number) {
         // ack: 1 = ACK_SERVER (single tick), 2 = ACK_DEVICE (double tick - delivered), 3 = ACK_READ (blue ticks), -1 = ACK_ERROR
-        const entry = this.watchdogMap.get(messageId);
-        let targetOrderId = entry?.orderId;
+        this.log('info', `[WhatsAppService] handleMessageAck received for ${messageId} with ack=${ack}`);
 
-        if (!targetOrderId) {
-            const existingOrder = await prisma.order.findFirst({
-                where: { whatsappMessageId: messageId }
-            });
-            targetOrderId = existingOrder?.id;
+        // Find if this message belongs to any ACTIVE watchdog
+        let matchedOrderId: number | null = null;
+        let entry: ActiveOrderWatchdog | undefined;
+
+        for (const [oId, e] of this.activeOrderWatchdogs.entries()) {
+            const isMatch = e.messageId === messageId || 
+                (e.rawMessageId && messageId.includes(e.rawMessageId)) ||
+                (messageId && e.messageId.includes(messageId));
+            if (isMatch) {
+                matchedOrderId = oId;
+                entry = e;
+                break;
+            }
         }
 
-        if (!targetOrderId) return;
+        // If not in active watchdogs, check if it matches the Order's CURRENT latest whatsappMessageId in the database
+        if (!matchedOrderId) {
+            const rawId = messageId.split('_').pop() || messageId;
+            const existingOrder = await prisma.order.findFirst({
+                where: {
+                    OR: [
+                        { whatsappMessageId: messageId },
+                        { whatsappMessageId: { contains: rawId } }
+                    ]
+                }
+            });
 
-        let orderEventBus: any = null;
-        try {
-            orderEventBus = require('./OrderEventBus').orderEventBus;
-        } catch (e) {}
+            if (existingOrder) {
+                // ONLY process if this message is the latest message recorded on the order
+                matchedOrderId = existingOrder.id;
+            }
+        }
+
+        if (!matchedOrderId) {
+            this.log('info', `[WhatsAppService] Ignoring ack for older or unmonitored message: ${messageId}`);
+            return;
+        }
 
         if (ack >= 2) {
-            // Cancel watchdog timer if running
+            // Cancel active watchdog timer & interval
             if (entry) {
-                clearTimeout(entry.timer);
-                this.watchdogMap.delete(messageId);
-                this.log('info', `[WhatsAppWatchdog] Order #${targetOrderId} received double tick (ack=${ack})! Delivery confirmed, email fallback timer cancelled.`);
+                if (entry.timer) clearTimeout(entry.timer);
+                if (entry.pollInterval) clearInterval(entry.pollInterval);
+                this.activeOrderWatchdogs.delete(matchedOrderId);
+                this.log('info', `[WhatsAppWatchdog] Order #${matchedOrderId} received delivery ack=${ack}! Delivery confirmed, timer cancelled.`);
             }
 
             const newStatus = ack === 3 ? 'WHATSAPP_READ' : 'WHATSAPP_DELIVERED';
@@ -784,32 +916,30 @@ export class WhatsAppService {
                 : `Consegnato sul telefono del cliente (doppia spunta) alle ${new Date().toLocaleTimeString('it-IT')}`;
 
             const updated = await prisma.order.update({
-                where: { id: targetOrderId },
+                where: { id: matchedOrderId },
                 data: {
                     notificationStatus: newStatus,
                     notificationDetails: detailsText
                 } as any
             });
 
-            if (orderEventBus) {
-                try {
-                    orderEventBus.emit('order:notification_updated', updated);
-                } catch (e) {}
-            }
+            this.notifyOrderUpdated(updated);
         } else if (ack === -1) {
-            this.log('warn', `[WhatsAppWatchdog] Order #${targetOrderId} message failed with ACK_ERROR (-1). Triggering immediate email fallback...`);
-            await this.triggerFallbackEmail(messageId);
+            this.log('warn', `[WhatsAppWatchdog] Order #${matchedOrderId} message failed with ACK_ERROR (-1). Triggering immediate fallback...`);
+            await this.triggerFallbackEmailForOrder(matchedOrderId);
         }
     }
 
-    public async triggerFallbackEmail(messageId: string) {
-        const entry = this.watchdogMap.get(messageId);
+    public async triggerFallbackEmailForOrder(orderId: number) {
+        const entry = this.activeOrderWatchdogs.get(orderId);
         if (!entry) return;
 
-        this.watchdogMap.delete(messageId);
-        const { orderId, customerEmail, order, status } = entry;
+        if (entry.timer) clearTimeout(entry.timer);
+        if (entry.pollInterval) clearInterval(entry.pollInterval);
+        this.activeOrderWatchdogs.delete(orderId);
 
-        this.log('warn', `[WhatsAppWatchdog] 3 minutes elapsed without WhatsApp delivery confirmation (ACK_DEVICE) for Order #${orderId}. Triggering Email Fallback...`);
+        const { customerEmail, order, status } = entry;
+        this.log('warn', `[WhatsAppWatchdog] 3 minutes elapsed without WhatsApp delivery confirmation for Order #${orderId}. Triggering Email Fallback...`);
 
         if (customerEmail) {
             try {
@@ -826,22 +956,29 @@ export class WhatsAppService {
                     } as any
                 });
 
-                try {
-                    const { orderEventBus } = require('./OrderEventBus');
-                    orderEventBus.emit('order:notification_updated', updated);
-                } catch (e) {}
+                this.notifyOrderUpdated(updated);
             } catch (emailErr: any) {
                 this.log('error', `[WhatsAppWatchdog] Failed to send fallback email for Order #${orderId}: ${emailErr?.message || emailErr}`);
             }
         } else {
             this.log('warn', `[WhatsAppWatchdog] Order #${orderId} has no customerEmail, cannot send email fallback.`);
-            await prisma.order.update({
+            const updated = await prisma.order.update({
                 where: { id: orderId },
                 data: {
                     notificationStatus: 'FAILED',
                     notificationDetails: `WhatsApp non recapitato sul telefono e nessuna email cliente disponibile.`
                 } as any
             });
+            this.notifyOrderUpdated(updated);
         }
     }
+
+    private notifyOrderUpdated(order: any) {
+        try {
+            const { orderEventBus } = require('./OrderEventBus');
+            orderEventBus.emit('order:updated', order);
+            orderEventBus.emit('order:notification_updated', order);
+        } catch (e) {}
+    }
 }
+
