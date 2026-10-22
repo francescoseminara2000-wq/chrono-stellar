@@ -39,31 +39,41 @@ const AuthMenu = ({
             <div className="relative" ref={dropdownRef}>
                 {/* Trigger Button seamlessly integrated into Header Pill */}
                 <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center gap-2.5 sm:gap-3 py-1 px-1.5 rounded-full group cursor-pointer transition-all"
+                    className="flex items-center gap-2.5 sm:gap-3 py-0.5 px-1 rounded-full group cursor-pointer transition-all"
                 >
-                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white flex items-center justify-center text-emerald-800 shadow-sm border border-nature-200/90 overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
-                        {user.avatar ? (
-                            <img
-                                src={sanitizeImageUrl(user.avatar)}
-                                alt={user.name || 'User'}
-                                className="w-full h-full object-contain p-0.5"
-                            />
-                        ) : (
-                            <UserIcon size={18} />
-                        )}
+                    {/* Avatar con anellino di stato e ombra morbida */}
+                    <div className="relative shrink-0">
+                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white flex items-center justify-center text-emerald-800 shadow-2xs border-2 border-emerald-400/60 overflow-hidden group-hover:scale-105 group-hover:border-emerald-600 transition-all">
+                            {user.avatar ? (
+                                <img
+                                    src={sanitizeImageUrl(user.avatar)}
+                                    alt={user.name || 'User'}
+                                    className="w-full h-full object-contain p-0.5"
+                                />
+                            ) : (
+                                <UserIcon size={18} />
+                            )}
+                        </div>
+                        {/* Micro status badge "Attivo" */}
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-2xs" />
                     </div>
+
                     <div className="flex flex-col text-left">
-                        <span className="text-sm sm:text-[15px] font-black text-nature-950 group-hover:text-emerald-700 transition-colors leading-tight truncate max-w-[160px]">
+                        <span className="text-xs sm:text-sm font-black text-gray-900 group-hover:text-emerald-700 transition-colors leading-tight truncate max-w-[140px] sm:max-w-[160px]">
                             {user.name || 'Account'}
                         </span>
-                        <span className="text-xs font-black text-emerald-700 leading-tight mt-0.5">
-                            € {formattedBalance}
-                        </span>
+                        
+                        {/* Micro-badge Saldo con Icona Wallet */}
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100/80 border border-emerald-300/70 text-emerald-900 text-[10.5px] font-black shadow-2xs mt-0.5 w-fit group-hover:bg-emerald-200/90 transition-colors">
+                            <Wallet size={11} className="text-emerald-700 shrink-0" />
+                            <span>€ {formattedBalance}</span>
+                        </div>
                     </div>
-                    <ChevronDown size={16} className={`text-nature-400 group-hover:text-emerald-700 transition-transform duration-300 ml-0.5 ${isOpen ? 'rotate-180' : ''}`} />
+
+                    <ChevronDown size={15} className={`text-gray-400 group-hover:text-emerald-700 transition-transform duration-300 ml-0.5 ${isOpen ? 'rotate-180 text-emerald-700' : ''}`} />
                 </motion.button>
 
                 <AnimatePresence>
@@ -514,8 +524,8 @@ export const Header = () => {
                     {/* Right: Desktop User Actions Pill (Profile, Balance, Cart) */}
                     <div className="hidden md:flex items-center flex-shrink-0">
                         <div className={`
-                            bg-nature-50 border border-nature-100 rounded-full shadow-xs flex items-center transition-all duration-300 hover:shadow-md hover:border-nature-200
-                            ${isScrolled ? 'py-1 pl-1.5 pr-2 gap-2' : 'py-1.5 pl-2 pr-2.5 gap-2.5'}
+                            bg-white/95 backdrop-blur-md border border-emerald-200/80 rounded-full shadow-xs flex items-center transition-all duration-300 hover:shadow-md hover:border-emerald-300
+                            ${isScrolled ? 'py-1 pl-1.5 pr-1.5 gap-2' : 'py-1.5 pl-2 pr-2 gap-2.5'}
                         `}>
                             <AuthMenu
                                 pushEnabled={pushEnabled}
@@ -523,17 +533,18 @@ export const Header = () => {
                                 isPushLoading={isPushLoading}
                             />
 
-                            <div className="w-px bg-nature-200/90 transition-all duration-300 self-stretch my-1"></div>
+                            <div className="w-px bg-emerald-200/80 transition-all duration-300 self-stretch my-1.5"></div>
 
+                            {/* Carrello in evidenza con pulsante circolare verde scuro */}
                             <Link 
                                 to="/cart" 
-                                className={`relative flex items-center justify-center rounded-full hover:bg-white/80 active:scale-95 text-nature-900 hover:text-emerald-700 transition-all group shrink-0 ${
+                                className={`relative flex items-center justify-center rounded-full bg-emerald-850 hover:bg-emerald-700 active:scale-95 text-white shadow-xs hover:shadow-md transition-all group shrink-0 ${
                                     isScrolled ? 'w-9 h-9' : 'w-10 h-10'
                                 }`}
                                 title="Carrello"
                             >
                                 <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} className="flex items-center justify-center">
-                                    <ShoppingBasket size={isScrolled ? 19 : 22} className="transition-all duration-300" />
+                                    <ShoppingBasket size={isScrolled ? 18 : 20} className="transition-transform group-hover:rotate-[-6deg]" />
                                 </motion.div>
                                 <AnimatePresence>
                                     {itemCount > 0 && (
