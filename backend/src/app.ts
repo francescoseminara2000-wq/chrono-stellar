@@ -88,6 +88,7 @@ app.patch('/api/admin/orders/:id/fulfill', authenticateToken, requireAdmin, (req
 app.post('/api/admin/orders/:id/resend-approval', authenticateToken, requireAdmin, (req, res) => adminController.resendApproval(req, res));
 app.patch('/api/admin/orders/:id/status', authenticateToken, requireAdmin, (req, res) => adminController.updateStatus(req, res));
 app.post('/api/admin/orders/:id/notify-whatsapp', authenticateToken, requireAdmin, (req, res) => adminController.notifyWhatsApp(req, res));
+app.post('/api/admin/orders/:id/check-whatsapp', authenticateToken, requireAdmin, (req, res) => adminController.checkWhatsAppStatus(req, res));
 app.get('/api/admin/deliveries/map', authenticateToken, requireAdmin, (req, res) => adminController.getDeliveryMap(req, res));
 
 // Admin - Customers

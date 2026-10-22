@@ -51,6 +51,7 @@ export const OrderManager = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'customer'>('items');
     const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
     const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+    const [isCheckingWhatsApp, setIsCheckingWhatsApp] = useState(false);
     const [weighedItemIds, setWeighedItemIds] = useState<number[]>([]);
     const [weighingItemModal, setWeighingItemModal] = useState<{
         isOpen: boolean;
@@ -641,6 +642,40 @@ export const OrderManager = () => {
             addToast('Errore di connessione al server', 'error');
         } finally {
             setIsSendingWhatsApp(false);
+        }
+    };
+
+    const handleCheckWhatsAppStatus = async (orderId: number) => {
+        try {
+            setIsCheckingWhatsApp(true);
+            const res = await fetch(`${API_URL}/api/admin/orders/${orderId}/check-whatsapp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (data.success && data.order) {
+                setSelectedOrder(data.order);
+                setOrders(prev => prev.map(o => o.id === data.order.id ? data.order : o));
+                if (data.ack >= 3) {
+                    addToast('👀 Messaggio WhatsApp visualizzato dal cliente (spunte blu)!', 'info');
+                } else if (data.ack >= 2) {
+                    addToast('✅ Consegna verificata! WhatsApp Consegnato al cliente (doppia spunta)', 'success');
+                } else if (data.ack === 1) {
+                    addToast('⏳ Messaggio inviato ai server WhatsApp, in attesa di ricezione sul telefono.', 'info');
+                } else {
+                    addToast('Stato recapito verificato.', 'info');
+                }
+            } else {
+                addToast(data.message || 'Nessun messaggio tracciato per questo ordine.', 'info');
+            }
+        } catch (e) {
+            console.error(e);
+            addToast('Errore durante la verifica dello stato WhatsApp', 'error');
+        } finally {
+            setIsCheckingWhatsApp(false);
         }
     };
 
@@ -1594,12 +1629,12 @@ export const OrderManager = () => {
                                         {selectedOrder.notificationStatus && selectedOrder.notificationStatus !== 'NONE' && (
                                             <button
                                                 type="button"
-                                                disabled={isSendingWhatsApp}
-                                                onClick={() => handleSendOrderWhatsApp(selectedOrder.id)}
-                                                className="text-gray-400 hover:text-gray-700 p-0.5 rounded cursor-pointer disabled:opacity-50"
-                                                title="Reinvia notifica ordine"
+                                                disabled={isCheckingWhatsApp || isSendingWhatsApp}
+                                                onClick={() => handleCheckWhatsAppStatus(selectedOrder.id)}
+                                                className="text-gray-400 hover:text-emerald-700 p-0.5 rounded cursor-pointer disabled:opacity-50 transition-colors"
+                                                title="Verifica stato consegna WhatsApp in tempo reale"
                                             >
-                                                <RotateCcw size={11} className={isSendingWhatsApp ? 'animate-spin' : ''} />
+                                                <RotateCcw size={11} className={isCheckingWhatsApp ? 'animate-spin text-emerald-600' : ''} />
                                             </button>
                                         )}
                                     </div>

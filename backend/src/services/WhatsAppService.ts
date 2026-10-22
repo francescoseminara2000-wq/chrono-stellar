@@ -486,6 +486,22 @@ export class WhatsAppService {
             }).catch(() => ({ hasStore: false, hasWWebJS: false }));
 
             if (recheck.hasWWebJS) {
+                // Ensure change:ack event is properly wired to onMessageAckEvent in case of delayed injection
+                await pupPage.evaluate(() => {
+                    try {
+                        const store = (window as any).Store;
+                        if (store && store.Msg && typeof store.Msg.on === 'function') {
+                            try { store.Msg.off('change:ack'); } catch (e) {}
+                            store.Msg.on('change:ack', (msg: any, ack: number) => {
+                                if (typeof (window as any).onMessageAckEvent === 'function') {
+                                    const model = (window as any).WWebJS ? (window as any).WWebJS.getMessageModel(msg) : msg;
+                                    (window as any).onMessageAckEvent(model, ack);
+                                }
+                            });
+                        }
+                    } catch (e) {}
+                }).catch(() => {});
+
                 this.log('info', '[WhatsAppService] Store & WWebJS verified in page!');
                 this.isReady = true;
                 this.isAuthenticated = true;
@@ -701,7 +717,7 @@ export class WhatsAppService {
             const messageId = sentResult?.id?._serialized || (typeof sentResult === 'string' ? sentResult : null);
             const rawMessageId = sentResult?.id?.id || (typeof messageId === 'string' ? messageId.split('_').pop() || messageId : '');
             const initialAck = typeof sentResult?.ack === 'number' ? sentResult.ack : 1;
-            const nowTime = new Date().toLocaleTimeString('it-IT');
+            const nowTime = new Date().toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' });
 
             if (order.id) {
                 if (initialAck >= 2) {
@@ -756,7 +772,7 @@ export class WhatsAppService {
                         await this.triggerFallbackEmailForOrder(order.id);
                     }, fallbackTimeoutMs);
 
-                    // 2. Active poll: inspects Store.Msg in the Puppeteer page every 5s (up to 36 times = 3 mins)
+                    // 2. Active poll: inspects Store.Msg in the Puppeteer page every 4s (up to 45 times = 3 mins)
                     watchdogEntry.pollInterval = setInterval(async () => {
                         try {
                             const currentEntry = this.activeOrderWatchdogs.get(order.id);
@@ -766,7 +782,7 @@ export class WhatsAppService {
                             }
 
                             currentEntry.pollCount++;
-                            if (currentEntry.pollCount > 36) {
+                            if (currentEntry.pollCount > 45) {
                                 if (currentEntry.pollInterval) clearInterval(currentEntry.pollInterval);
                                 return;
                             }
@@ -779,7 +795,7 @@ export class WhatsAppService {
                         } catch (pErr: any) {
                             // Poll check silent error
                         }
-                    }, 5000);
+                    }, 4000);
 
                     this.activeOrderWatchdogs.set(order.id, watchdogEntry);
                     this.log('info', `[WhatsAppWatchdog] Started 3-minute delivery watchdog exclusively for Order #${order.id} (latest msg: ${messageId})`);
@@ -799,11 +815,12 @@ export class WhatsAppService {
                     await emailService.sendOrderStatusUpdateEmail(customerEmail, order, type, true);
                     this.log('info', `[WhatsAppService] Immediate email fallback successfully sent to ${customerEmail} for Order #${order.id}`);
 
+                    const nowTime = new Date().toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' });
                     const updated = await prisma.order.update({
                         where: { id: order.id },
                         data: {
                             notificationStatus: 'EMAIL_FALLBACK_SENT',
-                            notificationDetails: `Invio WhatsApp fallito (${error?.message || 'Offline'}). Inviata email di fallback a ${customerEmail} alle ${new Date().toLocaleTimeString('it-IT')}`
+                            notificationDetails: `Invio WhatsApp fallito (${error?.message || 'Offline'}). Inviata email di fallback a ${customerEmail} alle ${nowTime}`
                         } as any
                     });
                     this.notifyOrderUpdated(updated);
@@ -827,15 +844,31 @@ export class WhatsAppService {
 
     public async checkMessageAckInPage(messageId: string, rawId: string): Promise<number> {
         if (!this.client) return -1;
+
+        try {
+            const msgObj: any = await this.client.getMessageById(messageId).catch(() => null);
+            if (msgObj && typeof msgObj.ack === 'number' && msgObj.ack >= 0) {
+                return msgObj.ack;
+            }
+        } catch (e) {}
+
         const page = (this.client as any).pupPage;
         if (!page) return -1;
 
         try {
-            const ack = await page.evaluate((fullId: string, rId: string) => {
+            const ack = await page.evaluate(async (fullId: string, rId: string) => {
                 try {
                     const store = (window as any).Store;
                     if (!store) return -1;
                     let msg = store.Msg ? store.Msg.get(fullId) : null;
+                    if (!msg && store.Msg?.getMessagesById) {
+                        try {
+                            const res = await store.Msg.getMessagesById([fullId]);
+                            if (res && res.messages && res.messages.length) {
+                                msg = res.messages[0];
+                            }
+                        } catch (e) {}
+                    }
                     if (!msg && store.Msg?.models) {
                         msg = store.Msg.models.find((m: any) => {
                             const idObj = m?.id;
@@ -910,10 +943,11 @@ export class WhatsAppService {
                 this.log('info', `[WhatsAppWatchdog] Order #${matchedOrderId} received delivery ack=${ack}! Delivery confirmed, timer cancelled.`);
             }
 
+            const nowTime = new Date().toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' });
             const newStatus = ack === 3 ? 'WHATSAPP_READ' : 'WHATSAPP_DELIVERED';
             const detailsText = ack === 3
-                ? `Visualizzato dal cliente su WhatsApp (spunte blu) alle ${new Date().toLocaleTimeString('it-IT')}`
-                : `Consegnato sul telefono del cliente (doppia spunta) alle ${new Date().toLocaleTimeString('it-IT')}`;
+                ? `Visualizzato dal cliente su WhatsApp (spunte blu) alle ${nowTime}`
+                : `Consegnato sul telefono del cliente (doppia spunta) alle ${nowTime}`;
 
             const updated = await prisma.order.update({
                 where: { id: matchedOrderId },
@@ -948,11 +982,12 @@ export class WhatsAppService {
                 await emailService.sendOrderStatusUpdateEmail(customerEmail, order, status, true);
                 this.log('info', `[WhatsAppWatchdog] Fallback email sent successfully to ${customerEmail} for Order #${orderId}`);
 
+                const nowTime = new Date().toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' });
                 const updated = await prisma.order.update({
                     where: { id: orderId },
                     data: {
                         notificationStatus: 'EMAIL_FALLBACK_SENT',
-                        notificationDetails: `WhatsApp non recapitato entro 3 min. Inviata email di fallback a ${customerEmail} alle ${new Date().toLocaleTimeString('it-IT')}`
+                        notificationDetails: `WhatsApp non recapitato entro 3 min. Inviata email di fallback a ${customerEmail} alle ${nowTime}`
                     } as any
                 });
 

@@ -234,6 +234,51 @@ export class AdminController {
         }
     }
 
+    async checkWhatsAppStatus(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const order: any = await prisma.order.findUnique({
+                where: { id: Number(id) }
+            });
+
+            if (!order || !order.whatsappMessageId) {
+                return res.json({
+                    success: false,
+                    message: 'Nessun messaggio WhatsApp tracciato per questo ordine',
+                    order
+                });
+            }
+
+            const rawId = order.whatsappMessageId.split('_').pop() || order.whatsappMessageId;
+            const ack = await whatsAppService.checkMessageAckInPage(order.whatsappMessageId, rawId);
+            whatsAppService.log('info', `[AdminController] Manual checkWhatsAppStatus for Order #${order.id} (msg: ${order.whatsappMessageId}): ack=${ack}`);
+
+            if (ack >= 2) {
+                await whatsAppService.handleMessageAck(order.whatsappMessageId, ack);
+            }
+
+            const updatedOrder = await prisma.order.findUnique({
+                where: { id: Number(id) },
+                include: {
+                    user: true,
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            });
+
+            res.json({
+                success: true,
+                ack,
+                order: updatedOrder
+            });
+        } catch (error: any) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
     async getDeliveryMap(req: Request, res: Response) {
         try {
             const deliveries = await adminService.getActiveDeliveries();
