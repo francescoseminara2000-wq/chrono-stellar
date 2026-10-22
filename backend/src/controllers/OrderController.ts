@@ -182,9 +182,17 @@ export class OrderController {
                     customerEmail: order.customerEmail,
                     customerPhone: order.customerPhone,
                     status: order.status,
+                    paymentMethod: order.paymentMethod,
+                    deliveryMethod: order.deliveryMethod,
+                    shippingAddress: order.shippingAddress,
+                    deliveryNotes: order.deliveryNotes,
+                    scheduledDate: order.scheduledDate,
+                    scheduledTime: order.scheduledTime,
                     estimatedTotal: order.estimatedTotal,
                     finalTotal: order.finalTotal,
                     shippingCost: order.shippingCost,
+                    discountAmount: order.discountAmount,
+                    walletAmountUsed: order.walletAmountUsed,
                     approvalStatus: order.approvalStatus || 'NONE',
                     approvalToken: order.approvalToken,
                     customerApprovedAt: order.customerApprovedAt,
@@ -195,8 +203,11 @@ export class OrderController {
                 tolerancePercent: storeSettings?.weighingTolerancePercent ?? 10,
                 storeInfo: {
                     siteName: storeSettings?.siteName || 'Ortofrutta Butti',
+                    logoUrl: storeSettings?.logoUrl,
                     contactPhone: storeSettings?.contactPhone,
-                    contactEmail: storeSettings?.contactEmail
+                    contactEmail: storeSettings?.contactEmail,
+                    contactAddress: storeSettings?.contactAddress,
+                    openingHours: storeSettings?.openingHours
                 }
             });
         } catch (error: any) {

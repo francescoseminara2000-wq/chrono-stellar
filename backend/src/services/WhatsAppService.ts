@@ -658,9 +658,9 @@ export class WhatsAppService {
             const approvalUrl = `${domain}/conferma-pesatura/${order.id}?token=${order.approvalToken}`;
 
             if (order.approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' || order.requiresApproval) {
-                message += `\n\n⚠️ *Variazione Pesatura da Approvare*\nPer verificare il dettaglio della pesatura ed approvare il tuo ordine, clicca sul link qui sotto:\n🔗 ${approvalUrl}`;
+                message += `\n\n⚖️ *Conferma Pesatura Richiesta*\nPer visualizzare lo scontrino dettagliato ed approvare il tuo ordine, tocca il link qui sotto:\n👉 ${approvalUrl}`;
             } else {
-                message += `\n\n🔍 *Dettaglio Pesatura Online*\nPer verificare la pesatura ed il dettaglio dei prodotti pesati, clicca sul link qui sotto:\n🔗 ${approvalUrl}`;
+                message += `\n\n🧾 *Scontrino Digitale Pesatura*\nPuoi controllare il dettaglio dei pesi effettivi e lo scontrino completo cliccando qui:\n👉 ${approvalUrl}`;
             }
         }
 
