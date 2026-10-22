@@ -17,16 +17,16 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    // Risoluzione dimensioni ottimali per il video (ora quadrato 1:1)
-    let dimension = 130;
+    // Risoluzione dimensioni ottimali per il video (mela grande e ben visibile)
+    let dimension = 200;
     if (typeof size === 'number') {
         dimension = size;
     } else {
         switch (size) {
-            case 'sm': dimension = 72; break;
-            case 'md': dimension = 130; break;
-            case 'lg': dimension = 170; break;
-            case 'xl': dimension = 220; break;
+            case 'sm': dimension = 110; break;
+            case 'md': dimension = 190; break;
+            case 'lg': dimension = 250; break;
+            case 'xl': dimension = 300; break;
         }
     }
 

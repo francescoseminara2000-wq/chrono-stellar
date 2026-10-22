@@ -22,14 +22,14 @@ export const LoadingOverlay: React.FC = () => {
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.85, opacity: 0, y: 10 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                        className="bg-white/90 border border-emerald-100/80 shadow-2xl rounded-3xl p-8 max-w-sm w-full flex flex-col items-center justify-center text-center relative overflow-hidden"
+                        className="bg-white/95 border border-emerald-100 shadow-2xl rounded-3xl p-8 sm:p-10 max-w-md w-full flex flex-col items-center justify-center text-center relative overflow-hidden"
                     >
                         {/* Riflesso decorativo di sfondo */}
-                        <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-100/50 rounded-full blur-2xl pointer-events-none" />
-                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-100/40 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -top-12 -right-12 w-36 h-36 bg-emerald-100/50 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-rose-100/40 rounded-full blur-2xl pointer-events-none" />
 
                         <AppleLoader 
-                            size="lg" 
+                            size="xl" 
                             text={message || 'Caricamento in corso...'} 
                             subtext={subtext}
                         />
