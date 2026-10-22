@@ -428,12 +428,12 @@ export const Header = () => {
                                                 />
                                             )}
 
-                                            {/* Hover Pill (when hovering over another link) */}
+                                            {/* Hover Pill (Transparent Glass Green) */}
                                             {isHovered && !isActive && (
                                                 <motion.div
                                                     layoutId="hoverNavPill"
                                                     transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                                                    className="absolute inset-0 bg-nature-200/60 rounded-full -z-10 shadow-2xs border border-nature-300/40"
+                                                    className="absolute inset-0 bg-emerald-600/18 backdrop-blur-md rounded-full -z-10 shadow-[0_2px_10px_rgba(16,185,129,0.22)] border border-emerald-500/45"
                                                 />
                                             )}
 
