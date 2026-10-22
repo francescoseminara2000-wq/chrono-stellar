@@ -535,16 +535,16 @@ export const Header = () => {
 
                             <div className="w-px bg-emerald-200/80 transition-all duration-300 self-stretch my-1.5"></div>
 
-                            {/* Carrello in evidenza con pulsante circolare verde scuro */}
+                            {/* Carrello in evidenza con pulsante circolare verde smeraldo */}
                             <Link 
                                 to="/cart" 
-                                className={`relative flex items-center justify-center rounded-full bg-emerald-850 hover:bg-emerald-700 active:scale-95 text-white shadow-xs hover:shadow-md transition-all group shrink-0 ${
+                                className={`relative flex items-center justify-center rounded-full bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white shadow-xs hover:shadow-md transition-all group shrink-0 ${
                                     isScrolled ? 'w-9 h-9' : 'w-10 h-10'
                                 }`}
                                 title="Carrello"
                             >
-                                <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} className="flex items-center justify-center">
-                                    <ShoppingBasket size={isScrolled ? 18 : 20} className="transition-transform group-hover:rotate-[-6deg]" />
+                                <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} className="flex items-center justify-center text-white">
+                                    <ShoppingBasket size={isScrolled ? 18 : 20} className="text-white transition-transform group-hover:rotate-[-6deg]" />
                                 </motion.div>
                                 <AnimatePresence>
                                     {itemCount > 0 && (
