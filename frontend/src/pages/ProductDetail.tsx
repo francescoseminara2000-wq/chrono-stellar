@@ -193,7 +193,7 @@ export const ProductDetail = () => {
     };
 
     if (loading) return (
-        <div className="flex flex-col justify-center items-center min-h-[75vh] bg-nature-50/50">
+        <div className="flex flex-col justify-center items-center min-h-[60vh] sm:min-h-[75vh] py-10 sm:py-20 bg-nature-50/50 px-4">
             <AppleLoader size="lg" />
         </div>
     );

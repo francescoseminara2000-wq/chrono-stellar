@@ -44,7 +44,7 @@ export const Home = () => {
 
     if (loading) {
         return (
-            <div className="min-h-[75vh] flex flex-col items-center justify-center py-24 px-4 select-none">
+            <div className="min-h-[60vh] sm:min-h-[75vh] flex flex-col items-center justify-center py-10 sm:py-24 px-4 select-none">
                 <AppleLoader size="xl" />
             </div>
         );

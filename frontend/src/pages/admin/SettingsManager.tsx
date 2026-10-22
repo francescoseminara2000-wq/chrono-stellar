@@ -6,7 +6,7 @@ import {
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
     ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders, Type,
-    Bold, MoveVertical
+    Bold, MoveVertical, Smartphone, Monitor
 } from 'lucide-react';
 import { AppleLoader } from '../../components/ui/AppleLoader';
 import { useToastStore } from '../../store/useToastStore';
@@ -65,6 +65,7 @@ export const SettingsManager = () => {
     const [isSaving, setIsSaving] = useState(false);
     const { addToast } = useToastStore();
     const { fetchSettings: refreshGlobalSettings } = useAppState();
+    const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
     // --- Settings State ---
     const [formData, setFormData] = useState({
@@ -1059,24 +1060,76 @@ export const SettingsManager = () => {
                             </button>
                         </div>
 
-                        {/* Interactive Live Preview Box */}
-                        <div className="bg-gradient-to-br from-emerald-50/60 via-white to-nature-50/40 rounded-3xl p-8 shadow-sm border border-emerald-100/80 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black uppercase tracking-wider mb-4 inline-flex items-center gap-1.5 shadow-2xs">
-                                <Play size={13} className="text-emerald-700" /> Anteprima dal Vivo
-                            </span>
+                        {/* Interactive Live Preview Box with Desktop / Smartphone Preview */}
+                        <div className="bg-gradient-to-br from-emerald-50/60 via-white to-nature-50/40 rounded-3xl p-6 sm:p-8 shadow-sm border border-emerald-100/80 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                            <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-xl mb-4 gap-2.5">
+                                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5 shadow-2xs">
+                                    <Play size={13} className="text-emerald-700" /> Anteprima dal Vivo
+                                </span>
+
+                                {/* Switcher Desktop vs Telefono (Mobile) */}
+                                <div className="inline-flex items-center bg-white p-1 rounded-2xl border border-emerald-200/80 shadow-2xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreviewDevice('desktop')}
+                                        className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                                            previewDevice === 'desktop'
+                                                ? 'bg-emerald-700 text-white shadow-xs'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        }`}
+                                    >
+                                        <Monitor size={14} /> Desktop
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreviewDevice('mobile')}
+                                        className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                                            previewDevice === 'mobile'
+                                                ? 'bg-emerald-700 text-white shadow-xs'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                        }`}
+                                    >
+                                        <Smartphone size={14} /> Telefono (Mobile)
+                                    </button>
+                                </div>
+                            </div>
                             
-                            <AppleLoader
-                                size={formData.appleLoaderDimension || 200}
-                                playbackRate={formData.appleLoaderPlaybackRate}
-                                videoUrl={formData.appleLoaderVideoUrl || undefined}
-                                text={formData.appleLoaderPhrase || 'Caricando gli scaffali...'}
-                                textSize={formData.appleLoaderTextSize}
-                                textBold={formData.appleLoaderTextBold}
-                                textOffset={formData.appleLoaderTextOffset}
-                            />
+                            {previewDevice === 'mobile' ? (
+                                <div className="w-[310px] max-w-[90vw] h-[450px] bg-white rounded-[40px] border-[6px] border-gray-900 shadow-xl relative flex flex-col items-center justify-center p-4 my-2 overflow-hidden ring-1 ring-black/10">
+                                    {/* Smartphone Notch */}
+                                    <div className="w-24 h-4 bg-gray-900 rounded-b-xl absolute top-0 left-1/2 -translate-x-1/2 flex items-center justify-center">
+                                        <div className="w-8 h-1 bg-gray-700 rounded-full mb-1"></div>
+                                    </div>
+                                    <div className="w-full flex flex-col items-center justify-center scale-95">
+                                        <AppleLoader
+                                            size={formData.appleLoaderDimension || 200}
+                                            playbackRate={formData.appleLoaderPlaybackRate}
+                                            videoUrl={formData.appleLoaderVideoUrl || undefined}
+                                            text={formData.appleLoaderPhrase || 'Caricando gli scaffali...'}
+                                            textSize={formData.appleLoaderTextSize}
+                                            textBold={formData.appleLoaderTextBold}
+                                            textOffset={formData.appleLoaderTextOffset}
+                                        />
+                                    </div>
+                                    {/* Home indicator bar */}
+                                    <div className="w-28 h-1 bg-gray-300 rounded-full absolute bottom-2 left-1/2 -translate-x-1/2"></div>
+                                </div>
+                            ) : (
+                                <AppleLoader
+                                    size={formData.appleLoaderDimension || 200}
+                                    playbackRate={formData.appleLoaderPlaybackRate}
+                                    videoUrl={formData.appleLoaderVideoUrl || undefined}
+                                    text={formData.appleLoaderPhrase || 'Caricando gli scaffali...'}
+                                    textSize={formData.appleLoaderTextSize}
+                                    textBold={formData.appleLoaderTextBold}
+                                    textOffset={formData.appleLoaderTextOffset}
+                                />
+                            )}
 
                             <p className="text-xs text-gray-500 font-medium mt-4">
-                                Questa anteprima reagisce in tempo reale alle regolazioni sottostanti e al video caricato.
+                                {previewDevice === 'mobile' 
+                                    ? 'Simulazione fedele su smartphone: font clamp fluido, proporzione automatica anti-debordo e offset calibrato.' 
+                                    : 'Questa anteprima reagisce in tempo reale alle regolazioni sottostanti e al video caricato.'}
                             </p>
                         </div>
 

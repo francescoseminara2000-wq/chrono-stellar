@@ -242,7 +242,7 @@ export const Shop = () => {
     );
 
     if (loading) return (
-        <div className="flex justify-center items-center min-h-[70vh] bg-nature-50/40">
+        <div className="flex justify-center items-center min-h-[60vh] sm:min-h-[70vh] py-10 sm:py-20 bg-nature-50/40 px-4">
             <AppleLoader size="lg" />
         </div>
     );
