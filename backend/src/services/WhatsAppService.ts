@@ -578,6 +578,7 @@ export class WhatsAppService {
             }
 
             this.log('info', `Calling client.sendMessage to ${chatId}... (Length: ${message.length} chars)`);
+            console.log(`[WhatsApp Track] 📤 Inviando messaggio a ${chatId} (${message.length} caratteri)...`);
             let sentResult: any;
             try {
                 sentResult = await this.client.sendMessage(chatId, message);
@@ -591,15 +592,90 @@ export class WhatsAppService {
                 }
             }
             
+            // Fallback recovery: if sentResult lacks serialized ID, retrieve last message from chat
+            if ((!sentResult || !sentResult.id || !sentResult.id._serialized) && (this.client as any).pupPage) {
+                console.log(`[WhatsApp Track] ⚠️ sentResult privo di ID univoco immediato, estraggo l'ultimo messaggio dalla chat ${chatId}...`);
+                const recovered = await (this.client as any).pupPage.evaluate((cId: string) => {
+                    try {
+                        const chat = (window as any).Store?.Chat?.get(cId);
+                        if (chat && chat.msgs && chat.msgs.length) {
+                            const myMsgs = chat.msgs.filter((m: any) => m.id && m.id.fromMe);
+                            const last = myMsgs[myMsgs.length - 1];
+                            if (last && last.id) {
+                                return {
+                                    id: last.id._serialized || last.id.id,
+                                    ack: typeof last.ack === 'number' ? last.ack : 1
+                                };
+                            }
+                        }
+                    } catch (e) {}
+                    return null;
+                }, chatId).catch(() => null);
+
+                if (recovered && recovered.id) {
+                    console.log(`[WhatsApp Track] ✅ ID recuperato con successo dalla memoria della chat: ${recovered.id} (ACK: ${recovered.ack})`);
+                    sentResult = { id: { _serialized: recovered.id, id: recovered.id.split('_').pop() || recovered.id }, ack: recovered.ack };
+                }
+            }
+
             if (sentResult) {
-                this.log('info', `Message successfully sent to ${chatId}! ID: ${sentResult.id?._serialized || 'OK'}`);
+                const sId = sentResult.id?._serialized || (typeof sentResult === 'string' ? sentResult : 'OK');
+                this.log('info', `Message successfully sent to ${chatId}! ID: ${sId}`);
+                console.log(`[WhatsApp Track] 📨 Messaggio inviato con successo a ${chatId}! ID Messaggio: ${sId}`);
             } else {
                 this.log('warn', `client.sendMessage returned null or undefined for ${chatId}`);
+                console.warn(`[WhatsApp Track] ⚠️ Invio completato ma nessun ID restituito per ${chatId}`);
             }
             return sentResult || true;
         } catch (error: any) {
             this.log('error', `Failed to send WhatsApp message to ${phoneNumber}: ${error?.message || error}`);
+            console.error(`[WhatsApp Track] ❌ Errore invio messaggio a ${phoneNumber}:`, error?.message || error);
             throw error;
+        }
+    }
+
+    public async findLastMessageForPhone(phoneNumber: string): Promise<{ id: string; ack: number } | null> {
+        if (!this.client) return null;
+        const page = (this.client as any).pupPage;
+        if (!page) return null;
+
+        let cleanPhone = (phoneNumber || '').replace(/[^0-9]/g, '');
+        if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
+            cleanPhone = '39' + cleanPhone;
+        } else if (cleanPhone.startsWith('0039')) {
+            cleanPhone = cleanPhone.substring(2);
+        }
+
+        const chatId = `${cleanPhone}@c.us`;
+        try {
+            const result = await page.evaluate(async (cId: string) => {
+                try {
+                    const store = (window as any).Store;
+                    if (!store || !store.Chat) return null;
+                    let chat = store.Chat.get(cId);
+                    if (!chat && store.Chat.find) {
+                        try {
+                            const wid = store.WidFactory ? store.WidFactory.createWid(cId) : cId;
+                            chat = await store.Chat.find(wid);
+                        } catch (e) {}
+                    }
+                    if (chat && chat.msgs && chat.msgs.length) {
+                        const myMsgs = chat.msgs.filter((m: any) => m.id && m.id.fromMe);
+                        const last = myMsgs[myMsgs.length - 1];
+                        if (last && last.id) {
+                            return {
+                                id: last.id._serialized || last.id.id,
+                                ack: typeof last.ack === 'number' ? last.ack : 1
+                            };
+                        }
+                    }
+                } catch (e) {}
+                return null;
+            }, chatId).catch(() => null);
+
+            return result;
+        } catch (e) {
+            return null;
         }
     }
 
@@ -714,7 +790,7 @@ export class WhatsAppService {
             this.cancelWatchdogForOrder(order.id);
 
             const sentResult = await this.sendMessage(phone, message);
-            const messageId = sentResult?.id?._serialized || (typeof sentResult === 'string' ? sentResult : null);
+            let messageId = sentResult?.id?._serialized || (typeof sentResult === 'string' ? sentResult : null);
             const rawMessageId = sentResult?.id?.id || (typeof messageId === 'string' ? messageId.split('_').pop() || messageId : '');
             const initialAck = typeof sentResult?.ack === 'number' ? sentResult.ack : 1;
             const nowTime = new Date().toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' });
@@ -742,6 +818,15 @@ export class WhatsAppService {
                 }
 
                 // Initial state: Sent to WhatsApp server, waiting for customer device delivery
+                if (!messageId) {
+                    console.warn(`[WhatsApp Track] ⚠️ Nessun messageId restituito da sendMessage per Ordine #${order.id}. Avvio recupero automatico dalla chat...`);
+                    const found = await this.findLastMessageForPhone(phone);
+                    if (found && found.id) {
+                        messageId = found.id;
+                        console.log(`[WhatsApp Track] 🔗 Message ID recuperato con successo per Ordine #${order.id}: ${messageId} (ACK: ${found.ack})`);
+                    }
+                }
+
                 const updated = await prisma.order.update({
                     where: { id: order.id },
                     data: {
@@ -750,6 +835,7 @@ export class WhatsAppService {
                         whatsappMessageId: messageId
                     } as any
                 });
+                console.log(`[WhatsApp Track] 💾 Ordine #${order.id} salvato nel database con stato WHATSAPP_SENT e messageId: ${messageId || 'NULL'}`);
                 this.notifyOrderUpdated(updated);
 
                 if (messageId) {
@@ -757,7 +843,7 @@ export class WhatsAppService {
                     const watchdogEntry: ActiveOrderWatchdog = {
                         orderId: order.id,
                         messageId,
-                        rawMessageId,
+                        rawMessageId: rawMessageId || messageId.split('_').pop() || messageId,
                         customerEmail: order.customerEmail || order.user?.email,
                         order,
                         status: type,
@@ -769,6 +855,7 @@ export class WhatsAppService {
 
                     // 1. Fallback timer (3 minutes)
                     watchdogEntry.timer = setTimeout(async () => {
+                        console.log(`[WhatsApp Track] ⏰ Scaduti 3 minuti per Ordine #${order.id}. Avvio fallback email...`);
                         await this.triggerFallbackEmailForOrder(order.id);
                     }, fallbackTimeoutMs);
 
@@ -787,9 +874,10 @@ export class WhatsAppService {
                                 return;
                             }
 
-                            const pageAck = await this.checkMessageAckInPage(messageId, rawMessageId);
+                            const pageAck = await this.checkMessageAckInPage(messageId, currentEntry.rawMessageId);
+                            console.log(`[WhatsApp Track] 🔍 Poll #${currentEntry.pollCount} per Ordine #${order.id} (msg: ${messageId}): ACK=${pageAck}`);
                             if (pageAck >= 2) {
-                                this.log('info', `[WhatsAppWatchdog] Active page poll detected ack=${pageAck} for Order #${order.id}!`);
+                                console.log(`[WhatsApp Track] 🎯 Doppia spunta rilevata (ACK=${pageAck}) per Ordine #${order.id}!`);
                                 await this.handleMessageAck(messageId, pageAck);
                             }
                         } catch (pErr: any) {
@@ -798,6 +886,7 @@ export class WhatsAppService {
                     }, 4000);
 
                     this.activeOrderWatchdogs.set(order.id, watchdogEntry);
+                    console.log(`[WhatsApp Track] 🚀 Avviato watchdog attivo di 3 minuti per Ordine #${order.id} su messaggio ${messageId}`);
                     this.log('info', `[WhatsAppWatchdog] Started 3-minute delivery watchdog exclusively for Order #${order.id} (latest msg: ${messageId})`);
                 }
             }

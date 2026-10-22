@@ -241,7 +241,29 @@ export class AdminController {
                 where: { id: Number(id) }
             });
 
-            if (!order || !order.whatsappMessageId) {
+            if (!order) {
+                return res.status(404).json({ error: 'Ordine non trovato' });
+            }
+
+            let msgId = order.whatsappMessageId;
+            const targetPhone = order.customerPhone || order.user?.phone;
+
+            if (!msgId && targetPhone) {
+                console.log(`[WhatsApp Track] 🔍 Ordine #${order.id} non ha whatsappMessageId registrato. Ricerco ultimo messaggio per ${targetPhone}...`);
+                const found = await whatsAppService.findLastMessageForPhone(targetPhone);
+                if (found && found.id) {
+                    msgId = found.id;
+                    console.log(`[WhatsApp Track] 🔗 Trovato messaggio ${msgId} (ack=${found.ack}) per Ordine #${order.id}! Salvataggio nel database...`);
+                    await prisma.order.update({
+                        where: { id: order.id },
+                        data: { whatsappMessageId: msgId }
+                    });
+                    order.whatsappMessageId = msgId;
+                }
+            }
+
+            if (!msgId) {
+                console.log(`[WhatsApp Track] ℹ️ Nessun messaggio trovato in memoria per Ordine #${order.id} (${targetPhone || 'senza telefono'})`);
                 return res.json({
                     success: false,
                     message: 'Nessun messaggio WhatsApp tracciato per questo ordine',
@@ -249,12 +271,14 @@ export class AdminController {
                 });
             }
 
-            const rawId = order.whatsappMessageId.split('_').pop() || order.whatsappMessageId;
-            const ack = await whatsAppService.checkMessageAckInPage(order.whatsappMessageId, rawId);
-            whatsAppService.log('info', `[AdminController] Manual checkWhatsAppStatus for Order #${order.id} (msg: ${order.whatsappMessageId}): ack=${ack}`);
+            const rawId = msgId.split('_').pop() || msgId;
+            const ack = await whatsAppService.checkMessageAckInPage(msgId, rawId);
+            console.log(`[WhatsApp Track] 🔎 Controllo manuale per Ordine #${order.id} (msg: ${msgId}): ACK=${ack}`);
+            whatsAppService.log('info', `[AdminController] Manual checkWhatsAppStatus for Order #${order.id} (msg: ${msgId}): ack=${ack}`);
 
             if (ack >= 2) {
-                await whatsAppService.handleMessageAck(order.whatsappMessageId, ack);
+                console.log(`[WhatsApp Track] ✅ ACK >= 2 rilevato! Aggiorno ordine #${order.id} a CONSEGNATO/LETTO...`);
+                await whatsAppService.handleMessageAck(msgId, ack);
             }
 
             const updatedOrder = await prisma.order.findUnique({
