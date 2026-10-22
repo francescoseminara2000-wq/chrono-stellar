@@ -96,8 +96,8 @@ export const AnalyticsDashboard: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200">
+                <div className="flex items-center gap-2 flex-wrap shrink-0">
+                    <div className="flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 overflow-x-auto no-scrollbar max-w-full">
                         {[
                             { id: 'today', label: 'Oggi' },
                             { id: '7days', label: '7 Giorni' },
