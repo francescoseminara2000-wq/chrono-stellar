@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { trackProductVisit } from '../hooks/useAnalyticsTracker';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
 import { 
     ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, 
-    Leaf, Info, Share2, CornerDownRight, ShieldCheck, ChevronDown
+    Leaf, Info, Share2, CornerDownRight, ShieldCheck, ChevronDown,
+    ChevronLeft, ChevronRight, Maximize2, X, Images
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
 import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
@@ -22,6 +23,7 @@ interface Product {
     isVariableWeight: boolean;
     stepAmount: number;
     imageUrl?: string;
+    images?: string | string[];
     isAvailable: boolean;
     seasonalTips?: string;
     origin?: string;
@@ -41,6 +43,9 @@ export const ProductDetail = () => {
     const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
     const cartItem = product ? items.find(i => i.id === product.id) : null;
     const [selectedUnit, setSelectedUnit] = useState<'KG' | 'PZ' | 'BOX'>('KG');
@@ -60,6 +65,74 @@ export const ProductDetail = () => {
         const item = items.find(i => i.id === productId);
         return item ? item.quantity : 0;
     };
+
+    const galleryImages = useMemo<string[]>(() => {
+        if (!product) return [];
+        let list: string[] = [];
+        if (product.images) {
+            if (Array.isArray(product.images)) {
+                list = product.images.filter(Boolean);
+            } else if (typeof product.images === 'string') {
+                try {
+                    const parsed = JSON.parse(product.images);
+                    if (Array.isArray(parsed)) {
+                        list = parsed.filter(Boolean);
+                    }
+                } catch (e) {
+                    if (product.images.trim()) list = [product.images.trim()];
+                }
+            }
+        }
+        if (list.length === 0 && product.imageUrl) {
+            list = [product.imageUrl];
+        } else if (product.imageUrl && !list.includes(product.imageUrl)) {
+            list = [product.imageUrl, ...list];
+        }
+        return list;
+    }, [product]);
+
+    useEffect(() => {
+        setActiveImageIndex(0);
+    }, [product?.id]);
+
+    const handlePrevImage = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        if (galleryImages.length <= 1) return;
+        setActiveImageIndex(prev => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+    };
+
+    const handleNextImage = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        if (galleryImages.length <= 1) return;
+        setActiveImageIndex(prev => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+    };
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchStartX(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX === null || galleryImages.length <= 1) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const diff = touchStartX - touchEndX;
+        if (diff > 45) {
+            handleNextImage();
+        } else if (diff < -45) {
+            handlePrevImage();
+        }
+        setTouchStartX(null);
+    };
+
+    useEffect(() => {
+        if (!isLightboxOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsLightboxOpen(false);
+            if (e.key === 'ArrowLeft') handlePrevImage();
+            if (e.key === 'ArrowRight') handleNextImage();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isLightboxOpen, galleryImages.length]);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -186,14 +259,70 @@ export const ProductDetail = () => {
                         transition={{ duration: 0.4 }}
                         className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-24 self-start flex justify-center lg:justify-start"
                     >
-                        <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/80 w-full max-w-[420px] xl:max-w-[450px] group">
-                            <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-gray-50/50 to-white">
-                                {product.imageUrl ? (
-                                    <img
-                                        src={sanitizeImageUrl(product.imageUrl)}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 ease-out"
-                                    />
+                        <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/80 w-full max-w-[420px] xl:max-w-[450px] group flex flex-col">
+                            {/* Main Carousel Frame */}
+                            <div 
+                                className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-gray-50/50 to-white select-none"
+                                onTouchStart={handleTouchStart}
+                                onTouchEnd={handleTouchEnd}
+                            >
+                                {galleryImages.length > 0 ? (
+                                    <div className="relative w-full h-full">
+                                        <AnimatePresence mode="wait">
+                                            <motion.img
+                                                key={galleryImages[activeImageIndex] || activeImageIndex}
+                                                src={sanitizeImageUrl(galleryImages[activeImageIndex])}
+                                                alt={`${product.name} - Immagine ${activeImageIndex + 1}`}
+                                                initial={{ opacity: 0.2, scale: 0.98 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0.2, scale: 1.01 }}
+                                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                                className="w-full h-full object-cover cursor-zoom-in"
+                                                onClick={() => setIsLightboxOpen(true)}
+                                            />
+                                        </AnimatePresence>
+
+                                        {/* Magnify Hint Button */}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsLightboxOpen(true);
+                                            }}
+                                            className="absolute bottom-3 right-3 p-2 rounded-full bg-white/85 hover:bg-white text-gray-700 shadow-md backdrop-blur-md transition-all active:scale-95 border border-white/70 z-10"
+                                            title="Ingrandisci immagine"
+                                        >
+                                            <Maximize2 size={15} />
+                                        </button>
+
+                                        {/* Previous & Next Carousel Arrows */}
+                                        {galleryImages.length > 1 && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={handlePrevImage}
+                                                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-md backdrop-blur-md flex items-center justify-center transition-all active:scale-90 border border-white/70 z-10 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
+                                                    aria-label="Foto precedente"
+                                                >
+                                                    <ChevronLeft size={20} className="-ml-0.5" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleNextImage}
+                                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-md backdrop-blur-md flex items-center justify-center transition-all active:scale-90 border border-white/70 z-10 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 hover:opacity-100"
+                                                    aria-label="Foto successiva"
+                                                >
+                                                    <ChevronRight size={20} className="-mr-0.5" />
+                                                </button>
+
+                                                {/* Counter Badge */}
+                                                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm pointer-events-none z-10">
+                                                    <Images size={12} className="text-white/80" />
+                                                    <span>{activeImageIndex + 1} / {galleryImages.length}</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center text-nature-200 font-script text-9xl">
                                         <span>{product.name[0]}</span>
@@ -201,7 +330,7 @@ export const ProductDetail = () => {
                                 )}
 
                                 {/* Subtle Discreet Badges */}
-                                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+                                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none z-10">
                                     <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-gray-800 shadow-2xs border border-gray-200/60 flex items-center gap-1.5">
                                         {product.unitType === 'KG' ? (
                                             <>
@@ -229,6 +358,34 @@ export const ProductDetail = () => {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Multi-image Thumbnail Strip (visible only when multiple images exist) */}
+                            {galleryImages.length > 1 && (
+                                <div className="px-3 py-2.5 bg-gray-50/90 border-t border-gray-150/70 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                                    {galleryImages.map((imgUrl, idx) => {
+                                        const isActive = idx === activeImageIndex;
+                                        return (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                onClick={() => setActiveImageIndex(idx)}
+                                                className={`relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${
+                                                    isActive
+                                                        ? 'border-emerald-600 ring-2 ring-emerald-500/30 scale-105 shadow-sm opacity-100'
+                                                        : 'border-transparent hover:border-gray-300 opacity-60 hover:opacity-100'
+                                                }`}
+                                                aria-label={`Visualizza immagine ${idx + 1}`}
+                                            >
+                                                <img
+                                                    src={sanitizeImageUrl(imgUrl)}
+                                                    alt={`Miniatura ${idx + 1}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
                             {/* Minimal Bottom Bar */}
                             <div className="px-4 py-2.5 bg-gray-50/80 border-t border-gray-150/70 flex items-center justify-between text-xs text-gray-500 font-medium">
@@ -613,6 +770,109 @@ export const ProductDetail = () => {
                     product={product}
                 />
             )}
+
+            {/* Gallery Fullscreen Lightbox Zoom Modal */}
+            <AnimatePresence>
+                {isLightboxOpen && galleryImages.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6"
+                        onClick={() => setIsLightboxOpen(false)}
+                    >
+                        {/* Top bar */}
+                        <div className="flex items-center justify-between text-white z-10" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center gap-3">
+                                <span className="font-bold text-sm sm:text-base text-gray-200 truncate max-w-[200px] sm:max-w-md">
+                                    {product?.name}
+                                </span>
+                                {galleryImages.length > 1 && (
+                                    <span className="text-xs font-semibold px-2.5 py-1 bg-white/10 rounded-full text-gray-300">
+                                        {activeImageIndex + 1} / {galleryImages.length}
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsLightboxOpen(false)}
+                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+                                title="Chiudi (Esc)"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Center Stage Image */}
+                        <div 
+                            className="relative flex-1 flex items-center justify-center my-4 overflow-hidden" 
+                            onClick={e => e.stopPropagation()}
+                            onTouchStart={handleTouchStart}
+                            onTouchEnd={handleTouchEnd}
+                        >
+                            {galleryImages.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={handlePrevImage}
+                                    className="absolute left-2 sm:left-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-90"
+                                    aria-label="Precedente"
+                                >
+                                    <ChevronLeft size={26} className="-ml-0.5" />
+                                </button>
+                            )}
+
+                            <motion.img
+                                key={activeImageIndex}
+                                src={sanitizeImageUrl(galleryImages[activeImageIndex])}
+                                alt={`${product?.name} - Zoom`}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className="max-h-[80vh] max-w-full object-contain rounded-2xl shadow-2xl select-none"
+                            />
+
+                            {galleryImages.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={handleNextImage}
+                                    className="absolute right-2 sm:right-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-90"
+                                    aria-label="Successiva"
+                                >
+                                    <ChevronRight size={26} className="-mr-0.5" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Bottom Thumbnail Strip in Lightbox */}
+                        {galleryImages.length > 1 && (
+                            <div 
+                                className="flex items-center justify-center gap-2 overflow-x-auto py-2 z-10 scrollbar-none"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                {galleryImages.map((imgUrl, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => setActiveImageIndex(idx)}
+                                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
+                                            idx === activeImageIndex
+                                                ? 'border-emerald-400 scale-110 shadow-lg ring-2 ring-emerald-400/50'
+                                                : 'border-white/20 opacity-50 hover:opacity-100'
+                                        }`}
+                                    >
+                                        <img
+                                            src={sanitizeImageUrl(imgUrl)}
+                                            alt=""
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </div>
     );

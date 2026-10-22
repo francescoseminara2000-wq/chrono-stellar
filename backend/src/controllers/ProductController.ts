@@ -17,6 +17,9 @@ async function ensureProductColumnsExist() {
         if (!colNames.includes('commercialCategory')) {
             await prisma.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN commercialCategory VARCHAR(255) NULL`);
         }
+        if (!colNames.includes('images')) {
+            await prisma.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN images LONGTEXT NULL`);
+        }
         columnsEnsured = true;
     } catch (e) {
         console.error('[ProductController] ensureProductColumnsExist error:', e);
@@ -98,6 +101,29 @@ export class ProductController {
                 stepAmount, seasonalTips, categoryId, origin, caliber, commercialCategory
             } = req.body;
             const file = req.file;
+            let imagesJson: string | null = null;
+            if (req.body.images) {
+                imagesJson = typeof req.body.images === 'string' ? req.body.images : JSON.stringify(req.body.images);
+            }
+            if (file) {
+                const fileUrl = `/uploads/${file.filename}`;
+                let list: string[] = [];
+                if (imagesJson) {
+                    try { list = JSON.parse(imagesJson); } catch (e) { list = []; }
+                }
+                if (!list.includes(fileUrl)) {
+                    list.unshift(fileUrl);
+                }
+                imagesJson = JSON.stringify(list);
+            }
+
+            let primaryImageUrl = (req.body.imageUrl && String(req.body.imageUrl).trim()) || (file ? `/uploads/${file.filename}` : null);
+            if (!primaryImageUrl && imagesJson) {
+                try {
+                    const parsed = JSON.parse(imagesJson);
+                    if (Array.isArray(parsed) && parsed.length > 0) primaryImageUrl = parsed[0];
+                } catch (e) {}
+            }
 
             const product = await prisma.product.create({
                 data: {
@@ -115,7 +141,8 @@ export class ProductController {
                     caliber: caliber ? String(caliber).trim() : null,
                     commercialCategory: commercialCategory ? String(commercialCategory).trim() : null,
                     categoryId: categoryId ? Number(categoryId) : null,
-                    imageUrl: file ? `/uploads/${file.filename}` : null,
+                    imageUrl: primaryImageUrl,
+                    images: imagesJson,
                     isAvailable: true
                 }
             });
@@ -153,7 +180,30 @@ export class ProductController {
             if (caliber !== undefined) data.caliber = caliber ? String(caliber).trim() : null;
             if (commercialCategory !== undefined) data.commercialCategory = commercialCategory ? String(commercialCategory).trim() : null;
             if (categoryId !== undefined) data.categoryId = categoryId ? Number(categoryId) : null;
-            if (file) data.imageUrl = `/uploads/${file.filename}`;
+            if (req.body.images !== undefined) {
+                data.images = typeof req.body.images === 'string' ? req.body.images : JSON.stringify(req.body.images);
+            }
+            if (file) {
+                const fileUrl = `/uploads/${file.filename}`;
+                data.imageUrl = fileUrl;
+                let list: string[] = [];
+                const currentImages = data.images !== undefined ? data.images : null;
+                if (currentImages) {
+                    try { list = JSON.parse(currentImages); } catch (e) { list = []; }
+                }
+                if (!list.includes(fileUrl)) {
+                    list.unshift(fileUrl);
+                }
+                data.images = JSON.stringify(list);
+            } else if (req.body.imageUrl !== undefined && req.body.imageUrl !== null && req.body.imageUrl !== '') {
+                data.imageUrl = req.body.imageUrl;
+            } else if (data.images) {
+                try {
+                    const parsed = JSON.parse(data.images);
+                    if (Array.isArray(parsed) && parsed.length > 0) data.imageUrl = parsed[0];
+                    else if (Array.isArray(parsed) && parsed.length === 0) data.imageUrl = null;
+                } catch (e) {}
+            }
 
             const product = await prisma.product.update({
                 where: { id: Number(id) },

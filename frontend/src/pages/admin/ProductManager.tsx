@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter, Sliders, Tag, Euro, FileText, ChefHat, Scale, Package, AlertTriangle, Image, Check, MapPin, Globe, Ruler, Award } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Upload, Eye, EyeOff, Infinity as InfinityIcon, PackageX, X, Save, Info, ArrowUpDown, ArrowUp, ArrowDown, BarChart2, PackagePlus, ListFilter, Sliders, Tag, Euro, FileText, ChefHat, Scale, Package, AlertTriangle, Check, MapPin, Globe, Ruler, Award, Star, Loader2, Images, ArrowLeft, ArrowRight } from 'lucide-react';
 
 import { sanitizeImageUrl } from '../../utils/imageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,7 @@ interface Product {
     isVariableWeight: boolean;
     stepAmount: number;
     imageUrl?: string;
+    images?: string | string[];
     isAvailable: boolean;
     stockQuantity: number;
     lowStockThreshold: number;
@@ -60,8 +61,10 @@ export const ProductManager = () => {
         caliber: '',
         commercialCategory: '',
         categoryId: '',
-        image: null as File | null
+        image: null as File | null,
+        galleryImages: [] as string[]
     });
+    const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
     const API_URL = '';
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -219,6 +222,14 @@ export const ProductManager = () => {
         data.append('caliber', formData.caliber);
         data.append('commercialCategory', formData.commercialCategory);
         data.append('categoryId', formData.categoryId);
+        if (formData.galleryImages) {
+            data.append('images', JSON.stringify(formData.galleryImages));
+            if (formData.galleryImages.length > 0) {
+                data.append('imageUrl', formData.galleryImages[0]);
+            } else {
+                data.append('imageUrl', '');
+            }
+        }
         if (formData.image) {
             data.append('image', formData.image);
         }
@@ -241,6 +252,66 @@ export const ProductManager = () => {
             resetForm();
             fetchProducts();
         }
+    };
+
+    const handleUploadGalleryFiles = async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        setIsUploadingGallery(true);
+        try {
+            const uploadedUrls: string[] = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fd = new FormData();
+                fd.append('image', file);
+                const res = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.url) uploadedUrls.push(json.url);
+                }
+            }
+            if (uploadedUrls.length > 0) {
+                setFormData(prev => ({
+                    ...prev,
+                    galleryImages: [...prev.galleryImages, ...uploadedUrls]
+                }));
+            }
+        } catch (err) {
+            console.error('Error uploading gallery files:', err);
+        } finally {
+            setIsUploadingGallery(false);
+        }
+    };
+
+    const setAsCoverImage = (indexToCover: number) => {
+        setFormData(prev => {
+            const imgs = [...prev.galleryImages];
+            const [cover] = imgs.splice(indexToCover, 1);
+            return {
+                ...prev,
+                galleryImages: [cover, ...imgs]
+            };
+        });
+    };
+
+    const removeGalleryImage = (indexToRemove: number) => {
+        setFormData(prev => ({
+            ...prev,
+            galleryImages: prev.galleryImages.filter((_, idx) => idx !== indexToRemove)
+        }));
+    };
+
+    const moveGalleryImage = (fromIdx: number, toIdx: number) => {
+        setFormData(prev => {
+            const imgs = [...prev.galleryImages];
+            if (toIdx < 0 || toIdx >= imgs.length) return prev;
+            const [item] = imgs.splice(fromIdx, 1);
+            imgs.splice(toIdx, 0, item);
+            return { ...prev, galleryImages: imgs };
+        });
     };
 
     const handleInlineUpdate = async (id: number) => {
@@ -284,6 +355,28 @@ export const ProductManager = () => {
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product);
+
+        let initialGallery: string[] = [];
+        if (product.images) {
+            if (Array.isArray(product.images)) {
+                initialGallery = product.images.filter(Boolean);
+            } else if (typeof product.images === 'string') {
+                try {
+                    const parsed = JSON.parse(product.images);
+                    if (Array.isArray(parsed)) {
+                        initialGallery = parsed.filter(Boolean);
+                    }
+                } catch (e) {
+                    if (product.images.trim()) initialGallery = [product.images.trim()];
+                }
+            }
+        }
+        if (initialGallery.length === 0 && product.imageUrl) {
+            initialGallery = [product.imageUrl];
+        } else if (product.imageUrl && !initialGallery.includes(product.imageUrl)) {
+            initialGallery = [product.imageUrl, ...initialGallery];
+        }
+
         setFormData({
             name: product.name,
             description: product.description || '',
@@ -299,7 +392,8 @@ export const ProductManager = () => {
             caliber: product.caliber || '',
             commercialCategory: product.commercialCategory || '',
             categoryId: product.categoryId?.toString() || '',
-            image: null
+            image: null,
+            galleryImages: initialGallery
         });
         setActiveTab('base');
         setIsModalOpen(true);
@@ -322,7 +416,8 @@ export const ProductManager = () => {
             caliber: '',
             commercialCategory: '',
             categoryId: '',
-            image: null
+            image: null,
+            galleryImages: []
         });
         setActiveTab('base');
     };
@@ -1161,58 +1256,121 @@ export const ProductManager = () => {
                                                     </div>
                                                 </div>
 
-                                                <div className="col-span-2 space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                                                        <Image size={12} className="text-nature-600" /> Immagine Prodotto
-                                                    </label>
-                                                    
-                                                    {/* Custom Upload Area with Live Preview */}
-                                                    <div className="group relative border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center hover:bg-nature-50/50 hover:border-nature-300 transition-all cursor-pointer overflow-hidden min-h-[140px] flex items-center justify-center bg-gray-50/30">
+                                                <div className="col-span-2 space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-xs font-black uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                                                            <Images size={14} className="text-nature-600" /> Galleria Immagini Prodotto
+                                                        </label>
+                                                        <span className="text-[11px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                            {formData.galleryImages.length} {formData.galleryImages.length === 1 ? 'foto' : 'foto'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-400">
+                                                        Carica una o più immagini per la galleria carosello. La prima immagine con il contrassegno <span className="text-emerald-700 font-semibold">★ Principale</span> sarà la copertina dell'articolo.
+                                                    </p>
+
+                                                    {/* Existing Gallery Images Grid */}
+                                                    {formData.galleryImages.length > 0 && (
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3 bg-gray-50/80 rounded-2xl border border-gray-200/60">
+                                                            {formData.galleryImages.map((imgUrl, idx) => {
+                                                                const isCover = idx === 0;
+                                                                return (
+                                                                    <div 
+                                                                        key={idx}
+                                                                        className={`relative group rounded-xl overflow-hidden bg-white border-2 transition-all shadow-xs ${
+                                                                            isCover ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-gray-200 hover:border-gray-300'
+                                                                        }`}
+                                                                    >
+                                                                        <div className="aspect-square w-full overflow-hidden bg-gray-100">
+                                                                            <img 
+                                                                                src={sanitizeImageUrl(imgUrl)} 
+                                                                                alt={`Foto ${idx + 1}`}
+                                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                            />
+                                                                        </div>
+
+                                                                        {/* Cover Badge or Set as Cover Button */}
+                                                                        <div className="absolute top-1.5 left-1.5 z-10">
+                                                                            {isCover ? (
+                                                                                <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                                                                    <Star size={10} className="fill-white" /> Principale
+                                                                                </span>
+                                                                            ) : (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setAsCoverImage(idx)}
+                                                                                    className="bg-white/90 hover:bg-emerald-600 hover:text-white text-gray-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs backdrop-blur-xs transition-colors flex items-center gap-1 opacity-90 group-hover:opacity-100"
+                                                                                    title="Imposta come immagine di copertina"
+                                                                                >
+                                                                                    <Star size={10} /> Copertina
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Delete Button */}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => removeGalleryImage(idx)}
+                                                                            className="absolute top-1.5 right-1.5 p-1 bg-white/90 hover:bg-red-500 text-gray-600 hover:text-white rounded-md shadow-xs backdrop-blur-xs transition-colors z-10"
+                                                                            title="Elimina foto"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+
+                                                                        {/* Reorder Buttons */}
+                                                                        {formData.galleryImages.length > 1 && (
+                                                                            <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 bg-black/60 backdrop-blur-xs rounded-md p-0.5 z-10">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    disabled={idx === 0}
+                                                                                    onClick={() => moveGalleryImage(idx, idx - 1)}
+                                                                                    className="p-0.5 text-white/80 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                                                                    title="Sposta prima"
+                                                                                >
+                                                                                    <ArrowLeft size={11} />
+                                                                                </button>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    disabled={idx === formData.galleryImages.length - 1}
+                                                                                    onClick={() => moveGalleryImage(idx, idx + 1)}
+                                                                                    className="p-0.5 text-white/80 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                                                                    title="Sposta dopo"
+                                                                                >
+                                                                                    <ArrowRight size={11} />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Upload Area for New Photos */}
+                                                    <div className="group relative border-2 border-dashed border-gray-200 hover:border-nature-400 hover:bg-nature-50/40 rounded-2xl p-4 text-center transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-gray-50/30 min-h-[110px]">
                                                         <input 
                                                             type="file" 
+                                                            multiple
                                                             className="absolute inset-0 opacity-0 cursor-pointer z-10" 
                                                             accept="image/*" 
-                                                            onChange={e => setFormData({ ...formData, image: e.target.files?.[0] || null })} 
+                                                            disabled={isUploadingGallery}
+                                                            onChange={e => {
+                                                                handleUploadGalleryFiles(e.target.files);
+                                                                e.target.value = '';
+                                                            }} 
                                                         />
-                                                        
-                                                        {/* Preview container */}
-                                                        {formData.image || (editingProduct && editingProduct.imageUrl) ? (
-                                                            <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-                                                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm shrink-0 bg-white relative">
-                                                                    <img 
-                                                                        src={formData.image ? URL.createObjectURL(formData.image) : (editingProduct?.imageUrl ? sanitizeImageUrl(editingProduct.imageUrl) : '')} 
-                                                                        alt="Preview" 
-                                                                        className="w-full h-full object-cover"
-                                                                    />
-                                                                </div>
-                                                                <div className="text-left overflow-hidden pr-8">
-                                                                    <p className="text-sm font-bold text-gray-850 truncate">
-                                                                        {formData.image ? formData.image.name : 'Immagine attuale salvata'}
-                                                                    </p>
-                                                                    <p className="text-xs text-gray-400 mt-1">Trascina o clicca qui per sostituire l'immagine.</p>
-                                                                </div>
-                                                                
-                                                                {/* Reset Button */}
-                                                                {formData.image && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={(e) => {
-                                                                            e.preventDefault();
-                                                                            e.stopPropagation();
-                                                                            setFormData({ ...formData, image: null });
-                                                                        }}
-                                                                        className="absolute right-4 top-4 p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors z-20"
-                                                                        title="Rimuovi nuova foto"
-                                                                    >
-                                                                        <X size={14} />
-                                                                    </button>
-                                                                )}
+                                                        {isUploadingGallery ? (
+                                                            <div className="flex items-center gap-2 text-nature-700 font-bold text-sm">
+                                                                <Loader2 size={18} className="animate-spin text-nature-600" />
+                                                                <span>Caricamento immagini in corso...</span>
                                                             </div>
                                                         ) : (
-                                                            <div className="space-y-1">
-                                                                <Upload className="mx-auto text-gray-400 mb-2 transition-transform duration-300 group-hover:-translate-y-1" size={24} />
-                                                                <p className="text-gray-700 font-bold text-sm">Trascina o clicca qui per inserire la foto</p>
-                                                                <p className="text-[10px] text-gray-400">Supporta PNG, JPG o WEBP</p>
+                                                            <div className="space-y-1 pointer-events-none">
+                                                                <Upload className="mx-auto text-nature-600 mb-1 transition-transform duration-300 group-hover:-translate-y-0.5" size={22} />
+                                                                <p className="text-gray-700 font-bold text-xs sm:text-sm">
+                                                                    {formData.galleryImages.length > 0 ? '+ Aggiungi altre foto alla galleria' : 'Carica foto del prodotto (anche multiple)'}
+                                                                </p>
+                                                                <p className="text-[10px] text-gray-400">Trascina o clicca per selezionare uno o più file JPG, PNG, WEBP</p>
                                                             </div>
                                                         )}
                                                     </div>

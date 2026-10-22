@@ -99,6 +99,7 @@ model Product {
   isVariableWeight  Boolean          @default(false)
   stepAmount        Decimal          @default(1.00) @db.Decimal(10, 2)
   imageUrl          String?
+  images            String?          @db.LongText
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   isAvailable       Boolean          @default(true)
