@@ -288,6 +288,17 @@ const AuthMenu = ({
 
 import { useAppState, DEFAULT_NAV_ITEMS, CustomNavItem } from '../store/useAppState';
 
+const hexToRgba = (hex: string, alpha: number) => {
+    let c = (hex || '').replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const num = parseInt(c, 16);
+    if (isNaN(num)) return `rgba(187, 247, 208, ${alpha})`;
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 export const Header = () => {
     const location = useLocation();
     const [hoveredNav, setHoveredNav] = React.useState<string | null>(null);
@@ -296,6 +307,9 @@ export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
     const { settings } = useAppState();
+
+    const hoverOpacity = settings?.navHoverOpacity !== undefined ? (Number(settings.navHoverOpacity) / 100) : 0.75;
+    const hoverColor = settings?.navHoverColor || '#bbf7d0';
 
     const dynamicNavItems: CustomNavItem[] = React.useMemo(() => {
         let list: CustomNavItem[] = DEFAULT_NAV_ITEMS;
@@ -428,12 +442,16 @@ export const Header = () => {
                                                 />
                                             )}
 
-                                            {/* Hover Pill (Clearly Visible Light Green Glass) */}
+                                            {/* Hover Pill (Configurable Light Green Glass) */}
                                             {isHovered && !isActive && (
                                                 <motion.div
                                                     layoutId="hoverNavPill"
                                                     transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                                                    className="absolute inset-0 bg-[#bbf7d0]/75 backdrop-blur-md rounded-full -z-10 shadow-[0_2px_8px_rgba(34,197,94,0.18)] border border-emerald-300/50"
+                                                    style={{
+                                                        backgroundColor: hexToRgba(hoverColor, hoverOpacity),
+                                                        borderColor: hexToRgba(hoverColor, Math.min(1, hoverOpacity + 0.25))
+                                                    }}
+                                                    className="absolute inset-0 backdrop-blur-md rounded-full -z-10 shadow-[0_2px_8px_rgba(34,197,94,0.18)] border"
                                                 />
                                             )}
 

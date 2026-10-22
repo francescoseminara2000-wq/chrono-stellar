@@ -5,7 +5,7 @@ import {
     MessageSquare, User as UserIcon, Upload, Trash2,
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
-    ExternalLink, BookOpen, CheckCircle2
+    ExternalLink, BookOpen, CheckCircle2, Sparkles
 } from 'lucide-react';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
@@ -15,6 +15,17 @@ import { AVAILABLE_PAGE_TARGETS } from '../../components/ui/PageBackground';
 import { ConfirmModal } from '../../components/admin/ConfirmModal';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
+
+const hexToRgba = (hex: string, alpha: number) => {
+    let c = (hex || '').replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const num = parseInt(c, 16);
+    if (isNaN(num)) return `rgba(187, 247, 208, ${alpha})`;
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 
 // --- Components ---
 
@@ -73,7 +84,9 @@ export const SettingsManager = () => {
         revolutEnabled: false,
         weighingTolerancePercent: 10,
         pageBackgrounds: {} as PageBackgroundsMap,
-        customNavItems: DEFAULT_NAV_ITEMS as CustomNavItem[]
+        customNavItems: DEFAULT_NAV_ITEMS as CustomNavItem[],
+        navHoverOpacity: 75,
+        navHoverColor: '#bbf7d0'
     });
 
     // --- Navigation Management State ---
@@ -191,7 +204,9 @@ export const SettingsManager = () => {
                     : (data.pageBackgrounds || {}),
                 customNavItems: typeof data.customNavItems === 'string'
                     ? (() => { try { return JSON.parse(data.customNavItems); } catch (e) { return DEFAULT_NAV_ITEMS; } })()
-                    : (Array.isArray(data.customNavItems) && data.customNavItems.length > 0 ? data.customNavItems : DEFAULT_NAV_ITEMS)
+                    : (Array.isArray(data.customNavItems) && data.customNavItems.length > 0 ? data.customNavItems : DEFAULT_NAV_ITEMS),
+                navHoverOpacity: data.navHoverOpacity !== undefined && data.navHoverOpacity !== null ? Number(data.navHoverOpacity) : 75,
+                navHoverColor: data.navHoverColor || '#bbf7d0'
             });
         }
     };
@@ -1004,6 +1019,136 @@ export const SettingsManager = () => {
                                                 )}
                                             </div>
                                         ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Hover Effect Calibration Card */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+                                <div>
+                                    <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                        <Sparkles size={18} className="text-emerald-600" /> Trasparenza & Colore Chip al Passaggio del Mouse (Hover)
+                                    </h4>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        Regola l'opacità e la tonalità verde del chip satinato quando l'utente passa sopra una voce del menu prima di selezionarla.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleSettingsSubmit}
+                                    disabled={isSaving}
+                                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
+                                >
+                                    <Save size={15} /> {isSaving ? 'Salvataggio...' : 'Salva Trasparenza'}
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                                {/* Slider Controls */}
+                                <div className="lg:col-span-7 space-y-5">
+                                    {/* 1. Opacity Slider */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-xs font-bold text-gray-700">
+                                            <label htmlFor="navHoverOpacity" className="flex items-center gap-1.5">
+                                                <span>Livello Opacità / Trasparenza</span>
+                                            </label>
+                                            <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-mono font-extrabold shadow-2xs">
+                                                {formData.navHoverOpacity}%
+                                            </span>
+                                        </div>
+                                        <input
+                                            id="navHoverOpacity"
+                                            type="range"
+                                            min="10"
+                                            max="100"
+                                            step="5"
+                                            value={formData.navHoverOpacity}
+                                            onChange={e => setFormData({ ...formData, navHoverOpacity: Number(e.target.value) })}
+                                            className="w-full h-2.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                                        />
+                                        <div className="flex justify-between text-[10px] text-gray-400 font-medium">
+                                            <span>10% (Molto Trasparente)</span>
+                                            <span>50% (Equilibrato)</span>
+                                            <span>100% (Solido)</span>
+                                        </div>
+                                    </div>
+
+                                    {/* 2. Color Tone Selector & Presets */}
+                                    <div className="space-y-2 pt-2">
+                                        <label className="block text-xs font-bold text-gray-700">
+                                            Tonalità Colore Vetro
+                                        </label>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {[
+                                                { name: 'Menta Fresca', color: '#bbf7d0' },
+                                                { name: 'Smeraldo Chiaro', color: '#a7f3d0' },
+                                                { name: 'Erba / Salvia', color: '#86efac' },
+                                                { name: 'Lime Vivace', color: '#d9f99d' },
+                                                { name: 'Smeraldo Intenso', color: '#34d399' }
+                                            ].map(preset => (
+                                                <button
+                                                    key={preset.color}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, navHoverColor: preset.color })}
+                                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer ${
+                                                        formData.navHoverColor?.toLowerCase() === preset.color.toLowerCase()
+                                                            ? 'border-emerald-600 ring-2 ring-emerald-500/30 bg-emerald-50 text-emerald-900 shadow-xs'
+                                                            : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-600'
+                                                    }`}
+                                                >
+                                                    <span 
+                                                        className="w-3.5 h-3.5 rounded-full border border-black/10 shrink-0" 
+                                                        style={{ backgroundColor: preset.color }} 
+                                                    />
+                                                    <span>{preset.name}</span>
+                                                </button>
+                                            ))}
+                                            <div className="flex items-center gap-1.5 pl-2 border-l border-gray-200">
+                                                <input
+                                                    type="color"
+                                                    value={formData.navHoverColor || '#bbf7d0'}
+                                                    onChange={e => setFormData({ ...formData, navHoverColor: e.target.value })}
+                                                    className="w-8 h-8 rounded-lg cursor-pointer border border-gray-200 p-0.5 bg-white"
+                                                    title="Scegli colore personalizzato"
+                                                />
+                                                <span className="text-[11px] font-mono text-gray-500">{formData.navHoverColor}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Live Interactive Test Box */}
+                                <div className="lg:col-span-5 bg-gradient-to-b from-gray-50/80 to-white p-5 rounded-2xl border border-gray-200/70 text-center flex flex-col items-center justify-center space-y-3">
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                                        Prova Interattiva (Passa il mouse)
+                                    </span>
+                                    
+                                    {/* Test Chip Container */}
+                                    <div className="relative bg-nature-50/90 border border-nature-200/80 rounded-full p-2 shadow-sm inline-flex items-center gap-2">
+                                        <div className="px-5 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-600 via-nature-600 to-emerald-700 text-white shadow-md flex items-center gap-2">
+                                            <span>Home</span>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+                                        </div>
+                                        
+                                        {/* Interactive Hover Test Link */}
+                                        <div 
+                                            className="relative px-5 py-2 rounded-full text-xs font-bold text-nature-900/80 cursor-pointer select-none transition-all group"
+                                        >
+                                            <div 
+                                                className="absolute inset-0 rounded-full backdrop-blur-md transition-opacity duration-200 opacity-90 group-hover:opacity-100 -z-10 shadow-xs border"
+                                                style={{
+                                                    backgroundColor: hexToRgba(formData.navHoverColor || '#bbf7d0', (formData.navHoverOpacity || 75) / 100),
+                                                    borderColor: hexToRgba(formData.navHoverColor || '#bbf7d0', Math.min(1, ((formData.navHoverOpacity || 75) / 100) + 0.25))
+                                                }}
+                                            />
+                                            <span>Passa sopra qui! ✨</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <p className="text-[11px] text-gray-400">
+                                        Il chip mostra in tempo reale l'effetto con opacità <strong>{formData.navHoverOpacity}%</strong>.
+                                    </p>
                                 </div>
                             </div>
                         </div>

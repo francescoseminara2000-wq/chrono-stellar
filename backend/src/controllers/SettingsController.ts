@@ -15,7 +15,9 @@ export class SettingsController {
             `ALTER TABLE Order ADD COLUMN customerApprovedAt DATETIME`,
             `ALTER TABLE Transaction MODIFY COLUMN gateway VARCHAR(255) DEFAULT 'COD'`,
             `ALTER TABLE StoreSettings ADD COLUMN pageBackgrounds LONGTEXT`,
-            `ALTER TABLE StoreSettings ADD COLUMN customNavItems LONGTEXT`
+            `ALTER TABLE StoreSettings ADD COLUMN customNavItems LONGTEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN navHoverOpacity INT DEFAULT 75`,
+            `ALTER TABLE StoreSettings ADD COLUMN navHoverColor VARCHAR(50) DEFAULT '#bbf7d0'`
         ];
 
         for (const statement of sqlStatements) {
@@ -199,6 +201,12 @@ export class SettingsController {
                 updateData.customNavItems = typeof req.body.customNavItems === 'string'
                     ? req.body.customNavItems
                     : JSON.stringify(req.body.customNavItems);
+            }
+            if (req.body.navHoverOpacity !== undefined) {
+                updateData.navHoverOpacity = Number(req.body.navHoverOpacity);
+            }
+            if (req.body.navHoverColor !== undefined) {
+                updateData.navHoverColor = String(req.body.navHoverColor).trim();
             }
 
             const updatedSettings = await prisma.storeSettings.update({

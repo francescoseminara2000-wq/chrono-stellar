@@ -50,6 +50,8 @@ export interface StoreSettings {
     revolutEnabled?: boolean;
     pageBackgrounds?: string | PageBackgroundsMap;
     customNavItems?: string | CustomNavItem[];
+    navHoverOpacity?: number;
+    navHoverColor?: string;
 }
 
 interface AppState {

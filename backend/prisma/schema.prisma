@@ -176,6 +176,8 @@ model StoreSettings {
   newsletterCouponCode        String?  @default("NEWSLETTER10")
   pageBackgrounds             String?  @db.LongText
   customNavItems              String?  @db.LongText
+  navHoverOpacity             Int?     @default(75)
+  navHoverColor               String?  @default("#bbf7d0")
 }
 
 model Transaction {
