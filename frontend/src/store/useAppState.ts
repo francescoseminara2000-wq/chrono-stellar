@@ -56,6 +56,7 @@ export interface StoreSettings {
     appleLoaderMinDuration?: number;
     appleLoaderVideoUrl?: string | null;
     appleLoaderDimension?: number;
+    appleLoaderPhrase?: string;
 }
 
 interface AppState {

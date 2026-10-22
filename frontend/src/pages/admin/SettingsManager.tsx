@@ -5,7 +5,7 @@ import {
     MessageSquare, User as UserIcon, Upload, Trash2,
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
-    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders
+    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders, Type
 } from 'lucide-react';
 import { AppleLoader } from '../../components/ui/AppleLoader';
 import { useToastStore } from '../../store/useToastStore';
@@ -91,7 +91,8 @@ export const SettingsManager = () => {
         appleLoaderPlaybackRate: 1.0,
         appleLoaderMinDuration: 2,
         appleLoaderVideoUrl: null as string | null,
-        appleLoaderDimension: 200
+        appleLoaderDimension: 200,
+        appleLoaderPhrase: 'Caricando gli scaffali...'
     });
 
     // --- Navigation Management State ---
@@ -216,7 +217,8 @@ export const SettingsManager = () => {
                 appleLoaderPlaybackRate: data.appleLoaderPlaybackRate !== undefined && data.appleLoaderPlaybackRate !== null ? Number(data.appleLoaderPlaybackRate) : 1.0,
                 appleLoaderMinDuration: data.appleLoaderMinDuration !== undefined && data.appleLoaderMinDuration !== null ? Number(data.appleLoaderMinDuration) : 2,
                 appleLoaderVideoUrl: data.appleLoaderVideoUrl || null,
-                appleLoaderDimension: data.appleLoaderDimension !== undefined && data.appleLoaderDimension !== null ? Number(data.appleLoaderDimension) : 200
+                appleLoaderDimension: data.appleLoaderDimension !== undefined && data.appleLoaderDimension !== null ? Number(data.appleLoaderDimension) : 200,
+                appleLoaderPhrase: data.appleLoaderPhrase || 'Caricando gli scaffali...'
             });
         }
     };
@@ -1060,8 +1062,7 @@ export const SettingsManager = () => {
                                 size={formData.appleLoaderDimension || 200}
                                 playbackRate={formData.appleLoaderPlaybackRate}
                                 videoUrl={formData.appleLoaderVideoUrl || undefined}
-                                text="Caricamento in corso..."
-                                subtext={`Velocità: ${formData.appleLoaderPlaybackRate}x • Dimensione: ${formData.appleLoaderDimension || 200}px • Durata minima: ${formData.appleLoaderMinDuration}s`}
+                                text={formData.appleLoaderPhrase || 'Caricando gli scaffali...'}
                             />
 
                             <p className="text-xs text-gray-500 font-medium mt-4">
@@ -1152,6 +1153,68 @@ export const SettingsManager = () => {
                                         <li><strong>Sfondo</strong>: Bianco puro (<code>#FFFFFF</code>) per la trasparenza automatica.</li>
                                         <li><strong>Durata</strong>: Da 2 a 4 secondi (ottimale boomerang o loop continuo).</li>
                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Frase di Caricamento (Font Script) Card */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+                                <div>
+                                    <h4 className="font-extrabold text-gray-900 text-base flex items-center gap-2">
+                                        <Type size={20} className="text-emerald-600" /> Frase di Caricamento (Font Script Elegante)
+                                    </h4>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Personalizza la scritta mostrata sotto la mela con il carattere corsivo distintivo del negozio.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-700 block">Testo Frase:</label>
+                                    <input
+                                        type="text"
+                                        value={formData.appleLoaderPhrase}
+                                        onChange={(e) => setFormData({ ...formData, appleLoaderPhrase: e.target.value })}
+                                        placeholder="es. Caricando gli scaffali..."
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 text-sm font-semibold"
+                                    />
+                                </div>
+
+                                {/* Font Preview in real-time */}
+                                <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100 flex flex-col items-center justify-center text-center">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 mb-1">Resa Grafica con Font Script</span>
+                                    <p className="font-script text-2xl sm:text-3xl font-bold text-nature-950 tracking-wide drop-shadow-2xs">
+                                        {formData.appleLoaderPhrase || 'Caricando gli scaffali...'}
+                                    </p>
+                                </div>
+
+                                {/* Preset Suggestions */}
+                                <div className="space-y-2">
+                                    <span className="text-xs font-bold text-gray-700 block">Frasi Suggerite:</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            'Caricando gli scaffali...',
+                                            'Rifornendo il banco fresco...',
+                                            'Selezionando i frutti migliori...',
+                                            'Freschezza in arrivo...',
+                                            'Preparando la qualità per te...',
+                                        ].map(suggestion => (
+                                            <button
+                                                key={suggestion}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, appleLoaderPhrase: suggestion })}
+                                                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                    formData.appleLoaderPhrase === suggestion
+                                                        ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
+                                                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200/70'
+                                                }`}
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>

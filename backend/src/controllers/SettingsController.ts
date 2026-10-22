@@ -21,7 +21,8 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderPlaybackRate FLOAT DEFAULT 1.0`,
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderMinDuration INT DEFAULT 2`,
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderVideoUrl TEXT`,
-            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderDimension INT DEFAULT 200`
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderDimension INT DEFAULT 200`,
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderPhrase VARCHAR(255) DEFAULT 'Caricando gli scaffali...'`
         ];
 
         for (const statement of sqlStatements) {
@@ -223,6 +224,9 @@ export class SettingsController {
             }
             if (req.body.appleLoaderDimension !== undefined) {
                 updateData.appleLoaderDimension = Number(req.body.appleLoaderDimension);
+            }
+            if (req.body.appleLoaderPhrase !== undefined) {
+                updateData.appleLoaderPhrase = String(req.body.appleLoaderPhrase).trim();
             }
 
             const updatedSettings = await prisma.storeSettings.update({

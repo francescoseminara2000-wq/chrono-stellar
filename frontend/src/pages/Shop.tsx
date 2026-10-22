@@ -243,11 +243,7 @@ export const Shop = () => {
 
     if (loading) return (
         <div className="flex justify-center items-center min-h-[70vh] bg-nature-50/40">
-            <AppleLoader 
-                size="lg" 
-                text="Caricamento del banco ortofrutta..." 
-                subtext="Stiamo selezionando i migliori prodotti freschi di giornata" 
-            />
+            <AppleLoader size="lg" />
         </div>
     );
 

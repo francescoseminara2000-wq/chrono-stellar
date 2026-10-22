@@ -194,11 +194,7 @@ export const ProductDetail = () => {
 
     if (loading) return (
         <div className="flex flex-col justify-center items-center min-h-[75vh] bg-nature-50/50">
-            <AppleLoader 
-                size="lg" 
-                text="Caricamento prodotto..." 
-                subtext="Recupero informazioni nutrizionali e freschezza" 
-            />
+            <AppleLoader size="lg" />
         </div>
     );
 

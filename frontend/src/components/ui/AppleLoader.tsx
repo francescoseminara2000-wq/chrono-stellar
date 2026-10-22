@@ -10,16 +10,17 @@ export interface AppleLoaderProps {
     className?: string;
     playbackRate?: number;
     videoUrl?: string;
+    hideText?: boolean;
 }
 
 export const AppleLoader: React.FC<AppleLoaderProps> = ({
     size = 'md',
     text,
-    subtext,
     inline = false,
     className = '',
     playbackRate,
     videoUrl,
+    hideText = false,
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const { settings } = useAppState();
@@ -43,6 +44,12 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
             case 'xl': dimension = Math.round(300 * scale); break;
         }
     }
+
+    // Frase di caricamento elegante: se text non fornito, usa quella delle impostazioni o default
+    const displayPhrase = text !== undefined 
+        ? text 
+        : (settings?.appleLoaderPhrase || 'Caricando gli scaffali...');
+    const cleanPhrase = displayPhrase ? displayPhrase.replace(/\.+$/, '').trim() : '';
 
     // Assicura autoplay su tutti i browser mobili e desktop e applica velocita di riproduzione
     useEffect(() => {
@@ -80,22 +87,17 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
                 />
             </div>
 
-            {/* Testo di caricamento */}
-            {text && (
-                <div className="mt-3 text-center">
-                    <p className="text-sm font-extrabold text-gray-800 tracking-tight flex items-center justify-center gap-1.5">
-                        {text}
-                        <span className="inline-flex">
+            {/* Frase di caricamento elegante (font script brand Ortofrutta Butti) */}
+            {!hideText && cleanPhrase && (
+                <div className="mt-3.5 sm:mt-4 text-center">
+                    <p className="font-script text-2xl sm:text-3xl font-bold text-nature-950 tracking-wide flex items-center justify-center gap-0.5 drop-shadow-2xs">
+                        <span>{cleanPhrase}</span>
+                        <span className="inline-flex text-emerald-700 tracking-normal font-sans font-bold">
                             <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
-                            <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
-                            <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+                            <span className="animate-bounce" style={{ animationDelay: '180ms' }}>.</span>
+                            <span className="animate-bounce" style={{ animationDelay: '360ms' }}>.</span>
                         </span>
                     </p>
-                    {subtext && (
-                        <p className="text-xs text-gray-400 font-medium mt-0.5 max-w-xs mx-auto">
-                            {subtext}
-                        </p>
-                    )}
                 </div>
             )}
         </div>
