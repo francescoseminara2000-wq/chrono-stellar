@@ -74,23 +74,15 @@ export const Markets: React.FC = () => {
 
                     {/* 3D Ape Illustration */}
                     <motion.div 
-                        animate={{ y: [0, -8, 0] }}
+                        animate={{ y: [0, -6, 0] }}
                         transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                        className="relative flex-shrink-0 flex items-center justify-center"
+                        className="flex-shrink-0 flex items-center justify-center"
                     >
-                        {/* Soft Ambient Glow */}
-                        <div className="absolute w-56 h-56 sm:w-72 sm:h-72 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none -z-10" />
-
-                        <div className="relative group cursor-pointer">
-                            <img 
-                                src="/market-van.jpg" 
-                                alt="Ortofrutta Itinerante Ape Car" 
-                                className="w-64 sm:w-72 md:w-80 lg:w-96 h-auto object-contain mix-blend-multiply drop-shadow-md transition-transform duration-500 group-hover:scale-105"
-                            />
-                            <div className="absolute -bottom-1 right-2 sm:right-6 bg-white/95 backdrop-blur-md border border-emerald-100 shadow-md px-3 py-1 rounded-full text-[11px] font-black text-emerald-800 flex items-center gap-1.5 pointer-events-none">
-                                <span>🛵</span> Bottega su 3 ruote
-                            </div>
-                        </div>
+                        <img 
+                            src="/market-van.png" 
+                            alt="Ortofrutta Itinerante Ape Car" 
+                            className="w-64 sm:w-72 md:w-80 lg:w-96 h-auto object-contain transition-transform duration-500 hover:scale-105 select-none"
+                        />
                     </motion.div>
                 </div>
 
