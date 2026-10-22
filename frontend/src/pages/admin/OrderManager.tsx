@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, Phone, Mail, MapPin, MoreVertical, Plus, Minus, RotateCcw } from 'lucide-react';
+import { X, Scale, MessageCircle, Truck, CheckCircle, Clock, ShoppingBag, Search, ListFilter, Ban, Trash2, Calendar, ArrowLeft, Phone, Mail, MapPin, MoreVertical, Plus, Minus, RotateCcw, CheckCheck, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -24,6 +24,9 @@ interface Order {
     customerEmail?: string;
     scheduledDate?: string;
     scheduledTime?: string;
+    notificationStatus?: string;
+    notificationDetails?: string;
+    whatsappMessageId?: string;
 }
 
 export const OrderManager = () => {
@@ -1484,6 +1487,56 @@ export const OrderManager = () => {
                                             <Mail size={13} /> {selectedOrder.customerEmail || selectedOrder.user?.email}
                                         </a>
                                     </div>
+                                )}
+
+                                {/* Status Notifica Recapito WhatsApp / Email (Discreto) */}
+                                <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">Recapito</span>
+                                    <div className="text-right">
+                                        {selectedOrder.notificationStatus === 'WHATSAPP_READ' ? (
+                                            <span 
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200" 
+                                                title={selectedOrder.notificationDetails || 'Messaggio visualizzato dal cliente su WhatsApp'}
+                                            >
+                                                <CheckCheck size={12} className="text-blue-600" /> WhatsApp Letto
+                                            </span>
+                                        ) : selectedOrder.notificationStatus === 'WHATSAPP_DELIVERED' ? (
+                                            <span 
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                                                title={selectedOrder.notificationDetails || 'Messaggio consegnato al dispositivo WhatsApp del cliente (doppia spunta)'}
+                                            >
+                                                <CheckCheck size={12} className="text-emerald-600" /> WhatsApp Consegnato
+                                            </span>
+                                        ) : selectedOrder.notificationStatus === 'WHATSAPP_SENT' ? (
+                                            <span 
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse" 
+                                                title={selectedOrder.notificationDetails || 'Inviato ai server WhatsApp, in attesa di consegna al telefono...'}
+                                            >
+                                                <Clock size={11} className="text-amber-500" /> WhatsApp Inviato
+                                            </span>
+                                        ) : selectedOrder.notificationStatus === 'EMAIL_FALLBACK_SENT' ? (
+                                            <span 
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200" 
+                                                title={selectedOrder.notificationDetails || 'WhatsApp non recapitato entro 3 min, inviata email di fallback'}
+                                            >
+                                                <Mail size={11} className="text-purple-600" /> Fallback Email Inviato
+                                            </span>
+                                        ) : selectedOrder.notificationStatus === 'FAILED' ? (
+                                            <span 
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200" 
+                                                title={selectedOrder.notificationDetails || 'Recapito notifica fallito'}
+                                            >
+                                                <AlertCircle size={11} className="text-rose-600" /> Non Recapitato
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] font-semibold text-gray-400">Nessun invio</span>
+                                        )}
+                                    </div>
+                                </div>
+                                {selectedOrder.notificationDetails && (
+                                    <p className="text-[9px] text-gray-400 italic leading-tight">
+                                        {selectedOrder.notificationDetails}
+                                    </p>
                                 )}
 
                                 <div className="pt-2 border-t border-gray-100">

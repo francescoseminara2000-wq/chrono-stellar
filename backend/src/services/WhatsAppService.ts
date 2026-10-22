@@ -10,6 +10,15 @@ export interface WhatsAppLogEntry {
     message: string;
 }
 
+export interface WatchdogEntry {
+    orderId: number;
+    customerEmail?: string;
+    order: any;
+    status: string;
+    timer: any;
+    sentAt: Date;
+}
+
 export class WhatsAppService {
     private client!: Client;
     private qrCode: string | null = null;
@@ -19,6 +28,7 @@ export class WhatsAppService {
     private pingInterval: any = null;
     private isReconnecting: boolean = false;
     private logBuffer: WhatsAppLogEntry[] = [];
+    private watchdogMap: Map<string, WatchdogEntry> = new Map();
     private static instance: WhatsAppService;
 
     public log(level: 'info' | 'warn' | 'error', message: string, meta?: any) {
@@ -323,6 +333,18 @@ export class WhatsAppService {
             this.loadingPercent = null;
             this.qrCode = null;
             this.startHeartbeat();
+        });
+
+        this.client.on('message_ack', async (msg: any, ack: number) => {
+            try {
+                const msgId = msg?.id?._serialized || msg?.id?.id;
+                this.log('info', `[WhatsAppService] message_ack for ${msgId}: ack=${ack}`);
+                if (msgId) {
+                    await this.handleMessageAck(msgId, ack);
+                }
+            } catch (err: any) {
+                this.log('warn', `[WhatsAppService] message_ack handler error: ${err?.message || err}`);
+            }
         });
 
         this.client.on('auth_failure', (msg: any) => {
@@ -667,6 +689,159 @@ export class WhatsAppService {
         // Add Footer
         message += `\n\n_${settings?.siteName || 'Ortofrutta'}_`;
 
-        return this.sendMessage(phone, message);
+        try {
+            const sentResult = await this.sendMessage(phone, message);
+            const messageId = sentResult?.id?._serialized || (typeof sentResult === 'string' ? sentResult : null);
+
+            if (order.id) {
+                const nowTime = new Date().toLocaleTimeString('it-IT');
+                await prisma.order.update({
+                    where: { id: order.id },
+                    data: {
+                        notificationStatus: 'WHATSAPP_SENT',
+                        notificationDetails: `Inviato al server WhatsApp alle ${nowTime}. In attesa di consegna sul telefono...`,
+                        whatsappMessageId: messageId
+                    } as any
+                });
+
+                if (messageId) {
+                    // Set 3-minute Watchdog timer (180,000 ms)
+                    const fallbackTimeoutMs = 3 * 60 * 1000;
+                    const timer = setTimeout(async () => {
+                        await this.triggerFallbackEmail(messageId);
+                    }, fallbackTimeoutMs);
+
+                    this.watchdogMap.set(messageId, {
+                        orderId: order.id,
+                        customerEmail: order.customerEmail || order.user?.email,
+                        order,
+                        status: type,
+                        timer,
+                        sentAt: new Date()
+                    });
+                    this.log('info', `[WhatsAppWatchdog] Started 3-minute delivery watchdog for Order #${order.id} (msg: ${messageId})`);
+                }
+            }
+
+            return sentResult;
+        } catch (error: any) {
+            this.log('error', `[WhatsAppService] sendOrderNotification failed for Order #${order.id}: ${error?.message || error}. Triggering immediate email fallback...`);
+            
+            // Immediate fallback to email if WhatsApp send fails
+            const customerEmail = order.customerEmail || order.user?.email;
+            if (customerEmail) {
+                try {
+                    const { EmailService } = require('./EmailService');
+                    const emailService = new EmailService();
+                    await emailService.sendOrderStatusUpdateEmail(customerEmail, order, type, true);
+                    this.log('info', `[WhatsAppService] Immediate email fallback successfully sent to ${customerEmail} for Order #${order.id}`);
+
+                    await prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            notificationStatus: 'EMAIL_FALLBACK_SENT',
+                            notificationDetails: `Invio WhatsApp fallito (${error?.message || 'Offline'}). Inviata email di fallback a ${customerEmail} alle ${new Date().toLocaleTimeString('it-IT')}`
+                        } as any
+                    });
+                } catch (eErr: any) {
+                    this.log('error', `[WhatsAppService] Immediate email fallback also failed: ${eErr?.message || eErr}`);
+                }
+            }
+            throw error;
+        }
+    }
+
+    public async handleMessageAck(messageId: string, ack: number) {
+        // ack: 1 = ACK_SERVER (single tick), 2 = ACK_DEVICE (double tick - delivered), 3 = ACK_READ (blue ticks), -1 = ACK_ERROR
+        const entry = this.watchdogMap.get(messageId);
+        let targetOrderId = entry?.orderId;
+
+        if (!targetOrderId) {
+            const existingOrder = await prisma.order.findFirst({
+                where: { whatsappMessageId: messageId }
+            });
+            targetOrderId = existingOrder?.id;
+        }
+
+        if (!targetOrderId) return;
+
+        let orderEventBus: any = null;
+        try {
+            orderEventBus = require('./OrderEventBus').orderEventBus;
+        } catch (e) {}
+
+        if (ack >= 2) {
+            // Cancel watchdog timer if running
+            if (entry) {
+                clearTimeout(entry.timer);
+                this.watchdogMap.delete(messageId);
+                this.log('info', `[WhatsAppWatchdog] Order #${targetOrderId} received double tick (ack=${ack})! Delivery confirmed, email fallback timer cancelled.`);
+            }
+
+            const newStatus = ack === 3 ? 'WHATSAPP_READ' : 'WHATSAPP_DELIVERED';
+            const detailsText = ack === 3
+                ? `Visualizzato dal cliente su WhatsApp (spunte blu) alle ${new Date().toLocaleTimeString('it-IT')}`
+                : `Consegnato sul telefono del cliente (doppia spunta) alle ${new Date().toLocaleTimeString('it-IT')}`;
+
+            const updated = await prisma.order.update({
+                where: { id: targetOrderId },
+                data: {
+                    notificationStatus: newStatus,
+                    notificationDetails: detailsText
+                } as any
+            });
+
+            if (orderEventBus) {
+                try {
+                    orderEventBus.emit('order:notification_updated', updated);
+                } catch (e) {}
+            }
+        } else if (ack === -1) {
+            this.log('warn', `[WhatsAppWatchdog] Order #${targetOrderId} message failed with ACK_ERROR (-1). Triggering immediate email fallback...`);
+            await this.triggerFallbackEmail(messageId);
+        }
+    }
+
+    public async triggerFallbackEmail(messageId: string) {
+        const entry = this.watchdogMap.get(messageId);
+        if (!entry) return;
+
+        this.watchdogMap.delete(messageId);
+        const { orderId, customerEmail, order, status } = entry;
+
+        this.log('warn', `[WhatsAppWatchdog] 3 minutes elapsed without WhatsApp delivery confirmation (ACK_DEVICE) for Order #${orderId}. Triggering Email Fallback...`);
+
+        if (customerEmail) {
+            try {
+                const { EmailService } = require('./EmailService');
+                const emailService = new EmailService();
+                await emailService.sendOrderStatusUpdateEmail(customerEmail, order, status, true);
+                this.log('info', `[WhatsAppWatchdog] Fallback email sent successfully to ${customerEmail} for Order #${orderId}`);
+
+                const updated = await prisma.order.update({
+                    where: { id: orderId },
+                    data: {
+                        notificationStatus: 'EMAIL_FALLBACK_SENT',
+                        notificationDetails: `WhatsApp non recapitato entro 3 min. Inviata email di fallback a ${customerEmail} alle ${new Date().toLocaleTimeString('it-IT')}`
+                    } as any
+                });
+
+                try {
+                    const { orderEventBus } = require('./OrderEventBus');
+                    orderEventBus.emit('order:notification_updated', updated);
+                } catch (e) {}
+            } catch (emailErr: any) {
+                this.log('error', `[WhatsAppWatchdog] Failed to send fallback email for Order #${orderId}: ${emailErr?.message || emailErr}`);
+            }
+        } else {
+            this.log('warn', `[WhatsAppWatchdog] Order #${orderId} has no customerEmail, cannot send email fallback.`);
+            await prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    notificationStatus: 'FAILED',
+                    notificationDetails: `WhatsApp non recapitato sul telefono e nessuna email cliente disponibile.`
+                } as any
+            });
+        }
     }
 }

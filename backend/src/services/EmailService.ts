@@ -299,16 +299,41 @@ export class EmailService {
         return this.sendMail(to, subject, this.getEmailTemplate('Conferma del tuo Ordine', content, settings), settings);
     }
 
-    async sendOrderStatusUpdateEmail(to: string, order: any, status: string) {
+    async sendOrderStatusUpdateEmail(to: string, order: any, status: string, isFallback: boolean = false) {
         const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
-        const siteName = settings?.siteName || 'Chrono Stellar';
+        const siteName = settings?.siteName || 'Ortofrutta Butti';
+        const primaryColor = settings?.primaryColor || '#16a34a';
+        const domain = process.env.PUBLIC_URL || process.env.FRONTEND_URL || 'https://ortofruttabutti.it';
         
         let statusLabel = status;
         let details = '';
+        let actionButtonHtml = '';
         
         if (status === 'WEIGHING_COMPLETED') {
-            statusLabel = 'Confermato & Pesato';
-            details = `Il tuo ordine è stato pesato. Il totale finale aggiornato è <strong>€${((order.finalTotal || order.estimatedTotal) / 100).toFixed(2)}</strong>.`;
+            const finalTotalEur = ((order.finalTotal || order.estimatedTotal) / 100).toFixed(2);
+            statusLabel = 'Pesatura Completata';
+            details = `I prodotti freschi del tuo ordine sono stati pesati al banco. Il totale finale aggiornato è <strong>€${finalTotalEur}</strong>.`;
+
+            if (order.approvalToken) {
+                const approvalUrl = `${domain}/conferma-pesatura/${order.id}?token=${order.approvalToken}`;
+                const isAwaiting = order.approvalStatus === 'AWAITING_CUSTOMER_APPROVAL' || order.requiresApproval;
+
+                actionButtonHtml = `
+                    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: center;">
+                        <h3 style="color: #166534; margin: 0 0 10px 0; font-size: 17px;">
+                            ${isAwaiting ? '⚖️ Conferma Pesatura Richiesta' : '🧾 Scontrino Digitale Pesatura'}
+                        </h3>
+                        <p style="color: #14532d; font-size: 13px; margin: 0 0 18px 0; line-height: 1.5;">
+                            ${isAwaiting 
+                                ? 'C\'è stata una leggera variazione rispetto alla stima iniziale. Controlla il dettaglio dei pesi effettivi e conferma l\'ordine:'
+                                : 'Visualizza lo scontrino dettagliato con tutti i pesi effettivi rilevati al banco:'}
+                        </p>
+                        <a href="${approvalUrl}" style="background-color: ${primaryColor}; color: #ffffff !important; padding: 13px 26px; border-radius: 10px; font-weight: bold; text-decoration: none; display: inline-block; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+                            ${isAwaiting ? 'Verifica e Conferma Pesatura' : 'Visualizza Scontrino'}
+                        </a>
+                    </div>
+                `;
+            }
         } else if (status === 'OUT_FOR_DELIVERY') {
             if (order.deliveryMethod === 'PICKUP') {
                 statusLabel = 'Pronto per il Ritiro';
@@ -322,21 +347,30 @@ export class EmailService {
             details = `Il tuo ordine è stato consegnato/ritirato con successo. Grazie per aver acquistato da noi!`;
         } else if (status === 'CANCELLED') {
             statusLabel = 'Annullato';
-            details = `Ci dispiace informarti che il tuo ordine è stato annullato.`;
+            details = `Ci dispiace informarti che il tuo ordine è stato annullato. L'eventuale importo autorizzato è stato sbloccato.`;
         }
         
-        const subject = `Aggiornamento Ordine #${order.id} - ${statusLabel} - ${siteName}`;
+        const subject = `${isFallback ? '🔔 [Promemoria] ' : ''}Aggiornamento Ordine #${order.id} - ${statusLabel} - ${siteName}`;
         
+        const fallbackNote = isFallback ? `
+            <div style="background-color: #fefce8; border-left: 4px solid #eab308; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; color: #713f12; line-height: 1.5;">
+                ℹ️ <strong>Comunicazione di sicurezza:</strong> Ti inoltriamo questo aggiornamento anche via email per essere certi che tu lo riceva senza ritardi.
+            </div>
+        ` : '';
+
         const content = `
+            ${fallbackNote}
             <p>Ciao ${order.customerName || 'Cliente'},</p>
-            <p>Ti comunichiamo che lo stato del tuo ordine <strong>#${order.id}</strong> è stato aggiornato a: <strong style="color: ${settings?.primaryColor || '#16a34a'};">${statusLabel}</strong>.</p>
+            <p>Ti comunichiamo che lo stato del tuo ordine <strong>#${order.id}</strong> è: <strong style="color: ${primaryColor};">${statusLabel}</strong>.</p>
             
-            <div style="background-color: #f8faf7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${settings?.primaryColor || '#16a34a'};">
+            <div style="background-color: #f8faf7; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${primaryColor}; font-size: 14px;">
                 ${details}
             </div>
+
+            ${actionButtonHtml}
             
-            <p>Puoi monitorare lo stato del tuo ordine accedendo al tuo profilo sul nostro sito.</p>
-            <p>A presto,<br>Il Team di ${siteName}</p>
+            <p style="font-size: 13px; color: #64748b; margin-top: 25px;">Puoi verificare tutti i dettagli del tuo ordine accedendo al tuo profilo sul nostro sito.</p>
+            <p style="font-size: 13px; color: #334155;">A presto,<br><strong>Il Team di ${siteName}</strong></p>
         `;
         
         return this.sendMail(to, subject, this.getEmailTemplate(`Aggiornamento Ordine #${order.id}`, content, settings), settings);

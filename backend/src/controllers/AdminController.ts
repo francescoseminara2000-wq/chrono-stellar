@@ -33,7 +33,14 @@ async function notifyClientOfStatusUpdate(order: any, status: string) {
 
         if (!whatsAppSent && order.customerEmail) {
             console.log(`[AdminController] Sending Email notification for status ${status} to order #${order.id} (${order.customerEmail})`);
-            await emailService.sendOrderStatusUpdateEmail(order.customerEmail, order, status);
+            await emailService.sendOrderStatusUpdateEmail(order.customerEmail, order, status, true);
+            await prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    notificationStatus: 'EMAIL_FALLBACK_SENT',
+                    notificationDetails: `WhatsApp non configurato o non raggiungibile. Notifica inviata via email a ${order.customerEmail} alle ${new Date().toLocaleTimeString('it-IT')}`
+                } as any
+            });
         }
     } catch (err: any) {
         whatsAppService.log('error', `[AdminController] Failed to notify client of status update: ${err?.message || err}`);
