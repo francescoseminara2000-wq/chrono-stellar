@@ -53,7 +53,7 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
                 */}
                 <video
                     ref={videoRef}
-                    src="/apple-loader.mp4?v=3"
+                    src="/apple-loader.mp4?v=4"
                     autoPlay
                     loop
                     muted
