@@ -17,16 +17,16 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    // Risoluzione dimensioni ottimali per il video
-    let dimension = 110;
+    // Risoluzione dimensioni ottimali per il video (ora quadrato 1:1)
+    let dimension = 130;
     if (typeof size === 'number') {
         dimension = size;
     } else {
         switch (size) {
-            case 'sm': dimension = 64; break;
-            case 'md': dimension = 110; break;
-            case 'lg': dimension = 150; break;
-            case 'xl': dimension = 200; break;
+            case 'sm': dimension = 72; break;
+            case 'md': dimension = 130; break;
+            case 'lg': dimension = 170; break;
+            case 'xl': dimension = 220; break;
         }
     }
 
@@ -48,12 +48,12 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
                 style={{ width: dimension, height: dimension }}
             >
                 {/* 
-                  Video MP4 animazione mela smangiucchiata -> intera
-                  mix-blend-multiply rende trasparente lo sfondo bianco puro del video
+                  Video MP4 animazione mela smangiucchiata -> intera (720x720 quadrato)
+                  mix-blend-multiply fonde lo sfondo #ffffff rendendolo trasparente
                 */}
                 <video
                     ref={videoRef}
-                    src="/apple-loader.mp4"
+                    src="/apple-loader.mp4?v=2"
                     autoPlay
                     loop
                     muted
@@ -61,9 +61,6 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
                     preload="auto"
                     disablePictureInPicture
                     className="w-full h-full object-contain pointer-events-none select-none mix-blend-multiply"
-                    style={{
-                        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                    }}
                 />
             </div>
 
