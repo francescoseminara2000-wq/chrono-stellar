@@ -14,6 +14,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductShareModal } from '../components/ProductShareModal';
 import { sanitizeImageUrl } from '../utils/imageUrl';
 import { AppleLoader } from '../components/ui/AppleLoader';
+import { useAppState } from '../store/useAppState';
 
 interface Product {
     id: number;
@@ -135,9 +136,13 @@ export const ProductDetail = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isLightboxOpen, galleryImages.length]);
 
+    const { settings } = useAppState();
+    const minDurationMs = Math.max(2000, ((settings?.appleLoaderMinDuration ?? 2) * 1000));
+
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setLoading(true);
+        const startTime = Date.now();
         fetch(`/api/products`)
             .then(res => res.json())
             .then((data: Product[]) => {
@@ -170,13 +175,18 @@ export const ProductDetail = () => {
 
                 // Filter related products
                 setRelatedProducts(data.filter(p => p.id !== Number(id) && p.isAvailable).slice(0, 4));
-                setLoading(false);
             })
             .catch(err => {
                 console.error("Error loading product", err);
-                setLoading(false);
+            })
+            .finally(() => {
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, minDurationMs - elapsed);
+                setTimeout(() => {
+                    setLoading(false);
+                }, delay);
             });
-    }, [id]);
+    }, [id, minDurationMs]);
 
     const handleShare = () => {
         setIsShareModalOpen(true);

@@ -17,7 +17,9 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN pageBackgrounds LONGTEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN customNavItems LONGTEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN navHoverOpacity INT DEFAULT 75`,
-            `ALTER TABLE StoreSettings ADD COLUMN navHoverColor VARCHAR(50) DEFAULT '#bbf7d0'`
+            `ALTER TABLE StoreSettings ADD COLUMN navHoverColor VARCHAR(50) DEFAULT '#bbf7d0'`,
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderPlaybackRate FLOAT DEFAULT 1.0`,
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderMinDuration INT DEFAULT 2`
         ];
 
         for (const statement of sqlStatements) {
@@ -207,6 +209,12 @@ export class SettingsController {
             }
             if (req.body.navHoverColor !== undefined) {
                 updateData.navHoverColor = String(req.body.navHoverColor).trim();
+            }
+            if (req.body.appleLoaderPlaybackRate !== undefined) {
+                updateData.appleLoaderPlaybackRate = Number(req.body.appleLoaderPlaybackRate);
+            }
+            if (req.body.appleLoaderMinDuration !== undefined) {
+                updateData.appleLoaderMinDuration = Number(req.body.appleLoaderMinDuration);
             }
 
             const updatedSettings = await prisma.storeSettings.update({

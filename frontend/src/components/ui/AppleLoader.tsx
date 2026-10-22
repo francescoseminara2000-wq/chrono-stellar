@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useAppState } from '../../store/useAppState';
 
 export interface AppleLoaderProps {
     size?: 'sm' | 'md' | 'lg' | 'xl' | number;
@@ -6,6 +7,7 @@ export interface AppleLoaderProps {
     subtext?: string;
     inline?: boolean;
     className?: string;
+    playbackRate?: number;
 }
 
 export const AppleLoader: React.FC<AppleLoaderProps> = ({
@@ -14,8 +16,11 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
     subtext,
     inline = false,
     className = '',
+    playbackRate,
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const { settings } = useAppState();
+    const effectivePlaybackRate = playbackRate ?? (settings?.appleLoaderPlaybackRate && settings.appleLoaderPlaybackRate > 0 ? settings.appleLoaderPlaybackRate : 1.0);
 
     // Risoluzione dimensioni ottimali per il video (mela grande e ben visibile)
     let dimension = 200;
@@ -30,16 +35,17 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
         }
     }
 
-    // Assicura autoplay su tutti i browser mobili e desktop
+    // Assicura autoplay su tutti i browser mobili e desktop e applica velocita di riproduzione
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.defaultMuted = true;
             videoRef.current.muted = true;
+            videoRef.current.playbackRate = effectivePlaybackRate;
             videoRef.current.play().catch(() => {
                 // Autoplay policy fallback: muted play
             });
         }
-    }, []);
+    }, [effectivePlaybackRate]);
 
     return (
         <div className={`flex flex-col items-center justify-center select-none ${inline ? 'inline-flex' : ''} ${className}`}>

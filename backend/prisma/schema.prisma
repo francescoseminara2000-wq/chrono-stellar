@@ -178,6 +178,8 @@ model StoreSettings {
   customNavItems              String?  @db.LongText
   navHoverOpacity             Int?     @default(75)
   navHoverColor               String?  @default("#bbf7d0")
+  appleLoaderPlaybackRate     Float?   @default(1.0)
+  appleLoaderMinDuration      Int?     @default(2)
 }
 
 model Transaction {

@@ -52,6 +52,8 @@ export interface StoreSettings {
     customNavItems?: string | CustomNavItem[];
     navHoverOpacity?: number;
     navHoverColor?: string;
+    appleLoaderPlaybackRate?: number;
+    appleLoaderMinDuration?: number;
 }
 
 interface AppState {

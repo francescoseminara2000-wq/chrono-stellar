@@ -5,14 +5,20 @@ import { motion } from 'framer-motion';
 import { useAppState } from '../store/useAppState';
 import { BlockRenderer } from '../components/cms/BlockRenderer';
 import { NewsletterSection } from '../components/NewsletterSection';
+import { AppleLoader } from '../components/ui/AppleLoader';
 
 const API_URL = '';
 
 export const Home = () => {
     const heroRef = useRef<HTMLDivElement>(null);
     const [cmsContent, setCmsContent] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const { settings } = useAppState();
+
+    const minDurationMs = Math.max(2000, ((settings?.appleLoaderMinDuration ?? 2) * 1000));
 
     useEffect(() => {
+        const startTime = Date.now();
         const fetchHomeContent = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/pages/home`);
@@ -25,12 +31,28 @@ export const Home = () => {
             } catch (error) {
                 console.error("Home page CMS fetch failed:", error);
                 // Graceful fallback to static content
+            } finally {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, minDurationMs - elapsed);
+                setTimeout(() => {
+                    setLoading(false);
+                }, remaining);
             }
         };
         fetchHomeContent();
-    }, []);
+    }, [minDurationMs]);
 
-    const { settings } = useAppState();
+    if (loading) {
+        return (
+            <div className="min-h-[75vh] flex flex-col items-center justify-center py-24 px-4 select-none">
+                <AppleLoader
+                    size="xl"
+                    text={settings?.siteName || "Ortofrutta Butti"}
+                    subtext={settings?.tagline || "Caricamento delle migliori selezioni fresche di stagione..."}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col min-h-screen font-sans selection:bg-nature-200 selection:text-nature-900">

@@ -5,8 +5,9 @@ import {
     MessageSquare, User as UserIcon, Upload, Trash2,
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
-    ExternalLink, BookOpen, CheckCircle2, Sparkles
+    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play
 } from 'lucide-react';
+import { AppleLoader } from '../../components/ui/AppleLoader';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
@@ -86,7 +87,9 @@ export const SettingsManager = () => {
         pageBackgrounds: {} as PageBackgroundsMap,
         customNavItems: DEFAULT_NAV_ITEMS as CustomNavItem[],
         navHoverOpacity: 75,
-        navHoverColor: '#bbf7d0'
+        navHoverColor: '#bbf7d0',
+        appleLoaderPlaybackRate: 1.0,
+        appleLoaderMinDuration: 2
     });
 
     // --- Navigation Management State ---
@@ -206,7 +209,9 @@ export const SettingsManager = () => {
                     ? (() => { try { return JSON.parse(data.customNavItems); } catch (e) { return DEFAULT_NAV_ITEMS; } })()
                     : (Array.isArray(data.customNavItems) && data.customNavItems.length > 0 ? data.customNavItems : DEFAULT_NAV_ITEMS),
                 navHoverOpacity: data.navHoverOpacity !== undefined && data.navHoverOpacity !== null ? Number(data.navHoverOpacity) : 75,
-                navHoverColor: data.navHoverColor || '#bbf7d0'
+                navHoverColor: data.navHoverColor || '#bbf7d0',
+                appleLoaderPlaybackRate: data.appleLoaderPlaybackRate !== undefined && data.appleLoaderPlaybackRate !== null ? Number(data.appleLoaderPlaybackRate) : 1.0,
+                appleLoaderMinDuration: data.appleLoaderMinDuration !== undefined && data.appleLoaderMinDuration !== null ? Number(data.appleLoaderMinDuration) : 2
             });
         }
     };
@@ -646,6 +651,7 @@ export const SettingsManager = () => {
 
     const tabs = [
         { id: 'general', label: 'Generale', icon: <Globe size={18} /> },
+        { id: 'loader', label: 'Animazione Mela', icon: <Sparkles size={18} /> },
         { id: 'navigation', label: 'Menu Navigazione', icon: <Compass size={18} /> },
         { id: 'backgrounds', label: 'Sfondi Pagine', icon: <ImageIcon size={18} /> },
         { id: 'revolut', label: 'Pagamenti Revolut', icon: <CreditCard size={18} /> },
@@ -957,6 +963,196 @@ export const SettingsManager = () => {
                             </button>
                         </div>
                     </form>
+                )}
+
+                {activeTab === 'loader' && (
+                    <div className="space-y-8 animate-in fade-in duration-300">
+                        {/* Header Box */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-xl font-bold flex items-center gap-2 text-nature-800">
+                                    <Sparkles size={22} className="text-emerald-600" /> Configurazione Animazione Mela & Loader
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-1 max-w-2xl leading-relaxed">
+                                    Personalizza la velocità del video MP4 (boomerang) e la durata minima di caricamento garantita quando i clienti accedono alla Home Page o al Catalogo Prodotti.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSettingsSubmit}
+                                disabled={isSaving}
+                                className="bg-nature-900 text-white px-6 py-3 rounded-2xl font-bold shadow-md hover:bg-black transition-all flex items-center gap-2 self-start md:self-auto shrink-0 active:scale-95 cursor-pointer"
+                            >
+                                {isSaving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <Save size={18} />}
+                                <span>Salva Modifiche</span>
+                            </button>
+                        </div>
+
+                        {/* Interactive Live Preview Box */}
+                        <div className="bg-gradient-to-br from-emerald-50/60 via-white to-nature-50/40 rounded-3xl p-8 shadow-sm border border-emerald-100/80 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-black uppercase tracking-wider mb-4 inline-flex items-center gap-1.5 shadow-2xs">
+                                <Play size={13} className="text-emerald-700" /> Anteprima dal Vivo
+                            </span>
+                            
+                            <AppleLoader
+                                size="lg"
+                                playbackRate={formData.appleLoaderPlaybackRate}
+                                text="Caricamento in corso..."
+                                subtext={`Velocità: ${formData.appleLoaderPlaybackRate}x • Durata minima: ${formData.appleLoaderMinDuration}s`}
+                            />
+
+                            <p className="text-xs text-gray-500 font-medium mt-4">
+                                Questa anteprima reagisce in tempo reale alle regolazioni sottostanti.
+                            </p>
+                        </div>
+
+                        {/* Controls Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Velocità Riproduzione Video (Playback Rate) */}
+                            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                    <div className="flex items-center gap-2">
+                                        <Gauge size={20} className="text-emerald-600" />
+                                        <h4 className="font-extrabold text-gray-900 text-base">Velocità Riproduzione Video MP4</h4>
+                                    </div>
+                                    <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-mono font-black text-sm">
+                                        {formData.appleLoaderPlaybackRate.toFixed(2)}x
+                                    </span>
+                                </div>
+
+                                <p className="text-xs text-gray-500 leading-relaxed">
+                                    Controlla il fattore di velocità di riproduzione (<code>playbackRate</code>) del video boomerang MP4 su tutti i loader del sito.
+                                </p>
+
+                                {/* Slider */}
+                                <div className="space-y-2">
+                                    <input
+                                        type="range"
+                                        min="0.5"
+                                        max="2.5"
+                                        step="0.05"
+                                        value={formData.appleLoaderPlaybackRate}
+                                        onChange={(e) => setFormData({ ...formData, appleLoaderPlaybackRate: parseFloat(e.target.value) })}
+                                        className="w-full accent-nature-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                                    />
+                                    <div className="flex justify-between text-[11px] font-bold text-gray-400">
+                                        <span>0.5x (Molto Lento)</span>
+                                        <span>1.0x (Standard)</span>
+                                        <span>2.5x (Molto Veloce)</span>
+                                    </div>
+                                </div>
+
+                                {/* Preset Buttons */}
+                                <div className="space-y-2">
+                                    <span className="text-xs font-bold text-gray-700 block">Preset Rapidi:</span>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { label: '0.75x Lento', value: 0.75 },
+                                            { label: '1.0x Normale', value: 1.0 },
+                                            { label: '1.25x Fluido', value: 1.25 },
+                                            { label: '1.5x Rapido', value: 1.5 },
+                                            { label: '1.75x Sprint', value: 1.75 },
+                                            { label: '2.0x Max', value: 2.0 },
+                                        ].map(preset => (
+                                            <button
+                                                key={preset.value}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, appleLoaderPlaybackRate: preset.value })}
+                                                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                    Math.abs(formData.appleLoaderPlaybackRate - preset.value) < 0.01
+                                                        ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
+                                                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200/70'
+                                                }`}
+                                            >
+                                                {preset.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Durata Minima Caricamento (Home & Prodotti) */}
+                            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                    <div className="flex items-center gap-2">
+                                        <Clock size={20} className="text-emerald-600" />
+                                        <h4 className="font-extrabold text-gray-900 text-base">Durata Minima Caricamento</h4>
+                                    </div>
+                                    <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-mono font-black text-sm">
+                                        {formData.appleLoaderMinDuration}s
+                                    </span>
+                                </div>
+
+                                <p className="text-xs text-gray-500 leading-relaxed">
+                                    Imposta per quanti secondi l'animazione della mela deve restare visibile durante l'accesso iniziale alla <strong>Home Page</strong> e al <strong>Catalogo/Dettaglio Prodotti</strong> prima di mostrare il contenuto.
+                                </p>
+
+                                {/* Slider */}
+                                <div className="space-y-2">
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="6"
+                                        step="1"
+                                        value={formData.appleLoaderMinDuration}
+                                        onChange={(e) => setFormData({ ...formData, appleLoaderMinDuration: parseInt(e.target.value) })}
+                                        className="w-full accent-nature-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                                    />
+                                    <div className="flex justify-between text-[11px] font-bold text-gray-400">
+                                        <span>1 secondo</span>
+                                        <span>2 secondi (Consigliato)</span>
+                                        <span>6 secondi</span>
+                                    </div>
+                                </div>
+
+                                {/* Preset Buttons */}
+                                <div className="space-y-2">
+                                    <span className="text-xs font-bold text-gray-700 block">Scelta Rapida:</span>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {[
+                                            { label: '2 sec', value: 2 },
+                                            { label: '3 sec', value: 3 },
+                                            { label: '4 sec', value: 4 },
+                                            { label: '5 sec', value: 5 },
+                                        ].map(preset => (
+                                            <button
+                                                key={preset.value}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, appleLoaderMinDuration: preset.value })}
+                                                className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                    formData.appleLoaderMinDuration === preset.value
+                                                        ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
+                                                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200/70'
+                                                }`}
+                                            >
+                                                {preset.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex items-start gap-2.5 text-xs text-amber-800">
+                                    <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                                    <span>
+                                        Un valore di <strong>2 o 3 secondi</strong> offre il miglior compromesso tra spettacolarità visiva e rapidità di navigazione per l'utente.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Save Action Footer */}
+                        <div className="flex justify-end pt-4">
+                            <button
+                                type="button"
+                                onClick={handleSettingsSubmit}
+                                disabled={isSaving}
+                                className="bg-nature-900 text-white px-10 py-4 rounded-2xl font-bold shadow-2xl hover:bg-black transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                            >
+                                {isSaving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save size={20} />}
+                                <span>Salva Configurazione Animazione Mela</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
 
                 {activeTab === 'navigation' && (

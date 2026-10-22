@@ -7,6 +7,7 @@ import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppleLoader } from '../components/ui/AppleLoader';
+import { useAppState } from '../store/useAppState';
 
 interface Category {
     id: number;
@@ -54,7 +55,12 @@ export const Shop = () => {
         return item ? item.quantity : 0;
     };
 
+    const { settings } = useAppState();
+    const minDurationMs = Math.max(2000, ((settings?.appleLoaderMinDuration ?? 2) * 1000));
+
     const fetchProducts = useCallback(() => {
+        setLoading(true);
+        const startTime = Date.now();
         const params = new URLSearchParams();
         if (filterCategory) params.append('categoryId', filterCategory);
         if (searchTerm) params.append('search', searchTerm);
@@ -69,13 +75,18 @@ export const Shop = () => {
             .then(data => {
                 if (Array.isArray(data)) setProducts(data);
                 else setProducts([]);
-                setLoading(false);
             })
             .catch(err => {
                 console.error('Error fetching products:', err);
-                setLoading(false);
+            })
+            .finally(() => {
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, minDurationMs - elapsed);
+                setTimeout(() => {
+                    setLoading(false);
+                }, delay);
             });
-    }, [filterCategory, searchTerm, sortBy, sortOrder]);
+    }, [filterCategory, searchTerm, sortBy, sortOrder, minDurationMs]);
 
     useEffect(() => {
         fetch(`${API_URL}/api/categories`)
