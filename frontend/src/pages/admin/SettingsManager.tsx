@@ -5,7 +5,7 @@ import {
     MessageSquare, User as UserIcon, Upload, Trash2,
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
-    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play
+    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders
 } from 'lucide-react';
 import { AppleLoader } from '../../components/ui/AppleLoader';
 import { useToastStore } from '../../store/useToastStore';
@@ -90,7 +90,8 @@ export const SettingsManager = () => {
         navHoverColor: '#bbf7d0',
         appleLoaderPlaybackRate: 1.0,
         appleLoaderMinDuration: 2,
-        appleLoaderVideoUrl: null as string | null
+        appleLoaderVideoUrl: null as string | null,
+        appleLoaderDimension: 200
     });
 
     // --- Navigation Management State ---
@@ -214,7 +215,8 @@ export const SettingsManager = () => {
                 navHoverColor: data.navHoverColor || '#bbf7d0',
                 appleLoaderPlaybackRate: data.appleLoaderPlaybackRate !== undefined && data.appleLoaderPlaybackRate !== null ? Number(data.appleLoaderPlaybackRate) : 1.0,
                 appleLoaderMinDuration: data.appleLoaderMinDuration !== undefined && data.appleLoaderMinDuration !== null ? Number(data.appleLoaderMinDuration) : 2,
-                appleLoaderVideoUrl: data.appleLoaderVideoUrl || null
+                appleLoaderVideoUrl: data.appleLoaderVideoUrl || null,
+                appleLoaderDimension: data.appleLoaderDimension !== undefined && data.appleLoaderDimension !== null ? Number(data.appleLoaderDimension) : 200
             });
         }
     };
@@ -1055,11 +1057,11 @@ export const SettingsManager = () => {
                             </span>
                             
                             <AppleLoader
-                                size="lg"
+                                size={formData.appleLoaderDimension || 200}
                                 playbackRate={formData.appleLoaderPlaybackRate}
                                 videoUrl={formData.appleLoaderVideoUrl || undefined}
                                 text="Caricamento in corso..."
-                                subtext={`Velocità: ${formData.appleLoaderPlaybackRate}x • Durata minima: ${formData.appleLoaderMinDuration}s`}
+                                subtext={`Velocità: ${formData.appleLoaderPlaybackRate}x • Dimensione: ${formData.appleLoaderDimension || 200}px • Durata minima: ${formData.appleLoaderMinDuration}s`}
                             />
 
                             <p className="text-xs text-gray-500 font-medium mt-4">
@@ -1155,13 +1157,13 @@ export const SettingsManager = () => {
                         </div>
 
                         {/* Controls Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Velocità Riproduzione Video (Playback Rate) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Card 1: Velocità Riproduzione Video (Playback Rate) */}
                             <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
                                 <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                                     <div className="flex items-center gap-2">
                                         <Gauge size={20} className="text-emerald-600" />
-                                        <h4 className="font-extrabold text-gray-900 text-base">Velocità Riproduzione Video MP4</h4>
+                                        <h4 className="font-extrabold text-gray-900 text-base">Velocità Video MP4</h4>
                                     </div>
                                     <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-mono font-black text-sm">
                                         {formData.appleLoaderPlaybackRate.toFixed(2)}x
@@ -1184,9 +1186,9 @@ export const SettingsManager = () => {
                                         className="w-full accent-nature-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
                                     />
                                     <div className="flex justify-between text-[11px] font-bold text-gray-400">
-                                        <span>0.5x (Molto Lento)</span>
-                                        <span>1.0x (Standard)</span>
-                                        <span>2.5x (Molto Veloce)</span>
+                                        <span>0.5x (Lento)</span>
+                                        <span>1.0x (Normale)</span>
+                                        <span>2.5x (Veloce)</span>
                                     </div>
                                 </div>
 
@@ -1206,7 +1208,7 @@ export const SettingsManager = () => {
                                                 key={preset.value}
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, appleLoaderPlaybackRate: preset.value })}
-                                                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                className={`py-2 px-2 text-center rounded-xl font-bold text-xs transition-all cursor-pointer ${
                                                     Math.abs(formData.appleLoaderPlaybackRate - preset.value) < 0.01
                                                         ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
                                                         : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200/70'
@@ -1219,7 +1221,70 @@ export const SettingsManager = () => {
                                 </div>
                             </div>
 
-                            {/* Durata Minima Caricamento (Home & Prodotti) */}
+                            {/* Card 2: Dimensione Video (in Pixel) */}
+                            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                    <div className="flex items-center gap-2">
+                                        <Sliders size={20} className="text-emerald-600" />
+                                        <h4 className="font-extrabold text-gray-900 text-base">Dimensione Video</h4>
+                                    </div>
+                                    <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-mono font-black text-sm">
+                                        {formData.appleLoaderDimension || 200}px
+                                    </span>
+                                </div>
+
+                                <p className="text-xs text-gray-500 leading-relaxed">
+                                    Imposta la dimensione in pixel del video animato. I loader delle pagine scaleranno in proporzione a questo valore.
+                                </p>
+
+                                {/* Slider */}
+                                <div className="space-y-2">
+                                    <input
+                                        type="range"
+                                        min="120"
+                                        max="400"
+                                        step="10"
+                                        value={formData.appleLoaderDimension || 200}
+                                        onChange={(e) => setFormData({ ...formData, appleLoaderDimension: parseInt(e.target.value) })}
+                                        className="w-full accent-nature-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                                    />
+                                    <div className="flex justify-between text-[11px] font-bold text-gray-400">
+                                        <span>120px (Compatto)</span>
+                                        <span>200px (Default)</span>
+                                        <span>400px (Maxi)</span>
+                                    </div>
+                                </div>
+
+                                {/* Preset Buttons */}
+                                <div className="space-y-2">
+                                    <span className="text-xs font-bold text-gray-700 block">Preset Dimensioni:</span>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { label: '150px', value: 150 },
+                                            { label: '200px', value: 200 },
+                                            { label: '250px', value: 250 },
+                                            { label: '280px', value: 280 },
+                                            { label: '320px', value: 320 },
+                                            { label: '380px', value: 380 },
+                                        ].map(preset => (
+                                            <button
+                                                key={preset.value}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, appleLoaderDimension: preset.value })}
+                                                className={`py-2 px-2 text-center rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                    (formData.appleLoaderDimension || 200) === preset.value
+                                                        ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
+                                                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200/70'
+                                                }`}
+                                            >
+                                                {preset.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 3: Durata Minima Caricamento (Home & Prodotti) */}
                             <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
                                 <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                                     <div className="flex items-center gap-2">

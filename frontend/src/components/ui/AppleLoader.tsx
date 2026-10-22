@@ -26,16 +26,21 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
     const effectivePlaybackRate = playbackRate ?? (settings?.appleLoaderPlaybackRate && settings.appleLoaderPlaybackRate > 0 ? settings.appleLoaderPlaybackRate : 1.0);
     const videoSrc = videoUrl || (settings?.appleLoaderVideoUrl ? sanitizeImageUrl(settings.appleLoaderVideoUrl) : '/apple-loader.mp4?v=4');
 
-    // Risoluzione dimensioni ottimali per il video (mela grande e ben visibile)
-    let dimension = 200;
+    // Risoluzione dimensioni ottimali per il video (mela e loader scalabili da impostazioni)
+    const baseDimension = settings?.appleLoaderDimension && settings.appleLoaderDimension > 0 
+        ? settings.appleLoaderDimension 
+        : 200;
+
+    let dimension = baseDimension;
     if (typeof size === 'number') {
         dimension = size;
     } else {
+        const scale = baseDimension / 200;
         switch (size) {
-            case 'sm': dimension = 110; break;
-            case 'md': dimension = 190; break;
-            case 'lg': dimension = 250; break;
-            case 'xl': dimension = 300; break;
+            case 'sm': dimension = Math.round(110 * scale); break;
+            case 'md': dimension = Math.round(190 * scale); break;
+            case 'lg': dimension = Math.round(250 * scale); break;
+            case 'xl': dimension = Math.round(300 * scale); break;
         }
     }
 

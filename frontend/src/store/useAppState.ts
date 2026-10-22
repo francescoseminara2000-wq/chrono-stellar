@@ -55,6 +55,7 @@ export interface StoreSettings {
     appleLoaderPlaybackRate?: number;
     appleLoaderMinDuration?: number;
     appleLoaderVideoUrl?: string | null;
+    appleLoaderDimension?: number;
 }
 
 interface AppState {

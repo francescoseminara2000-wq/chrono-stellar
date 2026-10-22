@@ -181,6 +181,7 @@ model StoreSettings {
   appleLoaderPlaybackRate     Float?   @default(1.0)
   appleLoaderMinDuration      Int?     @default(2)
   appleLoaderVideoUrl         String?  @db.Text
+  appleLoaderDimension        Int?     @default(200)
 }
 
 model Transaction {
