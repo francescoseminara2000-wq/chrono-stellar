@@ -6,7 +6,7 @@ import {
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
     ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders, Type,
-    Bold, MoveVertical, Smartphone, Monitor
+    Bold, MoveVertical, Smartphone, Monitor, RotateCcw
 } from 'lucide-react';
 import { AppleLoader } from '../../components/ui/AppleLoader';
 import { useToastStore } from '../../store/useToastStore';
@@ -29,21 +29,33 @@ const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+export const DEFAULT_WA_TEMPLATES = {
+    waTemplateCreated: 'Ciao [cliente], grazie per il tuo ordine #[id]! 🍎\n\nLo abbiamo ricevuto e inizieremo a prepararlo a breve.\nTi invieremo un messaggio appena pesati i prodotti freschi con il totale esatto.\n\nRiepilogo:\n[prodotti]',
+    waTemplateWeighing: 'Ciao [cliente], il tuo ordine #[id] è pronto! ⚖️\n\nAbbiamo pesato i prodotti freschi.\n💰 *Totale aggiornato: € [totale]*\n\nDettaglio pesatura:\n[prodotti]\n\nPuoi procedere al ritiro o attendere la consegna.',
+    waTemplateOutForDelivery: 'Ciao [cliente], il tuo ordine #[id] è in consegna! 🚚\n\nIl nostro corriere sta arrivando da te.\n📍 Indirizzo: [indirizzo]\n💰 Totale da pagare: € [totale]',
+    waTemplatePickupReady: 'Ciao [cliente], il tuo ordine #[id] è pronto per il ritiro in negozio! 🏪\n\nTi aspettiamo negli orari di apertura.\n💰 Totale da pagare: € [totale]',
+    waTemplateDelivered: 'Ciao [cliente], ordine #[id] consegnato. Grazie mille! 🥗\n\nSperiamo che i prodotti siano di tuo gradimento.\nAlla prossima! 👋',
+    waTemplateCancelled: 'Ciao [cliente], ci dispiace informarti che l\'ordine #[id] è stato annullato.\nPer maggiori informazioni, non esitare a contattarci.',
+    waTemplateScheduled: 'Ciao [cliente], la pianificazione del tuo ordine #[id] è stata programmata per il [data] alle [ora]. A presto! 📅'
+};
+
 // --- Components ---
 
-const TemplateField = ({ label, field, value, tags, onInsertTag, onChange, textareaRef }: any) => (
-    <div className="space-y-3">
+const TemplateField = ({ label, field, value, placeholder, tags, onInsertTag, onChange, textareaRef }: any) => (
+    <div className="space-y-3 bg-gray-50/60 p-4 md:p-5 rounded-2xl border border-gray-100 transition-all hover:border-gray-200">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-            <label className="text-sm font-bold text-gray-700">{label}</label>
-            <div className="flex flex-wrap gap-1">
+            <label className="text-sm font-bold text-gray-800">{label}</label>
+            <div className="flex flex-wrap gap-1.5 items-center">
+                <span className="text-[11px] text-gray-400 font-medium mr-1">Inserisci variabile:</span>
                 {tags.map((tag: string) => (
                     <button
                         key={tag}
                         type="button"
                         onClick={() => onInsertTag(field, tag)}
-                        className="px-2 py-1 text-[11px] bg-nature-50 hover:bg-nature-100 text-nature-800 rounded font-mono transition-colors"
+                        className="px-2 py-1 text-xs bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/80 rounded-lg font-mono font-bold transition-all active:scale-95 shadow-xs"
+                        title={`Inserisci [${tag}]`}
                     >
-                        +{tag}
+                        +[{tag}]
                     </button>
                 ))}
             </div>
@@ -52,8 +64,9 @@ const TemplateField = ({ label, field, value, tags, onInsertTag, onChange, texta
             ref={textareaRef}
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
             rows={4}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 transition-colors text-sm font-sans"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors text-sm font-sans bg-white shadow-xs"
         />
     </div>
 );
@@ -192,13 +205,13 @@ export const SettingsManager = () => {
                 openingHours: data.openingHours || '',
                 announcementText: data.announcementText || '',
                 announcementActive: data.announcementActive || false,
-                waTemplateCreated: data.waTemplateCreated || '',
-                waTemplateWeighing: data.waTemplateWeighing || '',
-                waTemplateOutForDelivery: data.waTemplateOutForDelivery || '',
-                waTemplatePickupReady: data.waTemplatePickupReady || '',
-                waTemplateDelivered: data.waTemplateDelivered || '',
-                waTemplateCancelled: data.waTemplateCancelled || '',
-                waTemplateScheduled: data.waTemplateScheduled || '',
+                waTemplateCreated: data.waTemplateCreated || DEFAULT_WA_TEMPLATES.waTemplateCreated,
+                waTemplateWeighing: data.waTemplateWeighing || DEFAULT_WA_TEMPLATES.waTemplateWeighing,
+                waTemplateOutForDelivery: data.waTemplateOutForDelivery || DEFAULT_WA_TEMPLATES.waTemplateOutForDelivery,
+                waTemplatePickupReady: data.waTemplatePickupReady || DEFAULT_WA_TEMPLATES.waTemplatePickupReady,
+                waTemplateDelivered: data.waTemplateDelivered || DEFAULT_WA_TEMPLATES.waTemplateDelivered,
+                waTemplateCancelled: data.waTemplateCancelled || DEFAULT_WA_TEMPLATES.waTemplateCancelled,
+                waTemplateScheduled: data.waTemplateScheduled || DEFAULT_WA_TEMPLATES.waTemplateScheduled,
                 latitude: data.latitude || null,
                 longitude: data.longitude || null,
                 logoUrl: data.logoUrl || null,
@@ -384,13 +397,22 @@ export const SettingsManager = () => {
         const textarea = ref.current;
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const text = (formData as any)[field] as string;
-        const newValue = text.substring(0, start) + tag + text.substring(end);
+        const text = ((formData as any)[field] as string) || '';
+        const tagFormatted = tag.startsWith('[') ? tag : `[${tag}]`;
+        const newValue = text.substring(0, start) + tagFormatted + text.substring(end);
         setFormData(prev => ({ ...prev, [field]: newValue }));
         setTimeout(() => {
             textarea.focus();
-            textarea.setSelectionRange(start + tag.length, start + tag.length);
+            textarea.setSelectionRange(start + tagFormatted.length, start + tagFormatted.length);
         }, 0);
+    };
+
+    const handleResetWaTemplates = () => {
+        setFormData(prev => ({
+            ...prev,
+            ...DEFAULT_WA_TEMPLATES
+        }));
+        addToast('Template WhatsApp ripristinati con i testi predefiniti! Clicca su Salva Template per confermare.', 'info');
     };
 
     const handleSettingsSubmit = async (e: React.FormEvent) => {
@@ -2426,14 +2448,96 @@ export const SettingsManager = () => {
                 {activeTab === 'whatsapp' && (
                     <form onSubmit={handleSettingsSubmit} className="space-y-8 animate-in fade-in duration-300">
                         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-green-600"><MessageSquare size={20} /> Template WhatsApp</h3>
-                            <p className="text-sm text-gray-500 mb-8">Personalizza i messaggi automatici inviati ai clienti.</p>
-                            <div className="space-y-8">
-                                <TemplateField label="1. Ordine Ricevuto" field="waTemplateCreated" value={formData.waTemplateCreated} tags={['id', 'cliente', 'prodotti']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplateCreated: v })} textareaRef={refs.waTemplateCreated} />
-                                <TemplateField label="2. Pesatura Completa" field="waTemplateWeighing" value={formData.waTemplateWeighing} tags={['id', 'cliente', 'totale', 'prodotti']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplateWeighing: v })} textareaRef={refs.waTemplateWeighing} />
-                                <TemplateField label="3. In Consegna" field="waTemplateOutForDelivery" value={formData.waTemplateOutForDelivery} tags={['id', 'cliente', 'totale', 'indirizzo', 'note']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplateOutForDelivery: v })} textareaRef={refs.waTemplateOutForDelivery} />
-                                <TemplateField label="4. Pronto al Ritiro" field="waTemplatePickupReady" value={formData.waTemplatePickupReady} tags={['id', 'cliente', 'totale']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplatePickupReady: v })} textareaRef={refs.waTemplatePickupReady} />
-                                <TemplateField label="5. Programmazione Appuntamento" field="waTemplateScheduled" value={formData.waTemplateScheduled} tags={['id', 'cliente', 'data', 'ora', 'metodo']} onInsertTag={handleInsertTag} onChange={(v: any) => setFormData({ ...formData, waTemplateScheduled: v })} textareaRef={refs.waTemplateScheduled} />
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
+                                <div>
+                                    <h3 className="text-xl font-bold flex items-center gap-2 text-green-700">
+                                        <MessageSquare size={22} /> Template Messaggi WhatsApp
+                                    </h3>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Personalizza i messaggi automatici inviati ai clienti per ogni stato dell'ordine.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleResetWaTemplates}
+                                    className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 self-start sm:self-auto shadow-xs active:scale-95"
+                                    title="Ripristina tutti i testi predefiniti con tag ed emoji"
+                                >
+                                    <RotateCcw size={15} /> Ripristina Predefiniti
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                <TemplateField 
+                                    label="1. Ordine Ricevuto" 
+                                    field="waTemplateCreated" 
+                                    value={formData.waTemplateCreated} 
+                                    placeholder={DEFAULT_WA_TEMPLATES.waTemplateCreated}
+                                    tags={['id', 'cliente', 'prodotti']} 
+                                    onInsertTag={handleInsertTag} 
+                                    onChange={(v: any) => setFormData({ ...formData, waTemplateCreated: v })} 
+                                    textareaRef={refs.waTemplateCreated} 
+                                />
+                                <TemplateField 
+                                    label="2. Pesatura Completa (Totale calcolato)" 
+                                    field="waTemplateWeighing" 
+                                    value={formData.waTemplateWeighing} 
+                                    placeholder={DEFAULT_WA_TEMPLATES.waTemplateWeighing}
+                                    tags={['id', 'cliente', 'totale', 'prodotti']} 
+                                    onInsertTag={handleInsertTag} 
+                                    onChange={(v: any) => setFormData({ ...formData, waTemplateWeighing: v })} 
+                                    textareaRef={refs.waTemplateWeighing} 
+                                />
+                                <TemplateField 
+                                    label="3. In Consegna (Spedizione a domicilio)" 
+                                    field="waTemplateOutForDelivery" 
+                                    value={formData.waTemplateOutForDelivery} 
+                                    placeholder={DEFAULT_WA_TEMPLATES.waTemplateOutForDelivery}
+                                    tags={['id', 'cliente', 'totale', 'indirizzo', 'note']} 
+                                    onInsertTag={handleInsertTag} 
+                                    onChange={(v: any) => setFormData({ ...formData, waTemplateOutForDelivery: v })} 
+                                    textareaRef={refs.waTemplateOutForDelivery} 
+                                />
+                                <TemplateField 
+                                    label="4. Pronto al Ritiro (Ritiro in negozio)" 
+                                    field="waTemplatePickupReady" 
+                                    value={formData.waTemplatePickupReady} 
+                                    placeholder={DEFAULT_WA_TEMPLATES.waTemplatePickupReady}
+                                    tags={['id', 'cliente', 'totale']} 
+                                    onInsertTag={handleInsertTag} 
+                                    onChange={(v: any) => setFormData({ ...formData, waTemplatePickupReady: v })} 
+                                    textareaRef={refs.waTemplatePickupReady} 
+                                />
+                                <TemplateField 
+                                    label="5. Ordine Consegnato (Ringraziamento finale)" 
+                                    field="waTemplateDelivered" 
+                                    value={formData.waTemplateDelivered} 
+                                    placeholder={DEFAULT_WA_TEMPLATES.waTemplateDelivered}
+                                    tags={['id', 'cliente']} 
+                                    onInsertTag={handleInsertTag} 
+                                    onChange={(v: any) => setFormData({ ...formData, waTemplateDelivered: v })} 
+                                    textareaRef={refs.waTemplateDelivered} 
+                                />
+                                <TemplateField 
+                                    label="6. Ordine Annullato" 
+                                    field="waTemplateCancelled" 
+                                    value={formData.waTemplateCancelled} 
+                                    placeholder={DEFAULT_WA_TEMPLATES.waTemplateCancelled}
+                                    tags={['id', 'cliente']} 
+                                    onInsertTag={handleInsertTag} 
+                                    onChange={(v: any) => setFormData({ ...formData, waTemplateCancelled: v })} 
+                                    textareaRef={refs.waTemplateCancelled} 
+                                />
+                                <TemplateField 
+                                    label="7. Programmazione Appuntamento" 
+                                    field="waTemplateScheduled" 
+                                    value={formData.waTemplateScheduled} 
+                                    placeholder={DEFAULT_WA_TEMPLATES.waTemplateScheduled}
+                                    tags={['id', 'cliente', 'data', 'ora', 'metodo']} 
+                                    onInsertTag={handleInsertTag} 
+                                    onChange={(v: any) => setFormData({ ...formData, waTemplateScheduled: v })} 
+                                    textareaRef={refs.waTemplateScheduled} 
+                                />
                             </div>
                         </div>
 
@@ -2441,7 +2545,7 @@ export const SettingsManager = () => {
                             <button
                                 type="submit"
                                 disabled={isSaving}
-                                className="bg-green-600 text-white px-10 py-4 rounded-2xl font-bold shadow-2xl hover:bg-green-700 transition-all flex items-center gap-2"
+                                className="bg-green-600 text-white px-10 py-4 rounded-2xl font-bold shadow-2xl hover:bg-green-700 transition-all flex items-center gap-2 active:scale-95"
                             >
                                 {isSaving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Save size={20} />}
                                 <span>Salva Template</span>

@@ -1,10 +1,27 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
+export const DEFAULT_WA_TEMPLATES = {
+    waTemplateCreated: 'Ciao [cliente], grazie per il tuo ordine #[id]! 🍎\n\nLo abbiamo ricevuto e inizieremo a prepararlo a breve.\nTi invieremo un messaggio appena pesati i prodotti freschi con il totale esatto.\n\nRiepilogo:\n[prodotti]',
+    waTemplateWeighing: 'Ciao [cliente], il tuo ordine #[id] è pronto! ⚖️\n\nAbbiamo pesato i prodotti freschi.\n💰 *Totale aggiornato: € [totale]*\n\nDettaglio pesatura:\n[prodotti]\n\nPuoi procedere al ritiro o attendere la consegna.',
+    waTemplateOutForDelivery: 'Ciao [cliente], il tuo ordine #[id] è in consegna! 🚚\n\nIl nostro corriere sta arrivando da te.\n📍 Indirizzo: [indirizzo]\n💰 Totale da pagare: € [totale]',
+    waTemplatePickupReady: 'Ciao [cliente], il tuo ordine #[id] è pronto per il ritiro in negozio! 🏪\n\nTi aspettiamo negli orari di apertura.\n💰 Totale da pagare: € [totale]',
+    waTemplateDelivered: 'Ciao [cliente], ordine #[id] consegnato. Grazie mille! 🥗\n\nSperiamo che i prodotti siano di tuo gradimento.\nAlla prossima! 👋',
+    waTemplateCancelled: 'Ciao [cliente], ci dispiace informarti che l\'ordine #[id] è stato annullato.\nPer maggiori informazioni, non esitare a contattarci.',
+    waTemplateScheduled: 'Ciao [cliente], la pianificazione del tuo ordine #[id] è stata programmata per il [data] alle [ora]. A presto! 📅'
+};
+
 export class SettingsController {
 
     private async ensureColumnsExist() {
         const sqlStatements = [
+            `ALTER TABLE StoreSettings ADD COLUMN waTemplateCreated TEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN waTemplateWeighing TEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN waTemplateOutForDelivery TEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN waTemplatePickupReady TEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN waTemplateDelivered TEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN waTemplateCancelled TEXT`,
+            `ALTER TABLE StoreSettings ADD COLUMN waTemplateScheduled TEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN deliveryTimeSlots TEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN revolutApiKey TEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN revolutEnvironment VARCHAR(255) DEFAULT 'sandbox'`,
@@ -66,16 +83,13 @@ export class SettingsController {
                         contactAddress: 'Via Roma 1, Valmadrera (LC)',
                         openingHours: 'Lunedì - Sabato: 08:00 - 12:30 / 15:30 - 19:00',
                         announcementActive: false,
-                        // @ts-ignore
-                        waTemplateCreated: 'Ciao [cliente], grazie per il tuo ordine #[id]! 🍎\n\nLo abbiamo ricevuto e inizieremo a prepararlo a breve.\nTi invieremo un messaggio appena pesati i prodotti freschi con il totale esatto.\n\nRiepilogo:\n[prodotti]',
-                        // @ts-ignore
-                        waTemplateWeighing: 'Ciao [cliente], il tuo ordine #[id] è pronto! ⚖️\n\nAbbiamo pesato i prodotti freschi.\n💰 *Totale aggiornato: € [totale]*\n\nDettaglio pesatura:\n[prodotti]\n\nPuoi procedere al ritiro o attendere la consegna.',
-                        // @ts-ignore
-                        waTemplateOutForDelivery: 'Ciao [cliente], il tuo ordine #[id] è in consegna! 🚚\n\nIl nostro corriere sta arrivando da te.\n📍 Indirizzo: [indirizzo]\n💰 Totale da pagare: € [totale]',
-                        // @ts-ignore
-                        waTemplatePickupReady: 'Ciao [cliente], il tuo ordine #[id] è pronto per il ritiro in negozio! 🏪\n\nTi aspettiamo negli orari di apertura.\n💰 Totale da pagare: € [totale]',
-                        // @ts-ignore
-                        waTemplateCancelled: 'Ciao [cliente], ci dispiace informarti che l\'ordine #[id] è stato annullato.\nPer maggiori informazioni, non esitare a contattarci.',
+                        waTemplateCreated: DEFAULT_WA_TEMPLATES.waTemplateCreated,
+                        waTemplateWeighing: DEFAULT_WA_TEMPLATES.waTemplateWeighing,
+                        waTemplateOutForDelivery: DEFAULT_WA_TEMPLATES.waTemplateOutForDelivery,
+                        waTemplatePickupReady: DEFAULT_WA_TEMPLATES.waTemplatePickupReady,
+                        waTemplateDelivered: DEFAULT_WA_TEMPLATES.waTemplateDelivered,
+                        waTemplateCancelled: DEFAULT_WA_TEMPLATES.waTemplateCancelled,
+                        waTemplateScheduled: DEFAULT_WA_TEMPLATES.waTemplateScheduled,
                         latitude: 45.8485, // Valmadrera default
                         longitude: 9.3568,
                         logoUrl: null,
@@ -83,9 +97,7 @@ export class SettingsController {
                         primaryColor: '#16a34a',
                         accentColor: '#ef4444',
                         pickupCutoffHour: 12,
-                        deliveryCutoffHour: 12,
-                        // @ts-ignore
-                        waTemplateScheduled: 'Ciao [cliente], la pianificazione del tuo ordine #[id] è stata programmata per il [data] alle [ora]. A presto!'
+                        deliveryCutoffHour: 12
                     }
                 });
             } catch (createErr) {
@@ -93,6 +105,30 @@ export class SettingsController {
                 settings = await prisma.storeSettings.findFirst();
             }
         }
+
+        if (settings) {
+            // Auto-populate any missing or blank WhatsApp templates
+            const missingTemplates: any = {};
+            if (!settings.waTemplateCreated?.trim()) missingTemplates.waTemplateCreated = DEFAULT_WA_TEMPLATES.waTemplateCreated;
+            if (!settings.waTemplateWeighing?.trim()) missingTemplates.waTemplateWeighing = DEFAULT_WA_TEMPLATES.waTemplateWeighing;
+            if (!settings.waTemplateOutForDelivery?.trim()) missingTemplates.waTemplateOutForDelivery = DEFAULT_WA_TEMPLATES.waTemplateOutForDelivery;
+            if (!settings.waTemplatePickupReady?.trim()) missingTemplates.waTemplatePickupReady = DEFAULT_WA_TEMPLATES.waTemplatePickupReady;
+            if (!settings.waTemplateDelivered?.trim()) missingTemplates.waTemplateDelivered = DEFAULT_WA_TEMPLATES.waTemplateDelivered;
+            if (!settings.waTemplateCancelled?.trim()) missingTemplates.waTemplateCancelled = DEFAULT_WA_TEMPLATES.waTemplateCancelled;
+            if (!settings.waTemplateScheduled?.trim()) missingTemplates.waTemplateScheduled = DEFAULT_WA_TEMPLATES.waTemplateScheduled;
+
+            if (Object.keys(missingTemplates).length > 0) {
+                try {
+                    settings = await prisma.storeSettings.update({
+                        where: { id: settings.id },
+                        data: missingTemplates
+                    });
+                } catch (err) {
+                    settings = { ...settings, ...missingTemplates };
+                }
+            }
+        }
+
         if (!settings.deliveryTimeSlots) {
             try {
                 settings = await prisma.storeSettings.update({
