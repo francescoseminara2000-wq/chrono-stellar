@@ -386,36 +386,62 @@ export const Header = () => {
                     {/* Left: Logo + Desktop Menu Nav Bar */}
                     <div className="flex items-center gap-5 sm:gap-7 lg:gap-10 min-w-0">
                         {/* Logo */}
-                        <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group relative z-50 flex-shrink-0">
-                            <motion.div
-                                layout
-                                className={`relative flex items-center justify-center transition-all duration-500 ${isScrolled ? 'w-10 h-10 md:w-12 md:h-12' : 'w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22'}`}
-                            >
-                                <img
-                                    src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"}
-                                    alt={`${settings?.siteName || 'Chrono Stellar'} Logo`}
-                                    className="w-full h-full object-contain scale-115 drop-shadow-sm group-hover:scale-125 transition-transform duration-300 origin-center"
-                                />
-                            </motion.div>
-                            <motion.div
-                                layout
-                                className="flex flex-col justify-center origin-left transition-all duration-500"
-                            >
-                                <h1 className={`font-script text-nature-900 leading-none whitespace-nowrap transition-all duration-500 ${isScrolled ? 'text-xl md:text-2xl' : 'text-2xl sm:text-3xl md:text-4xl'}`}>
-                                    {settings?.siteName ? (
-                                        <>
-                                             <span className="text-nature-600">{settings.siteName.split(' ')[0]}</span>{' '}
-                                            {settings.siteName.substring(settings.siteName.indexOf(' ') + 1)}
-                                        </>
-                                    ) : (
-                                        <><span className="text-nature-600">Ortofrutta</span> Butti</>
-                                    )}
-                                </h1>
-                                <p className={`text-nature-600/90 font-sans tracking-[0.22em] uppercase font-bold transition-all duration-500 mt-1 ${isScrolled ? 'text-[8px] md:text-[9px]' : 'text-[9px] sm:text-[10px] md:text-xs'}`}>
-                                    {settings?.tagline || 'FRESCHEZZA DI QUALITÀ'}
-                                </p>
-                            </motion.div>
-                        </Link>
+                        {(() => {
+                            const baseLogoSize = settings?.headerLogoSize && settings.headerLogoSize > 0 ? settings.headerLogoSize : 80;
+                            const effectiveLogoSize = isScrolled ? Math.max(38, Math.round(baseLogoSize * 0.58)) : baseLogoSize;
+                            const logoScale = baseLogoSize / 80;
+
+                            return (
+                                <Link to="/" className="flex items-center gap-2 sm:gap-3.5 group relative z-50 flex-shrink-0">
+                                    <motion.div
+                                        layout
+                                        className="relative flex items-center justify-center transition-all duration-300 shrink-0"
+                                        style={{
+                                            width: isScrolled ? `${Math.max(36, Math.round(effectiveLogoSize * 0.85))}px` : `min(${effectiveLogoSize}px, 22vw)`,
+                                            height: isScrolled ? `${Math.max(36, Math.round(effectiveLogoSize * 0.85))}px` : `min(${effectiveLogoSize}px, 22vw)`
+                                        }}
+                                    >
+                                        <img
+                                            src={settings?.logoUrl ? sanitizeImageUrl(settings.logoUrl) : "/logo.png"}
+                                            alt={`${settings?.siteName || 'Chrono Stellar'} Logo`}
+                                            className="w-full h-full object-contain scale-115 drop-shadow-sm group-hover:scale-125 transition-transform duration-300 origin-center"
+                                        />
+                                    </motion.div>
+                                    <motion.div
+                                        layout
+                                        className="flex flex-col justify-center origin-left transition-all duration-300"
+                                    >
+                                        <h1 
+                                            className="font-script text-nature-900 leading-none whitespace-nowrap transition-all duration-300"
+                                            style={{
+                                                fontSize: isScrolled 
+                                                    ? `clamp(18px, 4.2vw, ${Math.round(24 * logoScale)}px)` 
+                                                    : `clamp(20px, 5.5vw, ${Math.round(36 * logoScale)}px)`
+                                            }}
+                                        >
+                                            {settings?.siteName ? (
+                                                <>
+                                                     <span className="text-nature-600">{settings.siteName.split(' ')[0]}</span>{' '}
+                                                    {settings.siteName.substring(settings.siteName.indexOf(' ') + 1)}
+                                                </>
+                                            ) : (
+                                                <><span className="text-nature-600">Ortofrutta</span> Butti</>
+                                            )}
+                                        </h1>
+                                        <p 
+                                            className="text-nature-600/90 font-sans tracking-[0.22em] uppercase font-bold transition-all duration-300 mt-1"
+                                            style={{
+                                                fontSize: isScrolled
+                                                    ? `clamp(7.5px, 1.8vw, ${Math.round(9 * logoScale)}px)`
+                                                    : `clamp(8.5px, 2.2vw, ${Math.round(11 * logoScale)}px)`
+                                            }}
+                                        >
+                                            {settings?.tagline || 'FRESCHEZZA DI QUALITÀ'}
+                                        </p>
+                                    </motion.div>
+                                </Link>
+                            );
+                        })()}
 
                         {/* Desktop Nav - Aligned Left right after the Logo */}
                         <nav className="hidden md:flex items-center">

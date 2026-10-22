@@ -60,6 +60,7 @@ export interface StoreSettings {
     appleLoaderTextSize?: number;
     appleLoaderTextBold?: boolean;
     appleLoaderTextOffset?: number;
+    headerLogoSize?: number;
 }
 
 interface AppState {

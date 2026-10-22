@@ -186,6 +186,7 @@ model StoreSettings {
   appleLoaderTextSize         Int?     @default(28)
   appleLoaderTextBold         Boolean? @default(true)
   appleLoaderTextOffset       Int?     @default(16)
+  headerLogoSize              Int?     @default(80)
 }
 
 model Transaction {

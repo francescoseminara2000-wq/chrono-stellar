@@ -97,7 +97,8 @@ export const SettingsManager = () => {
         appleLoaderPhrase: 'Caricando gli scaffali...',
         appleLoaderTextSize: 28,
         appleLoaderTextBold: true,
-        appleLoaderTextOffset: 16
+        appleLoaderTextOffset: 16,
+        headerLogoSize: 80
     });
 
     // --- Navigation Management State ---
@@ -226,7 +227,8 @@ export const SettingsManager = () => {
                 appleLoaderPhrase: data.appleLoaderPhrase || 'Caricando gli scaffali...',
                 appleLoaderTextSize: data.appleLoaderTextSize !== undefined && data.appleLoaderTextSize !== null ? Number(data.appleLoaderTextSize) : 28,
                 appleLoaderTextBold: data.appleLoaderTextBold !== undefined ? Boolean(data.appleLoaderTextBold) : true,
-                appleLoaderTextOffset: data.appleLoaderTextOffset !== undefined && data.appleLoaderTextOffset !== null ? Number(data.appleLoaderTextOffset) : 16
+                appleLoaderTextOffset: data.appleLoaderTextOffset !== undefined && data.appleLoaderTextOffset !== null ? Number(data.appleLoaderTextOffset) : 16,
+                headerLogoSize: data.headerLogoSize !== undefined && data.headerLogoSize !== null ? Number(data.headerLogoSize) : 80
             });
         }
     };
@@ -817,6 +819,112 @@ export const SettingsManager = () => {
                                             <Upload size={18} /> {isUploadingLogo ? 'Caricamento...' : 'Seleziona File'}
                                         </label>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Logo Size in Header Slider & Live Preview */}
+                            <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Sliders size={18} className="text-emerald-600" />
+                                        <label className="text-sm font-bold text-gray-800">
+                                            Dimensione Logo nella Barra Superiore (Header)
+                                        </label>
+                                    </div>
+                                    <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-mono font-black text-xs">
+                                        {formData.headerLogoSize || 80}px
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    Regola la dimensione dell'illustrazione della mela e del nome del negozio nella barra in alto.
+                                </p>
+
+                                {/* Slider */}
+                                <div className="space-y-2">
+                                    <input
+                                        type="range"
+                                        min="50"
+                                        max="130"
+                                        step="2"
+                                        value={formData.headerLogoSize || 80}
+                                        onChange={(e) => setFormData({ ...formData, headerLogoSize: parseInt(e.target.value) })}
+                                        className="w-full accent-nature-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                                    />
+                                    <div className="flex justify-between text-[11px] font-bold text-gray-400">
+                                        <span>50px (Compatto)</span>
+                                        <span>80px (Standard)</span>
+                                        <span>130px (Maxi)</span>
+                                    </div>
+                                </div>
+
+                                {/* Preset Buttons */}
+                                <div className="space-y-1.5">
+                                    <span className="text-[11px] font-bold text-gray-600 block">Preset Dimensioni:</span>
+                                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                                        {[
+                                            { label: '60px', value: 60 },
+                                            { label: '70px', value: 70 },
+                                            { label: '80px', value: 80 },
+                                            { label: '95px', value: 95 },
+                                            { label: '110px', value: 110 },
+                                            { label: '125px', value: 125 },
+                                        ].map(p => (
+                                            <button
+                                                key={p.value}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, headerLogoSize: p.value })}
+                                                className={`py-1.5 px-1.5 text-center rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                    (formData.headerLogoSize || 80) === p.value
+                                                        ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
+                                                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200/80'
+                                                }`}
+                                            >
+                                                {p.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Live Header Logo Preview */}
+                                <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100/90 mt-4">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-2">
+                                        Anteprima dal Vivo Barra Header
+                                    </span>
+                                    {(() => {
+                                        const size = formData.headerLogoSize || 80;
+                                        const scale = size / 80;
+                                        return (
+                                            <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-150 shadow-2xs overflow-hidden">
+                                                <div 
+                                                    className="relative flex items-center justify-center shrink-0 transition-all duration-200"
+                                                    style={{ width: `${size}px`, height: `${size}px` }}
+                                                >
+                                                    <img
+                                                        src={formData.logoUrl ? sanitizeImageUrl(formData.logoUrl) : "/logo.png"}
+                                                        alt="Logo"
+                                                        className="w-full h-full object-contain scale-115"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col justify-center">
+                                                    <span 
+                                                        className="font-script text-nature-900 leading-none whitespace-nowrap"
+                                                        style={{ fontSize: `${Math.round(36 * scale)}px` }}
+                                                    >
+                                                        <span className="text-nature-600">
+                                                            {(formData.siteName || 'Ortofrutta Butti').split(' ')[0]}
+                                                        </span>{' '}
+                                                        {(formData.siteName || 'Ortofrutta Butti').substring((formData.siteName || 'Ortofrutta Butti').indexOf(' ') + 1)}
+                                                    </span>
+                                                    <span 
+                                                        className="text-nature-600/90 font-sans tracking-[0.22em] uppercase font-bold mt-1"
+                                                        style={{ fontSize: `${Math.round(11 * scale)}px` }}
+                                                    >
+                                                        {formData.tagline || 'FRESCHEZZA DI QUALITÀ'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         </div>
