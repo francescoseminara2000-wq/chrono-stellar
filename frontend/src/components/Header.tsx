@@ -525,7 +525,7 @@ export const Header = () => {
                     <div className="hidden md:flex items-center flex-shrink-0">
                         <div className={`
                             bg-white/95 backdrop-blur-md border border-emerald-200/80 rounded-full shadow-xs flex items-center transition-all duration-300 hover:shadow-md hover:border-emerald-300
-                            ${isScrolled ? 'py-1 pl-1.5 pr-1.5 gap-2' : 'py-1.5 pl-2 pr-2 gap-2.5'}
+                            ${isScrolled ? 'py-1 pl-2 pr-3 gap-2.5' : 'py-1.5 pl-2.5 pr-3.5 gap-3'}
                         `}>
                             <AuthMenu
                                 pushEnabled={pushEnabled}
@@ -533,7 +533,7 @@ export const Header = () => {
                                 isPushLoading={isPushLoading}
                             />
 
-                            <div className="w-px bg-emerald-200/80 transition-all duration-300 self-stretch my-1.5"></div>
+                            <div className="w-px bg-emerald-200/80 transition-all duration-300 self-stretch my-1.5 mx-0.5"></div>
 
                             {/* Carrello in evidenza con pulsante circolare verde smeraldo */}
                             <Link 
