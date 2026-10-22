@@ -57,6 +57,9 @@ export interface StoreSettings {
     appleLoaderVideoUrl?: string | null;
     appleLoaderDimension?: number;
     appleLoaderPhrase?: string;
+    appleLoaderTextSize?: number;
+    appleLoaderTextBold?: boolean;
+    appleLoaderTextOffset?: number;
 }
 
 interface AppState {

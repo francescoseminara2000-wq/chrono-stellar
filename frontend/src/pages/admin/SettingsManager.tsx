@@ -5,7 +5,8 @@ import {
     MessageSquare, User as UserIcon, Upload, Trash2,
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
-    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders, Type
+    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders, Type,
+    Bold, MoveVertical
 } from 'lucide-react';
 import { AppleLoader } from '../../components/ui/AppleLoader';
 import { useToastStore } from '../../store/useToastStore';
@@ -92,7 +93,10 @@ export const SettingsManager = () => {
         appleLoaderMinDuration: 2,
         appleLoaderVideoUrl: null as string | null,
         appleLoaderDimension: 200,
-        appleLoaderPhrase: 'Caricando gli scaffali...'
+        appleLoaderPhrase: 'Caricando gli scaffali...',
+        appleLoaderTextSize: 28,
+        appleLoaderTextBold: true,
+        appleLoaderTextOffset: 16
     });
 
     // --- Navigation Management State ---
@@ -218,7 +222,10 @@ export const SettingsManager = () => {
                 appleLoaderMinDuration: data.appleLoaderMinDuration !== undefined && data.appleLoaderMinDuration !== null ? Number(data.appleLoaderMinDuration) : 2,
                 appleLoaderVideoUrl: data.appleLoaderVideoUrl || null,
                 appleLoaderDimension: data.appleLoaderDimension !== undefined && data.appleLoaderDimension !== null ? Number(data.appleLoaderDimension) : 200,
-                appleLoaderPhrase: data.appleLoaderPhrase || 'Caricando gli scaffali...'
+                appleLoaderPhrase: data.appleLoaderPhrase || 'Caricando gli scaffali...',
+                appleLoaderTextSize: data.appleLoaderTextSize !== undefined && data.appleLoaderTextSize !== null ? Number(data.appleLoaderTextSize) : 28,
+                appleLoaderTextBold: data.appleLoaderTextBold !== undefined ? Boolean(data.appleLoaderTextBold) : true,
+                appleLoaderTextOffset: data.appleLoaderTextOffset !== undefined && data.appleLoaderTextOffset !== null ? Number(data.appleLoaderTextOffset) : 16
             });
         }
     };
@@ -1063,6 +1070,9 @@ export const SettingsManager = () => {
                                 playbackRate={formData.appleLoaderPlaybackRate}
                                 videoUrl={formData.appleLoaderVideoUrl || undefined}
                                 text={formData.appleLoaderPhrase || 'Caricando gli scaffali...'}
+                                textSize={formData.appleLoaderTextSize}
+                                textBold={formData.appleLoaderTextBold}
+                                textOffset={formData.appleLoaderTextOffset}
                             />
 
                             <p className="text-xs text-gray-500 font-medium mt-4">
@@ -1214,6 +1224,216 @@ export const SettingsManager = () => {
                                                 {suggestion}
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Stile & Posizionamento Frase (Dimensione, Grassetto, Sovrapposizione) */}
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+                                <div>
+                                    <h4 className="font-extrabold text-gray-900 text-base flex items-center gap-2">
+                                        <Type size={20} className="text-emerald-600" /> Stile & Posizionamento Frase (Dimensione, Grassetto, Sovrapposizione)
+                                    </h4>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Personalizza l'impatto visivo della frase: altezza del testo, intensità (grassetto) e altezza verticale con possibilità di sovrapporla alla mela.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Col 1: Dimensione Testo */}
+                                <div className="p-5 bg-gray-50/70 rounded-2xl border border-gray-200/80 space-y-5">
+                                    <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                                        <div className="flex items-center gap-2">
+                                            <Type size={18} className="text-emerald-600" />
+                                            <span className="font-extrabold text-gray-900 text-sm">Dimensione Testo</span>
+                                        </div>
+                                        <span className="px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-mono font-black text-xs">
+                                            {formData.appleLoaderTextSize || 28}px
+                                        </span>
+                                    </div>
+
+                                    <p className="text-xs text-gray-500">
+                                        Regola la dimensione in pixel del font corsivo per renderlo più discreto o imponente.
+                                    </p>
+
+                                    {/* Slider */}
+                                    <div className="space-y-2">
+                                        <input
+                                            type="range"
+                                            min="18"
+                                            max="52"
+                                            step="1"
+                                            value={formData.appleLoaderTextSize || 28}
+                                            onChange={(e) => setFormData({ ...formData, appleLoaderTextSize: parseInt(e.target.value) })}
+                                            className="w-full accent-nature-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                                        />
+                                        <div className="flex justify-between text-[11px] font-bold text-gray-400">
+                                            <span>18px (Min)</span>
+                                            <span>28px (Default)</span>
+                                            <span>52px (Max)</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Presets */}
+                                    <div className="space-y-1.5">
+                                        <span className="text-[11px] font-bold text-gray-600 block">Preset Dimensioni:</span>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            {[
+                                                { label: '20px Piccolo', value: 20 },
+                                                { label: '24px Discreto', value: 24 },
+                                                { label: '28px Standard', value: 28 },
+                                                { label: '34px Grande', value: 34 },
+                                                { label: '40px Maxi', value: 40 },
+                                                { label: '46px Titolo', value: 46 },
+                                            ].map(p => (
+                                                <button
+                                                    key={p.value}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, appleLoaderTextSize: p.value })}
+                                                    className={`py-1.5 px-1.5 text-center rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                        (formData.appleLoaderTextSize || 28) === p.value
+                                                            ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
+                                                            : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                                                    }`}
+                                                >
+                                                    {p.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Col 2: Grassetto (Font Weight) */}
+                                <div className="p-5 bg-gray-50/70 rounded-2xl border border-gray-200/80 space-y-5 flex flex-col justify-between">
+                                    <div className="space-y-5">
+                                        <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                                            <div className="flex items-center gap-2">
+                                                <Bold size={18} className="text-emerald-600" />
+                                                <span className="font-extrabold text-gray-900 text-sm">Spessore / Grassetto</span>
+                                            </div>
+                                            <span className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs ${
+                                                formData.appleLoaderTextBold
+                                                    ? 'bg-emerald-100 text-emerald-900'
+                                                    : 'bg-gray-200 text-gray-700'
+                                            }`}>
+                                                {formData.appleLoaderTextBold ? 'Grassetto (700)' : 'Normale (400)'}
+                                            </span>
+                                        </div>
+
+                                        <p className="text-xs text-gray-500">
+                                            Attiva il grassetto per rendere i tratti corsivi più spessi, marcati e chiaramente leggibili anche su dispositivi mobili.
+                                        </p>
+
+                                        {/* Weight Toggle Buttons */}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, appleLoaderTextBold: false })}
+                                                className={`py-3 px-3 rounded-2xl font-medium text-xs flex flex-col items-center justify-center gap-1 border transition-all cursor-pointer ${
+                                                    !formData.appleLoaderTextBold
+                                                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-sm ring-2 ring-emerald-600/20'
+                                                        : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200'
+                                                }`}
+                                            >
+                                                <span className="font-script text-lg">Normale (400)</span>
+                                                <span className="text-[10px] opacity-80">Tratto sottile ed elegante</span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, appleLoaderTextBold: true })}
+                                                className={`py-3 px-3 rounded-2xl font-bold text-xs flex flex-col items-center justify-center gap-1 border transition-all cursor-pointer ${
+                                                    formData.appleLoaderTextBold
+                                                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-sm ring-2 ring-emerald-600/20'
+                                                        : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200'
+                                                }`}
+                                            >
+                                                <span className="font-script text-lg font-bold">Grassetto (700)</span>
+                                                <span className="text-[10px] opacity-80">Consigliato per leggibilità</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3 bg-white rounded-xl border border-gray-200 text-center">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Anteprima Spessore</span>
+                                        <span 
+                                            className="font-script text-xl text-nature-950"
+                                            style={{ fontWeight: formData.appleLoaderTextBold ? 700 : 400 }}
+                                        >
+                                            {formData.appleLoaderPhrase || 'Caricando gli scaffali...'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Col 3: Posizionamento Verticale & Sovrapposizione */}
+                                <div className="p-5 bg-gray-50/70 rounded-2xl border border-gray-200/80 space-y-5">
+                                    <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                                        <div className="flex items-center gap-2">
+                                            <MoveVertical size={18} className="text-emerald-600" />
+                                            <span className="font-extrabold text-gray-900 text-sm">Posizione & Sovrapposizione</span>
+                                        </div>
+                                        <span className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs ${
+                                            (formData.appleLoaderTextOffset ?? 16) < 0
+                                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                                : 'bg-emerald-100 text-emerald-900'
+                                        }`}>
+                                            {(formData.appleLoaderTextOffset ?? 16) < 0
+                                                ? `${formData.appleLoaderTextOffset}px (Sovrapposto)`
+                                                : `+${formData.appleLoaderTextOffset ?? 16}px (Sotto)`}
+                                        </span>
+                                    </div>
+
+                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                        I valori negativi <strong>spostano la frase in alto sovrapponendola alla mela</strong>. I valori positivi la distanziano verso il basso.
+                                    </p>
+
+                                    {/* Slider */}
+                                    <div className="space-y-2">
+                                        <input
+                                            type="range"
+                                            min="-90"
+                                            max="50"
+                                            step="2"
+                                            value={formData.appleLoaderTextOffset !== undefined ? formData.appleLoaderTextOffset : 16}
+                                            onChange={(e) => setFormData({ ...formData, appleLoaderTextOffset: parseInt(e.target.value) })}
+                                            className="w-full accent-nature-600 cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                                        />
+                                        <div className="flex justify-between text-[11px] font-bold text-gray-400">
+                                            <span className="text-amber-700 font-black">-90px (Sovrapposizione alta)</span>
+                                            <span>0px (A filo)</span>
+                                            <span>+50px (Distanziato)</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Presets */}
+                                    <div className="space-y-1.5">
+                                        <span className="text-[11px] font-bold text-gray-600 block">Preset Posizionamento:</span>
+                                        <div className="grid grid-cols-2 gap-1.5">
+                                            {[
+                                                { label: '+24px Distanziato', value: 24 },
+                                                { label: '+14px Standard', value: 14 },
+                                                { label: '0px A filo mela', value: 0 },
+                                                { label: '-20px Sfiora base', value: -20 },
+                                                { label: '-45px Sovrapposto', value: -45 },
+                                                { label: '-70px Centro mela', value: -70 },
+                                            ].map(p => (
+                                                <button
+                                                    key={p.value}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, appleLoaderTextOffset: p.value })}
+                                                    className={`py-1.5 px-2 text-center rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                                        (formData.appleLoaderTextOffset !== undefined ? formData.appleLoaderTextOffset : 16) === p.value
+                                                            ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20'
+                                                            : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                                                    }`}
+                                                >
+                                                    {p.label}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

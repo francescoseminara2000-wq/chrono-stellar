@@ -183,6 +183,9 @@ model StoreSettings {
   appleLoaderVideoUrl         String?  @db.Text
   appleLoaderDimension        Int?     @default(200)
   appleLoaderPhrase           String?  @default("Caricando gli scaffali...")
+  appleLoaderTextSize         Int?     @default(28)
+  appleLoaderTextBold         Boolean? @default(true)
+  appleLoaderTextOffset       Int?     @default(16)
 }
 
 model Transaction {

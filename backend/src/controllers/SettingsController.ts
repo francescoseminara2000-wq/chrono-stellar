@@ -22,7 +22,10 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderMinDuration INT DEFAULT 2`,
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderVideoUrl TEXT`,
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderDimension INT DEFAULT 200`,
-            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderPhrase VARCHAR(255) DEFAULT 'Caricando gli scaffali...'`
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderPhrase VARCHAR(255) DEFAULT 'Caricando gli scaffali...'`,
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderTextSize INT DEFAULT 28`,
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderTextBold TINYINT(1) DEFAULT 1`,
+            `ALTER TABLE StoreSettings ADD COLUMN appleLoaderTextOffset INT DEFAULT 16`
         ];
 
         for (const statement of sqlStatements) {
@@ -227,6 +230,15 @@ export class SettingsController {
             }
             if (req.body.appleLoaderPhrase !== undefined) {
                 updateData.appleLoaderPhrase = String(req.body.appleLoaderPhrase).trim();
+            }
+            if (req.body.appleLoaderTextSize !== undefined) {
+                updateData.appleLoaderTextSize = Number(req.body.appleLoaderTextSize);
+            }
+            if (req.body.appleLoaderTextBold !== undefined) {
+                updateData.appleLoaderTextBold = Boolean(req.body.appleLoaderTextBold);
+            }
+            if (req.body.appleLoaderTextOffset !== undefined) {
+                updateData.appleLoaderTextOffset = Number(req.body.appleLoaderTextOffset);
             }
 
             const updatedSettings = await prisma.storeSettings.update({

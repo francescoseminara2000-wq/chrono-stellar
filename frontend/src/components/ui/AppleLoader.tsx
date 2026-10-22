@@ -11,6 +11,9 @@ export interface AppleLoaderProps {
     playbackRate?: number;
     videoUrl?: string;
     hideText?: boolean;
+    textSize?: number;
+    textBold?: boolean;
+    textOffset?: number;
 }
 
 export const AppleLoader: React.FC<AppleLoaderProps> = ({
@@ -21,6 +24,9 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
     playbackRate,
     videoUrl,
     hideText = false,
+    textSize,
+    textBold,
+    textOffset,
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const { settings } = useAppState();
@@ -50,6 +56,15 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
         ? text 
         : (settings?.appleLoaderPhrase || 'Caricando gli scaffali...');
     const cleanPhrase = displayPhrase ? displayPhrase.replace(/\.+$/, '').trim() : '';
+
+    // Tipografia, grassetto e posizionamento verticale con eventuale sovrapposizione
+    const effectiveTextSize = textSize ?? (settings?.appleLoaderTextSize && settings.appleLoaderTextSize > 0 ? settings.appleLoaderTextSize : 28);
+    const effectiveTextBold = textBold !== undefined 
+        ? textBold 
+        : (settings?.appleLoaderTextBold !== undefined ? settings.appleLoaderTextBold : true);
+    const effectiveTextOffset = textOffset !== undefined 
+        ? textOffset 
+        : (settings?.appleLoaderTextOffset !== undefined ? settings.appleLoaderTextOffset : 16);
 
     // Assicura autoplay su tutti i browser mobili e desktop e applica velocita di riproduzione
     useEffect(() => {
@@ -87,12 +102,25 @@ export const AppleLoader: React.FC<AppleLoaderProps> = ({
                 />
             </div>
 
-            {/* Frase di caricamento elegante (font script brand Ortofrutta Butti) */}
+            {/* Frase di caricamento elegante (font script brand Ortofrutta Butti) con posizionamento/sovrapposizione dinamico */}
             {!hideText && cleanPhrase && (
-                <div className="mt-3.5 sm:mt-4 text-center">
-                    <p className="font-script text-2xl sm:text-3xl font-bold text-nature-950 tracking-wide flex items-center justify-center gap-0.5 drop-shadow-2xs">
+                <div 
+                    className="relative z-10 text-center pointer-events-none transition-all duration-150 px-2"
+                    style={{ marginTop: `${effectiveTextOffset}px` }}
+                >
+                    <p 
+                        className="font-script tracking-wide flex items-center justify-center gap-1 select-none text-nature-950"
+                        style={{ 
+                            fontSize: `${effectiveTextSize}px`,
+                            fontWeight: effectiveTextBold ? 700 : 400,
+                            lineHeight: 1.15,
+                            textShadow: effectiveTextOffset < 0 
+                                ? '0 1px 3px rgba(255, 255, 255, 0.95), 0 2px 8px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.9)' 
+                                : '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                    >
                         <span>{cleanPhrase}</span>
-                        <span className="inline-flex text-emerald-700 tracking-normal font-sans font-bold">
+                        <span className="inline-flex text-emerald-700 tracking-normal font-sans font-bold text-[0.8em]">
                             <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
                             <span className="animate-bounce" style={{ animationDelay: '180ms' }}>.</span>
                             <span className="animate-bounce" style={{ animationDelay: '360ms' }}>.</span>
