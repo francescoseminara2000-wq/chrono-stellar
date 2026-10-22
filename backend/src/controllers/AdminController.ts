@@ -14,15 +14,18 @@ async function notifyClientOfStatusUpdate(order: any, status: string) {
     try {
         const waStatus = whatsAppService.getStatus();
         let whatsAppSent = false;
+        const targetPhone = order.customerPhone || order.user?.phone;
 
-        if (waStatus.isConnected && order.customerPhone) {
-            console.log(`[AdminController] Sending WhatsApp notification for status ${status} to order #${order.id} (${order.customerPhone})`);
+        if (waStatus.isConnected && targetPhone) {
+            console.log(`[AdminController] Sending WhatsApp notification for status ${status} to order #${order.id} (${targetPhone})`);
             try {
-                await whatsAppService.sendOrderNotification(order, status as any);
+                await whatsAppService.sendOrderNotification({ ...order, customerPhone: targetPhone }, status as any);
                 whatsAppSent = true;
             } catch (err) {
                 console.error('[AdminController] WhatsApp notification failed, falling back to email:', err);
             }
+        } else {
+            console.log(`[AdminController] WhatsApp skipped: isConnected=${waStatus.isConnected}, targetPhone=${targetPhone || 'NONE'}`);
         }
 
         if (!whatsAppSent && order.customerEmail) {

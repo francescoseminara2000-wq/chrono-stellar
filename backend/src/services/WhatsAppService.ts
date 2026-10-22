@@ -319,6 +319,20 @@ export class WhatsAppService {
     public async sendMessage(phoneNumber: string, message: string) {
         console.log(`[WhatsApp] Attempting to send message to: ${phoneNumber}`);
 
+        // If not ready flag, perform a quick check to see if puppeteer page has injected WWebJS & Store
+        if (!this.isReady) {
+            try {
+                const isPageReady = await (this.client as any).pupPage?.evaluate(() => {
+                    return typeof (window as any).WWebJS !== 'undefined' && typeof (window as any).Store !== 'undefined';
+                }).catch(() => false);
+
+                if (isPageReady) {
+                    console.log('[WhatsApp] Page confirmed Store and WWebJS are ready, setting isReady = true');
+                    this.isReady = true;
+                }
+            } catch (e) {}
+        }
+
         if (!this.isReady) {
             console.warn('[WhatsApp] Client not ready (isReady = false)');
             throw new Error('WhatsApp client is not ready');
@@ -326,7 +340,7 @@ export class WhatsAppService {
 
         try {
             // formatting: remove non-digits
-            let cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
+            let cleanPhone = (phoneNumber || '').replace(/[^0-9]/g, '');
 
             // Handle Italian numbers logic
             if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
@@ -341,21 +355,21 @@ export class WhatsAppService {
 
             let chatId = `${cleanPhone}@c.us`;
 
-            // Try to validate number with 3s timeout
+            // Validate number via getNumberId (with safe timeout to avoid unhandled rejections)
             try {
-                const getNumberPromise = this.client.getNumberId(cleanPhone);
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout getNumberId')), 3000));
-                const check: any = await Promise.race([getNumberPromise, timeoutPromise]).catch(() => null);
+                const getNumberPromise = this.client.getNumberId(cleanPhone).catch(() => null);
+                const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500));
+                const check: any = await Promise.race([getNumberPromise, timeoutPromise]);
                 if (check && check._serialized) {
                     chatId = check._serialized;
                     console.log(`[WhatsApp] Number validated by WhatsApp API: ${chatId}`);
                 }
             } catch (vErr) {
-                console.warn(`[WhatsApp] Number verification skipped or timed out, sending directly to ${chatId}`);
+                console.warn(`[WhatsApp] Number verification skipped, sending directly to ${chatId}`);
             }
 
-            await this.client.sendMessage(chatId, message);
-            console.log(`[WhatsApp] Message successfully sent to ${chatId}`);
+            const sentResult = await this.client.sendMessage(chatId, message);
+            console.log(`[WhatsApp] Message successfully dispatched to ${chatId}:`, sentResult ? 'OK' : 'EMPTY_RESULT');
             return true;
         } catch (error) {
             console.error('[WhatsApp] Error sending message:', error);
@@ -363,74 +377,89 @@ export class WhatsAppService {
         }
     }
 
-    public async sendOrderNotification(order: any, type: 'CREATED' | 'WEIGHING_COMPLETED' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED') {
-        if (!order.customerPhone) {
-            console.log('[WhatsApp] No customer phone, skipping notification');
-            return;
+    public async sendOrderNotification(order: any, type: string) {
+        const phone = order.customerPhone || order.user?.phone;
+        if (!phone) {
+            console.log(`[WhatsApp] Order #${order.id} has no customer phone, skipping notification`);
+            return false;
         }
 
-        // Fetch settings for templates
-        const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        // Fetch settings for templates safely
+        let settings: any = null;
+        try {
+            settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+        } catch (e) {
+            console.warn('[WhatsApp] Could not load StoreSettings from DB, falling back to built-in templates:', e);
+        }
 
+        const normalizedType = (type || '').toUpperCase();
         let template = '';
-        switch (type) {
+        switch (normalizedType) {
             case 'CREATED':
-                // @ts-ignore
+            case 'PENDING':
                 template = settings?.waTemplateCreated || `Ciao [cliente], grazie per il tuo ordine #[id]! 🍎\n\nLo abbiamo ricevuto e inizieremo a prepararlo a breve.\nTi invieremo un messaggio appena pesati i prodotti freschi con il totale esatto.\n\nRiepilogo:\n[prodotti]`;
                 break;
             case 'WEIGHING_COMPLETED':
-                // @ts-ignore
                 template = settings?.waTemplateWeighing || `Ciao [cliente], il tuo ordine #[id] è pronto! ⚖️\n\nAbbiamo pesato i prodotti freschi.\n💰 *Totale aggiornato: € [totale]*\n\nDettaglio pesatura:\n[prodotti]\n\nPuoi procedere al ritiro o attendere la consegna.`;
                 break;
             case 'OUT_FOR_DELIVERY':
                 if (order.deliveryMethod === 'PICKUP') {
-                    // @ts-ignore
                     template = settings?.waTemplatePickupReady || `Ciao [cliente], il tuo ordine #[id] è pronto per il ritiro in negozio! 🏪\n\nTi aspettiamo negli orari di apertura.\n💰 Totale da pagare: € [totale]`;
                 } else {
-                    // @ts-ignore
                     template = settings?.waTemplateOutForDelivery || `Ciao [cliente], il tuo ordine #[id] è in consegna! 🚚\n\nIl nostro corriere sta arrivando da te.\n📍 Indirizzo: [indirizzo]\n💰 Totale da pagare: € [totale]`;
                 }
                 break;
+            case 'PICKUP_READY':
+                template = settings?.waTemplatePickupReady || `Ciao [cliente], il tuo ordine #[id] è pronto per il ritiro in negozio! 🏪\n\nTi aspettiamo negli orari di apertura.\n💰 Totale da pagare: € [totale]`;
+                break;
             case 'DELIVERED':
-                // @ts-ignore
                 template = settings?.waTemplateDelivered || `Ciao [cliente], ordine #[id] consegnato. Grazie mille! 🥗\n\nSperiamo che i prodotti siano di tuo gradimento.\nAlla prossima! 👋`;
                 break;
             case 'CANCELLED':
-                // @ts-ignore
                 template = settings?.waTemplateCancelled || `Ciao [cliente], ci dispiace informarti che l'ordine #[id] è stato annullato.\nPer maggiori informazioni, non esitare a contattarci.`;
+                break;
+            case 'SCHEDULED':
+                template = settings?.waTemplateScheduled || `Ciao [cliente], la consegna/ritiro del tuo ordine #[id] è programmata per il [data] alle [ora]. A presto! 📅`;
+                break;
+            default:
+                template = `Ciao [cliente], il tuo ordine #[id] è stato aggiornato allo stato: ${type}.\n💰 Totale: € [totale]`;
                 break;
         }
 
         // Prepare products list
         let productsList = '';
-        if (order.items) {
+        if (order.items && Array.isArray(order.items)) {
             order.items.forEach((item: any) => {
-                if (type === 'WEIGHING_COMPLETED') {
-                    if (item.product.isVariableWeight) {
-                        const chosenUnit = item.orderedUnit || item.product.unitType;
+                const prodName = item.product?.name || item.name || 'Prodotto';
+                if (normalizedType === 'WEIGHING_COMPLETED') {
+                    if (item.product?.isVariableWeight) {
+                        const chosenUnit = item.orderedUnit || item.product?.unitType;
                         const unitStr = chosenUnit === 'PZ' ? 'pz' : 'kg';
-                        productsList += `- ${item.product.name}: ${item.quantityFulfilled}kg (Ord: ${item.quantityOrdered} ${unitStr})\n`;
+                        productsList += `- ${prodName}: ${item.quantityFulfilled ?? item.quantityOrdered}kg (Ord: ${item.quantityOrdered} ${unitStr})\n`;
                     } else {
-                        const chosenUnit = item.orderedUnit || item.product.unitType;
-                        const unitText = chosenUnit === 'BOX' ? 'box' : chosenUnit.toLowerCase();
-                        productsList += `- ${item.product.name}: ${item.quantityFulfilled} ${unitText}\n`;
+                        const chosenUnit = item.orderedUnit || item.product?.unitType;
+                        const unitText = chosenUnit === 'BOX' ? 'box' : (chosenUnit ? chosenUnit.toLowerCase() : 'pz');
+                        productsList += `- ${prodName}: ${item.quantityFulfilled ?? item.quantityOrdered} ${unitText}\n`;
                     }
                 } else {
-                    productsList += `- ${item.quantityOrdered}x ${item.product.name}\n`;
+                    productsList += `- ${item.quantityOrdered}x ${prodName}\n`;
                 }
             });
         }
 
-        const total = (order.finalTotal ? order.finalTotal / 100 : (order.estimatedTotal / 100)).toFixed(2);
+        const total = (order.finalTotal ? order.finalTotal / 100 : (order.estimatedTotal ? order.estimatedTotal / 100 : 0)).toFixed(2);
 
         // Replace placeholders
         let message = template
             .replace(/\[id\]/g, order.id.toString())
-            .replace(/\[cliente\]/g, order.customerName || 'Cliente')
+            .replace(/\[cliente\]/g, order.customerName || order.user?.name || 'Cliente')
             .replace(/\[totale\]/g, total)
             .replace(/\[prodotti\]/g, productsList.trim())
             .replace(/\[indirizzo\]/g, order.shippingAddress || 'Ritiro in negozio')
-            .replace(/\[note\]/g, order.deliveryNotes || '');
+            .replace(/\[note\]/g, order.deliveryNotes || '')
+            .replace(/\[data\]/g, order.scheduledDate || '')
+            .replace(/\[ora\]/g, order.scheduledTime || '')
+            .replace(/\[metodo\]/g, order.deliveryMethod === 'PICKUP' ? 'Ritiro in negozio' : 'Consegna a domicilio');
 
         if (order.approvalToken) {
             const domain = process.env.PUBLIC_URL || 'https://ortofruttabutti.it';
@@ -446,6 +475,6 @@ export class WhatsAppService {
         // Add Footer
         message += `\n\n_${settings?.siteName || 'Ortofrutta'}_`;
 
-        return this.sendMessage(order.customerPhone, message);
+        return this.sendMessage(phone, message);
     }
 }
