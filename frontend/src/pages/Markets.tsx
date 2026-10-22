@@ -50,16 +50,48 @@ export const Markets: React.FC = () => {
             <div className="max-w-6xl mx-auto space-y-12">
 
                 {/* Hero Header */}
-                <div className="text-center space-y-4 max-w-2xl mx-auto animate-in fade-in duration-500">
-                    <span className="px-3 py-1 bg-emerald-100 text-emerald-850 rounded-full text-xs font-black uppercase tracking-widest inline-flex items-center gap-1.5 shadow-xs">
-                        📍 Mercati Rionali
-                    </span>
-                    <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight leading-none">
-                        Ortofrutta <span className="text-emerald-700">Itinerante</span>
-                    </h1>
-                    <p className="text-gray-500 text-sm md:text-base font-medium">
-                        Oltre al nostro punto vendita principale a Sirone, portiamo la freschezza e la qualità dei nostri prodotti selezionati nei mercati rionali della zona. Scopri dove trovarci giorno per giorno.
-                    </p>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8 lg:gap-12 py-2 animate-in fade-in duration-500">
+                    <div className="text-center md:text-left space-y-4 max-w-xl">
+                        <span className="px-3.5 py-1 bg-emerald-100 text-emerald-850 rounded-full text-xs font-black uppercase tracking-widest inline-flex items-center gap-1.5 shadow-xs">
+                            📍 Mercati Rionali
+                        </span>
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-tight">
+                            Ortofrutta <span className="text-emerald-700">Itinerante</span>
+                        </h1>
+                        <p className="text-gray-500 text-sm md:text-base font-medium leading-relaxed">
+                            Oltre al nostro punto vendita principale a Sirone, portiamo la freschezza e la qualità dei nostri prodotti selezionati nei mercati rionali della zona. Scopri dove trovarci giorno per giorno.
+                        </p>
+
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-1">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-emerald-100 text-xs font-bold text-emerald-800 shadow-xs">
+                                🥬 Freschezza a Km 0
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-emerald-100 text-xs font-bold text-emerald-800 shadow-xs">
+                                🚚 Dal campo al tuo quartiere
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* 3D Ape Illustration */}
+                    <motion.div 
+                        animate={{ y: [0, -8, 0] }}
+                        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                        className="relative flex-shrink-0 flex items-center justify-center"
+                    >
+                        {/* Soft Ambient Glow */}
+                        <div className="absolute w-56 h-56 sm:w-72 sm:h-72 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none -z-10" />
+
+                        <div className="relative group cursor-pointer">
+                            <img 
+                                src="/market-van.jpg" 
+                                alt="Ortofrutta Itinerante Ape Car" 
+                                className="w-64 sm:w-72 md:w-80 lg:w-96 h-auto object-contain mix-blend-multiply drop-shadow-md transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute -bottom-1 right-2 sm:right-6 bg-white/95 backdrop-blur-md border border-emerald-100 shadow-md px-3 py-1 rounded-full text-[11px] font-black text-emerald-800 flex items-center gap-1.5 pointer-events-none">
+                                <span>🛵</span> Bottega su 3 ruote
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
 
                 {loading ? (
