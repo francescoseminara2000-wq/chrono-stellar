@@ -206,9 +206,22 @@ export class AdminController {
             whatsAppService.log('info', `[AdminController] Manual WhatsApp trigger for Order #${order.id} with status "${targetStatus}"`);
             await whatsAppService.sendOrderNotification({ ...order, customerPhone: targetPhone }, targetStatus);
 
+            const updatedOrder = await prisma.order.findUnique({
+                where: { id: Number(id) },
+                include: {
+                    user: true,
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            });
+
             res.json({
                 success: true,
                 message: `Notifica WhatsApp inviata a ${targetPhone}!`,
+                order: updatedOrder,
                 logs: whatsAppService.getLogs().slice(0, 5)
             });
         } catch (error: any) {

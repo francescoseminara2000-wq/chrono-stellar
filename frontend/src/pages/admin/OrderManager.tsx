@@ -50,6 +50,7 @@ export const OrderManager = () => {
     const [isSavingEdits, setIsSavingEdits] = useState(false);
     const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'customer'>('items');
     const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
+    const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
     const [weighedItemIds, setWeighedItemIds] = useState<number[]>([]);
     const [weighingItemModal, setWeighingItemModal] = useState<{
         isOpen: boolean;
@@ -330,13 +331,7 @@ export const OrderManager = () => {
                 if (selectedOrder) {
                     const freshSelected = data.find((o: any) => o.id === selectedOrder.id);
                     if (freshSelected) {
-                        if (
-                            freshSelected.status !== selectedOrder.status ||
-                            (freshSelected as any).approvalStatus !== (selectedOrder as any).approvalStatus ||
-                            (freshSelected as any).customerApprovedAt !== (selectedOrder as any).customerApprovedAt
-                        ) {
-                            setSelectedOrder(freshSelected);
-                        }
+                        setSelectedOrder(freshSelected);
                     }
                 }
             })
@@ -603,6 +598,41 @@ export const OrderManager = () => {
         } catch (err) {
             console.error(err);
             addToast('Errore durante l\'invio del sollecito.', 'error');
+        }
+    };
+
+    const handleSendOrderWhatsApp = async (orderId: number) => {
+        try {
+            setIsSendingWhatsApp(true);
+            const res = await fetch(`${API_URL}/api/admin/orders/${orderId}/notify-whatsapp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: selectedOrder?.status })
+            });
+            const resData = await res.json();
+            if (res.ok) {
+                addRichToast(
+                    `📲 Notifica WhatsApp Inviata!`,
+                    `• Ordine: #${orderId}\n• Notifica presa in carico con tracciamento consegna e fallback email attivo.`,
+                    'success',
+                    6000
+                );
+                if (resData.order) {
+                    setSelectedOrder(resData.order);
+                    setOrders(orders.map(o => o.id === resData.order.id ? resData.order : o));
+                }
+                fetchOrders(true);
+            } else {
+                addToast(resData.error || 'Errore durante l\'invio della notifica WhatsApp', 'error');
+            }
+        } catch (e: any) {
+            console.error(e);
+            addToast('Errore di connessione al server', 'error');
+        } finally {
+            setIsSendingWhatsApp(false);
         }
     };
 
@@ -1453,15 +1483,26 @@ export const OrderManager = () => {
                                     <span>👤</span> Dati Cliente
                                 </span>
                                 {selectedOrder.customerPhone && (
-                                    <a
-                                        href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] rounded-xl flex items-center gap-1 shadow-2xs transition-all"
-                                        title="Chatta su WhatsApp"
-                                    >
-                                        <MessageCircle size={13} /> WhatsApp
-                                    </a>
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            disabled={isSendingWhatsApp}
+                                            onClick={() => handleSendOrderWhatsApp(selectedOrder.id)}
+                                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 text-white font-black text-[11px] rounded-xl flex items-center gap-1 shadow-2xs transition-all cursor-pointer"
+                                            title="Invia la notifica ufficiale dell'ordine con monitoraggio delle spunte e fallback email"
+                                        >
+                                            <MessageCircle size={13} /> {isSendingWhatsApp ? 'Invio...' : 'Invia Notifica'}
+                                        </button>
+                                        <a
+                                            href={`https://wa.me/${selectedOrder.customerPhone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[11px] rounded-xl flex items-center gap-1 transition-all"
+                                            title="Apri chat manuale su WhatsApp Web"
+                                        >
+                                            💬 Chat
+                                        </a>
+                                    </div>
                                 )}
                             </div>
 
@@ -1489,10 +1530,10 @@ export const OrderManager = () => {
                                     </div>
                                 )}
 
-                                {/* Status Notifica Recapito WhatsApp / Email (Discreto) */}
+                                {/* Status Notifica Recapito WhatsApp / Email (Discreto & Interattivo) */}
                                 <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">Recapito</span>
-                                    <div className="text-right">
+                                    <div className="text-right flex items-center gap-1.5 justify-end">
                                         {selectedOrder.notificationStatus === 'WHATSAPP_READ' ? (
                                             <span 
                                                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200" 
@@ -1529,7 +1570,29 @@ export const OrderManager = () => {
                                                 <AlertCircle size={11} className="text-rose-600" /> Non Recapitato
                                             </span>
                                         ) : (
-                                            <span className="text-[10px] font-semibold text-gray-400">Nessun invio</span>
+                                            <button
+                                                type="button"
+                                                disabled={isSendingWhatsApp}
+                                                onClick={() => handleSendOrderWhatsApp(selectedOrder.id)}
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 cursor-pointer disabled:opacity-50"
+                                            >
+                                                <span className="text-gray-400">Nessun invio</span>
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black rounded-md transition-colors">
+                                                    {isSendingWhatsApp ? 'Invio...' : 'Invia ora 📲'}
+                                                </span>
+                                            </button>
+                                        )}
+
+                                        {selectedOrder.notificationStatus && selectedOrder.notificationStatus !== 'NONE' && (
+                                            <button
+                                                type="button"
+                                                disabled={isSendingWhatsApp}
+                                                onClick={() => handleSendOrderWhatsApp(selectedOrder.id)}
+                                                className="text-gray-400 hover:text-gray-700 p-0.5 rounded cursor-pointer disabled:opacity-50"
+                                                title="Reinvia notifica ordine"
+                                            >
+                                                <RotateCcw size={11} className={isSendingWhatsApp ? 'animate-spin' : ''} />
+                                            </button>
                                         )}
                                     </div>
                                 </div>
