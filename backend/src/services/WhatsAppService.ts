@@ -102,7 +102,9 @@ export class WhatsAppService {
                 dataPath: path.join(process.cwd(), '.wwebjs_auth')
             }),
             webVersionCache: {
-                type: 'local'
+                type: 'remote',
+                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/{version}.html',
+                strict: false
             },
             userAgent: modernChromeUA,
             puppeteer: {
@@ -345,6 +347,83 @@ export class WhatsAppService {
             this.isReady = false;
             this.isAuthenticated = false;
         });
+    }
+
+    public async checkOrPromoteReady(): Promise<{ isConnected: boolean; isAuthenticated: boolean; loadingPercent: number | null; qrCode: string | null; diagnostic?: any }> {
+        if (!this.client) return this.getStatus();
+
+        try {
+            const state = await this.client.getState().catch(() => null);
+            if (state) {
+                this.log('info', `[WhatsAppService] client.getState() = "${state}"`);
+            }
+
+            if (state === 'CONNECTED') {
+                this.isAuthenticated = true;
+                this.qrCode = null;
+            }
+
+            if ((this.client as any).pupPage) {
+                const info = await (this.client as any).pupPage.evaluate(() => {
+                    const storeObj = (window as any).Store;
+                    const wwebjsObj = (window as any).WWebJS;
+                    const authState = (window as any).AuthStore?.AppState?.state;
+                    const progressEl = document.querySelector('progress, [role="progressbar"]');
+                    const progressVal = progressEl?.getAttribute('value') || progressEl?.textContent || null;
+                    const modalEl = document.querySelector('div[data-animate-modal-popup="true"]');
+                    const chatListEl = document.querySelector('[data-testid="chat-list"], [aria-label="Chat list"], #pane-side');
+
+                    return {
+                        hasStore: Boolean(storeObj),
+                        hasWWebJS: Boolean(wwebjsObj),
+                        hasChatList: Boolean(chatListEl),
+                        authState: authState || null,
+                        title: document.title,
+                        progress: progressVal,
+                        modalText: modalEl?.textContent?.slice(0, 150) || null
+                    };
+                }).catch((e: any) => ({ error: e?.message }));
+
+                this.log('info', `[WhatsAppService] Page diagnostic: hasStore=${info.hasStore}, hasWWebJS=${info.hasWWebJS}, hasChatList=${info.hasChatList}, title="${info.title}", progress="${info.progress || 'none'}", modal="${info.modalText || 'none'}"`);
+
+                if (info.hasStore && info.hasWWebJS) {
+                    if (!this.isReady) {
+                        this.log('info', '[WhatsAppService] Store & WWebJS detected! Setting isReady = true.');
+                        this.isReady = true;
+                        this.isAuthenticated = true;
+                        this.loadingPercent = null;
+                        this.qrCode = null;
+                        this.startHeartbeat();
+                    }
+                } else if (info.hasChatList || state === 'CONNECTED') {
+                    this.log('info', '[WhatsAppService] Chat list is active in DOM! Triggering Store recovery attempt...');
+                    try {
+                        const storeInjected = await (this.client as any).pupPage.evaluate(() => {
+                            if (typeof (window as any).Store === 'undefined' && typeof (window as any).require === 'function') {
+                                try {
+                                    (window as any).Store = Object.assign({}, (window as any).require('WAWebCollections'));
+                                } catch (e) {}
+                            }
+                            return typeof (window as any).Store !== 'undefined';
+                        }).catch(() => false);
+
+                        if (storeInjected) {
+                            this.log('info', '[WhatsAppService] Manual Store recovery succeeded! Setting isReady = true.');
+                            this.isReady = true;
+                            this.isAuthenticated = true;
+                            this.qrCode = null;
+                            this.startHeartbeat();
+                        }
+                    } catch (injErr: any) {
+                        this.log('warn', `[WhatsAppService] Store recovery failed: ${injErr?.message}`);
+                    }
+                }
+            }
+        } catch (err: any) {
+            this.log('warn', `[WhatsAppService] checkOrPromoteReady error: ${err?.message || err}`);
+        }
+
+        return this.getStatus();
     }
 
     public getStatus() {

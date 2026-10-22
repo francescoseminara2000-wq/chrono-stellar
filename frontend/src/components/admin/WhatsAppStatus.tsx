@@ -232,21 +232,38 @@ export const WhatsAppStatus = () => {
                                     <p className="text-xs text-amber-700 font-semibold mb-2">
                                         Sincronizzazione in corso... {status.loadingPercent ? `(${status.loadingPercent}%)` : ''}
                                     </p>
-                                    <p className="text-[11px] text-gray-400 max-w-[240px] mx-auto mb-3">
-                                        Lo smartphone ha completato il pairing. Il server sta caricando la sessione nel browser headless.
+                                    <p className="text-[11px] text-gray-400 max-w-[260px] mx-auto mb-3">
+                                        Lo smartphone ha completato il pairing. Se il processo impiega più di 1 minuto, puoi forzare la verifica o resettare la sessione.
                                     </p>
-                                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mb-3">
+                                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mb-4">
                                         <div 
                                             className="bg-amber-500 h-full transition-all duration-300 rounded-full"
-                                            style={{ width: `${status.loadingPercent || 70}%` }}
+                                            style={{ width: `${status.loadingPercent || 85}%` }}
                                         ></div>
                                     </div>
-                                    <button
-                                        onClick={fetchStatus}
-                                        className="text-xs text-gray-600 hover:text-green-600 font-bold underline transition-colors"
-                                    >
-                                        Verifica adesso lo stato
-                                    </button>
+
+                                    <div className="flex flex-col gap-2 max-w-[280px] mx-auto">
+                                        <button
+                                            onClick={fetchStatus}
+                                            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                                        >
+                                            <CheckCircle2 size={13} /> Verifica e Sblocca Connessione
+                                        </button>
+                                        <button
+                                            onClick={() => { setActiveTab('logs'); fetchLogs(); }}
+                                            className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                                        >
+                                            <Terminal size={13} /> Guarda i Log in Tempo Reale
+                                        </button>
+                                        <button
+                                            onClick={handleReset}
+                                            disabled={isResetting}
+                                            className="w-full py-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 text-[11px] font-semibold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                        >
+                                            <RefreshCw size={11} className={isResetting ? "animate-spin" : ""} />
+                                            {isResetting ? 'Reset in corso...' : 'Annulla e rigenera QR Code'}
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="text-center w-full">
