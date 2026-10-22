@@ -547,7 +547,7 @@ export const OrderManager = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ status, adminNotes: editNotes })
+                body: JSON.stringify({ status, adminNotes: editNotes, forceNotify: true })
             });
 
             if (res.ok) {

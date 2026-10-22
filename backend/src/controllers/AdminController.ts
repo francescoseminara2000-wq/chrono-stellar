@@ -16,24 +16,27 @@ async function notifyClientOfStatusUpdate(order: any, status: string) {
         let whatsAppSent = false;
         const targetPhone = order.customerPhone || order.user?.phone;
 
+        whatsAppService.log('info', `[AdminController] notifyClientOfStatusUpdate called for Order #${order.id}: status="${status}", isConnected=${waStatus.isConnected}, targetPhone="${targetPhone || 'NONE'}"`);
+
         if (waStatus.isConnected && targetPhone) {
-            console.log(`[AdminController] Sending WhatsApp notification for status ${status} to order #${order.id} (${targetPhone})`);
+            whatsAppService.log('info', `[AdminController] Invoking sendOrderNotification for #${order.id} to ${targetPhone}...`);
             try {
                 await whatsAppService.sendOrderNotification({ ...order, customerPhone: targetPhone }, status as any);
                 whatsAppSent = true;
-            } catch (err) {
-                console.error('[AdminController] WhatsApp notification failed, falling back to email:', err);
+                whatsAppService.log('info', `[AdminController] WhatsApp notification succeeded for #${order.id}!`);
+            } catch (err: any) {
+                whatsAppService.log('error', `[AdminController] WhatsApp notification failed for #${order.id}: ${err?.message || err}`);
             }
         } else {
-            console.log(`[AdminController] WhatsApp skipped: isConnected=${waStatus.isConnected}, targetPhone=${targetPhone || 'NONE'}`);
+            whatsAppService.log('warn', `[AdminController] WhatsApp NOT sent for #${order.id}: isConnected=${waStatus.isConnected}, targetPhone=${targetPhone || 'NONE'}`);
         }
 
         if (!whatsAppSent && order.customerEmail) {
             console.log(`[AdminController] Sending Email notification for status ${status} to order #${order.id} (${order.customerEmail})`);
             await emailService.sendOrderStatusUpdateEmail(order.customerEmail, order, status);
         }
-    } catch (err) {
-        console.error('Failed to notify client of status update:', err);
+    } catch (err: any) {
+        whatsAppService.log('error', `[AdminController] Failed to notify client of status update: ${err?.message || err}`);
     }
 }
 
@@ -115,7 +118,7 @@ export class AdminController {
         console.log('[AdminController] updateStatus request:', req.params, req.body);
         try {
             const { id } = req.params;
-            const { status, adminNotes } = req.body;
+            const { status, adminNotes, forceNotify } = req.body;
             console.log(`[AdminController] Calling adminService.updateStatus(${id}, ${status})`);
 
             const currentOrder = await prisma.order.findUnique({ where: { id: Number(id) } });
@@ -123,26 +126,29 @@ export class AdminController {
                 return res.status(404).json({ error: 'Ordine non trovato' });
             }
             const isStatusChanged = status && currentOrder.status !== status;
+            whatsAppService.log('info', `[AdminController] Order #${id} updateStatus: currentStatus="${currentOrder.status}", targetStatus="${status}", isChanged=${isStatusChanged}, forceNotify=${Boolean(forceNotify)}`);
 
             const order = await adminService.updateStatus(Number(id), status || currentOrder.status, adminNotes);
             console.log('[AdminController] Order updated successfully:', order.id);
 
-            if (isStatusChanged) {
-                // Auto-send WhatsApp/Email notification
-                await notifyClientOfStatusUpdate(order, status);
+            // Auto-send WhatsApp/Email notification if status changed OR if forced
+            if (isStatusChanged || forceNotify) {
+                await notifyClientOfStatusUpdate(order, status || currentOrder.status);
+            } else {
+                whatsAppService.log('info', `[AdminController] Order #${id} notification skipped because status did not change and forceNotify was not set.`);
+            }
 
-                // Push Notification to customer
-                if (order.userId) {
-                    try {
-                        let pushBody = `Il tuo ordine #${order.id} è ora in stato ${status}.`;
-                        if (status === 'OUT_FOR_DELIVERY') pushBody = `Il tuo ordine #${order.id} è in consegna! 🚚`;
-                        if (status === 'DELIVERED') pushBody = `Il tuo ordine #${order.id} è stato consegnato. Grazie!`;
-                        if (status === 'CANCELLED') pushBody = `Il tuo ordine #${order.id} è stato annullato.`;
+            // Push Notification to customer
+            if (order.userId && (isStatusChanged || forceNotify)) {
+                try {
+                    let pushBody = `Il tuo ordine #${order.id} è ora in stato ${status || order.status}.`;
+                    if (status === 'OUT_FOR_DELIVERY') pushBody = `Il tuo ordine #${order.id} è in consegna! 🚚`;
+                    if (status === 'DELIVERED') pushBody = `Il tuo ordine #${order.id} è stato consegnato. Grazie!`;
+                    if (status === 'CANCELLED') pushBody = `Il tuo ordine #${order.id} è stato annullato.`;
 
-                        await pushService.sendToUser(order.userId, 'Aggiornamento Ordine', pushBody, `/orders?id=${order.id}`);
-                    } catch (pushError) {
-                        console.error('[AdminController] Push notification failed:', pushError);
-                    }
+                    await pushService.sendToUser(order.userId, 'Aggiornamento Ordine', pushBody, `/orders?id=${order.id}`);
+                } catch (pushError) {
+                    console.error('[AdminController] Push notification failed:', pushError);
                 }
             }
 
@@ -150,6 +156,50 @@ export class AdminController {
         } catch (error: any) {
             console.error('[AdminController] Error in updateStatus:', error);
             res.status(400).json({ error: error.message, stack: error.stack });
+        }
+    }
+
+    async notifyWhatsApp(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const { status } = req.body;
+            const order: any = await prisma.order.findUnique({
+                where: { id: Number(id) },
+                include: {
+                    user: true,
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            });
+
+            if (!order) {
+                return res.status(404).json({ error: 'Ordine non trovato' });
+            }
+
+            const targetPhone = order.customerPhone || order.user?.phone;
+            if (!targetPhone) {
+                return res.status(400).json({ error: 'Nessun numero di telefono associato all\'ordine o al cliente' });
+            }
+
+            const targetStatus = status || order.status;
+            whatsAppService.log('info', `[AdminController] Manual WhatsApp trigger for Order #${order.id} with status "${targetStatus}"`);
+            await whatsAppService.sendOrderNotification({ ...order, customerPhone: targetPhone }, targetStatus);
+
+            res.json({
+                success: true,
+                message: `Notifica WhatsApp inviata a ${targetPhone}!`,
+                logs: whatsAppService.getLogs().slice(0, 5)
+            });
+        } catch (error: any) {
+            whatsAppService.log('error', `[AdminController] Manual notifyWhatsApp failed for Order #${req.params.id}: ${error?.message || error}`);
+            res.status(500).json({
+                success: false,
+                error: error.message || 'Errore durante l\'invio della notifica WhatsApp',
+                logs: whatsAppService.getLogs().slice(0, 5)
+            });
         }
     }
 

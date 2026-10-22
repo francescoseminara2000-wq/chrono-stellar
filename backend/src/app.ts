@@ -87,6 +87,7 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, (req, res) => stats
 app.patch('/api/admin/orders/:id/fulfill', authenticateToken, requireAdmin, (req, res) => adminController.fulfill(req, res));
 app.post('/api/admin/orders/:id/resend-approval', authenticateToken, requireAdmin, (req, res) => adminController.resendApproval(req, res));
 app.patch('/api/admin/orders/:id/status', authenticateToken, requireAdmin, (req, res) => adminController.updateStatus(req, res));
+app.post('/api/admin/orders/:id/notify-whatsapp', authenticateToken, requireAdmin, (req, res) => adminController.notifyWhatsApp(req, res));
 app.get('/api/admin/deliveries/map', authenticateToken, requireAdmin, (req, res) => adminController.getDeliveryMap(req, res));
 
 // Admin - Customers
@@ -113,6 +114,8 @@ app.get('/api/admin/logistics/dashboard', authenticateToken, requireAdmin, (req,
 import { WhatsAppController } from './controllers/WhatsAppController';
 const whatsAppController = new WhatsAppController();
 app.get('/api/admin/whatsapp/status', authenticateToken, requireAdmin, (req, res) => whatsAppController.getStatus(req, res));
+app.get('/api/admin/whatsapp/logs', authenticateToken, requireAdmin, (req, res) => whatsAppController.getLogs(req, res));
+app.post('/api/admin/whatsapp/test-send', authenticateToken, requireAdmin, (req, res) => whatsAppController.testSend(req, res));
 app.post('/api/admin/whatsapp/reset', authenticateToken, requireAdmin, (req, res) => whatsAppController.reset(req, res));
 
 // Settings (Global Store Info)

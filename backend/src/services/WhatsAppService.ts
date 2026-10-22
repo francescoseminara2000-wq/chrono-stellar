@@ -4,6 +4,12 @@ import qrcode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 
+export interface WhatsAppLogEntry {
+    timestamp: string;
+    level: 'info' | 'warn' | 'error';
+    message: string;
+}
+
 export class WhatsAppService {
     private client!: Client;
     private qrCode: string | null = null;
@@ -12,9 +18,41 @@ export class WhatsAppService {
     private loadingPercent: number | null = null;
     private pingInterval: any = null;
     private isReconnecting: boolean = false;
+    private logBuffer: WhatsAppLogEntry[] = [];
     private static instance: WhatsAppService;
 
+    public log(level: 'info' | 'warn' | 'error', message: string, meta?: any) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('it-IT');
+        const metaStr = meta ? ` ${typeof meta === 'object' ? JSON.stringify(meta) : meta}` : '';
+        const fullMsg = `${message}${metaStr}`;
+
+        if (level === 'error') {
+            console.error(`[${timeStr}] [WhatsApp] ❌ ${fullMsg}`);
+        } else if (level === 'warn') {
+            console.warn(`[${timeStr}] [WhatsApp] ⚠️ ${fullMsg}`);
+        } else {
+            console.log(`[${timeStr}] [WhatsApp] ℹ️ ${fullMsg}`);
+        }
+
+        this.logBuffer.unshift({ timestamp: timeStr, level, message: fullMsg });
+        if (this.logBuffer.length > 250) {
+            this.logBuffer.pop();
+        }
+
+        try {
+            const logsDir = path.join(process.cwd(), 'logs');
+            if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+            fs.appendFileSync(path.join(logsDir, 'whatsapp.log'), `[${now.toISOString()}] [${level.toUpperCase()}] ${fullMsg}\n`);
+        } catch (e) {}
+    }
+
+    public getLogs(): WhatsAppLogEntry[] {
+        return this.logBuffer;
+    }
+
     private constructor() {
+        this.log('info', 'WhatsAppService instance initializing...');
         this.createClient();
         this.setupExitHandlers();
     }
@@ -223,11 +261,11 @@ export class WhatsAppService {
 
     private initialize() {
         this.client.on('qr', async (qr) => {
-            console.log('[WhatsApp] QR code received and generated');
+            this.log('info', 'QR code generated and waiting for mobile scan');
             try {
                 this.qrCode = await qrcode.toDataURL(qr);
-            } catch (err) {
-                console.error('[WhatsApp] Error converting QR to data URL:', err);
+            } catch (err: any) {
+                this.log('error', 'Error converting QR to data URL:', err?.message || err);
             }
             this.isReady = false;
             this.isAuthenticated = false;
@@ -235,12 +273,11 @@ export class WhatsAppService {
         });
 
         this.client.on('authenticated', async () => {
-            console.log('[WhatsApp] Authenticated successfully with mobile device!');
-            // Immediately clear the QR code so the UI doesn't keep showing it after scan
+            this.log('info', 'Authenticated successfully with mobile device!');
             this.qrCode = null;
             this.isAuthenticated = true;
 
-            // Fast-track readiness check: check getState() while waiting for Store injection
+            // Check page readiness in background
             let checks = 0;
             const authCheckInterval = setInterval(async () => {
                 checks++;
@@ -249,32 +286,36 @@ export class WhatsAppService {
                     return;
                 }
                 try {
-                    const state: any = await this.client.getState().catch(() => null);
-                    if (state === 'CONNECTED') {
-                        console.log('[WhatsApp] Connection state confirmed as CONNECTED via post-auth check!');
+                    const isPageReady = await (this.client as any).pupPage?.evaluate(() => {
+                        return typeof (window as any).WWebJS !== 'undefined' && typeof (window as any).Store !== 'undefined';
+                    }).catch(() => false);
+
+                    if (isPageReady) {
+                        this.log('info', 'Puppeteer page confirmed Store and WWebJS are fully injected!');
                         this.isReady = true;
                         this.isAuthenticated = true;
                         this.qrCode = null;
                         this.startHeartbeat();
                         clearInterval(authCheckInterval);
+                        return;
                     }
                 } catch (e) {}
 
-                if (checks >= 25) { // 25 * 1.5s = ~37s
+                if (checks >= 30) {
                     clearInterval(authCheckInterval);
                 }
             }, 1500);
         });
 
         this.client.on('loading_screen', (percent: number, message: string) => {
-            console.log(`[WhatsApp] Loading screen: ${percent}% - ${message}`);
+            this.log('info', `Loading screen progress: ${percent}% - ${message}`);
             this.qrCode = null;
             this.isAuthenticated = true;
             this.loadingPercent = percent;
         });
 
         this.client.on('ready', () => {
-            console.log('[WhatsApp] Client is READY and fully connected!');
+            this.log('info', 'Client emitted READY event! WhatsApp is fully connected and ready to send messages.');
             this.isReady = true;
             this.isAuthenticated = true;
             this.loadingPercent = null;
@@ -282,26 +323,25 @@ export class WhatsAppService {
             this.startHeartbeat();
         });
 
-        this.client.on('auth_failure', msg => {
-            console.error('[WhatsApp] Auth failure:', msg);
+        this.client.on('auth_failure', (msg: any) => {
+            this.log('error', `Authentication failure: ${JSON.stringify(msg)}`);
             this.isReady = false;
             this.isAuthenticated = false;
             this.loadingPercent = null;
         });
 
         this.client.on('disconnected', (reason: any) => {
-            console.log('[WhatsApp] Client disconnected:', reason);
+            this.log('warn', `Client disconnected. Reason: ${reason}`);
             this.isReady = false;
             this.isAuthenticated = false;
             this.loadingPercent = null;
-            // Ignore transient navigation events
             if (reason !== 'NAVIGATION') {
                 this.reconnect();
             }
         });
 
-        this.client.initialize().catch(err => {
-            console.error('[WhatsApp] Failed to initialize client:', err);
+        this.client.initialize().catch((err: any) => {
+            this.log('error', `Failed to initialize client: ${err?.message || err}`);
             this.isReady = false;
             this.isAuthenticated = false;
         });
@@ -316,10 +356,10 @@ export class WhatsAppService {
         };
     }
 
-    public async sendMessage(phoneNumber: string, message: string) {
-        console.log(`[WhatsApp] Attempting to send message to: ${phoneNumber}`);
+    public async sendMessage(phoneNumber: string, message: string): Promise<any> {
+        this.log('info', `sendMessage requested for number: "${phoneNumber}"`);
 
-        // If not ready flag, perform a quick check to see if puppeteer page has injected WWebJS & Store
+        // Check if puppeteer page has injected WWebJS & Store
         if (!this.isReady) {
             try {
                 const isPageReady = await (this.client as any).pupPage?.evaluate(() => {
@@ -327,60 +367,80 @@ export class WhatsAppService {
                 }).catch(() => false);
 
                 if (isPageReady) {
-                    console.log('[WhatsApp] Page confirmed Store and WWebJS are ready, setting isReady = true');
+                    this.log('info', 'Page Store/WWebJS verified online on on-demand check');
                     this.isReady = true;
                 }
-            } catch (e) {}
+            } catch (e: any) {
+                this.log('warn', `On-demand page check failed: ${e?.message}`);
+            }
         }
 
         if (!this.isReady) {
-            console.warn('[WhatsApp] Client not ready (isReady = false)');
-            throw new Error('WhatsApp client is not ready');
+            const errMsg = `WhatsApp client not ready (isReady=false, isAuthenticated=${this.isAuthenticated})`;
+            this.log('warn', errMsg);
+            throw new Error(errMsg);
         }
 
         try {
-            // formatting: remove non-digits
             let cleanPhone = (phoneNumber || '').replace(/[^0-9]/g, '');
 
-            // Handle Italian numbers logic
             if (cleanPhone.length === 10 && cleanPhone.startsWith('3')) {
                 cleanPhone = '39' + cleanPhone;
             } else if (cleanPhone.startsWith('0039')) {
                 cleanPhone = cleanPhone.substring(2);
             } else if (cleanPhone.length === 12 && cleanPhone.startsWith('393')) {
-                // Already valid Italian international format 393XXXXXXXXX
+                // Valid Italian international number
             }
 
-            console.log(`[WhatsApp] Formatted phone number: ${cleanPhone}`);
+            this.log('info', `Formatted phone number: ${phoneNumber} -> ${cleanPhone}`);
 
             let chatId = `${cleanPhone}@c.us`;
 
-            // Validate number via getNumberId (with safe timeout to avoid unhandled rejections)
+            // Validate number via getNumberId with timeout
             try {
-                const getNumberPromise = this.client.getNumberId(cleanPhone).catch(() => null);
+                const getNumberPromise = this.client.getNumberId(cleanPhone).catch((e) => {
+                    this.log('warn', `getNumberId error: ${e?.message}`);
+                    return null;
+                });
                 const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500));
                 const check: any = await Promise.race([getNumberPromise, timeoutPromise]);
                 if (check && check._serialized) {
                     chatId = check._serialized;
-                    console.log(`[WhatsApp] Number validated by WhatsApp API: ${chatId}`);
+                    this.log('info', `WhatsApp API verified number: ${chatId}`);
+                } else {
+                    this.log('info', `Verification returned null/timeout, sending directly to ${chatId}`);
                 }
-            } catch (vErr) {
-                console.warn(`[WhatsApp] Number verification skipped, sending directly to ${chatId}`);
+            } catch (vErr: any) {
+                this.log('warn', `Number verification exception: ${vErr?.message}`);
             }
 
+            this.log('info', `Calling client.sendMessage to ${chatId}... (Length: ${message.length} chars)`);
             const sentResult = await this.client.sendMessage(chatId, message);
-            console.log(`[WhatsApp] Message successfully dispatched to ${chatId}:`, sentResult ? 'OK' : 'EMPTY_RESULT');
-            return true;
-        } catch (error) {
-            console.error('[WhatsApp] Error sending message:', error);
+            
+            if (sentResult) {
+                this.log('info', `Message successfully sent to ${chatId}! ID: ${sentResult.id?._serialized || 'OK'}`);
+            } else {
+                this.log('warn', `client.sendMessage returned null or undefined for ${chatId}`);
+            }
+            return sentResult || true;
+        } catch (error: any) {
+            this.log('error', `Failed to send WhatsApp message to ${phoneNumber}: ${error?.message || error}`);
             throw error;
         }
     }
 
+    public async sendTestMessage(phoneNumber: string, customMessage?: string) {
+        this.log('info', `Manual Test Message requested for: ${phoneNumber}`);
+        const testText = customMessage || `🔔 *Test Connessione WhatsApp*\n\nQuesto è un messaggio di prova inviato dal pannello amministratore di Ortofrutta Butti.\n\nSe ricevi questo messaggio, l'integrazione è 100% funzionante! ✅\nData: ${new Date().toLocaleString('it-IT')}`;
+        return await this.sendMessage(phoneNumber, testText);
+    }
+
     public async sendOrderNotification(order: any, type: string) {
         const phone = order.customerPhone || order.user?.phone;
+        this.log('info', `sendOrderNotification triggered for Order #${order.id}, Status/Type: "${type}", Phone: "${phone || 'NONE'}"`);
+
         if (!phone) {
-            console.log(`[WhatsApp] Order #${order.id} has no customer phone, skipping notification`);
+            this.log('warn', `Order #${order.id} has no customer phone (order.customerPhone=${order.customerPhone}, order.user.phone=${order.user?.phone}), skipping WhatsApp`);
             return false;
         }
 
@@ -388,8 +448,8 @@ export class WhatsAppService {
         let settings: any = null;
         try {
             settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
-        } catch (e) {
-            console.warn('[WhatsApp] Could not load StoreSettings from DB, falling back to built-in templates:', e);
+        } catch (e: any) {
+            this.log('warn', `Could not load StoreSettings from DB, falling back to built-in templates: ${e?.message}`);
         }
 
         const normalizedType = (type || '').toUpperCase();
