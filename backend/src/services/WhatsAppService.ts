@@ -54,26 +54,30 @@ export class WhatsAppService {
         // Clean stale Chromium SingletonLocks before initializing Puppeteer
         this.cleanChromiumLocks();
 
+        const modernChromeUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
+
         this.client = new Client({
             authStrategy: new LocalAuth({
                 clientId: 'chrono-session',
                 dataPath: path.join(process.cwd(), '.wwebjs_auth')
             }),
             webVersionCache: {
-                type: 'remote',
-                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1018944829-alpha.html'
+                type: 'local'
             },
+            userAgent: modernChromeUA,
             puppeteer: {
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
+                    '--disable-accelerated-2d-canvas',
                     '--disable-background-timer-throttling',
                     '--disable-backgrounding-occluded-windows',
                     '--disable-renderer-backgrounding',
                     '--no-first-run',
-                    '--no-zygote'
+                    '--no-zygote',
+                    `--user-agent=${modernChromeUA}`
                 ],
                 headless: true
             }
@@ -101,7 +105,10 @@ export class WhatsAppService {
             console.error('[WhatsApp] Error shutting down client:', err);
         }
 
-        // Try removing .wwebjs_auth directory if exists to clear stuck/corrupt session
+        // Wait 1.5s for Chromium processes and file handles to fully release on Windows
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Remove .wwebjs_auth and .wwebjs_cache directories if they exist to clear stuck/corrupt session
         try {
             const authPath = path.join(process.cwd(), '.wwebjs_auth');
             if (fs.existsSync(authPath)) {
@@ -110,6 +117,16 @@ export class WhatsAppService {
             }
         } catch (fsErr) {
             console.error('[WhatsApp] Could not remove .wwebjs_auth folder:', fsErr);
+        }
+
+        try {
+            const cachePath = path.join(process.cwd(), '.wwebjs_cache');
+            if (fs.existsSync(cachePath)) {
+                fs.rmSync(cachePath, { recursive: true, force: true });
+                console.log('[WhatsApp] Cleared .wwebjs_cache folder');
+            }
+        } catch (cErr) {
+            console.error('[WhatsApp] Could not remove .wwebjs_cache folder:', cErr);
         }
 
         // Re-create Client instance & initialize
@@ -148,20 +165,38 @@ export class WhatsAppService {
 
     private startHeartbeat() {
         if (this.pingInterval) clearInterval(this.pingInterval);
-        this.pingInterval = setInterval(async () => {
-            if (this.isReady && this.client && !this.isReconnecting) {
-                try {
-                    const state = await this.client.getState();
-                    if (state !== 'CONNECTED') {
-                        console.warn(`[WhatsApp Heartbeat] Disconnection detected (state: ${state}). Triggering reconnect...`);
-                        this.reconnect();
+
+        // Allow a 60-second grace period for newly authenticated sessions to settle and sync initial state
+        let failureCount = 0;
+        setTimeout(() => {
+            if (!this.isReady) return;
+            this.pingInterval = setInterval(async () => {
+                if (this.isReady && this.client && !this.isReconnecting) {
+                    try {
+                        const state: any = await this.client.getState().catch(() => null);
+                        if (state === 'CONNECTED') {
+                            failureCount = 0;
+                        } else if (state && state !== 'CONNECTED') {
+                            failureCount++;
+                            console.warn(`[WhatsApp Heartbeat] State check warning (${failureCount}/3): ${state}`);
+                            if (failureCount >= 3) {
+                                console.warn('[WhatsApp Heartbeat] Disconnection confirmed. Triggering reconnect...');
+                                failureCount = 0;
+                                this.reconnect();
+                            }
+                        }
+                    } catch (err) {
+                        failureCount++;
+                        console.warn(`[WhatsApp Heartbeat] Check error (${failureCount}/3):`, err);
+                        if (failureCount >= 3) {
+                            console.warn('[WhatsApp Heartbeat] Persistent connection check failure. Triggering reconnect...');
+                            failureCount = 0;
+                            this.reconnect();
+                        }
                     }
-                } catch (err) {
-                    console.warn('[WhatsApp Heartbeat] Connection check failed. Triggering reconnect...', err);
-                    this.reconnect();
                 }
-            }
-        }, 45000);
+            }, 60000);
+        }, 60000);
     }
 
     private async reconnect() {
@@ -184,35 +219,38 @@ export class WhatsAppService {
 
     private initialize() {
         this.client.on('qr', async (qr) => {
-            console.log('WhatsApp QR generated');
+            console.log('[WhatsApp] QR code received and generated');
             try {
                 this.qrCode = await qrcode.toDataURL(qr);
             } catch (err) {
-                console.error('Error generating QR', err);
+                console.error('[WhatsApp] Error converting QR to data URL:', err);
             }
             this.isReady = false;
         });
 
         this.client.on('ready', () => {
-            console.log('WhatsApp Client is ready and connected!');
+            console.log('[WhatsApp] Client is READY and fully connected!');
             this.isReady = true;
             this.qrCode = null;
             this.startHeartbeat();
         });
 
         this.client.on('authenticated', () => {
-            console.log('WhatsApp Authenticated');
+            console.log('[WhatsApp] Authenticated successfully with mobile device!');
         });
 
         this.client.on('auth_failure', msg => {
-            console.error('WhatsApp Auth Failure', msg);
+            console.error('[WhatsApp] Auth failure:', msg);
             this.isReady = false;
         });
 
-        this.client.on('disconnected', (reason) => {
+        this.client.on('disconnected', (reason: any) => {
             console.log('[WhatsApp] Client disconnected:', reason);
             this.isReady = false;
-            this.reconnect();
+            // Ignore transient navigation events
+            if (reason !== 'NAVIGATION') {
+                this.reconnect();
+            }
         });
 
         this.client.initialize().catch(err => {
