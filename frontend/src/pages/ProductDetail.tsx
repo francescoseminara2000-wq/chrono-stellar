@@ -13,6 +13,7 @@ import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
 import { ProductShareModal } from '../components/ProductShareModal';
 import { sanitizeImageUrl } from '../utils/imageUrl';
+import { AppleLoader } from '../components/ui/AppleLoader';
 
 interface Product {
     id: number;
@@ -182,12 +183,12 @@ export const ProductDetail = () => {
     };
 
     if (loading) return (
-        <div className="flex flex-col justify-center items-center h-screen bg-nature-50/50">
-            <div className="relative">
-                <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                <Leaf className="absolute inset-0 m-auto text-emerald-600 animate-pulse" size={24} />
-            </div>
-            <p className="mt-4 font-bold text-emerald-900 text-sm tracking-wide">Caricamento prodotto...</p>
+        <div className="flex flex-col justify-center items-center min-h-[75vh] bg-nature-50/50">
+            <AppleLoader 
+                size="lg" 
+                text="Caricamento prodotto..." 
+                subtext="Recupero informazioni nutrizionali e freschezza" 
+            />
         </div>
     );
 

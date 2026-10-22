@@ -42,6 +42,7 @@ import { NewsletterManager } from './pages/admin/NewsletterManager';
 import { CouponManager } from './pages/admin/CouponManager';
 import { NewsletterConfirm } from './pages/NewsletterConfirm';
 import { useAnalyticsTracker } from './hooks/useAnalyticsTracker';
+import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
 // Scroll to top & track site analytics on route change
 const RouteTracker = () => {
@@ -155,6 +156,7 @@ function App() {
                     </Route>
                 </Route>
             </Routes>
+            <LoadingOverlay />
             <Toaster />
         </Router>
     );

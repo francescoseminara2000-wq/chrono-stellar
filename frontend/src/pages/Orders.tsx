@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { Package, Calendar, ChevronRight, Scale, Clock, ShoppingBag } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { sanitizeImageUrl } from '../utils/imageUrl';
+import { AppleLoader } from '../components/ui/AppleLoader';
 
 interface Order {
     id: number;
@@ -133,9 +134,8 @@ export const Orders = () => {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-16 bg-white rounded-3xl shadow-sm border border-gray-100">
-                        <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-700 rounded-full animate-spin mx-auto mb-4" />
-                        <p className="text-gray-500 font-bold text-sm">Caricamento ordini in corso...</p>
+                    <div className="text-center py-16 bg-white/80 backdrop-blur-sm rounded-3xl shadow-sm border border-gray-100">
+                        <AppleLoader size="lg" text="Caricamento dei tuoi ordini..." subtext="Recupero cronologia e stato consegne" />
                     </div>
                 ) : orders.length === 0 ? (
                     <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100 space-y-4">

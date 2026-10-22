@@ -6,6 +6,7 @@ import { WeightSelectorDrawer } from '../components/WeightSelectorDrawer';
 import { QuantitySelectorDrawer } from '../components/QuantitySelectorDrawer';
 import { ProductCard } from '../components/ProductCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AppleLoader } from '../components/ui/AppleLoader';
 
 interface Category {
     id: number;
@@ -230,11 +231,12 @@ export const Shop = () => {
     );
 
     if (loading) return (
-        <div className="flex justify-center items-center h-screen bg-nature-50">
-            <div className="animate-pulse flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-nature-200 border-t-nature-600 rounded-full animate-spin"></div>
-                <p className="text-nature-900 font-medium">Caricamento raccolto...</p>
-            </div>
+        <div className="flex justify-center items-center min-h-[70vh] bg-nature-50/40">
+            <AppleLoader 
+                size="lg" 
+                text="Caricamento del banco ortofrutta..." 
+                subtext="Stiamo selezionando i migliori prodotti freschi di giornata" 
+            />
         </div>
     );
 

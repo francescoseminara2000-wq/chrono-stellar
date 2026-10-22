@@ -3,6 +3,7 @@ import { MapPin, Clock, ExternalLink, ArrowRight, Store, Navigation, ChevronDown
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { sanitizeImageUrl } from '../utils/imageUrl';
+import { AppleLoader } from '../components/ui/AppleLoader';
 
 interface MarketDay {
     id?: number;
@@ -87,9 +88,8 @@ export const Markets: React.FC = () => {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-16 bg-white rounded-3xl shadow-sm border border-gray-100 max-w-md mx-auto">
-                        <div className="w-12 h-12 border-4 border-emerald-250 border-t-emerald-700 rounded-full animate-spin mx-auto mb-4" />
-                        <p className="text-gray-500 font-bold text-sm">Caricamento itinerario mercati...</p>
+                    <div className="text-center py-12 bg-white/80 backdrop-blur-sm rounded-3xl shadow-sm border border-gray-100 max-w-md mx-auto">
+                        <AppleLoader size="md" text="Caricamento itinerario mercati..." subtext="Verifica delle tappe della settimana" />
                     </div>
                 ) : markets.length === 0 ? (
                     <div className="text-center py-16 bg-white rounded-3xl shadow-sm border border-gray-100 max-w-md mx-auto">
