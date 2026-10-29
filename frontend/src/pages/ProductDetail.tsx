@@ -257,16 +257,16 @@ export const ProductDetail = () => {
             <div className="max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
 
                 {/* Main Product Showcase Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-start">
 
                     {/* Left Column: Clean Gourmet Photo Showcase (Cortilia / Eataly Style) */}
                     <motion.div
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
-                        className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-24 self-start flex justify-center lg:justify-start"
+                        className="lg:col-span-6 xl:col-span-6 lg:sticky lg:top-24 self-start flex justify-center lg:justify-start w-full"
                     >
-                        <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/80 w-full max-w-[420px] xl:max-w-[450px] group flex flex-col">
+                        <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/80 w-full max-w-[620px] xl:max-w-[680px] group flex flex-col">
                             {/* Main Carousel Frame */}
                             <div 
                                 className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-gray-50/50 to-white select-none"
@@ -412,7 +412,7 @@ export const ProductDetail = () => {
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="lg:col-span-7 flex flex-col"
+                        className="lg:col-span-6 xl:col-span-6 flex flex-col min-w-0"
                     >
                         {/* Category & Title Header */}
                         <div className="mb-4">
