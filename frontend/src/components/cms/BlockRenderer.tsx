@@ -979,20 +979,28 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                         );
 
                     case 'categories':
-                        const categoriesList = (block.data.categories && block.data.categories.length > 0)
-                            ? block.data.categories
-                            : [
-                                { title: 'Frutta Fresca', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80' },
-                                { title: 'Verdura di Stagione', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80' },
-                                { title: 'Agrumi & Bio', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1582979512210-99b6a53386f9?w=800&q=80' },
-                                { title: 'Erbe & Aromi', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=800&q=80' }
-                            ];
+                        const rawCategories = Array.isArray(block.data.categories) ? block.data.categories : [];
                         const fallbackImages = [
                             'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80',
                             'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80',
                             'https://images.unsplash.com/photo-1582979512210-99b6a53386f9?w=800&q=80',
                             'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=800&q=80'
                         ];
+                        const defaultFallbackCategories = [
+                            { title: 'Frutta Fresca', link: '/shop', imageUrl: fallbackImages[0] },
+                            { title: 'Verdura di Stagione', link: '/shop', imageUrl: fallbackImages[1] },
+                            { title: 'Agrumi & Bio', link: '/shop', imageUrl: fallbackImages[2] },
+                            { title: 'Erbe & Aromi', link: '/shop', imageUrl: fallbackImages[3] }
+                        ];
+                        const categoriesList = rawCategories.length > 0 ? rawCategories : defaultFallbackCategories;
+
+                        const gridColsClass = categoriesList.length === 1 
+                            ? 'grid-cols-1 max-w-md mx-auto'
+                            : categoriesList.length === 2
+                            ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto'
+                            : categoriesList.length === 3
+                            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
 
                         return (
                             <AnimatedSection key={block.id} className={`${paddingClass} ${style.bgClass} ${style.borderClass} relative overflow-hidden`}>
@@ -1014,27 +1022,44 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                                         </Link>
                                     </div>
                                     
-                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                                    <div className={`grid ${gridColsClass} gap-4 sm:gap-6`}>
                                         {categoriesList.map((cat: any, i: number) => {
-                                            const imgUrl = cat.imageUrl ? sanitizeImageUrl(cat.imageUrl) : fallbackImages[i % fallbackImages.length];
+                                            const resolvedImg = (cat.imageUrl && cat.imageUrl.trim() !== '')
+                                                ? sanitizeImageUrl(cat.imageUrl)
+                                                : fallbackImages[i % fallbackImages.length];
+
                                             return (
                                                 <Link 
                                                     to={cat.link || '/shop'} 
                                                     key={i} 
-                                                    className="group relative h-72 sm:h-80 rounded-3xl overflow-hidden block shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1.5 border border-stone-200/80 bg-stone-900"
+                                                    style={{ minHeight: '320px', height: '320px' }}
+                                                    className="group relative w-full h-[320px] min-h-[320px] rounded-3xl overflow-hidden flex flex-col justify-end shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-1.5 border border-stone-200/80 bg-stone-900"
                                                 >
-                                                    <div className="absolute inset-0 bg-stone-800">
+                                                    {/* Background Image Container */}
+                                                    <div className="absolute inset-0 bg-stone-800 pointer-events-none">
                                                         <img 
-                                                            src={imgUrl} 
-                                                            alt={cat.title || 'Categoria'} 
+                                                            src={resolvedImg} 
+                                                            alt={cat.title || 'Reparto'} 
                                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90"
                                                             loading="lazy"
+                                                            onError={(e: any) => {
+                                                                e.currentTarget.onerror = null;
+                                                                e.currentTarget.src = fallbackImages[i % fallbackImages.length];
+                                                            }}
                                                         />
                                                     </div>
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-nature-950/90 via-nature-950/30 to-transparent transition-opacity duration-300"></div>
                                                     
-                                                    <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 transform transition-transform duration-300">
-                                                        <h3 className="font-bold text-lg sm:text-xl text-white mb-1 drop-shadow-md">{cat.title || 'Reparto'}</h3>
+                                                    {/* Dark Vignette / Contrast Gradient */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none transition-opacity duration-300"></div>
+                                                    
+                                                    {/* Card Labels & Actions */}
+                                                    <div className="relative z-10 p-5 sm:p-6 w-full">
+                                                        <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-xs text-white mb-2">
+                                                            Reparto #{i + 1}
+                                                        </span>
+                                                        <h3 className="font-bold text-lg sm:text-xl text-white mb-1 drop-shadow-md">
+                                                            {cat.title || 'Reparto Fresco'}
+                                                        </h3>
                                                         <div className="flex items-center gap-1.5 text-fruit-300 text-xs font-semibold">
                                                             <span>Scopri prodotti</span>
                                                             <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
