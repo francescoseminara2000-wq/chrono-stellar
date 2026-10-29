@@ -19,7 +19,7 @@ interface BlockRendererProps {
 const getPaddingClass = (paddingY: string | undefined, defaultClass = 'py-14 md:py-20') => {
     if (!paddingY || paddingY === 'normal') return defaultClass;
     if (paddingY === 'compact') return 'py-9 md:py-12';
-    if (paddingY === 'large') return 'py-18 md:py-26';
+    if (paddingY === 'large') return 'py-16 md:py-24';
     return defaultClass;
 };
 
@@ -979,6 +979,21 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                         );
 
                     case 'categories':
+                        const categoriesList = (block.data.categories && block.data.categories.length > 0)
+                            ? block.data.categories
+                            : [
+                                { title: 'Frutta Fresca', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80' },
+                                { title: 'Verdura di Stagione', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80' },
+                                { title: 'Agrumi & Bio', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1582979512210-99b6a53386f9?w=800&q=80' },
+                                { title: 'Erbe & Aromi', link: '/shop', imageUrl: 'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=800&q=80' }
+                            ];
+                        const fallbackImages = [
+                            'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80',
+                            'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80',
+                            'https://images.unsplash.com/photo-1582979512210-99b6a53386f9?w=800&q=80',
+                            'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=800&q=80'
+                        ];
+
                         return (
                             <AnimatedSection key={block.id} className={`${paddingClass} ${style.bgClass} ${style.borderClass} relative overflow-hidden`}>
                                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -998,34 +1013,36 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                                             <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
                                         </Link>
                                     </div>
-
+                                    
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                                        {(block.data.categories || []).map((cat: any, i: number) => (
-                                            <Link
-                                                to={cat.link || '/shop'}
-                                                key={i}
-                                                className="group relative h-68 sm:h-76 rounded-3xl overflow-hidden block shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1.5 border border-stone-200/80"
-                                            >
-                                                <div className="absolute inset-0 bg-nature-100">
-                                                    {cat.imageUrl && (
-                                                        <img
-                                                            src={sanitizeImageUrl(cat.imageUrl)}
-                                                            alt={cat.title}
-                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        {categoriesList.map((cat: any, i: number) => {
+                                            const imgUrl = cat.imageUrl ? sanitizeImageUrl(cat.imageUrl) : fallbackImages[i % fallbackImages.length];
+                                            return (
+                                                <Link 
+                                                    to={cat.link || '/shop'} 
+                                                    key={i} 
+                                                    className="group relative h-72 sm:h-80 rounded-3xl overflow-hidden block shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1.5 border border-stone-200/80 bg-stone-900"
+                                                >
+                                                    <div className="absolute inset-0 bg-stone-800">
+                                                        <img 
+                                                            src={imgUrl} 
+                                                            alt={cat.title || 'Categoria'} 
+                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90"
+                                                            loading="lazy"
                                                         />
-                                                    )}
-                                                </div>
-                                                <div className="absolute inset-0 bg-gradient-to-t from-nature-950/90 via-nature-950/30 to-transparent transition-opacity duration-300"></div>
-
-                                                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 transform transition-transform duration-300">
-                                                    <h3 className="font-bold text-lg sm:text-xl text-white mb-1 drop-shadow-md">{cat.title}</h3>
-                                                    <div className="flex items-center gap-1.5 text-fruit-300 text-xs font-semibold">
-                                                        <span>Scopri prodotti</span>
-                                                        <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
                                                     </div>
-                                                </div>
-                                            </Link>
-                                        ))}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-nature-950/90 via-nature-950/30 to-transparent transition-opacity duration-300"></div>
+                                                    
+                                                    <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 transform transition-transform duration-300">
+                                                        <h3 className="font-bold text-lg sm:text-xl text-white mb-1 drop-shadow-md">{cat.title || 'Reparto'}</h3>
+                                                        <div className="flex items-center gap-1.5 text-fruit-300 text-xs font-semibold">
+                                                            <span>Scopri prodotti</span>
+                                                            <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </AnimatedSection>
