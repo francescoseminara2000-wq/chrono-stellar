@@ -107,22 +107,325 @@ export interface Block {
     data: any;
 }
 
-const BLOCK_DEFINITIONS: Record<BlockType, { label: string; icon: any; description: string }> = {
-    hero: { label: 'Hero / Copertina', icon: Icons.Image, description: 'Immagine grande a tutto schermo con testo centrale.' },
-    bannerPromo: { label: 'Banner Promozioni', icon: Icons.Megaphone, description: 'Banner promozionale in evidenza con codice sconto.' },
-    features: { label: 'Vantaggi / Servizi', icon: Icons.Star, description: 'Griglia di punti di forza con icone.' },
-    imageText: { label: 'Immagine & Testo', icon: Icons.LayoutTemplate, description: 'Classico layout affiancato.' },
-    cta: { label: 'Call to Action', icon: Icons.MousePointerClick, description: 'Banner colorato con bottone.' },
-    faq: { label: 'FAQ', icon: Icons.HelpCircle, description: 'Domande frequenti a comparsa.' },
-    latestProducts: { label: 'Ultimi Arrivi', icon: Icons.ShoppingBag, description: 'Mostra i prodotti più recenti del catalogo.' },
-    testimonials: { label: 'Recensioni', icon: Icons.MessageSquareQuote, description: 'Le parole dei clienti in stile slider.' },
-    imageGallery: { label: 'Galleria Immagini', icon: Icons.Images, description: 'Griglia o masonry fotografico.' },
-    newsletter: { label: 'Iscrizione Newsletter', icon: Icons.Mail, description: 'Form attraente per raccogliere email.' },
-    stats: { label: 'Statistiche', icon: Icons.BarChart, description: 'Numeri aziendali animati o in evidenza.' },
-    video: { label: 'Video Embed', icon: Icons.Video, description: 'Sezione larga con player video YouTube/Vimeo.' },
-    categories: { label: 'Griglia Categorie', icon: Icons.Grid, description: 'Box visivi per navigare nello store.' },
-    storeInfo: { label: 'Info Sede & Orari', icon: Icons.Store, description: 'Box con orari, indirizzo, contatti e Google Maps.' },
-    richText: { label: 'Testo Libero', icon: Icons.AlignLeft, description: 'Editor di testo puro.' }
+export interface BlockDefinition {
+    label: string;
+    icon: any;
+    description: string;
+    category: 'Contenuto' | 'Marketing' | 'Social' | 'Store';
+    color: {
+        bg: string;
+        text: string;
+        ring: string;
+        border: string;
+        light: string;
+    };
+}
+
+const BLOCK_DEFINITIONS: Record<BlockType, BlockDefinition> = {
+    hero: {
+        label: 'Hero / Copertina',
+        icon: Icons.Image,
+        description: 'Immagine grande a tutto schermo con titolo d\'impatto e bottoni di chiamata all\'azione.',
+        category: 'Contenuto',
+        color: { bg: 'bg-emerald-500', text: 'text-emerald-700', ring: 'ring-emerald-200', border: 'border-emerald-200', light: 'bg-emerald-50' }
+    },
+    bannerPromo: {
+        label: 'Banner Promozioni',
+        icon: Icons.Megaphone,
+        description: 'Banner in evidenza con badge promozionale, testo e codice coupon sconto.',
+        category: 'Marketing',
+        color: { bg: 'bg-amber-500', text: 'text-amber-700', ring: 'ring-amber-200', border: 'border-amber-200', light: 'bg-amber-50' }
+    },
+    features: {
+        label: 'Vantaggi / Servizi',
+        icon: Icons.Sparkles,
+        description: 'Punti di forza e servizi garantiti con icone Lucide o grafiche personalizzate.',
+        category: 'Store',
+        color: { bg: 'bg-indigo-500', text: 'text-indigo-700', ring: 'ring-indigo-200', border: 'border-indigo-200', light: 'bg-indigo-50' }
+    },
+    imageText: {
+        label: 'Immagine & Testo',
+        icon: Icons.LayoutTemplate,
+        description: 'Layout affiancato bilanciato con supporto testo formattato e allineamento reversibile.',
+        category: 'Contenuto',
+        color: { bg: 'bg-purple-500', text: 'text-purple-700', ring: 'ring-purple-200', border: 'border-purple-200', light: 'bg-purple-50' }
+    },
+    cta: {
+        label: 'Call to Action',
+        icon: Icons.MousePointerClick,
+        description: 'Box accattivante ad alta conversione per guidare l\'utente ad acquistare o scoprire.',
+        category: 'Marketing',
+        color: { bg: 'bg-rose-500', text: 'text-rose-700', ring: 'ring-rose-200', border: 'border-rose-200', light: 'bg-rose-50' }
+    },
+    faq: {
+        label: 'FAQ / Domande Frequenti',
+        icon: Icons.HelpCircle,
+        description: 'Fisarmonica interattiva per rispondere con chiarezza ai dubbi tipici dei clienti.',
+        category: 'Store',
+        color: { bg: 'bg-sky-500', text: 'text-sky-700', ring: 'ring-sky-200', border: 'border-sky-200', light: 'bg-sky-50' }
+    },
+    latestProducts: {
+        label: 'Ultimi Arrivi / Vetrina',
+        icon: Icons.ShoppingBag,
+        description: 'Griglia che carica in automatico gli ultimi prodotti freschi disponibili dal catalogo.',
+        category: 'Store',
+        color: { bg: 'bg-nature-600', text: 'text-nature-700', ring: 'ring-nature-200', border: 'border-nature-200', light: 'bg-nature-50' }
+    },
+    testimonials: {
+        label: 'Recensioni Clienti',
+        icon: Icons.MessageSquareQuote,
+        description: 'Feedback con valutazione a stelle, foto avatar del cliente e citazione recensione.',
+        category: 'Social',
+        color: { bg: 'bg-yellow-500', text: 'text-yellow-700', ring: 'ring-yellow-200', border: 'border-yellow-200', light: 'bg-yellow-50' }
+    },
+    imageGallery: {
+        label: 'Galleria Immagini',
+        icon: Icons.Images,
+        description: 'Raccolta fotografica con disposizione in griglia ordinata o masonry fluido.',
+        category: 'Social',
+        color: { bg: 'bg-pink-500', text: 'text-pink-700', ring: 'ring-pink-200', border: 'border-pink-200', light: 'bg-pink-50' }
+    },
+    newsletter: {
+        label: 'Iscrizione Newsletter',
+        icon: Icons.Mail,
+        description: 'Modulo per stimolare l\'iscrizione alla newsletter offrendo vantaggi dedicati.',
+        category: 'Marketing',
+        color: { bg: 'bg-blue-500', text: 'text-blue-700', ring: 'ring-blue-200', border: 'border-blue-200', light: 'bg-blue-50' }
+    },
+    stats: {
+        label: 'Statistiche & Numeri',
+        icon: Icons.BarChart3,
+        description: 'Indicatori di fiducia e risultati importanti (es. 100% Locale, +500 Clienti).',
+        category: 'Social',
+        color: { bg: 'bg-teal-500', text: 'text-teal-700', ring: 'ring-teal-200', border: 'border-teal-200', light: 'bg-teal-50' }
+    },
+    video: {
+        label: 'Video Embed',
+        icon: Icons.Video,
+        description: 'Player video fluido per mostrare i campi coltivati o la preparazione degli ordini.',
+        category: 'Social',
+        color: { bg: 'bg-red-500', text: 'text-red-700', ring: 'ring-red-200', border: 'border-red-200', light: 'bg-red-50' }
+    },
+    categories: {
+        label: 'Griglia Categorie',
+        icon: Icons.LayoutGrid,
+        description: 'Card visive con foto e link per guidare i visitatori tra i reparti del negozio.',
+        category: 'Store',
+        color: { bg: 'bg-orange-500', text: 'text-orange-700', ring: 'ring-orange-200', border: 'border-orange-200', light: 'bg-orange-50' }
+    },
+    storeInfo: {
+        label: 'Info Sede & Orari',
+        icon: Icons.Store,
+        description: 'Box riepilogativo con indirizzo della bottega, orari, telefono fisso e WhatsApp.',
+        category: 'Store',
+        color: { bg: 'bg-cyan-600', text: 'text-cyan-700', ring: 'ring-cyan-200', border: 'border-cyan-200', light: 'bg-cyan-50' }
+    },
+    richText: {
+        label: 'Testo Libero / HTML',
+        icon: Icons.FileText,
+        description: 'Editor completo per articoli lunghi, approfondimenti, regolamenti e policy.',
+        category: 'Contenuto',
+        color: { bg: 'bg-slate-600', text: 'text-slate-700', ring: 'ring-slate-200', border: 'border-slate-200', light: 'bg-slate-50' }
+    }
+};
+
+const FormField = ({ label, hint, children, className = "" }: { label: string; hint?: string; children: React.ReactNode; className?: string }) => (
+    <div className={`space-y-1.5 ${className}`}>
+        <div className="flex items-center justify-between">
+            <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">{label}</label>
+            {hint && <span className="text-[11px] text-gray-400 font-normal">{hint}</span>}
+        </div>
+        {children}
+    </div>
+);
+
+const FormInput = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <input
+        {...props}
+        className={`w-full bg-white border border-gray-200 focus:border-nature-500 focus:ring-2 focus:ring-nature-500/15 rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-800 placeholder:text-gray-400 transition-all ${className}`}
+    />
+);
+
+const FormTextarea = ({ className = "", ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
+    <textarea
+        {...props}
+        className={`w-full bg-white border border-gray-200 focus:border-nature-500 focus:ring-2 focus:ring-nature-500/15 rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-800 placeholder:text-gray-400 transition-all resize-y ${className}`}
+    />
+);
+
+const ImageUploadBox = ({
+    imageUrl,
+    onUpload,
+    onRemove,
+    label = "Immagine",
+    hint = "Consigliato JPG o PNG",
+    aspectRatio = "aspect-video"
+}: {
+    imageUrl?: string;
+    onUpload: (file: File) => void;
+    onRemove?: () => void;
+    label?: string;
+    hint?: string;
+    aspectRatio?: string;
+}) => {
+    return (
+        <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">{label}</label>
+                <span className="text-[11px] text-gray-400">{hint}</span>
+            </div>
+            {imageUrl ? (
+                <div className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-2xs">
+                    <img src={sanitizeImageUrl(imageUrl)} alt="Preview" className={`w-full ${aspectRatio} object-cover`} />
+                    <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity p-2">
+                        <label className="cursor-pointer bg-white/95 hover:bg-white text-gray-800 font-semibold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors">
+                            <Icons.Upload size={14} />
+                            <span>Sostituisci</span>
+                            <input type="file" accept="image/*" className="hidden" onChange={e => {
+                                if (e.target.files?.[0]) onUpload(e.target.files[0]);
+                            }} />
+                        </label>
+                        {onRemove && (
+                            <button
+                                type="button"
+                                onClick={onRemove}
+                                className="bg-red-500 hover:bg-red-600 text-white font-semibold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                                <Trash2 size={14} />
+                                <span>Rimuovi</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                <label className="border-2 border-dashed border-gray-200 hover:border-nature-400 bg-gray-50/70 hover:bg-nature-50/40 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group">
+                    <div className="w-10 h-10 rounded-xl bg-white shadow-2xs border border-gray-100 text-gray-400 group-hover:text-nature-600 flex items-center justify-center transition-colors">
+                        <Icons.UploadCloud size={20} />
+                    </div>
+                    <div className="text-center">
+                        <p className="text-xs font-semibold text-gray-700 group-hover:text-nature-700">Clicca per caricare un'immagine</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">PNG, JPG, WebP fino a 10MB</p>
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={e => {
+                        if (e.target.files?.[0]) onUpload(e.target.files[0]);
+                    }} />
+                </label>
+            )}
+        </div>
+    );
+};
+
+const StarRatingInput = ({ value, onChange }: { value: number; onChange: (rating: number) => void }) => {
+    return (
+        <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                    key={star}
+                    type="button"
+                    onClick={() => onChange(star)}
+                    className="p-1 rounded hover:scale-110 transition-transform focus:outline-hidden cursor-pointer"
+                >
+                    <Icons.Star
+                        size={18}
+                        className={star <= value ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                    />
+                </button>
+            ))}
+            <span className="text-xs font-bold text-gray-600 ml-1.5">{value} / 5</span>
+        </div>
+    );
+};
+
+const SectionStylingControls = ({
+    paddingY,
+    bgColor,
+    onPaddingChange,
+    onBgChange
+}: {
+    paddingY?: string;
+    bgColor?: string;
+    onPaddingChange: (val: string) => void;
+    onBgChange: (val: string) => void;
+}) => {
+    const paddings = [
+        { value: 'compact', label: 'Compatta', icon: Icons.Minimize2 },
+        { value: 'normal', label: 'Normale', icon: Icons.Maximize2 },
+        { value: 'large', label: 'Ampia', icon: Icons.Expand }
+    ];
+
+    const bgColors = [
+        { value: 'default', label: 'Auto', colorClass: 'bg-white border-dashed border-gray-300' },
+        { value: 'white', label: 'Bianco', colorClass: 'bg-white border-gray-200' },
+        { value: 'gray', label: 'Grigio', colorClass: 'bg-emerald-50/60 border-emerald-100' },
+        { value: 'theme', label: 'Tema', colorClass: 'bg-nature-600 border-nature-600' },
+        { value: 'dark', label: 'Scuro', colorClass: 'bg-nature-950 border-nature-950' }
+    ];
+
+    return (
+        <div className="mt-6 pt-5 border-t border-gray-200/80 bg-white/70 -mx-4 -mb-4 p-4 rounded-b-2xl">
+            <div className="flex items-center gap-2 mb-3">
+                <Icons.SlidersHorizontal size={14} className="text-nature-600" />
+                <h6 className="text-xs font-bold uppercase tracking-wider text-gray-700">Spaziature & Stile Sezione</h6>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
+                        Spaziatura Verticale
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                        {paddings.map(opt => {
+                            const Icon = opt.icon;
+                            const isSelected = (paddingY || 'normal') === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => onPaddingChange(opt.value)}
+                                    className={`flex items-center justify-center gap-1.5 text-xs py-2 px-2.5 rounded-xl border font-semibold transition-all cursor-pointer ${
+                                        isSelected
+                                            ? 'bg-nature-600 border-nature-600 text-white shadow-2xs'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                                    }`}
+                                >
+                                    <Icon size={12} className={isSelected ? 'text-white' : 'text-gray-400'} />
+                                    <span>{opt.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
+                        Colore Sfondo
+                    </label>
+                    <div className="grid grid-cols-5 gap-1.5">
+                        {bgColors.map(opt => {
+                            const isSelected = (bgColor || 'default') === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => onBgChange(opt.value)}
+                                    className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all cursor-pointer ${
+                                        isSelected
+                                            ? 'border-nature-600 ring-2 ring-nature-500/20 bg-nature-50/50'
+                                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                                    }`}
+                                    title={opt.label}
+                                >
+                                    <span className={`w-5 h-5 rounded-full border shadow-2xs ${opt.colorClass}`} />
+                                    <span className={`text-[10px] font-medium truncate max-w-full ${isSelected ? 'text-nature-800 font-bold' : 'text-gray-500'}`}>
+                                        {opt.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const PageLinkSelector = ({
@@ -531,6 +834,31 @@ export const PageManager = () => {
         setBlocks(blocks.filter(b => b.id !== id));
     };
 
+    const duplicateBlock = (id: string) => {
+        const index = blocks.findIndex(b => b.id === id);
+        if (index === -1) return;
+        const original = blocks[index];
+        const duplicated: Block = {
+            id: Date.now().toString(),
+            type: original.type,
+            data: JSON.parse(JSON.stringify(original.data))
+        };
+        const newBlocks = [...blocks];
+        newBlocks.splice(index + 1, 0, duplicated);
+        setBlocks(newBlocks);
+        setExpandedBlockId(duplicated.id);
+    };
+
+    const moveBlock = (index: number, direction: 'up' | 'down') => {
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= blocks.length) return;
+        const newBlocks = [...blocks];
+        const [moved] = newBlocks.splice(index, 1);
+        newBlocks.splice(targetIndex, 0, moved);
+        setBlocks(newBlocks);
+    };
+
+
 
 
     const handleDragEnd = (result: DropResult) => {
@@ -746,24 +1074,51 @@ export const PageManager = () => {
 
                                     {/* Builder Area */}
                                     <div className="space-y-4">
-                                        <div className="flex justify-between items-center px-1">
-                                            <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                                                <LayoutTemplate size={20} className="text-nature-500" />
-                                                Struttura Pagina
-                                            </h4>
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-1 pb-1 border-b border-gray-100">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-8 h-8 rounded-xl bg-nature-100 text-nature-700 flex items-center justify-center shadow-2xs">
+                                                    <LayoutTemplate size={18} />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900 text-base leading-tight">
+                                                        Struttura & Blocchi della Pagina
+                                                    </h4>
+                                                    <p className="text-xs text-gray-500 font-medium">
+                                                        Trascina, riordina e personalizza i contenuti della pagina.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 border border-gray-200">
+                                                    {blocks.length} {blocks.length === 1 ? 'sezione' : 'sezioni'}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAddingAtIndex(blocks.length)}
+                                                    className="bg-nature-600 hover:bg-nature-700 text-white px-3.5 py-1.5 rounded-xl font-bold text-xs transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                                >
+                                                    <Plus size={15} />
+                                                    <span>Aggiungi Sezione</span>
+                                                </button>
+                                            </div>
                                         </div>
 
                                     {blocks.length === 0 ? (
                                         <div className="space-y-4">
-                                            <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center bg-white">
-                                                <p className="text-gray-500 mb-6">La pagina è vuota. Inizia aggiungendo la tua prima sezione.</p>
+                                            <div className="border-2 border-dashed border-gray-200 hover:border-nature-300 rounded-3xl p-10 text-center bg-white shadow-2xs transition-colors">
+                                                <div className="w-14 h-14 rounded-2xl bg-nature-50 text-nature-600 flex items-center justify-center mx-auto mb-3">
+                                                    <Icons.Layers size={28} />
+                                                </div>
+                                                <h5 className="font-bold text-gray-800 text-base mb-1">La pagina è vuota</h5>
+                                                <p className="text-gray-500 text-xs max-w-sm mx-auto mb-5">Inizia aggiungendo la tua prima sezione modulare: puoi scegliere tra Hero copertina, Vantaggi, Catalogo, Recensioni e molto altro.</p>
                                                 {addingAtIndex !== 0 && (
                                                     <button 
                                                         type="button" 
                                                         onClick={() => setAddingAtIndex(0)} 
-                                                        className="bg-nature-600 hover:bg-nature-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors inline-flex items-center gap-2"
+                                                        className="bg-nature-600 hover:bg-nature-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs transition-colors inline-flex items-center gap-2 shadow-xs cursor-pointer"
                                                     >
-                                                        <Plus size={20} /> Aggiungi Sezione
+                                                        <Plus size={16} /> Aggiungi la Prima Sezione
                                                     </button>
                                                 )}
                                             </div>
@@ -772,11 +1127,11 @@ export const PageManager = () => {
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="space-y-2">
+                                        <div className="space-y-3">
                                             <DragDropContext onDragEnd={handleDragEnd}>
                                                 <Droppable droppableId="blocks-list">
                                                     {(provided) => (
-                                                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2 relative pb-10">
+                                                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 relative pb-6">
                                                             {blocks.map((block, index) => {
                                                                 const isExpanded = expandedBlockId === block.id;
                                                                 const def = BLOCK_DEFINITIONS[block.type] || BLOCK_DEFINITIONS.richText;
@@ -793,101 +1148,297 @@ export const PageManager = () => {
                                                                                 <div 
                                                                                     ref={provided.innerRef} 
                                                                                     {...provided.draggableProps} 
-                                                                                    className={`bg-white rounded-2xl border ${isExpanded ? 'border-nature-400 ring-2 ring-nature-100 shadow-md my-4' : 'border-gray-200 shadow-sm hover:border-nature-300'} overflow-hidden flex flex-col group transition-all duration-300 relative ${snapshot.isDragging ? 'z-50 ring-4 ring-nature-200 opacity-90' : ''}`}
+                                                                                    className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden shadow-2xs ${
+                                                                                        isExpanded 
+                                                                                            ? 'border-nature-500 ring-2 ring-nature-500/15 shadow-md' 
+                                                                                            : 'border-gray-200 hover:border-gray-300'
+                                                                                    } ${snapshot.isDragging ? 'z-50 ring-4 ring-nature-400 opacity-95 shadow-xl scale-[1.01]' : ''}`}
                                                                                 >
                                                                                     {/* Block Accordion Header */}
                                                                                     <div 
-                                                                                        className={`flex justify-between items-center px-4 py-3 cursor-pointer ${isExpanded ? 'bg-nature-50 border-b border-nature-200' : 'bg-white hover:bg-gray-50'}`}
+                                                                                        className={`flex items-center justify-between px-3.5 py-3 cursor-pointer select-none transition-colors ${
+                                                                                            isExpanded ? 'bg-gradient-to-r from-gray-50/90 to-nature-50/40 border-b border-gray-100' : 'bg-white hover:bg-gray-50/80'
+                                                                                        }`}
                                                                                         onClick={() => setExpandedBlockId(isExpanded ? null : block.id)}
                                                                                     >
-                                                                                        <div className="flex items-center gap-3">
-                                                                                            <div {...provided.dragHandleProps} className="text-gray-400 hover:text-gray-600 p-1 cursor-grab active:cursor-grabbing">
+                                                                                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                                                                            <div 
+                                                                                                {...provided.dragHandleProps} 
+                                                                                                className="text-gray-300 hover:text-gray-600 p-1 cursor-grab active:cursor-grabbing rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+                                                                                                title="Trascina per riordinare"
+                                                                                            >
                                                                                                 <Icons.GripVertical size={18} />
                                                                                             </div>
-                                                                                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${isExpanded ? 'bg-nature-200 text-nature-800' : 'bg-gray-100 text-gray-500'}`}>
-                                                                                                <Icon size={16} />
+
+                                                                                            <span className="text-[11px] font-black text-gray-400 font-mono w-5 shrink-0 text-center">
+                                                                                                #{index + 1}
                                                                                             </span>
-                                                                                            <div>
-                                                                                                <h5 className="font-bold text-gray-800 text-sm tracking-wide">
-                                                                                                    {block.data.title || def.label} 
-                                                                                                </h5>
-                                                                                                <span className="text-xs text-gray-400">{def.label}</span>
+
+                                                                                            <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${def.color.light} ${def.color.text} border ${def.color.border}`}>
+                                                                                                <Icon size={18} />
+                                                                                            </span>
+
+                                                                                            <div className="min-w-0">
+                                                                                                <div className="flex items-center gap-2">
+                                                                                                    <h5 className="font-bold text-gray-900 text-sm tracking-tight truncate">
+                                                                                                        {block.data.title || block.data.badge || def.label}
+                                                                                                    </h5>
+                                                                                                    <span className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border shrink-0 ${def.color.light} ${def.color.text} ${def.color.border}`}>
+                                                                                                        {def.category}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                                <p className="text-xs text-gray-400 font-medium truncate">
+                                                                                                    {def.label}
+                                                                                                </p>
                                                                                             </div>
                                                                                         </div>
                                                                                         
-                                                                                        <div className="flex flex-row-reverse items-center gap-1">
+                                                                                        <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                                                                                            {/* Move Up */}
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                disabled={index === 0}
+                                                                                                onClick={() => moveBlock(index, 'up')}
+                                                                                                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors cursor-pointer"
+                                                                                                title="Sposta Su"
+                                                                                            >
+                                                                                                <Icons.ChevronUp size={16} />
+                                                                                            </button>
+
+                                                                                            {/* Move Down */}
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                disabled={index === blocks.length - 1}
+                                                                                                onClick={() => moveBlock(index, 'down')}
+                                                                                                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg transition-colors cursor-pointer"
+                                                                                                title="Sposta Giù"
+                                                                                            >
+                                                                                                <Icons.ChevronDown size={16} />
+                                                                                            </button>
+
+                                                                                            {/* Duplicate */}
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() => duplicateBlock(block.id)}
+                                                                                                className="p-1.5 text-gray-400 hover:text-nature-700 hover:bg-nature-50 rounded-lg transition-colors cursor-pointer"
+                                                                                                title="Duplica questa sezione"
+                                                                                            >
+                                                                                                <Icons.Copy size={16} />
+                                                                                            </button>
+
+                                                                                            {/* Delete */}
                                                                                             <button 
                                                                                                 type="button" 
-                                                                                                onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }} 
-                                                                                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors ml-2"
+                                                                                                onClick={() => removeBlock(block.id)} 
+                                                                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                                                                                title="Elimina sezione"
                                                                                             >
                                                                                                 <Trash2 size={16} />
                                                                                             </button>
-                                                                                              <div className={`p-1 rounded-full bg-gray-100 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                                                                                                <Icons.ChevronDown size={16} className="text-gray-500" />
-                                                                                            </div>
+
+                                                                                            {/* Toggle Chevron */}
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() => setExpandedBlockId(isExpanded ? null : block.id)}
+                                                                                                className={`p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all cursor-pointer ${isExpanded ? 'rotate-180 text-nature-700' : ''}`}
+                                                                                                title={isExpanded ? 'Comprimi' : 'Espandi'}
+                                                                                            >
+                                                                                                <Icons.ChevronDown size={17} />
+                                                                                            </button>
                                                                                         </div>
                                                                                     </div>
 
                                                                                     {/* Block Body (Editor) */}
                                                                                     {isExpanded && (
-                                                                                        <div className="p-4 bg-gray-50 animate-in slide-in-from-top-2 duration-300">
+                                                                                        <div className="p-5 bg-gray-50/70 border-t border-gray-100 animate-in slide-in-from-top-1 duration-200">
                                                         {block.type === 'hero' && (
                                                             <div className="space-y-4">
                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                    <input type="text" placeholder="Badge Superiore (es. Freschezza Quotidiana)" className="w-full px-3 py-2 border rounded-lg text-sm font-bold" value={block.data.badgeText || ''} onChange={e => updateBlockData(block.id, { badgeText: e.target.value })} />
-                                                                    <input type="text" placeholder="Titolo Principale (es. Il Nostro Raccolto)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                    <textarea rows={2} placeholder="Sottotitolo / Descrizione (opzionale)" className="w-full md:col-span-2 px-3 py-2 border rounded-lg text-sm" value={block.data.subtitle || ''} onChange={e => updateBlockData(block.id, { subtitle: e.target.value })} />
-                                                                    <input type="text" placeholder="Testo Bottone Principale (es. Scopri il Catalogo)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} />
-                                                                    <PageLinkSelector value={block.data.ctaLink || ''} onChange={val => updateBlockData(block.id, { ctaLink: val })} pages={pages} placeholder="Seleziona Pagina Bottone Principale" />
-                                                                    <input type="text" placeholder="Testo Secondo Bottone (es. I Nostri Mercati)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.secondaryCtaText || ''} onChange={e => updateBlockData(block.id, { secondaryCtaText: e.target.value })} />
-                                                                    <PageLinkSelector value={block.data.secondaryCtaLink || ''} onChange={val => updateBlockData(block.id, { secondaryCtaLink: val })} pages={pages} placeholder="Seleziona Pagina Secondo Bottone" />
+                                                                    <FormField label="Badge Superiore" hint="Es. Freschezza Quotidiana">
+                                                                        <FormInput
+                                                                            value={block.data.badgeText || ''}
+                                                                            onChange={e => updateBlockData(block.id, { badgeText: e.target.value })}
+                                                                            placeholder="Es. Raccolto Locale a Km 0"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Titolo Principale" hint="Titolo ad alto impatto">
+                                                                        <FormInput
+                                                                            value={block.data.title || ''}
+                                                                            onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                            placeholder="Es. Il Gusto Autentico della Nostra Terra"
+                                                                            className="font-bold text-gray-900"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Sottotitolo / Descrizione" hint="Opzionale" className="md:col-span-2">
+                                                                        <FormTextarea
+                                                                            rows={2}
+                                                                            value={block.data.subtitle || ''}
+                                                                            onChange={e => updateBlockData(block.id, { subtitle: e.target.value })}
+                                                                            placeholder="Breve presentazione o payoff del tuo store di ortofrutta..."
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Testo Bottone Principale">
+                                                                        <FormInput
+                                                                            value={block.data.ctaText || ''}
+                                                                            onChange={e => updateBlockData(block.id, { ctaText: e.target.value })}
+                                                                            placeholder="Es. Ordina Ora"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Destinazione Bottone Principale">
+                                                                        <PageLinkSelector
+                                                                            value={block.data.ctaLink || ''}
+                                                                            onChange={val => updateBlockData(block.id, { ctaLink: val })}
+                                                                            pages={pages}
+                                                                            placeholder="Seleziona Pagina Bottone Principale"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Testo Secondo Bottone" hint="Opzionale">
+                                                                        <FormInput
+                                                                            value={block.data.secondaryCtaText || ''}
+                                                                            onChange={e => updateBlockData(block.id, { secondaryCtaText: e.target.value })}
+                                                                            placeholder="Es. I Nostri Mercati"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Destinazione Secondo Bottone">
+                                                                        <PageLinkSelector
+                                                                            value={block.data.secondaryCtaLink || ''}
+                                                                            onChange={val => updateBlockData(block.id, { secondaryCtaLink: val })}
+                                                                            pages={pages}
+                                                                            placeholder="Seleziona Pagina Secondo Bottone"
+                                                                        />
+                                                                    </FormField>
                                                                 </div>
-                                                                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-4">
-                                                                    <div className="flex-1">
-                                                                        <label className="block text-xs font-bold text-gray-700 mb-1">Immagine di Sfondo (Upload)</label>
-                                                                        <input type="file" accept="image/*" onChange={(e) => {
-                                                                            if (e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, 'backgroundImage');
-                                                                        }} className="text-sm w-full" />
-                                                                        {block.data.backgroundImage && <p className="text-xs text-green-600 mt-1 truncate">Attualmente inserita: {block.data.backgroundImage}</p>}
-                                                                    </div>
-                                                                    {block.data.backgroundImage && (
-                                                                        <img src={sanitizeImageUrl(block.data.backgroundImage)} alt="Preview" className="w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-200" />
-                                                                    )}
+                                                                <ImageUploadBox
+                                                                    label="Immagine di Sfondo Copertina"
+                                                                    hint="Risoluzione consigliata 1920x1080px"
+                                                                    imageUrl={block.data.backgroundImage}
+                                                                    onUpload={file => handleImageUpload(file, block.id, 'backgroundImage')}
+                                                                    onRemove={() => updateBlockData(block.id, { backgroundImage: '' })}
+                                                                    aspectRatio="aspect-21/9"
+                                                                />
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {block.type === 'bannerPromo' && (
+                                                            <div className="space-y-4">
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                    <FormField label="Badge Promozionale" hint="Es. PROMOZIONE DELLA SETTIMANA">
+                                                                        <FormInput
+                                                                            value={block.data.badge || ''}
+                                                                            onChange={e => updateBlockData(block.id, { badge: e.target.value })}
+                                                                            placeholder="Es. SCONTO BENVENUTO"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Codice Coupon Sconto" hint="Verrà formattato in maiuscolo">
+                                                                        <FormInput
+                                                                            value={block.data.couponCode || ''}
+                                                                            onChange={e => updateBlockData(block.id, { couponCode: e.target.value.toUpperCase() })}
+                                                                            placeholder="Es. FRESCO10"
+                                                                            className="font-mono uppercase tracking-wider font-bold"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Titolo Offerta" className="md:col-span-2">
+                                                                        <FormInput
+                                                                            value={block.data.title || ''}
+                                                                            onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                            placeholder="Es. 10% di sconto su tutta la frutta di stagione"
+                                                                            className="font-bold text-gray-900"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Dettagli Offerta / Condizioni" className="md:col-span-2">
+                                                                        <FormTextarea
+                                                                            rows={2}
+                                                                            value={block.data.text || ''}
+                                                                            onChange={e => updateBlockData(block.id, { text: e.target.value })}
+                                                                            placeholder="Valido su un acquisto minimo di €20. Valido solo online per questa settimana..."
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Testo Bottone">
+                                                                        <FormInput
+                                                                            value={block.data.ctaText || ''}
+                                                                            onChange={e => updateBlockData(block.id, { ctaText: e.target.value })}
+                                                                            placeholder="Es. Approfitta Ora"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Destinazione Bottone">
+                                                                        <PageLinkSelector
+                                                                            value={block.data.ctaLink || ''}
+                                                                            onChange={val => updateBlockData(block.id, { ctaLink: val })}
+                                                                            pages={pages}
+                                                                            placeholder="Seleziona Pagina Promozione"
+                                                                        />
+                                                                    </FormField>
                                                                 </div>
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'features' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Sezione (es. I Nostri Servizi)" className="w-full px-3 py-2 border rounded-lg font-bold focus:ring-2 focus:ring-nature-500/20" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
+                                                                <FormField label="Titolo Sezione" hint="Es. I Nostri Vantaggi Esclusivi">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. Perché Scegliere Ortofrutta Butti"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
 
-                                                                <div className="space-y-3 mt-4">
-                                                                    <h5 className="text-sm font-bold text-gray-700">Vantaggi</h5>
-                                                                    {(block.data.features || []).map((feature: any, fIndex: number) => (
-                                                                        <div key={fIndex} className="p-3 bg-gray-50 border border-gray-100 rounded-xl flex gap-3 relative group">
-                                                                            <button type="button" onClick={() => {
-                                                                                const newFeatures = [...block.data.features];
-                                                                                newFeatures.splice(fIndex, 1);
-                                                                                updateBlockData(block.id, { features: newFeatures });
-                                                                            }} className="absolute top-2 right-2 p-1 text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={14} /></button>
-                                                                            <div className="flex-1 space-y-3 pr-6">
-                                                                                <div className="flex flex-col md:flex-row gap-2">
-                                                                                    <div className="w-full md:w-2/5 space-y-2">
-                                                                                    <SearchableSelect
-                                                            options={[
-                                                                { value: 'lucide', label: 'Icona Lucide' },
-                                                                { value: 'image', label: 'Immagine (Upload)' }
-                                                            ]}
-                                                            value={feature.iconType || 'lucide'}
-                                                            onChange={(value) => {
-                                                                const newF = [...block.data.features];
-                                                                newF[fIndex].iconType = value;
-                                                                updateBlockData(block.id, { features: newF });
-                                                            }}
-                                                            placeholder="Tipo Icona"
-                                                            className="w-full text-xs mb-1.5"
-                                                        />
+                                                                <div className="space-y-3 pt-2">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                            Elementi Vantaggi ({(block.data.features || []).length})
+                                                                        </label>
+                                                                    </div>
+
+                                                                    <div className="space-y-3">
+                                                                        {(block.data.features || []).map((feature: any, fIndex: number) => (
+                                                                            <div key={fIndex} className="p-4 bg-white border border-gray-200/90 rounded-2xl shadow-2xs space-y-3 transition-all hover:border-gray-300">
+                                                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                                                                                    <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                                                                                        #{fIndex + 1} Vantaggio
+                                                                                    </span>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            const newFeatures = [...block.data.features];
+                                                                                            newFeatures.splice(fIndex, 1);
+                                                                                            updateBlockData(block.id, { features: newFeatures });
+                                                                                        }}
+                                                                                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                                                    >
+                                                                                        <Trash2 size={13} />
+                                                                                        <span>Rimuovi</span>
+                                                                                    </button>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                                                                                    <div className="md:col-span-4 space-y-2">
+                                                                                        <SearchableSelect
+                                                                                            options={[
+                                                                                                { value: 'lucide', label: '✨ Icona Vettoriale' },
+                                                                                                { value: 'image', label: '🖼️ Immagine Caricata' }
+                                                                                            ]}
+                                                                                            value={feature.iconType || 'lucide'}
+                                                                                            onChange={(value) => {
+                                                                                                const newF = [...block.data.features];
+                                                                                                newF[fIndex].iconType = value;
+                                                                                                updateBlockData(block.id, { features: newF });
+                                                                                            }}
+                                                                                            placeholder="Tipo Icona"
+                                                                                            className="w-full text-xs"
+                                                                                        />
                                                                                         {(!feature.iconType || feature.iconType === 'lucide') ? (
                                                                                             <IconSelector
                                                                                                 value={feature.icon || 'Star'}
@@ -898,58 +1449,121 @@ export const PageManager = () => {
                                                                                                 }}
                                                                                             />
                                                                                         ) : (
-                                                                                            <div>
-                                                                                                <input type="file" accept="image/*" className="w-full text-xs" onChange={(e) => {
-                                                                                                    if (e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, '', fIndex);
-                                                                                                }} />
-                                                                                                {feature.iconUrl && <img src={sanitizeImageUrl(feature.iconUrl)} alt="Icon" className="w-8 h-8 mt-1 object-contain" />}
+                                                                                            <div className="space-y-1.5">
+                                                                                                <input
+                                                                                                    type="file"
+                                                                                                    accept="image/*"
+                                                                                                    className="w-full text-xs file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
+                                                                                                    onChange={(e) => {
+                                                                                                        if (e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, '', fIndex, 'features');
+                                                                                                    }}
+                                                                                                />
+                                                                                                {feature.iconUrl && (
+                                                                                                    <div className="flex items-center gap-2 mt-1">
+                                                                                                        <img src={sanitizeImageUrl(feature.iconUrl)} alt="Icon" className="w-8 h-8 rounded-lg object-contain bg-gray-50 border border-gray-200 p-0.5" />
+                                                                                                        <span className="text-[11px] text-green-600 font-medium truncate">Caricata</span>
+                                                                                                    </div>
+                                                                                                )}
                                                                                             </div>
                                                                                         )}
                                                                                     </div>
-                                                                                    <input type="text" placeholder="Titolo vantaggio" className="w-full md:w-3/5 px-3 py-2 border rounded-lg text-sm font-bold" value={feature.title || ''} onChange={e => { const newF = [...block.data.features]; newF[fIndex].title = e.target.value; updateBlockData(block.id, { features: newF }); }} />
+
+                                                                                    <div className="md:col-span-8 space-y-2">
+                                                                                        <FormInput
+                                                                                            value={feature.title || ''}
+                                                                                            onChange={e => {
+                                                                                                const newF = [...block.data.features];
+                                                                                                newF[fIndex].title = e.target.value;
+                                                                                                updateBlockData(block.id, { features: newF });
+                                                                                            }}
+                                                                                            placeholder="Titolo Vantaggio (es. Raccolta Giornaliera)"
+                                                                                            className="font-bold text-sm"
+                                                                                        />
+                                                                                        <FormInput
+                                                                                            value={feature.description || ''}
+                                                                                            onChange={e => {
+                                                                                                const newF = [...block.data.features];
+                                                                                                newF[fIndex].description = e.target.value;
+                                                                                                updateBlockData(block.id, { features: newF });
+                                                                                            }}
+                                                                                            placeholder="Descrizione breve (es. Frutta e verdura colte nelle 24h precedenti)"
+                                                                                            className="text-xs text-gray-600"
+                                                                                        />
+                                                                                    </div>
                                                                                 </div>
-                                                                                <input type="text" placeholder="Descrizione breve..." className="w-full px-3 py-2 border rounded-lg text-sm text-gray-600" value={feature.description || ''} onChange={e => { const newF = [...block.data.features]; newF[fIndex].description = e.target.value; updateBlockData(block.id, { features: newF }); }} />
                                                                             </div>
-                                                                        </div>
-                                                                    ))}
-                                                                    <button type="button" onClick={() => {
-                                                                        const newF = [...(block.data.features || []), { icon: 'Star', title: 'Nuovo Vantaggio', description: 'Descrizione' }];
-                                                                        updateBlockData(block.id, { features: newF });
-                                                                    }} className="text-sm font-semibold text-fruit-600 hover:text-fruit-700 flex items-center gap-1">
-                                                                        <Plus size={14} /> Aggiungi Vantaggio
+                                                                        ))}
+                                                                    </div>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newF = [...(block.data.features || []), { icon: 'Leaf', title: 'Nuovo Vantaggio', description: 'Descrizione del servizio offerto...' }];
+                                                                            updateBlockData(block.id, { features: newF });
+                                                                        }}
+                                                                        className="w-full py-2.5 px-4 border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                                                    >
+                                                                        <Plus size={15} />
+                                                                        <span>Aggiungi Altro Vantaggio</span>
                                                                     </button>
                                                                 </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'imageText' && (
                                                             <div className="space-y-4">
-                                                                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-4">
-                                                                    <div className="flex-1">
-                                                                        <label className="block text-xs font-bold text-gray-700 mb-1">Immagine (Upload)</label>
-                                                                        <input type="file" accept="image/*" onChange={(e) => {
-                                                                            if (e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, 'imageUrl');
-                                                                        }} className="text-sm w-full" />
-                                                                        {block.data.imageUrl && <p className="text-xs text-green-600 mt-1 truncate">Attualmente inserita</p>}
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                    <div>
+                                                                        <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                                                            Posizionamento Immagine
+                                                                        </label>
+                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                            {[
+                                                                                { value: 'left', label: 'Immagine a Sinistra', icon: Icons.AlignLeft },
+                                                                                { value: 'right', label: 'Immagine a Destra', icon: Icons.AlignRight }
+                                                                            ].map(opt => {
+                                                                                const isSelected = (block.data.imagePosition || 'left') === opt.value;
+                                                                                const Icon = opt.icon;
+                                                                                return (
+                                                                                    <button
+                                                                                        key={opt.value}
+                                                                                        type="button"
+                                                                                        onClick={() => updateBlockData(block.id, { imagePosition: opt.value })}
+                                                                                        className={`flex items-center justify-center gap-1.5 text-xs py-2 px-3 rounded-xl border font-bold transition-all cursor-pointer ${
+                                                                                            isSelected
+                                                                                                ? 'bg-purple-600 border-purple-600 text-white shadow-2xs'
+                                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                                                                        }`}
+                                                                                    >
+                                                                                        <Icon size={14} />
+                                                                                        <span>{opt.label}</span>
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
                                                                     </div>
-                                                                    {block.data.imageUrl && (
-                                                                        <img src={sanitizeImageUrl(block.data.imageUrl)} alt="Preview" className="w-16 h-16 object-cover rounded-lg shadow-sm" />
-                                                                    )}
+
+                                                                    <ImageUploadBox
+                                                                        label="Immagine di Sezione"
+                                                                        imageUrl={block.data.imageUrl}
+                                                                        onUpload={file => handleImageUpload(file, block.id, 'imageUrl')}
+                                                                        onRemove={() => updateBlockData(block.id, { imageUrl: '' })}
+                                                                        aspectRatio="aspect-4/3"
+                                                                    />
                                                                 </div>
 
-                                                                <SearchableSelect
-                                                                    options={[
-                                                                        { value: 'left', label: 'Immagine a Sinistra' },
-                                                                        { value: 'right', label: 'Immagine a Destra' }
-                                                                    ]}
-                                                                    value={block.data.imagePosition || 'left'}
-                                                                    onChange={value => updateBlockData(block.id, { imagePosition: value })}
-                                                                    placeholder="Posizione Immagine"
-                                                                />
-
-                                                                <div>
-                                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Titolo Formattabile</label>
-                                                                    <div className="bg-white rounded-lg">
+                                                                <div className="space-y-1.5">
+                                                                    <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                        Titolo Formattabile
+                                                                    </label>
+                                                                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-2xs">
                                                                         <ReactQuill
                                                                             theme="snow"
                                                                             modules={QUILL_MODULES}
@@ -960,396 +1574,862 @@ export const PageManager = () => {
                                                                     </div>
                                                                 </div>
 
-                                                                <div>
-                                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Testo</label>
-                                                                    <div className="bg-white rounded-lg">
+                                                                <div className="space-y-1.5">
+                                                                    <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                        Testo Descrittivo
+                                                                    </label>
+                                                                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-2xs">
                                                                         <ReactQuill
                                                                             theme="snow"
                                                                             modules={QUILL_MODULES}
                                                                             formats={QUILL_FORMATS}
                                                                             value={block.data.content || ''}
-                                                                            onChange={(content) => updateBlockData(block.id, { content: content })}
+                                                                            onChange={(content) => updateBlockData(block.id, { content })}
                                                                         />
                                                                     </div>
                                                                 </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'cta' && (
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                <input type="text" placeholder="Titolo" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
-                                                                <input type="text" placeholder="Sottotitolo" value={block.data.text || ''} onChange={e => updateBlockData(block.id, { text: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
-                                                                <input type="text" placeholder="Testo Bottone" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
-                                                                <PageLinkSelector value={block.data.ctaLink || ''} onChange={val => updateBlockData(block.id, { ctaLink: val })} pages={pages} placeholder="Seleziona Pagina Destinazione" />
-                                                                <SearchableSelect
-                                                                    options={[
-                                                                        { value: 'fruit', label: 'Brand (Arancione)' },
-                                                                        { value: 'nature', label: 'Natura (Verde)' }
-                                                                    ]}
-                                                                    value={block.data.backgroundColor || 'fruit'}
-                                                                    onChange={value => updateBlockData(block.id, { backgroundColor: value })}
-                                                                    placeholder="Colore Sfondo"
-                                                                    className="w-full md:col-span-2"
+                                                            <div className="space-y-4">
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                    <FormField label="Titolo Chiamata all'Azione">
+                                                                        <FormInput
+                                                                            value={block.data.title || ''}
+                                                                            onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                            placeholder="Es. Vuoi Ricevere la Tua Spesa a Casa?"
+                                                                            className="font-bold text-gray-900"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Sottotitolo / Didascalia">
+                                                                        <FormInput
+                                                                            value={block.data.text || ''}
+                                                                            onChange={e => updateBlockData(block.id, { text: e.target.value })}
+                                                                            placeholder="Es. Ordina comodamente online e ritira al mercato o ricevi a domicilio."
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Testo del Bottone">
+                                                                        <FormInput
+                                                                            value={block.data.ctaText || ''}
+                                                                            onChange={e => updateBlockData(block.id, { ctaText: e.target.value })}
+                                                                            placeholder="Es. Esplora il Catalogo"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Destinazione Bottone">
+                                                                        <PageLinkSelector
+                                                                            value={block.data.ctaLink || ''}
+                                                                            onChange={val => updateBlockData(block.id, { ctaLink: val })}
+                                                                            pages={pages}
+                                                                            placeholder="Seleziona Pagina Destinazione"
+                                                                        />
+                                                                    </FormField>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                                                        Stile & Colore del Banner
+                                                                    </label>
+                                                                    <div className="grid grid-cols-2 gap-3">
+                                                                        {[
+                                                                            { value: 'fruit', label: 'Arancione Frutta (Brand)', color: 'bg-fruit-500 text-white' },
+                                                                            { value: 'nature', label: 'Verde Natura (Bio)', color: 'bg-nature-600 text-white' }
+                                                                        ].map(opt => {
+                                                                            const isSelected = (block.data.backgroundColor || 'fruit') === opt.value;
+                                                                            return (
+                                                                                <button
+                                                                                    key={opt.value}
+                                                                                    type="button"
+                                                                                    onClick={() => updateBlockData(block.id, { backgroundColor: opt.value })}
+                                                                                    className={`p-3 rounded-xl border flex items-center gap-3 transition-all cursor-pointer ${
+                                                                                        isSelected ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30' : 'border-gray-200 bg-white hover:border-gray-300'
+                                                                                    }`}
+                                                                                >
+                                                                                    <span className={`w-6 h-6 rounded-lg ${opt.color} flex items-center justify-center text-xs font-bold`}>✓</span>
+                                                                                    <span className="text-xs font-bold text-gray-800">{opt.label}</span>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
                                                                 />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'faq' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Sezione FAQ" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <div className="space-y-3">
-                                                                    {(block.data.faqs || []).map((faq: any, faqIndex: number) => (
-                                                                        <div key={faqIndex} className="p-3 bg-gray-50 border border-gray-200 rounded-xl relative group pr-10">
-                                                                            <button type="button" onClick={() => {
-                                                                                const newF = [...block.data.faqs];
-                                                                                newF.splice(faqIndex, 1);
-                                                                                updateBlockData(block.id, { faqs: newF });
-                                                                            }} className="absolute top-3 right-3 p-1 text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={16} /></button>
-                                                                            <input type="text" placeholder="Domanda" className="w-full px-3 py-2 border rounded-lg mb-2 text-sm font-bold" value={faq.question || ''} onChange={e => {
-                                                                                const newF = [...block.data.faqs];
-                                                                                newF[faqIndex].question = e.target.value;
-                                                                                updateBlockData(block.id, { faqs: newF });
-                                                                            }} />
-                                                                            <textarea rows={2} placeholder="Risposta" className="w-full px-3 py-2 border rounded-lg text-sm" value={faq.answer || ''} onChange={e => {
-                                                                                const newF = [...block.data.faqs];
-                                                                                newF[faqIndex].answer = e.target.value;
-                                                                                updateBlockData(block.id, { faqs: newF });
-                                                                            }}></textarea>
-                                                                        </div>
-                                                                    ))}
-                                                                    <button type="button" onClick={() => {
-                                                                        const newF = [...(block.data.faqs || []), { question: 'Nuova Domanda?', answer: 'Risposta...' }];
-                                                                        updateBlockData(block.id, { faqs: newF });
-                                                                    }} className="text-sm font-semibold text-nature-600 flex items-center gap-1"><Plus size={14} /> Aggiungi FAQ</button>
+                                                                <FormField label="Titolo Sezione FAQ" hint="Es. Domande Frequenti">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. Hai Domande? Ecco le Risposte Più Comuni"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
+
+                                                                <div className="space-y-3 pt-2">
+                                                                    <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                        Domande & Risposte ({(block.data.faqs || []).length})
+                                                                    </label>
+
+                                                                    <div className="space-y-3">
+                                                                        {(block.data.faqs || []).map((faq: any, faqIndex: number) => (
+                                                                            <div key={faqIndex} className="p-4 bg-white border border-gray-200/90 rounded-2xl shadow-2xs space-y-3 transition-all hover:border-gray-300">
+                                                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                                                                    <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg">
+                                                                                        #{faqIndex + 1} Domanda
+                                                                                    </span>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            const newF = [...block.data.faqs];
+                                                                                            newF.splice(faqIndex, 1);
+                                                                                            updateBlockData(block.id, { faqs: newF });
+                                                                                        }}
+                                                                                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                                                    >
+                                                                                        <Trash2 size={13} />
+                                                                                        <span>Rimuovi</span>
+                                                                                    </button>
+                                                                                </div>
+
+                                                                                <FormField label="Domanda">
+                                                                                    <FormInput
+                                                                                        value={faq.question || ''}
+                                                                                        onChange={e => {
+                                                                                            const newF = [...block.data.faqs];
+                                                                                            newF[faqIndex].question = e.target.value;
+                                                                                            updateBlockData(block.id, { faqs: newF });
+                                                                                        }}
+                                                                                        placeholder="Es. Come funziona la consegna a domicilio?"
+                                                                                        className="font-semibold text-sm"
+                                                                                    />
+                                                                                </FormField>
+
+                                                                                <FormField label="Risposta">
+                                                                                    <FormTextarea
+                                                                                        rows={2}
+                                                                                        value={faq.answer || ''}
+                                                                                        onChange={e => {
+                                                                                            const newF = [...block.data.faqs];
+                                                                                            newF[faqIndex].answer = e.target.value;
+                                                                                            updateBlockData(block.id, { faqs: newF });
+                                                                                        }}
+                                                                                        placeholder="Spiega in dettaglio la risposta..."
+                                                                                        className="text-xs text-gray-600"
+                                                                                    />
+                                                                                </FormField>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newF = [...(block.data.faqs || []), { question: 'Nuova Domanda Frequente?', answer: 'Inserisci qui la spiegazione dettagliata...' }];
+                                                                            updateBlockData(block.id, { faqs: newF });
+                                                                        }}
+                                                                        className="w-full py-2.5 px-4 border-2 border-dashed border-sky-200 hover:border-sky-400 bg-sky-50/50 hover:bg-sky-50 text-sky-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                                                    >
+                                                                        <Plus size={15} />
+                                                                        <span>Aggiungi Altra FAQ</span>
+                                                                    </button>
                                                                 </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'latestProducts' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Sezione (es. Ultimi Arrivi)" className="w-full px-3 py-2 border rounded-lg font-bold focus:ring-2 focus:ring-nature-500/20" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                                                    <label className="text-sm font-semibold text-gray-700">Numero di prodotti da mostrare:</label>
-                                                                    <input type="number" min="2" max="12" className="w-20 px-3 py-2 border rounded-lg" value={block.data.count || 4} onChange={e => updateBlockData(block.id, { count: parseInt(e.target.value) || 4 })} />
+                                                                <FormField label="Titolo Sezione Catalogo" hint="Es. I Nostri Ultimi Arrivi">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. Freschi di Raccolta: I Nuovi Arrivi"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
+
+                                                                <div>
+                                                                    <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                                                        Numero di Prodotti da Mostrare
+                                                                    </label>
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        {[2, 4, 6, 8, 12].map(num => (
+                                                                            <button
+                                                                                key={num}
+                                                                                type="button"
+                                                                                onClick={() => updateBlockData(block.id, { count: num })}
+                                                                                className={`w-12 h-10 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
+                                                                                    (block.data.count || 4) === num
+                                                                                        ? 'bg-nature-600 border-nature-600 text-white shadow-2xs'
+                                                                                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                                                                }`}
+                                                                            >
+                                                                                {num}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
-                                                                <p className="text-sm text-gray-500 italic">I prodotti più recenti verranno caricati automaticamente in questa sezione.</p>
+
+                                                                <div className="p-3.5 bg-nature-50 border border-nature-200 rounded-xl flex items-center gap-3 text-nature-800 text-xs">
+                                                                    <Icons.Sparkles size={18} className="shrink-0 text-nature-600" />
+                                                                    <p>
+                                                                        Questa vetrina si aggiorna in tempo reale mostrando automaticamente i prodotti più recenti e disponibili del tuo catalogo.
+                                                                    </p>
+                                                                </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'testimonials' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Sezione (es. Dicono di noi)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <div className="space-y-3">
-                                                                    {(block.data.testimonials || []).map((t: any, tIndex: number) => (
-                                                                        <div key={tIndex} className="p-3 bg-gray-50 border border-gray-200 rounded-xl relative group pr-10">
-                                                                            <button type="button" onClick={() => {
-                                                                                const newT = [...block.data.testimonials];
-                                                                                newT.splice(tIndex, 1);
-                                                                                updateBlockData(block.id, { testimonials: newT });
-                                                                            }} className="absolute top-3 right-3 p-1 text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={16} /></button>
-                                                                            <div className="flex gap-4 items-start mb-2">
-                                                                                <div className="w-16 h-16 bg-gray-200 rounded-full flex-shrink-0 overflow-hidden relative group/img">
-                                                                                    {t.avatarUrl ? (
-                                                                                        <img src={sanitizeImageUrl(t.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
-                                                                                    ) : (
-                                                                                        <div className="w-full h-full flex items-center justify-center text-gray-400"><Icons.User size={24} /></div>
-                                                                                    )}
-                                                                                    <label className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 cursor-pointer transition-opacity">
-                                                                                        <Icons.Upload size={16} />
-                                                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                                                                            if(e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, 'temp', tIndex); // Reusing featureIndex logic for avatar upload inside testimonial requires backend tweak, for now let's use a simpler text input or modify handleImageUpload to accept custom array paths.
-                                                                                            // Since handleImageUpload is hardcoded for 'features', we need a workaround or just use text URL. A better approach is to let users upload via a separate generic API, but let's implement a quick fix.
-                                                                                        }} />
-                                                                                    </label>
-                                                                                </div>
-                                                                                <div className="flex-1 space-y-2">
-                                                                                    <input type="text" placeholder="Nome Cliente (es. Mario R.)" className="w-full px-3 py-2 border rounded-lg text-sm font-bold" value={t.name || ''} onChange={e => {
-                                                                                        const newT = [...block.data.testimonials];
-                                                                                        newT[tIndex].name = e.target.value;
-                                                                                        updateBlockData(block.id, { testimonials: newT });
-                                                                                    }} />
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        <label className="text-xs text-gray-500">Valutazione:</label>
-                                                                                        <input type="number" min="1" max="5" value={t.rating || 5} onChange={e => {
+                                                                <FormField label="Titolo Sezione Recensioni" hint="Es. Cosa Dicono i Nostri Clienti">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. Parole Genuine da Chi Ci Sceglie Ogni Giorno"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
+
+                                                                <div className="space-y-3 pt-2">
+                                                                    <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                        Recensioni Clienti ({(block.data.testimonials || []).length})
+                                                                    </label>
+
+                                                                    <div className="space-y-3">
+                                                                        {(block.data.testimonials || []).map((t: any, tIndex: number) => (
+                                                                            <div key={tIndex} className="p-4 bg-white border border-gray-200/90 rounded-2xl shadow-2xs space-y-3 transition-all hover:border-gray-300">
+                                                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                                                                    <span className="text-xs font-bold text-yellow-700 bg-yellow-50 px-2.5 py-1 rounded-lg">
+                                                                                        #{tIndex + 1} Recensione
+                                                                                    </span>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
                                                                                             const newT = [...block.data.testimonials];
-                                                                                            newT[tIndex].rating = parseInt(e.target.value) || 5;
+                                                                                            newT.splice(tIndex, 1);
                                                                                             updateBlockData(block.id, { testimonials: newT });
-                                                                                        }} className="w-16 px-2 py-1 border rounded text-sm" />
+                                                                                        }}
+                                                                                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                                                    >
+                                                                                        <Trash2 size={13} />
+                                                                                        <span>Rimuovi</span>
+                                                                                    </button>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                                                                                    <div className="md:col-span-3 flex items-center gap-3">
+                                                                                        <div className="w-14 h-14 rounded-full bg-gray-100 border border-gray-200 overflow-hidden relative group/avatar shrink-0 flex items-center justify-center">
+                                                                                            {t.avatarUrl ? (
+                                                                                                <img src={sanitizeImageUrl(t.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
+                                                                                            ) : (
+                                                                                                <Icons.User size={22} className="text-gray-400" />
+                                                                                            )}
+                                                                                            <label className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 cursor-pointer transition-opacity">
+                                                                                                <Icons.Upload size={14} />
+                                                                                                <input
+                                                                                                    type="file"
+                                                                                                    accept="image/*"
+                                                                                                    className="hidden"
+                                                                                                    onChange={(e) => {
+                                                                                                        if (e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, '', tIndex, 'testimonials');
+                                                                                                    }}
+                                                                                                />
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <span className="text-[11px] text-gray-500 font-medium">Foto Profilo</span>
+                                                                                    </div>
+
+                                                                                    <div className="md:col-span-5">
+                                                                                        <FormField label="Nome e Cognome Cliente">
+                                                                                            <FormInput
+                                                                                                value={t.name || ''}
+                                                                                                onChange={e => {
+                                                                                                    const newT = [...block.data.testimonials];
+                                                                                                    newT[tIndex].name = e.target.value;
+                                                                                                    updateBlockData(block.id, { testimonials: newT });
+                                                                                                }}
+                                                                                                placeholder="Es. Mario Rossi (Lecco)"
+                                                                                                className="font-bold text-sm"
+                                                                                            />
+                                                                                        </FormField>
+                                                                                    </div>
+
+                                                                                    <div className="md:col-span-4">
+                                                                                        <FormField label="Valutazione">
+                                                                                            <StarRatingInput
+                                                                                                value={t.rating || 5}
+                                                                                                onChange={rating => {
+                                                                                                    const newT = [...block.data.testimonials];
+                                                                                                    newT[tIndex].rating = rating;
+                                                                                                    updateBlockData(block.id, { testimonials: newT });
+                                                                                                }}
+                                                                                            />
+                                                                                        </FormField>
                                                                                     </div>
                                                                                 </div>
+
+                                                                                <FormField label="Testo della Recensione">
+                                                                                    <FormTextarea
+                                                                                        rows={2}
+                                                                                        value={t.content || ''}
+                                                                                        onChange={e => {
+                                                                                            const newT = [...block.data.testimonials];
+                                                                                            newT[tIndex].content = e.target.value;
+                                                                                            updateBlockData(block.id, { testimonials: newT });
+                                                                                        }}
+                                                                                        placeholder="Cosa dice il cliente sulla freschezza, sul servizio e sulla cortesia..."
+                                                                                        className="text-xs"
+                                                                                    />
+                                                                                </FormField>
                                                                             </div>
-                                                                            <textarea rows={3} placeholder="Recensione..." className="w-full px-3 py-2 border rounded-lg text-sm" value={t.content || ''} onChange={e => {
-                                                                                const newT = [...block.data.testimonials];
-                                                                                newT[tIndex].content = e.target.value;
-                                                                                updateBlockData(block.id, { testimonials: newT });
-                                                                            }}></textarea>
-                                                                        </div>
-                                                                    ))}
-                                                                    <button type="button" onClick={() => {
-                                                                        const newT = [...(block.data.testimonials || []), { name: 'Nuovo Cliente', rating: 5, content: 'Ottimo servizio!' }];
-                                                                        updateBlockData(block.id, { testimonials: newT });
-                                                                    }} className="text-sm font-semibold text-fruit-600 flex items-center gap-1"><Plus size={14} /> Aggiungi Recensione</button>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newT = [...(block.data.testimonials || []), { name: 'Cliente Soddisfatto', rating: 5, content: 'Prodotti freschissimi e di stagione, personale sempre gentile e disponibile!' }];
+                                                                            updateBlockData(block.id, { testimonials: newT });
+                                                                        }}
+                                                                        className="w-full py-2.5 px-4 border-2 border-dashed border-yellow-200 hover:border-yellow-400 bg-yellow-50/50 hover:bg-yellow-50 text-yellow-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                                                    >
+                                                                        <Plus size={15} />
+                                                                        <span>Aggiungi Altra Recensione</span>
+                                                                    </button>
                                                                 </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'imageGallery' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Galleria (es. La nostra fattoria)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <SearchableSelect
-                                                                    options={[
-                                                                        { value: 'grid', label: 'Griglia Classica' },
-                                                                        { value: 'masonry', label: 'Muro (Masonry)' }
-                                                                    ]}
-                                                                    value={block.data.layout || 'grid'}
-                                                                    onChange={value => updateBlockData(block.id, { layout: value })}
-                                                                    placeholder="Layout Galleria"
-                                                                    className="mb-4"
-                                                                />
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                    <FormField label="Titolo Galleria Fotografica">
+                                                                        <FormInput
+                                                                            value={block.data.title || ''}
+                                                                            onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                            placeholder="Es. I Nostri Banchi e Campi di Raccolta"
+                                                                            className="font-bold text-gray-900"
+                                                                        />
+                                                                    </FormField>
 
-                                                                <div className="p-4 border-2 border-dashed border-nature-200 rounded-xl bg-nature-50 flex items-center justify-center">
-                                                                    <label className="cursor-pointer text-nature-700 font-bold flex flex-col items-center gap-2">
-                                                                        <div className="w-10 h-10 bg-nature-100 rounded-full flex items-center justify-center"><Icons.Upload size={20} /></div>
-                                                                        <span>Carica nuova immagine</span>
-                                                                        <input type="file" accept="image/*" multiple className="hidden" onChange={async (e) => {
-                                                                            if(e.target.files) {
-                                                                                // For simplicity in UI without rewriting handleUpload, we'll suggest uploading one by one or create a specific loop
-                                                                                for(let i=0; i<e.target.files.length; i++) {
-                                                                                    const file = e.target.files[i];
-                                                                                    const formData = new FormData();
-                                                                                    formData.append('image', file);
-                                                                                    try {
-                                                                                        const res = await fetch(`${API_URL}/api/admin/upload`, {
-                                                                                            method: 'POST',
-                                                                                            headers: { 'Authorization': `Bearer ${token}` },
-                                                                                            body: formData
-                                                                                        });
-                                                                                        if (res.ok) {
-                                                                                            const data = await res.json();
-                                                                                            const imageUrl = `${API_URL}${data.url}`;
-                                                                                            setBlocks(prev => prev.map(b => {
-                                                                                                if(b.id === block.id) {
-                                                                                                    return {...b, data: {...b.data, images: [...(b.data.images || []), {url: imageUrl, alt: ''}]}};
-                                                                                                }
-                                                                                                return b;
-                                                                                            }));
-                                                                                        }
-                                                                                    } catch (err) { console.error(err); }
+                                                                    <div>
+                                                                        <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                                                            Disposizione Galleria
+                                                                        </label>
+                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                            {[
+                                                                                { value: 'grid', label: 'Griglia Ordinata', icon: Icons.Grid },
+                                                                                { value: 'masonry', label: 'Muro (Masonry)', icon: Icons.Columns }
+                                                                            ].map(opt => {
+                                                                                const isSelected = (block.data.layout || 'grid') === opt.value;
+                                                                                const Icon = opt.icon;
+                                                                                return (
+                                                                                    <button
+                                                                                        key={opt.value}
+                                                                                        type="button"
+                                                                                        onClick={() => updateBlockData(block.id, { layout: opt.value })}
+                                                                                        className={`flex items-center justify-center gap-1.5 text-xs py-2 px-3 rounded-xl border font-bold transition-all cursor-pointer ${
+                                                                                            isSelected
+                                                                                                ? 'bg-pink-600 border-pink-600 text-white shadow-2xs'
+                                                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                                                                        }`}
+                                                                                    >
+                                                                                        <Icon size={14} />
+                                                                                        <span>{opt.label}</span>
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="p-5 border-2 border-dashed border-pink-200 rounded-2xl bg-pink-50/40 flex flex-col items-center justify-center gap-2 hover:bg-pink-50/70 transition-colors">
+                                                                    <label className="cursor-pointer text-pink-700 font-bold flex flex-col items-center gap-2">
+                                                                        <div className="w-12 h-12 bg-white shadow-2xs rounded-full flex items-center justify-center text-pink-600">
+                                                                            <Icons.UploadCloud size={24} />
+                                                                        </div>
+                                                                        <span className="text-sm">Carica una o più immagini per la galleria</span>
+                                                                        <span className="text-xs font-normal text-pink-500">Seleziona più foto contemporaneamente</span>
+                                                                        <input
+                                                                            type="file"
+                                                                            accept="image/*"
+                                                                            multiple
+                                                                            className="hidden"
+                                                                            onChange={async (e) => {
+                                                                                if (e.target.files) {
+                                                                                    for (let i = 0; i < e.target.files.length; i++) {
+                                                                                        const file = e.target.files[i];
+                                                                                        const formData = new FormData();
+                                                                                        formData.append('image', file);
+                                                                                        try {
+                                                                                            const res = await fetch(`${API_URL}/api/admin/upload`, {
+                                                                                                method: 'POST',
+                                                                                                headers: { 'Authorization': `Bearer ${token}` },
+                                                                                                body: formData
+                                                                                            });
+                                                                                            if (res.ok) {
+                                                                                                const data = await res.json();
+                                                                                                const imageUrl = `${API_URL}${data.url}`;
+                                                                                                setBlocks(prev => prev.map(b => {
+                                                                                                    if (b.id === block.id) {
+                                                                                                        return { ...b, data: { ...b.data, images: [...(b.data.images || []), { url: imageUrl, alt: '' }] } };
+                                                                                                    }
+                                                                                                    return b;
+                                                                                                }));
+                                                                                            }
+                                                                                        } catch (err) { console.error(err); }
+                                                                                    }
                                                                                 }
-                                                                            }
-                                                                        }} />
+                                                                            }}
+                                                                        />
                                                                     </label>
                                                                 </div>
 
                                                                 {block.data.images && block.data.images.length > 0 && (
-                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
-                                                                        {block.data.images.map((img: any, imgIdx: number) => (
-                                                                            <div key={imgIdx} className="relative aspect-square rounded-lg overflow-hidden group">
-                                                                                <img src={sanitizeImageUrl(img.url)} alt="" className="w-full h-full object-cover" />
-                                                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                                                    <button type="button" onClick={() => {
-                                                                                        const newImg = [...block.data.images];
-                                                                                        newImg.splice(imgIdx, 1);
-                                                                                        updateBlockData(block.id, { images: newImg });
-                                                                                    }} className="p-2 bg-red-500 rounded-full text-white hover:scale-110 transition-transform"><Trash2 size={16} /></button>
+                                                                    <div>
+                                                                        <label className="block text-[11px] font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                                                                            Foto Inserite ({block.data.images.length})
+                                                                        </label>
+                                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                                                            {block.data.images.map((img: any, imgIdx: number) => (
+                                                                                <div key={imgIdx} className="relative aspect-square rounded-xl overflow-hidden group border border-gray-200 bg-gray-50 shadow-2xs">
+                                                                                    <img src={sanitizeImageUrl(img.url)} alt="" className="w-full h-full object-cover" />
+                                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => {
+                                                                                                const newImg = [...block.data.images];
+                                                                                                newImg.splice(imgIdx, 1);
+                                                                                                updateBlockData(block.id, { images: newImg });
+                                                                                            }}
+                                                                                            className="p-2 bg-red-500 hover:bg-red-600 rounded-full text-white shadow-sm transition-transform hover:scale-110 cursor-pointer"
+                                                                                            title="Elimina foto"
+                                                                                        >
+                                                                                            <Trash2 size={14} />
+                                                                                        </button>
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                                                                        ))}
+                                                                            ))}
+                                                                        </div>
                                                                     </div>
                                                                 )}
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'richText' && (
-                                                            <div className="bg-white rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-nature-500/20 focus-within:border-nature-500 transition-colors pb-10">
-                                                                <ReactQuill
-                                                                    theme="snow"
-                                                                    value={block.data.content || ''}
-                                                                    onChange={(content) => updateBlockData(block.id, { content })}
-                                                                    className="h-48"
-                                                                    style={{ border: 'none' }}
+                                                            <div className="space-y-4">
+                                                                <FormField label="Titolo Blocco (Opzionale)">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. La Nostra Storia e Tradizione di Famiglia"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
+
+                                                                <div className="space-y-1.5">
+                                                                    <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                        Contenuto Formattato (WYSIWYG)
+                                                                    </label>
+                                                                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xs">
+                                                                        <ReactQuill
+                                                                            theme="snow"
+                                                                            modules={QUILL_MODULES}
+                                                                            formats={QUILL_FORMATS}
+                                                                            value={block.data.content || ''}
+                                                                            onChange={(content) => updateBlockData(block.id, { content })}
+                                                                            className="min-h-[180px]"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
                                                                 />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'newsletter' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo (es. Iscriviti alla Newsletter)" className="w-full px-3 py-2 border rounded-lg font-bold focus:ring-2 focus:ring-nature-500/20" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <input type="text" placeholder="Sottotitolo (es. Ricevi uno sconto del 10%)" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-nature-500/20" value={block.data.subtitle || ''} onChange={e => updateBlockData(block.id, { subtitle: e.target.value })} />
-                                                                <input type="text" placeholder="Testo Bottone (es. Iscriviti ora)" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-nature-500/20" value={block.data.buttonText || ''} onChange={e => updateBlockData(block.id, { buttonText: e.target.value })} />
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                    <FormField label="Titolo Invito Newsletter">
+                                                                        <FormInput
+                                                                            value={block.data.title || ''}
+                                                                            onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                            placeholder="Es. Iscriviti per Ricevere le Nostre Offerte"
+                                                                            className="font-bold text-gray-900"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Testo Bottone di Iscrizione">
+                                                                        <FormInput
+                                                                            value={block.data.buttonText || ''}
+                                                                            onChange={e => updateBlockData(block.id, { buttonText: e.target.value })}
+                                                                            placeholder="Es. Iscriviti Subito"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Sottotitolo / Vantaggio Iscrizione" className="md:col-span-2">
+                                                                        <FormTextarea
+                                                                            rows={2}
+                                                                            value={block.data.subtitle || ''}
+                                                                            onChange={e => updateBlockData(block.id, { subtitle: e.target.value })}
+                                                                            placeholder="Es. Riceverai uno sconto del 10% sul tuo primo acquisto e aggiornamenti sui raccolti di stagione."
+                                                                        />
+                                                                    </FormField>
+                                                                </div>
+
+                                                                <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 text-blue-800 text-xs">
+                                                                    <Icons.Mail size={18} className="shrink-0 text-blue-600" />
+                                                                    <p>
+                                                                        Il form include la validazione email automatica e la conformità al consenso privacy per raccogliere contatti genuini.
+                                                                    </p>
+                                                                </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'stats' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Sezione Statistiche" className="w-full px-3 py-2 border rounded-lg font-bold focus:ring-2 focus:ring-nature-500/20" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <div className="space-y-3 mt-4">
-                                                                    <h5 className="text-sm font-bold text-gray-700">Dati Statistiche</h5>
-                                                                    {(block.data.stats || []).map((stat: any, sIdx: number) => (
-                                                                        <div key={sIdx} className="p-3 bg-gray-50 border border-gray-100 rounded-xl relative group flex gap-3">
-                                                                             <button type="button" onClick={() => {
-                                                                                const newS = [...block.data.stats];
-                                                                                newS.splice(sIdx, 1);
-                                                                                updateBlockData(block.id, { stats: newS });
-                                                                            }} className="absolute top-2 right-2 flex text-red-500 opacity-0 group-hover:opacity-100 p-1 bg-red-50 hover:bg-red-100 rounded z-10"><Trash2 size={14} /></button>
-                                                                            <div className="w-1/3">
-                                                                                <input type="text" placeholder="Numero (es. 100+)" className="w-full px-3 py-2 border rounded-lg text-sm font-bold focus:ring-2 focus:ring-nature-500/20" value={stat.value || ''} onChange={e => {
-                                                                                    const newS = [...block.data.stats];
-                                                                                    newS[sIdx].value = e.target.value;
-                                                                                    updateBlockData(block.id, { stats: newS });
-                                                                                }} />
+                                                                <FormField label="Titolo Sezione Statistiche" hint="Es. I Nostri Numeri">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. La Nostra Passione in Numeri Concreti"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
+
+                                                                <div className="space-y-3 pt-2">
+                                                                    <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                        Metriche & Dati ({(block.data.stats || []).length})
+                                                                    </label>
+
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                        {(block.data.stats || []).map((stat: any, sIdx: number) => (
+                                                                            <div key={sIdx} className="p-4 bg-white border border-gray-200/90 rounded-2xl shadow-2xs space-y-3 transition-all hover:border-gray-300">
+                                                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                                                                    <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-lg">
+                                                                                        #{sIdx + 1} Dato
+                                                                                    </span>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            const newS = [...block.data.stats];
+                                                                                            newS.splice(sIdx, 1);
+                                                                                            updateBlockData(block.id, { stats: newS });
+                                                                                        }}
+                                                                                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                                                    >
+                                                                                        <Trash2 size={13} />
+                                                                                        <span>Rimuovi</span>
+                                                                                    </button>
+                                                                                </div>
+
+                                                                                <FormField label="Valore / Numero" hint="Es. 100%, 500+, 24h">
+                                                                                    <FormInput
+                                                                                        value={stat.value || ''}
+                                                                                        onChange={e => {
+                                                                                            const newS = [...block.data.stats];
+                                                                                            newS[sIdx].value = e.target.value;
+                                                                                            updateBlockData(block.id, { stats: newS });
+                                                                                        }}
+                                                                                        placeholder="Es. 100%"
+                                                                                        className="font-black text-lg text-teal-700"
+                                                                                    />
+                                                                                </FormField>
+
+                                                                                <FormField label="Etichetta / Didascalia">
+                                                                                    <FormInput
+                                                                                        value={stat.label || ''}
+                                                                                        onChange={e => {
+                                                                                            const newS = [...block.data.stats];
+                                                                                            newS[sIdx].label = e.target.value;
+                                                                                            updateBlockData(block.id, { stats: newS });
+                                                                                        }}
+                                                                                        placeholder="Es. Freschezza e Filiera Corta Garantita"
+                                                                                        className="text-sm font-medium"
+                                                                                    />
+                                                                                </FormField>
                                                                             </div>
-                                                                            <div className="w-2/3 pr-6">
-                                                                                <input type="text" placeholder="Etichetta (es. Agricoltori Locali)" className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-nature-500/20" value={stat.label || ''} onChange={e => {
-                                                                                    const newS = [...block.data.stats];
-                                                                                    newS[sIdx].label = e.target.value;
-                                                                                    updateBlockData(block.id, { stats: newS });
-                                                                                }} />
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                    <button type="button" onClick={() => {
-                                                                        const newS = [...(block.data.stats || []), { value: '100+', label: 'Nuova Statistica' }];
-                                                                        updateBlockData(block.id, { stats: newS });
-                                                                    }} className="text-sm font-semibold text-fruit-600 hover:text-fruit-700 bg-fruit-50 hover:bg-fruit-100 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors w-fit"><Plus size={14} /> Aggiungi Dato</button>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newS = [...(block.data.stats || []), { value: '100%', label: 'Nuova Metrica o Traguardo' }];
+                                                                            updateBlockData(block.id, { stats: newS });
+                                                                        }}
+                                                                        className="w-full py-2.5 px-4 border-2 border-dashed border-teal-200 hover:border-teal-400 bg-teal-50/50 hover:bg-teal-50 text-teal-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                                                    >
+                                                                        <Plus size={15} />
+                                                                        <span>Aggiungi Altra Statistica</span>
+                                                                    </button>
                                                                 </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'video' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Video (opzionale)" className="w-full px-3 py-2 border rounded-lg font-bold focus:ring-2 focus:ring-nature-500/20" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <input type="url" placeholder="URL Video YouTube o Vimeo (es. https://youtu.be/...)" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-nature-500/20" value={block.data.videoUrl || ''} onChange={e => updateBlockData(block.id, { videoUrl: e.target.value })} />
-                                                                <div className="p-3 bg-blue-50 text-blue-800 text-sm rounded-lg border border-blue-100 flex gap-2 items-start shadow-sm">
-                                                                    <Icons.Info size={16} className="mt-0.5 shrink-0" />
-                                                                    <p>Incolla il link diretto di un video YouTube o Vimeo. Verrà mostrato un player grande e immersivo.</p>
+                                                                <FormField label="Titolo Sezione Video (Opzionale)">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. Scopri Come Selezioniamo la Nostra Frutta"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
+
+                                                                <FormField label="Link Video YouTube o Vimeo" hint="Incolla l'URL completo del video">
+                                                                    <FormInput
+                                                                        type="url"
+                                                                        value={block.data.videoUrl || ''}
+                                                                        onChange={e => updateBlockData(block.id, { videoUrl: e.target.value })}
+                                                                        placeholder="Es. https://www.youtube.com/watch?v=..."
+                                                                        className="font-mono text-sm"
+                                                                    />
+                                                                </FormField>
+
+                                                                <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-800 text-xs">
+                                                                    <Icons.Video size={18} className="shrink-0 text-red-600" />
+                                                                    <p>
+                                                                        Il player video verrà renderizzato a tutto schermo e responsive 16:9 con supporto ai controlli nativi e streaming veloce.
+                                                                    </p>
                                                                 </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
                                                         {block.type === 'categories' && (
                                                             <div className="space-y-4">
-                                                                <input type="text" placeholder="Titolo Sezione (es. Cosa stai cercando?)" className="w-full px-3 py-2 border rounded-lg font-bold focus:ring-2 focus:ring-nature-500/20" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                <div className="space-y-3 mt-4">
-                                                                    <h5 className="text-sm font-bold text-gray-700">Categorie da mostrare</h5>
-                                                                    {(block.data.categories || []).map((cat: any, cIdx: number) => (
-                                                                        <div key={cIdx} className="p-4 bg-gray-50 border border-gray-100 rounded-xl flex flex-col md:flex-row gap-4 relative group">
-                                                                            <button type="button" onClick={() => {
-                                                                                const newC = [...block.data.categories];
-                                                                                newC.splice(cIdx, 1);
-                                                                                updateBlockData(block.id, { categories: newC });
-                                                                            }} className="absolute top-2 right-2 p-1.5 text-red-500 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 rounded-lg transition-all z-10 shadow-sm"><Trash2 size={14} /></button>
-                                                                            
-                                                                            <div className="w-full md:w-32 shrink-0">
-                                                                                <label className="block text-xs font-bold text-gray-700 mb-2">Immagine</label>
-                                                                                <input type="file" accept="image/*" className="w-full text-xs" onChange={(e) => {
-                                                                                    if (e.target.files?.[0]) handleImageUpload(e.target.files[0], block.id, '', cIdx, 'categories');
-                                                                                }} />
-                                                                                {cat.imageUrl && <img src={sanitizeImageUrl(cat.imageUrl)} alt="Preview" className="w-full h-24 mt-2 object-cover rounded-xl shadow-sm border border-gray-200" />}
+                                                                <FormField label="Titolo Sezione Categorie" hint="Es. Esplora per Reparto">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. Cosa Vuoi Mettere nel Carrello Oggi?"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
+
+                                                                <div className="space-y-3 pt-2">
+                                                                    <label className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                                                        Box Categorie ({(block.data.categories || []).length})
+                                                                    </label>
+
+                                                                    <div className="space-y-3">
+                                                                        {(block.data.categories || []).map((cat: any, cIdx: number) => (
+                                                                            <div key={cIdx} className="p-4 bg-white border border-gray-200/90 rounded-2xl shadow-2xs space-y-3 transition-all hover:border-gray-300">
+                                                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                                                                    <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-lg">
+                                                                                        #{cIdx + 1} Categoria
+                                                                                    </span>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            const newC = [...block.data.categories];
+                                                                                            newC.splice(cIdx, 1);
+                                                                                            updateBlockData(block.id, { categories: newC });
+                                                                                        }}
+                                                                                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                                                                    >
+                                                                                        <Trash2 size={13} />
+                                                                                        <span>Rimuovi</span>
+                                                                                    </button>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                                                                                    <div className="md:col-span-4">
+                                                                                        <ImageUploadBox
+                                                                                            label="Foto Categoria"
+                                                                                            imageUrl={cat.imageUrl}
+                                                                                            onUpload={file => handleImageUpload(file, block.id, '', cIdx, 'categories')}
+                                                                                            onRemove={() => {
+                                                                                                const newC = [...block.data.categories];
+                                                                                                newC[cIdx].imageUrl = '';
+                                                                                                updateBlockData(block.id, { categories: newC });
+                                                                                            }}
+                                                                                            aspectRatio="aspect-16/10"
+                                                                                        />
+                                                                                    </div>
+
+                                                                                    <div className="md:col-span-8 space-y-3">
+                                                                                        <FormField label="Nome Categoria">
+                                                                                            <FormInput
+                                                                                                value={cat.title || ''}
+                                                                                                onChange={e => {
+                                                                                                    const newC = [...block.data.categories];
+                                                                                                    newC[cIdx].title = e.target.value;
+                                                                                                    updateBlockData(block.id, { categories: newC });
+                                                                                                }}
+                                                                                                placeholder="Es. Frutta Fresca di Stagione"
+                                                                                                className="font-bold text-sm"
+                                                                                            />
+                                                                                        </FormField>
+
+                                                                                        <FormField label="Pagina o Reparto di Destinazione">
+                                                                                            <PageLinkSelector
+                                                                                                value={cat.link || ''}
+                                                                                                onChange={val => {
+                                                                                                    const newC = [...block.data.categories];
+                                                                                                    newC[cIdx].link = val;
+                                                                                                    updateBlockData(block.id, { categories: newC });
+                                                                                                }}
+                                                                                                pages={pages}
+                                                                                                placeholder="Seleziona Pagina Destinazione"
+                                                                                            />
+                                                                                        </FormField>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="flex-1 space-y-3 pt-2">
-                                                                                <input type="text" placeholder="Titolo Categoria (es. Frutta Fresca)" className="w-full px-3 py-2 border rounded-lg text-sm font-bold focus:ring-2 focus:ring-nature-500/20" value={cat.title || ''} onChange={e => {
-                                                                                    const newC = [...block.data.categories];
-                                                                                    newC[cIdx].title = e.target.value;
-                                                                                    updateBlockData(block.id, { categories: newC });
-                                                                                }} />
-                                                                                <PageLinkSelector value={cat.link || ''} onChange={val => {
-                                                                                     const newC = [...block.data.categories];
-                                                                                     newC[cIdx].link = val;
-                                                                                     updateBlockData(block.id, { categories: newC });
-                                                                                 }} pages={pages} placeholder="Seleziona Pagina Destinazione" />
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                    <button type="button" onClick={() => {
-                                                                        const newC = [...(block.data.categories || []), { title: 'Nuova Categoria', link: '/shop' }];
-                                                                        updateBlockData(block.id, { categories: newC });
-                                                                    }} className="text-sm font-semibold text-fruit-600 hover:text-fruit-700 bg-fruit-50 hover:bg-fruit-100 px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors w-fit"><Plus size={16} /> Aggiungi Box Categoria</button>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newC = [...(block.data.categories || []), { title: 'Nuovo Reparto', link: '/shop' }];
+                                                                            updateBlockData(block.id, { categories: newC });
+                                                                        }}
+                                                                        className="w-full py-2.5 px-4 border-2 border-dashed border-orange-200 hover:border-orange-400 bg-orange-50/50 hover:bg-orange-50 text-orange-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                                                    >
+                                                                        <Plus size={15} />
+                                                                        <span>Aggiungi Altra Categoria</span>
+                                                                    </button>
                                                                 </div>
+
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
                                                         )}
 
-                                                        {block.type === 'bannerPromo' && (
-                                                             <div className="space-y-4">
-                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                     <input type="text" placeholder="Badge Promozionale (es. PROMO DEL MESE)" className="w-full px-3 py-2 border rounded-lg text-sm font-bold" value={block.data.badge || ''} onChange={e => updateBlockData(block.id, { badge: e.target.value })} />
-                                                                     <input type="text" placeholder="Codice Sconto (es. BENVENUTO10)" className="w-full px-3 py-2 border rounded-lg text-sm font-mono uppercase" value={block.data.couponCode || ''} onChange={e => updateBlockData(block.id, { couponCode: e.target.value })} />
-                                                                     <input type="text" placeholder="Titolo Offerta" className="w-full md:col-span-2 px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                     <textarea rows={2} placeholder="Descrizione o dettagli offerta..." className="w-full md:col-span-2 px-3 py-2 border rounded-lg text-sm" value={block.data.text || ''} onChange={e => updateBlockData(block.id, { text: e.target.value })} />
-                                                                     <input type="text" placeholder="Testo Bottone (es. Vai al Catalogo)" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.ctaText || ''} onChange={e => updateBlockData(block.id, { ctaText: e.target.value })} />
-                                                                     <PageLinkSelector value={block.data.ctaLink || ''} onChange={val => updateBlockData(block.id, { ctaLink: val })} pages={pages} placeholder="Seleziona Pagina Promozione" />
-                                                                 </div>
-                                                             </div>
-                                                         )}
+                                                        {block.type === 'storeInfo' && (
+                                                            <div className="space-y-4">
+                                                                <FormField label="Titolo Sezione Sede">
+                                                                    <FormInput
+                                                                        value={block.data.title || ''}
+                                                                        onChange={e => updateBlockData(block.id, { title: e.target.value })}
+                                                                        placeholder="Es. Vieni a Trovarci in Bottega o al Banco"
+                                                                        className="font-bold text-gray-900"
+                                                                    />
+                                                                </FormField>
 
-                                                         {block.type === 'storeInfo' && (
-                                                             <div className="space-y-4">
-                                                                 <input type="text" placeholder="Titolo Sezione (es. La Nostra Sede)" className="w-full px-3 py-2 border rounded-lg font-bold" value={block.data.title || ''} onChange={e => updateBlockData(block.id, { title: e.target.value })} />
-                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                     <input type="text" placeholder="Indirizzo Completo" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.address || ''} onChange={e => updateBlockData(block.id, { address: e.target.value })} />
-                                                                     <input type="text" placeholder="Orari di Apertura" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.hours || ''} onChange={e => updateBlockData(block.id, { hours: e.target.value })} />
-                                                                     <input type="text" placeholder="Telefono Fisso" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.phone || ''} onChange={e => updateBlockData(block.id, { phone: e.target.value })} />
-                                                                     <input type="text" placeholder="Numero WhatsApp" className="w-full px-3 py-2 border rounded-lg text-sm" value={block.data.whatsapp || ''} onChange={e => updateBlockData(block.id, { whatsapp: e.target.value })} />
-                                                                     <input type="url" placeholder="Link Google Maps (opzionale)" className="w-full md:col-span-2 px-3 py-2 border rounded-lg text-sm" value={block.data.googleMapsUrl || ''} onChange={e => updateBlockData(block.id, { googleMapsUrl: e.target.value })} />
-                                                                 </div>
-                                                             </div>
-                                                         )}
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                    <FormField label="Indirizzo Completo">
+                                                                        <FormInput
+                                                                            value={block.data.address || ''}
+                                                                            onChange={e => updateBlockData(block.id, { address: e.target.value })}
+                                                                            placeholder="Es. Via Papa Giovanni XXIII, 12, Sirone (LC)"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Orari di Apertura">
+                                                                        <FormInput
+                                                                            value={block.data.hours || ''}
+                                                                            onChange={e => updateBlockData(block.id, { hours: e.target.value })}
+                                                                            placeholder="Es. Lun - Sab: 07:30 - 19:30"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Telefono Fisso">
+                                                                        <FormInput
+                                                                            value={block.data.phone || ''}
+                                                                            onChange={e => updateBlockData(block.id, { phone: e.target.value })}
+                                                                            placeholder="Es. +39 0341 850123"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Recapito WhatsApp">
+                                                                        <FormInput
+                                                                            value={block.data.whatsapp || ''}
+                                                                            onChange={e => updateBlockData(block.id, { whatsapp: e.target.value })}
+                                                                            placeholder="Es. +39 340 1234567"
+                                                                        />
+                                                                    </FormField>
+                                                                    <FormField label="Link Google Maps" hint="Link per avviare il navigatore" className="md:col-span-2">
+                                                                        <FormInput
+                                                                            type="url"
+                                                                            value={block.data.googleMapsUrl || ''}
+                                                                            onChange={e => updateBlockData(block.id, { googleMapsUrl: e.target.value })}
+                                                                            placeholder="Es. https://maps.google.com/?q=..."
+                                                                        />
+                                                                    </FormField>
+                                                                </div>
 
-                                                            {/* common section style editor */}
-                                                            <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                <div>
-                                                                    <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Spaziatura Verticale</label>
-                                                                    <div className="flex gap-2">
-                                                                        {[
-                                                                            { value: 'compact', label: 'Ridotta' },
-                                                                            { value: 'normal', label: 'Normale' },
-                                                                            { value: 'large', label: 'Ampia' }
-                                                                        ].map(opt => (
-                                                                            <button
-                                                                                key={opt.value}
-                                                                                type="button"
-                                                                                onClick={() => updateBlockData(block.id, { paddingY: opt.value })}
-                                                                                className={`flex-1 text-xs py-1.5 px-3 rounded-lg border font-medium transition-colors ${
-                                                                                    (block.data.paddingY || 'normal') === opt.value
-                                                                                        ? 'bg-nature-600 border-nature-600 text-white shadow-sm'
-                                                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                                                                                }`}
-                                                                            >
-                                                                                {opt.label}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Colore Sfondo</label>
-                                                                    <div className="flex gap-2">
-                                                                        {[
-                                                                            { value: 'default', label: 'Auto' },
-                                                                            { value: 'white', label: 'Bianco' },
-                                                                            { value: 'gray', label: 'Grigio' },
-                                                                            { value: 'theme', label: 'Tema' },
-                                                                            { value: 'dark', label: 'Scuro' }
-                                                                        ].map(opt => (
-                                                                            <button
-                                                                                key={opt.value}
-                                                                                type="button"
-                                                                                onClick={() => updateBlockData(block.id, { bgColor: opt.value })}
-                                                                                className={`flex-1 text-xs py-1.5 px-2 rounded-lg border font-medium transition-colors ${
-                                                                                    (block.data.bgColor || 'default') === opt.value
-                                                                                        ? 'bg-nature-600 border-nature-600 text-white shadow-sm'
-                                                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                                                                                }`}
-                                                                            >
-                                                                                {opt.label}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
+                                                                <SectionStylingControls
+                                                                    paddingY={block.data.paddingY}
+                                                                    bgColor={block.data.bgColor}
+                                                                    onPaddingChange={val => updateBlockData(block.id, { paddingY: val })}
+                                                                    onBgChange={val => updateBlockData(block.id, { bgColor: val })}
+                                                                />
                                                             </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-
+                                                        )}
+                                                                                    </div>
+                                                                                    )}
+                                                                                </div>
                                                                             )}
                                                                         </Draggable>
                                                                     </div>
@@ -1358,13 +2438,13 @@ export const PageManager = () => {
                                                             
                                                             {/* Add block to the very end */}
                                                             {blocks.length > 0 && addingAtIndex !== blocks.length && (
-                                                               <div className="py-4 text-center">
+                                                               <div className="py-3 text-center">
                                                                    <button 
                                                                         type="button" 
                                                                         onClick={() => setAddingAtIndex(blocks.length)} 
-                                                                        className="bg-nature-50 border-2 border-dashed border-nature-200 text-nature-600 hover:text-nature-700 hover:bg-nature-100 hover:border-nature-300 px-6 py-2 rounded-full font-medium transition-colors inline-flex items-center gap-2 shadow-sm"
+                                                                        className="bg-white border-2 border-dashed border-nature-300 text-nature-700 hover:bg-nature-50/70 hover:border-nature-500 px-6 py-2.5 rounded-2xl font-bold text-xs transition-all inline-flex items-center gap-2 shadow-2xs cursor-pointer"
                                                                     >
-                                                                        <Plus size={18} /> Aggiungi Nuova Sezione Qui
+                                                                        <Plus size={16} /> Aggiungi Sezione Qui in Coda
                                                                     </button>
                                                                </div>
                                                             )}
@@ -1379,7 +2459,7 @@ export const PageManager = () => {
                                     )}
                                 </div>
 
-                                <label className="flex items-center gap-3 p-4 bg-white hover:bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer transition-colors group shadow-sm">
+                                <label className="flex items-center gap-3 p-4 bg-white hover:bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer transition-colors group shadow-2xs">
                                     <div className="relative flex items-center justify-center">
                                         <input
                                             type="checkbox"
@@ -1400,27 +2480,27 @@ export const PageManager = () => {
                         )}
                     </div>
 
-                        <div className="p-5 md:p-6 border-t border-gray-100 flex flex-col md:flex-row justify-end gap-3 bg-white">
-                            <button
-                                type="button"
-                                onClick={handleCloseModal}
-                                className="order-2 md:order-1 px-6 py-3 text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-xl font-bold md:font-medium transition-colors"
-                            >
-                                Annulla
-                            </button>
-                            <button
-                                type="submit"
-                                form="page-form"
-                                className="order-1 md:order-2 px-6 py-3 bg-nature-600 hover:bg-nature-700 text-white rounded-xl font-bold md:font-medium transition-colors shadow-sm"
-                            >
-                                {isEditing ? 'Salva Modifiche' : 'Crea Pagina'}
-                            </button>
-                        </div>
+                    <div className="p-5 md:p-6 border-t border-gray-100 flex flex-col md:flex-row justify-end gap-3 bg-white">
+                        <button
+                            type="button"
+                            onClick={handleCloseModal}
+                            className="order-2 md:order-1 px-6 py-3 text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-xl font-bold md:font-medium transition-colors cursor-pointer"
+                        >
+                            Annulla
+                        </button>
+                        <button
+                            type="submit"
+                            form="page-form"
+                            className="order-1 md:order-2 px-6 py-3 bg-nature-600 hover:bg-nature-700 text-white rounded-xl font-bold md:font-medium transition-colors shadow-sm cursor-pointer"
+                        >
+                            {isEditing ? 'Salva Modifiche' : 'Crea Pagina'}
+                        </button>
                     </div>
                 </div>
-            )}
+            </div>
+        )}
 
-            {/* Markets Manager Modal */}
+        {/* Markets Manager Modal */}
             {isMarketsModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -1660,37 +2740,82 @@ export const PageManager = () => {
 };
 
 const BlockInserter = ({ index, onCancel, onAdd }: { index: number, onCancel: () => void, onAdd: (type: BlockType, index: number) => void }) => {
+    const [selectedCat, setSelectedCat] = useState<'Tutti' | 'Contenuto' | 'Marketing' | 'Social' | 'Store'>('Tutti');
+
+    const categories: Array<'Tutti' | 'Contenuto' | 'Marketing' | 'Social' | 'Store'> = ['Tutti', 'Contenuto', 'Marketing', 'Social', 'Store'];
+
+    const filteredBlocks = Object.entries(BLOCK_DEFINITIONS).filter(([_, def]) => {
+        if (selectedCat === 'Tutti') return true;
+        return def.category === selectedCat;
+    });
+
     return (
-        <div className="my-6 relative border-2 border-dashed border-nature-300 bg-nature-50/50 rounded-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
+        <div className="my-6 relative border-2 border-dashed border-nature-300 bg-white/95 rounded-3xl p-6 md:p-7 shadow-lg animate-in fade-in zoom-in-95 duration-200">
             <button 
                 type="button" 
                 onClick={onCancel}
-                className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors"
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                title="Chiudi"
             >
-                <X size={16} />
+                <X size={18} />
             </button>
-            <h4 className="font-bold text-gray-800 text-center mb-4">Scegli la Sezione da Aggiungere</h4>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                {Object.entries(BLOCK_DEFINITIONS).map(([type, def]) => {
+
+            <div className="text-center max-w-lg mx-auto mb-6">
+                <div className="w-10 h-10 rounded-xl bg-nature-100 text-nature-700 flex items-center justify-center mx-auto mb-2 shadow-2xs">
+                    <Icons.PlusCircle size={22} />
+                </div>
+                <h4 className="font-black text-gray-900 text-lg">Aggiungi una Sezione</h4>
+                <p className="text-xs text-gray-500 mt-0.5">Scegli tra 15 tipologie di blocchi personalizzabili per costruire la pagina perfetta.</p>
+                
+                {/* Category Filter Pills */}
+                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4">
+                    {categories.map(cat => (
+                        <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setSelectedCat(cat)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                selectedCat === cat
+                                    ? 'bg-nature-600 text-white shadow-2xs'
+                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                            }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[460px] overflow-y-auto custom-scrollbar p-1">
+                {filteredBlocks.map(([type, def]) => {
                     const Icon = def.icon;
                     return (
                         <button
                             key={type}
                             type="button"
                             onClick={() => onAdd(type as BlockType, index)}
-                            className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-nature-400 hover:ring-2 hover:ring-nature-100 transition-all text-left group flex gap-3"
+                            className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs hover:shadow-md hover:border-nature-500 hover:ring-2 hover:ring-nature-500/15 transition-all text-left group flex gap-3.5 cursor-pointer relative overflow-hidden"
                         >
-                            <span className="w-10 h-10 rounded-lg bg-nature-100 text-nature-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                <Icon size={20} />
+                            <span className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs ${def.color.light} ${def.color.text} border ${def.color.border}`}>
+                                <Icon size={22} />
                             </span>
-                            <div>
-                                <h5 className="font-bold text-gray-900 text-sm">{def.label}</h5>
-                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{def.description}</p>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-1 mb-0.5">
+                                    <h5 className="font-bold text-gray-900 text-sm tracking-tight truncate group-hover:text-nature-700 transition-colors">
+                                        {def.label}
+                                    </h5>
+                                    <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border shrink-0 ${def.color.light} ${def.color.text} ${def.color.border}`}>
+                                        {def.category}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                                    {def.description}
+                                </p>
                             </div>
                         </button>
-                    )
+                    );
                 })}
             </div>
         </div>
     );
-}
+};

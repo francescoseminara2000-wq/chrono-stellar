@@ -2,8 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { trackProductVisit } from '../hooks/useAnalyticsTracker';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/useCartStore';
-import { 
-    ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus, 
+import {
+    ArrowLeft, ChefHat, ShoppingBasket, Scale, Plus, Minus,
     Leaf, Info, Share2, CornerDownRight, ShieldCheck, ChevronDown,
     ChevronLeft, ChevronRight, Maximize2, X, Images
 } from 'lucide-react';
@@ -224,7 +224,7 @@ export const ProductDetail = () => {
 
     return (
         <div className="bg-gradient-to-b from-nature-50/70 via-white to-nature-50/40 min-h-screen pb-32">
-            
+
             {/* Sticky Navigation Bar - Flush against main header */}
             <div className="sticky top-[56px] sm:top-[60px] md:top-[64px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs transition-all">
                 <div className="max-w-[1650px] mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
@@ -268,7 +268,7 @@ export const ProductDetail = () => {
                     >
                         <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/80 w-full max-w-[620px] xl:max-w-[680px] group flex flex-col">
                             {/* Main Carousel Frame */}
-                            <div 
+                            <div
                                 className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-gray-50/50 to-white select-none"
                                 onTouchStart={handleTouchStart}
                                 onTouchEnd={handleTouchEnd}
@@ -376,11 +376,10 @@ export const ProductDetail = () => {
                                                 key={idx}
                                                 type="button"
                                                 onClick={() => setActiveImageIndex(idx)}
-                                                className={`relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${
-                                                    isActive
-                                                        ? 'border-emerald-600 ring-2 ring-emerald-500/30 scale-105 shadow-sm opacity-100'
-                                                        : 'border-transparent hover:border-gray-300 opacity-60 hover:opacity-100'
-                                                }`}
+                                                className={`relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${isActive
+                                                    ? 'border-emerald-600 ring-2 ring-emerald-500/30 scale-105 shadow-sm opacity-100'
+                                                    : 'border-transparent hover:border-gray-300 opacity-60 hover:opacity-100'
+                                                    }`}
                                                 aria-label={`Visualizza immagine ${idx + 1}`}
                                             >
                                                 <img
@@ -471,11 +470,10 @@ export const ProductDetail = () => {
                                                 if (cartItem) updateItemUnit(product.id, 'KG', 1);
                                                 else setSelectedUnit('KG');
                                             }}
-                                            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                                selectedUnit === 'KG' 
-                                                    ? 'bg-emerald-800 text-white shadow-xs font-black' 
-                                                    : 'text-gray-600 hover:text-gray-900'
-                                            }`}
+                                            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedUnit === 'KG'
+                                                ? 'bg-emerald-800 text-white shadow-xs font-black'
+                                                : 'text-gray-600 hover:text-gray-900'
+                                                }`}
                                         >
                                             <Scale size={14} />
                                             <span>Al Chilo (Kg)</span>
@@ -486,11 +484,10 @@ export const ProductDetail = () => {
                                                 if (cartItem) updateItemUnit(product.id, 'PZ', 1);
                                                 else setSelectedUnit('PZ');
                                             }}
-                                            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                                selectedUnit === 'PZ' 
-                                                    ? 'bg-emerald-800 text-white shadow-xs font-black' 
-                                                    : 'text-gray-600 hover:text-gray-900'
-                                            }`}
+                                            className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedUnit === 'PZ'
+                                                ? 'bg-emerald-800 text-white shadow-xs font-black'
+                                                : 'text-gray-600 hover:text-gray-900'
+                                                }`}
                                         >
                                             <ShoppingBasket size={14} />
                                             <span>Al Pezzo</span>
@@ -607,9 +604,9 @@ export const ProductDetail = () => {
                                         Tracciabilità e Dettagli del Raccolto
                                     </span>
                                 </div>
-                                <ChevronDown 
-                                    size={17} 
-                                    className={`text-gray-400 group-hover:text-emerald-800 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`} 
+                                <ChevronDown
+                                    size={17}
+                                    className={`text-gray-400 group-hover:text-emerald-800 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`}
                                 />
                             </button>
 
@@ -817,7 +814,7 @@ export const ProductDetail = () => {
                         </div>
 
                         {/* Center Stage Image - Clicking the background CLOSES the modal */}
-                        <div 
+                        <div
                             className="relative flex-1 flex items-center justify-center my-3 overflow-hidden cursor-zoom-out"
                             onTouchStart={handleTouchStart}
                             onTouchEnd={handleTouchEnd}
@@ -859,7 +856,7 @@ export const ProductDetail = () => {
 
                         {/* Bottom Thumbnail Strip in Lightbox */}
                         {galleryImages.length > 1 ? (
-                            <div 
+                            <div
                                 className="flex items-center justify-center gap-2 overflow-x-auto py-2 z-20 scrollbar-none"
                                 onClick={e => e.stopPropagation()}
                             >
@@ -868,11 +865,10 @@ export const ProductDetail = () => {
                                         key={idx}
                                         type="button"
                                         onClick={() => setActiveImageIndex(idx)}
-                                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
-                                            idx === activeImageIndex
-                                                ? 'border-emerald-400 scale-110 shadow-lg ring-2 ring-emerald-400/50'
-                                                : 'border-white/20 opacity-50 hover:opacity-100'
-                                        }`}
+                                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${idx === activeImageIndex
+                                            ? 'border-emerald-400 scale-110 shadow-lg ring-2 ring-emerald-400/50'
+                                            : 'border-white/20 opacity-50 hover:opacity-100'
+                                            }`}
                                     >
                                         <img
                                             src={sanitizeImageUrl(imgUrl)}
