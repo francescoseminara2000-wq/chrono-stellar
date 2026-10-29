@@ -16,8 +16,15 @@ export class CustomerController {
                             finalTotal: true,
                             estimatedTotal: true,
                             createdAt: true,
-                            status: true
-                        }
+                            status: true,
+                            deliveryMethod: true,
+                            scheduledDate: true,
+                            scheduledTime: true,
+                            _count: {
+                                select: { items: true }
+                            }
+                        },
+                        orderBy: { createdAt: 'desc' }
                     }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -27,7 +34,6 @@ export class CustomerController {
             const customers = users.map(user => {
                 const totalOrders = user.orders.length;
                 const totalSpent = user.orders.reduce((sum, order) => {
-                    // Only count completed or delivered orders for LTV optionally, or all non-cancelled
                     if (order.status !== 'CANCELLED') {
                         return sum + (order.finalTotal || order.estimatedTotal);
                     }
@@ -47,11 +53,22 @@ export class CustomerController {
                     role: user.role,
                     createdAt: user.createdAt,
                     avatar: user.avatar,
+                    walletBalance: user.walletBalance || 0,
                     stats: {
                         totalOrders,
                         totalSpent
                     },
-                    orders: user.orders // Send order skeleton for the timeline/history view
+                    orders: user.orders.map(o => ({
+                        id: o.id,
+                        finalTotal: o.finalTotal,
+                        estimatedTotal: o.estimatedTotal,
+                        createdAt: o.createdAt,
+                        status: o.status,
+                        deliveryMethod: o.deliveryMethod,
+                        scheduledDate: o.scheduledDate,
+                        scheduledTime: o.scheduledTime,
+                        itemsCount: o._count?.items || 0
+                    }))
                 };
             });
 
@@ -110,7 +127,7 @@ export class CustomerController {
     async update(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { name, email, phone, street, civic, city, zipCode, notificationPreference, password, avatar } = req.body;
+            const { name, email, phone, street, civic, city, zipCode, notificationPreference, password, avatar, role } = req.body;
 
             const updateData: any = {
                 name,
@@ -124,6 +141,10 @@ export class CustomerController {
 
             if (avatar !== undefined) {
                 updateData.avatar = avatar;
+            }
+
+            if (role && ['CUSTOMER', 'ADMIN'].includes(role)) {
+                updateData.role = role;
             }
 
             if (notificationPreference && ['EMAIL', 'WHATSAPP'].includes(notificationPreference)) {
@@ -149,6 +170,8 @@ export class CustomerController {
                     zipCode: true,
                     notificationPreference: true,
                     avatar: true,
+                    role: true,
+                    walletBalance: true,
                     createdAt: true
                 }
             });
@@ -156,6 +179,80 @@ export class CustomerController {
             res.json(user);
         } catch (error: any) {
             console.error('[CustomerController] Error updating customer:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async adjustWallet(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const { amountCents, description } = req.body;
+            const userId = parseInt(id);
+
+            if (typeof amountCents !== 'number' || isNaN(amountCents) || amountCents === 0) {
+                return res.status(400).json({ error: 'Importo non valido' });
+            }
+
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+            if (!user) return res.status(404).json({ error: 'Cliente non trovato' });
+
+            const newBalance = (user.walletBalance || 0) + amountCents;
+            if (newBalance < 0) {
+                return res.status(400).json({ error: 'Il saldo del borsellino non può diventare negativo' });
+            }
+
+            const result = await prisma.$transaction(async (tx) => {
+                const updated = await tx.user.update({
+                    where: { id: userId },
+                    data: { walletBalance: newBalance }
+                });
+
+                await tx.walletTransaction.create({
+                    data: {
+                        userId,
+                        amount: amountCents,
+                        balanceAfter: newBalance,
+                        type: 'MANUAL_ADJUSTMENT',
+                        description: description || (amountCents > 0 ? 'Ricarica manuale borsellino da admin' : 'Rettifica manuale borsellino da admin')
+                    }
+                });
+
+                return updated;
+            });
+
+            res.json({ success: true, walletBalance: result.walletBalance });
+        } catch (error: any) {
+            console.error('[CustomerController] adjustWallet error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async delete(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = parseInt(id);
+
+            // @ts-ignore
+            if (req.user?.userId === userId) {
+                return res.status(400).json({ error: 'Non puoi eliminare il tuo stesso account amministratore' });
+            }
+
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                include: { orders: true }
+            });
+            if (!user) return res.status(404).json({ error: 'Cliente non trovato' });
+
+            if (user.orders.length > 0) {
+                return res.status(400).json({
+                    error: `Impossibile eliminare: il cliente ha ${user.orders.length} ordini collegati. Per motivi contabili e fiscali, l'account con ordini non può essere rimosso.`
+                });
+            }
+
+            await prisma.user.delete({ where: { id: userId } });
+            res.json({ success: true, message: 'Cliente eliminato con successo' });
+        } catch (error: any) {
+            console.error('[CustomerController] delete customer error:', error);
             res.status(500).json({ error: error.message });
         }
     }

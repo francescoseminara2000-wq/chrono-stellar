@@ -98,6 +98,8 @@ const customerController = new CustomerController();
 app.get('/api/admin/customers', authenticateToken, requireAdmin, (req, res) => customerController.list(req, res));
 app.post('/api/admin/customers', authenticateToken, requireAdmin, (req, res) => customerController.create(req, res));
 app.put('/api/admin/customers/:id', authenticateToken, requireAdmin, (req, res) => customerController.update(req, res));
+app.post('/api/admin/customers/:id/wallet', authenticateToken, requireAdmin, (req, res) => customerController.adjustWallet(req, res));
+app.delete('/api/admin/customers/:id', authenticateToken, requireAdmin, (req, res) => customerController.delete(req, res));
 
 // Admin - Delivery Zones
 app.get('/api/admin/delivery-zones', authenticateToken, requireAdmin, (req, res) => deliveryZoneController.list(req, res));
