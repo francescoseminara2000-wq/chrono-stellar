@@ -62,10 +62,11 @@ export interface StoreSettings {
     appleLoaderTextOffset?: number;
     headerLogoSize?: number;
     customCursorEnabled?: boolean;
-    customCursorStyle?: 'sprout' | 'leaf-trail' | 'smart-pill' | 'apple-harvest' | 'water-droplet' | 'artisan-stamp' | 'bee-flutter' | 'minimal-lens' | 'system';
+    customCursorStyle?: 'nature-arrow' | 'sprout' | 'leaf-trail' | 'smart-pill' | 'apple-harvest' | 'water-droplet' | 'artisan-stamp' | 'bee-flutter' | 'minimal-lens' | 'system';
     customCursorColor?: string;
     customCursorActiveInAdmin?: boolean;
     customCursorClickEffect?: 'botanical' | 'fruits' | 'ripple' | 'sparkles' | 'hearts' | 'fireworks' | 'none';
+    customCursorSpriteUrl?: string | null;
 }
 
 interface AppState {

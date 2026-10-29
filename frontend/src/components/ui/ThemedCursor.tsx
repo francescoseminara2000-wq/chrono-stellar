@@ -34,6 +34,7 @@ interface ClickBurst {
 }
 
 export type CursorStyleType =
+    | 'nature-arrow'
     | 'sprout'
     | 'leaf-trail'
     | 'smart-pill'
@@ -90,7 +91,7 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
     const burstIdRef = useRef(0);
 
     // Active configurations
-    const activeStyle = (previewStyle || settings?.customCursorStyle || 'sprout') as CursorStyleType;
+    const activeStyle = (previewStyle || settings?.customCursorStyle || 'nature-arrow') as CursorStyleType;
     const activeColor = previewColor || settings?.customCursorColor || '#16a34a';
     const activeClickEffect = (previewClickEffect || settings?.customCursorClickEffect || 'botanical') as ClickEffectType;
     const isEnabled = isInteractivePreview ? true : (settings?.customCursorEnabled !== false);
@@ -426,6 +427,134 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
             {/* CURSOR GRAPHICS (Hidden over text inputs) */}
             {!isTextInput && (
                 <>
+                    {/* STYLE 0: NATURE-ARROW (Freccia Botanica Evolutiva con Stati & Sprite) */}
+                    {activeStyle === 'nature-arrow' && (
+                        <>
+                            {/* Halo / Aura on hover */}
+                            <motion.div
+                                style={{
+                                    x: ringX,
+                                    y: ringY,
+                                    translateX: '-50%',
+                                    translateY: '-50%',
+                                    borderColor: `${activeColor}40`
+                                }}
+                                animate={{
+                                    scale: isMouseDown ? 0.7 : isHovering ? 1.6 : 0.8,
+                                    opacity: isVisible ? (isHovering ? 0.45 : 0.15) : 0,
+                                    backgroundColor: isHovering ? `${activeColor}15` : 'transparent'
+                                }}
+                                transition={{ duration: 0.18 }}
+                                className="w-10 h-10 rounded-full border border-dashed fixed pointer-events-none blur-[0.5px]"
+                            />
+
+                            {/* Main Arrow or Custom Sprite */}
+                            <motion.div
+                                style={{
+                                    x: dotX,
+                                    y: dotY,
+                                    translateX: '-2px',
+                                    translateY: '-2px'
+                                }}
+                                animate={{
+                                    scale: isMouseDown ? 0.82 : isHovering ? 1.15 : 1,
+                                    rotate: isMouseDown ? -8 : isHovering ? 12 : 0,
+                                    opacity: isVisible ? 1 : 0
+                                }}
+                                transition={{ type: 'spring', damping: 18, stiffness: 350 }}
+                                className="fixed filter drop-shadow-md select-none pointer-events-none"
+                            >
+                                {settings?.customCursorSpriteUrl ? (
+                                    /* Custom Sprite Sheet Mode (5 frames of 48px each) */
+                                    <div
+                                        style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            backgroundImage: `url(${settings.customCursorSpriteUrl})`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundSize: '240px 48px',
+                                            backgroundPosition: hoverType === 'cart'
+                                                ? '-96px 0px'
+                                                : hoverType === 'zoom'
+                                                ? '-192px 0px'
+                                                : isHovering
+                                                ? '-48px 0px'
+                                                : '0px 0px'
+                                        }}
+                                    />
+                                ) : (
+                                    /* Handcrafted Artisan Nature Arrow SVG */
+                                    <div className="relative">
+                                        <svg width="34" height="34" viewBox="0 0 32 32" fill="none">
+                                            {/* Outer Stroke Outline */}
+                                            <path
+                                                d="M3 2L13 27L17.5 17.5L27 13L3 2Z"
+                                                fill="#ffffff"
+                                                stroke="#ffffff"
+                                                strokeWidth="2.5"
+                                                strokeLinejoin="round"
+                                            />
+                                            {/* Emerald Nature Arrow Body */}
+                                            <path
+                                                d="M3 2L13 27L17.5 17.5L27 13L3 2Z"
+                                                fill={activeColor}
+                                            />
+                                            {/* Natural Vein / Nervatura Centrale */}
+                                            <path
+                                                d="M3 2L17.5 17.5"
+                                                stroke="#ffffff"
+                                                strokeWidth="1.2"
+                                                strokeLinecap="round"
+                                                opacity="0.75"
+                                            />
+                                            {/* Small Leaf attached to the notch */}
+                                            <path
+                                                d="M17.5 17.5C19 16 23 16 25 18C25 20 23 23 20 23C18 23 17.5 19 17.5 17.5Z"
+                                                fill="#86efac"
+                                                stroke="#ffffff"
+                                                strokeWidth="0.8"
+                                            />
+                                        </svg>
+
+                                        {/* State Indicators */}
+                                        {/* STATE 1: Hover / Link Sprout */}
+                                        {isHovering && hoverType !== 'cart' && hoverType !== 'zoom' && (
+                                            <motion.div
+                                                initial={{ scale: 0, y: 5 }}
+                                                animate={{ scale: 1, y: 0 }}
+                                                className="absolute -right-1 -top-2 flex items-center justify-center text-xs select-none"
+                                            >
+                                                🌱
+                                            </motion.div>
+                                        )}
+
+                                        {/* STATE 2: Add to Cart Basket */}
+                                        {isHovering && hoverType === 'cart' && (
+                                            <motion.div
+                                                initial={{ scale: 0, y: 5 }}
+                                                animate={{ scale: 1, y: 0 }}
+                                                className="absolute -right-2.5 -top-2 text-sm select-none"
+                                            >
+                                                🧺
+                                            </motion.div>
+                                        )}
+
+                                        {/* STATE 3: Zoom Lens */}
+                                        {isHovering && hoverType === 'zoom' && (
+                                            <motion.div
+                                                initial={{ scale: 0, y: 5 }}
+                                                animate={{ scale: 1, y: 0 }}
+                                                className="absolute -right-2 -top-2 text-xs select-none"
+                                            >
+                                                🔍
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )}
+                            </motion.div>
+                        </>
+                    )}
+
                     {/* STYLE 1: SPROUT (Magnetic Sprout & Dew) */}
                     {activeStyle === 'sprout' && (
                         <>

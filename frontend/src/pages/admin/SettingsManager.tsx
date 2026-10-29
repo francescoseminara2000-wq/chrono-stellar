@@ -114,8 +114,9 @@ export const SettingsManager = () => {
         appleLoaderTextOffset: 16,
         headerLogoSize: 80,
         customCursorEnabled: true,
-        customCursorStyle: 'sprout' as 'sprout' | 'leaf-trail' | 'smart-pill' | 'system',
+        customCursorStyle: 'nature-arrow' as 'nature-arrow' | 'sprout' | 'leaf-trail' | 'smart-pill' | 'apple-harvest' | 'water-droplet' | 'artisan-stamp' | 'bee-flutter' | 'minimal-lens' | 'system',
         customCursorClickEffect: 'botanical' as 'botanical' | 'fruits' | 'ripple' | 'sparkles' | 'hearts' | 'fireworks' | 'none',
+        customCursorSpriteUrl: null as string | null,
         customCursorColor: '#16a34a',
         customCursorActiveInAdmin: false
     });
@@ -249,7 +250,8 @@ export const SettingsManager = () => {
                 appleLoaderTextOffset: data.appleLoaderTextOffset !== undefined && data.appleLoaderTextOffset !== null ? Number(data.appleLoaderTextOffset) : 16,
                 headerLogoSize: data.headerLogoSize !== undefined && data.headerLogoSize !== null ? Number(data.headerLogoSize) : 80,
                 customCursorEnabled: data.customCursorEnabled !== undefined ? Boolean(data.customCursorEnabled) : true,
-                customCursorStyle: (data.customCursorStyle || 'sprout') as any,
+                customCursorStyle: (data.customCursorStyle || 'nature-arrow') as any,
+                customCursorSpriteUrl: data.customCursorSpriteUrl || null,
                 customCursorClickEffect: (data.customCursorClickEffect || 'botanical') as any,
                 customCursorColor: data.customCursorColor || '#16a34a',
                 customCursorActiveInAdmin: Boolean(data.customCursorActiveInAdmin)
@@ -855,6 +857,13 @@ export const SettingsManager = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {[
                                     {
+                                        id: 'nature-arrow',
+                                        icon: '🏹',
+                                        tag: 'Scelta Top',
+                                        name: 'Freccia Botanica Evolutiva',
+                                        desc: 'La freccia classica che tutti conoscono, con fogliolina viva: sboccia un germoglio 🌱 sui link, compare un cestino 🧺 sul carrello e una lente 🔍 sulle foto.'
+                                    },
+                                    {
                                         id: 'sprout',
                                         icon: '🌱',
                                         name: 'Germoglio & Rugiada',
@@ -1084,6 +1093,74 @@ export const SettingsManager = () => {
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sprite Sheet Upload Box */}
+                        {formData.customCursorStyle === 'nature-arrow' && (
+                            <div className="bg-gradient-to-br from-emerald-50/50 via-white to-stone-50 p-6 md:p-7 rounded-3xl border border-emerald-200/80 shadow-xs space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
+                                                Opzione Avanzata
+                                            </span>
+                                            <h4 className="font-black text-gray-900 text-base">Sprite Sheet Personalizzato con IA</h4>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Vuoi usare le tue immagini disegnate o generate con l'Intelligenza Artificiale? Carica una striscia orizzontale PNG trasparente a 5 frame (240x48px).
+                                        </p>
+                                    </div>
+
+                                    {formData.customCursorSpriteUrl && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, customCursorSpriteUrl: null }))}
+                                            className="px-3.5 py-1.5 rounded-xl border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 text-xs font-bold transition cursor-pointer self-start shrink-0"
+                                        >
+                                            Ripristina Grafica Vettoriale
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="p-4 bg-white rounded-2xl border border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div className="text-xs text-gray-600 space-y-1">
+                                        <p className="font-bold text-gray-800">Guida alle 5 caselle dello sprite (da sinistra a destra):</p>
+                                        <p className="text-[11px] text-gray-500 font-mono">
+                                            [0px: Freccia Base] • [48px: Hover/Link] • [96px: Cestino Carrello] • [144px: Digitazione Testo] • [192px: Zoom Foto]
+                                        </p>
+                                    </div>
+
+                                    <label className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nature-900 hover:bg-nature-800 text-white text-xs font-bold cursor-pointer transition shadow-xs shrink-0">
+                                        <Upload size={14} />
+                                        <span>{formData.customCursorSpriteUrl ? 'Sostituisci Sprite PNG' : 'Carica File Sprite PNG'}</span>
+                                        <input
+                                            type="file"
+                                            accept="image/png,image/webp,image/svg+xml"
+                                            className="hidden"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                const data = new FormData();
+                                                data.append('image', file);
+                                                try {
+                                                    const res = await fetch(`${API_URL}/api/admin/upload`, {
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': `Bearer ${token}` },
+                                                        body: data
+                                                    });
+                                                    if (res.ok) {
+                                                        const result = await res.json();
+                                                        setFormData(prev => ({ ...prev, customCursorSpriteUrl: result.url }));
+                                                        addToast('Sprite caricato con successo! Clicca su Salva per applicarlo.', 'success');
+                                                    }
+                                                } catch (err) {
+                                                    addToast('Errore durante il caricamento dello sprite.', 'error');
+                                                }
+                                            }}
+                                        />
+                                    </label>
                                 </div>
                             </div>
                         )}
