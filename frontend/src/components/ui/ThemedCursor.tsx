@@ -485,69 +485,174 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                 ) : (
                                     /* Handcrafted Artisan Nature Arrow SVG */
                                     <div className="relative">
-                                        <svg width="34" height="34" viewBox="0 0 32 32" fill="none">
-                                            {/* Outer Stroke Outline */}
-                                            <path
-                                                d="M3 2L13 27L17.5 17.5L27 13L3 2Z"
-                                                fill="#ffffff"
-                                                stroke="#ffffff"
-                                                strokeWidth="2.5"
-                                                strokeLinejoin="round"
-                                            />
-                                            {/* Emerald Nature Arrow Body */}
-                                            <path
-                                                d="M3 2L13 27L17.5 17.5L27 13L3 2Z"
-                                                fill={activeColor}
-                                            />
-                                            {/* Natural Vein / Nervatura Centrale */}
-                                            <path
-                                                d="M3 2L17.5 17.5"
-                                                stroke="#ffffff"
-                                                strokeWidth="1.2"
-                                                strokeLinecap="round"
-                                                opacity="0.75"
-                                            />
-                                            {/* Small Leaf attached to the notch */}
-                                            <path
-                                                d="M17.5 17.5C19 16 23 16 25 18C25 20 23 23 20 23C18 23 17.5 19 17.5 17.5Z"
-                                                fill="#86efac"
-                                                stroke="#ffffff"
-                                                strokeWidth="0.8"
-                                            />
-                                        </svg>
-
-                                        {/* State Indicators */}
-                                        {/* STATE 1: Hover / Link Sprout */}
-                                        {isHovering && hoverType !== 'cart' && hoverType !== 'zoom' && (
-                                            <motion.div
-                                                initial={{ scale: 0, y: 5 }}
-                                                animate={{ scale: 1, y: 0 }}
-                                                className="absolute -right-1 -top-2 flex items-center justify-center text-xs select-none"
-                                            >
-                                                🌱
-                                            </motion.div>
-                                        )}
-
-                                        {/* STATE 2: Add to Cart Basket */}
-                                        {isHovering && hoverType === 'cart' && (
-                                            <motion.div
-                                                initial={{ scale: 0, y: 5 }}
-                                                animate={{ scale: 1, y: 0 }}
-                                                className="absolute -right-2.5 -top-2 text-sm select-none"
-                                            >
-                                                🧺
-                                            </motion.div>
-                                        )}
-
-                                        {/* STATE 3: Zoom Lens */}
-                                        {isHovering && hoverType === 'zoom' && (
-                                            <motion.div
-                                                initial={{ scale: 0, y: 5 }}
-                                                animate={{ scale: 1, y: 0 }}
-                                                className="absolute -right-2 -top-2 text-xs select-none"
-                                            >
-                                                🔍
-                                            </motion.div>
+                                        {/* State: Zoom Lens */}
+                                        {isHovering && hoverType === 'zoom' ? (
+                                            <div className="relative -translate-x-2 -translate-y-2">
+                                                <svg width="42" height="42" viewBox="0 0 36 36" fill="none">
+                                                    {/* Outer Vine Wreath / Ghirlanda */}
+                                                    <circle cx="16" cy="16" r="12" stroke="#ffffff" strokeWidth="3" />
+                                                    <circle cx="16" cy="16" r="12" stroke={activeColor} strokeWidth="2.5" />
+                                                    {/* Vine Leaf Accents */}
+                                                    <path d="M26 8C27 5 30 5 31 7C31 9 29 11 26 10Z" fill="#86efac" stroke="#ffffff" strokeWidth="0.8" />
+                                                    <path d="M6 22C4 24 4 27 6 28C8 28 9 26 8 24Z" fill="#86efac" stroke="#ffffff" strokeWidth="0.8" />
+                                                    {/* Crystal Water Drop Lens */}
+                                                    <circle cx="16" cy="16" r="10" fill="url(#lensWaterGrad)" opacity="0.65" />
+                                                    <ellipse cx="13" cy="13" rx="3.5" ry="2" transform="rotate(-30 13 13)" fill="#ffffff" opacity="0.75" />
+                                                    {/* Lens Handle */}
+                                                    <path d="M25 25L33 33" stroke="#78350f" strokeWidth="3.5" strokeLinecap="round" />
+                                                    <path d="M25 25L33 33" stroke="#a16207" strokeWidth="2" strokeLinecap="round" />
+                                                    {/* Plus Icon inside Lens */}
+                                                    <path d="M16 12V20M12 16H20" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" />
+                                                    <defs>
+                                                        <radialGradient id="lensWaterGrad" cx="0.4" cy="0.4" r="0.8">
+                                                            <stop stopColor="#67e8f9" />
+                                                            <stop offset="0.7" stopColor="#0284c7" />
+                                                            <stop offset="1" stopColor="#0369a1" />
+                                                        </radialGradient>
+                                                    </defs>
+                                                </svg>
+                                            </div>
+                                        ) : isHovering && hoverType === 'cart' ? (
+                                            /* State: Cart - Arrow carrying rustic wicker basket */
+                                            <div className="relative">
+                                                <svg width="42" height="42" viewBox="0 0 38 38" fill="none">
+                                                    {/* Outer White Border for maximum contrast */}
+                                                    <path
+                                                        d="M3 2C5 12 7 20 12 25C13.5 22.5 15.5 19.5 18 17.5C14 16 9 12 3 2Z"
+                                                        fill="#ffffff"
+                                                        stroke="#ffffff"
+                                                        strokeWidth="3.5"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                    {/* Main Organic Leaf Body */}
+                                                    <path
+                                                        d="M3 2C5 12 7 20 12 25C13.5 22.5 15.5 19.5 18 17.5C14 16 9 12 3 2Z"
+                                                        fill="url(#natureArrowGradCart)"
+                                                        stroke={activeColor}
+                                                        strokeWidth="1"
+                                                    />
+                                                    {/* Leaf Vein */}
+                                                    <path d="M3 2C8 10 13 16 18 17.5" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+                                                    {/* Tendril Stem curving to basket */}
+                                                    <path d="M18 17.5C21 16 23 18 24 21" stroke="#15803d" strokeWidth="1.8" strokeLinecap="round" />
+                                                    {/* Wicker Basket Body */}
+                                                    <g transform="translate(18, 17)">
+                                                        {/* Basket Outline */}
+                                                        <path d="M3 6L5 15C5.2 16 6 16.5 7 16.5H15C16 16.5 16.8 16 17 15L19 6H3Z" fill="#b45309" stroke="#ffffff" strokeWidth="1.2" />
+                                                        {/* Wicker texture lines */}
+                                                        <line x1="7" y1="7" x2="7" y2="15" stroke="#78350f" strokeWidth="0.8" />
+                                                        <line x1="11" y1="7" x2="11" y2="16" stroke="#78350f" strokeWidth="0.8" />
+                                                        <line x1="15" y1="7" x2="15" y2="15" stroke="#78350f" strokeWidth="0.8" />
+                                                        {/* Fresh Red Apple inside basket */}
+                                                        <circle cx="9" cy="5" r="3.5" fill="#ef4444" stroke="#ffffff" strokeWidth="0.7" />
+                                                        {/* Fresh Orange inside basket */}
+                                                        <circle cx="14" cy="5.5" r="3" fill="#f97316" stroke="#ffffff" strokeWidth="0.7" />
+                                                        {/* Little green leaf on fruit */}
+                                                        <path d="M9 2C10 1 12 2 11 3Z" fill="#22c55e" />
+                                                    </g>
+                                                    <defs>
+                                                        <linearGradient id="natureArrowGradCart" x1="3" y1="2" x2="18" y2="25" gradientUnits="userSpaceOnUse">
+                                                            <stop stopColor="#22c55e" />
+                                                            <stop offset="0.6" stopColor={activeColor} />
+                                                            <stop offset="1" stopColor="#14532d" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                            </div>
+                                        ) : isHovering ? (
+                                            /* State: Hover / Link - Arrow blooming a delicate golden-white blossom */
+                                            <div className="relative">
+                                                <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
+                                                    {/* Outer Contrast Contour */}
+                                                    <path
+                                                        d="M3 2C5 12 7 20 12 25C13.8 22 16 19.5 18.5 17.5C14 16 9 12 3 2Z"
+                                                        fill="#ffffff"
+                                                        stroke="#ffffff"
+                                                        strokeWidth="3.5"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                    {/* Organic Leaf Body with Vibrant Chlorophyll Gradient */}
+                                                    <path
+                                                        d="M3 2C5 12 7 20 12 25C13.8 22 16 19.5 18.5 17.5C14 16 9 12 3 2Z"
+                                                        fill="url(#natureArrowGradHover)"
+                                                    />
+                                                    {/* Central Vein */}
+                                                    <path d="M3 2C8 10 13 16 18.5 17.5" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
+                                                    {/* Secondary Vine and Side Leaflet */}
+                                                    <path d="M18.5 17.5C21 16 23 18 24 21C22 22 19 21 18.5 17.5Z" fill="#86efac" stroke="#ffffff" strokeWidth="0.8" />
+                                                    {/* Morning Dew Droplet on tip */}
+                                                    <circle cx="6" cy="7" r="1.8" fill="#ffffff" opacity="0.9" />
+                                                    <circle cx="5.5" cy="6.5" r="0.6" fill="#ffffff" />
+                                                    {/* Blooming Flower Blossom */}
+                                                    <g transform="translate(16, 14)">
+                                                        {/* Flower Glow Halo */}
+                                                        <circle cx="6" cy="6" r="8" fill="#fef08a" opacity="0.35" className="animate-pulse" />
+                                                        {/* 5 Ivory Petals */}
+                                                        <circle cx="6" cy="2.5" r="2.4" fill="#ffffff" stroke="#fef08a" strokeWidth="0.5" />
+                                                        <circle cx="9.5" cy="5" r="2.4" fill="#ffffff" stroke="#fef08a" strokeWidth="0.5" />
+                                                        <circle cx="8" cy="9.5" r="2.4" fill="#ffffff" stroke="#fef08a" strokeWidth="0.5" />
+                                                        <circle cx="4" cy="9.5" r="2.4" fill="#ffffff" stroke="#fef08a" strokeWidth="0.5" />
+                                                        <circle cx="2.5" cy="5" r="2.4" fill="#ffffff" stroke="#fef08a" strokeWidth="0.5" />
+                                                        {/* Golden Center Core */}
+                                                        <circle cx="6" cy="6" r="2.6" fill="#eab308" />
+                                                        <circle cx="6" cy="6" r="1.3" fill="#ca8a04" />
+                                                    </g>
+                                                    <defs>
+                                                        <linearGradient id="natureArrowGradHover" x1="3" y1="2" x2="18.5" y2="25" gradientUnits="userSpaceOnUse">
+                                                            <stop stopColor="#4ade80" />
+                                                            <stop offset="0.5" stopColor={activeColor} />
+                                                            <stop offset="1" stopColor="#15803d" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                            </div>
+                                        ) : (
+                                            /* State: Default - Sleek, Sharp Living Plant Arrow */
+                                            <div className="relative">
+                                                <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+                                                    {/* Outer Clean Contrast Border */}
+                                                    <path
+                                                        d="M2.5 1.5C4.5 11 6.5 19 11.5 24C13.2 21 15.2 18.5 17.5 16.8C13 15.2 8.5 11.5 2.5 1.5Z"
+                                                        fill="#ffffff"
+                                                        stroke="#ffffff"
+                                                        strokeWidth="3.2"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                    {/* Living Curved Leaf Body */}
+                                                    <path
+                                                        d="M2.5 1.5C4.5 11 6.5 19 11.5 24C13.2 21 15.2 18.5 17.5 16.8C13 15.2 8.5 11.5 2.5 1.5Z"
+                                                        fill="url(#natureArrowGradDefault)"
+                                                    />
+                                                    {/* Elegant Leaf Midrib Vein */}
+                                                    <path
+                                                        d="M2.5 1.5C7 9.5 12 15 17.5 16.8"
+                                                        stroke="#ffffff"
+                                                        strokeWidth="1.2"
+                                                        strokeLinecap="round"
+                                                        opacity="0.8"
+                                                    />
+                                                    {/* Side Micro-Veins */}
+                                                    <path d="M7 8C8.5 8.5 9.5 9.5 9.5 10.5" stroke="#ffffff" strokeWidth="0.7" strokeLinecap="round" opacity="0.6" />
+                                                    <path d="M10 13C12 13.5 13 14.5 13 15.5" stroke="#ffffff" strokeWidth="0.7" strokeLinecap="round" opacity="0.6" />
+                                                    {/* Curled Stem with Mini Leaflet */}
+                                                    <path
+                                                        d="M17.5 16.8C19.5 15.2 22.5 16.5 23.5 19C21.5 20.2 19 19.5 17.5 16.8Z"
+                                                        fill="#86efac"
+                                                        stroke="#ffffff"
+                                                        strokeWidth="0.8"
+                                                    />
+                                                    {/* Glistening Morning Dewdrop on the blade */}
+                                                    <circle cx="5.5" cy="7.5" r="1.6" fill="#67e8f9" opacity="0.9" />
+                                                    <circle cx="5.2" cy="7" r="0.6" fill="#ffffff" />
+                                                    <defs>
+                                                        <linearGradient id="natureArrowGradDefault" x1="2.5" y1="1.5" x2="17.5" y2="24" gradientUnits="userSpaceOnUse">
+                                                            <stop stopColor="#34d399" />
+                                                            <stop offset="0.45" stopColor={activeColor} />
+                                                            <stop offset="1" stopColor="#064e3b" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                            </div>
                                         )}
                                     </div>
                                 )}
