@@ -5,10 +5,11 @@ import {
     MessageSquare, User as UserIcon, Upload, Trash2,
     Plus, Edit2, X, Tag, CreditCard, Scale,
     Image as ImageIcon, Compass, ArrowUp, ArrowDown,
-    ExternalLink, BookOpen, CheckCircle2, Sparkles, Gauge, Clock, Play, Sliders, Type,
+    ExternalLink, BookOpen, CheckCircle2, Sparkles, MousePointer, Gauge, Clock, Play, Sliders, Type,
     Bold, MoveVertical, Smartphone, Monitor, RotateCcw
 } from 'lucide-react';
 import { AppleLoader } from '../../components/ui/AppleLoader';
+import { ThemedCursor } from '../../components/ui/ThemedCursor';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
@@ -111,7 +112,11 @@ export const SettingsManager = () => {
         appleLoaderTextSize: 28,
         appleLoaderTextBold: true,
         appleLoaderTextOffset: 16,
-        headerLogoSize: 80
+        headerLogoSize: 80,
+        customCursorEnabled: true,
+        customCursorStyle: 'sprout' as 'sprout' | 'leaf-trail' | 'smart-pill' | 'system',
+        customCursorColor: '#16a34a',
+        customCursorActiveInAdmin: false
     });
 
     // --- Navigation Management State ---
@@ -241,7 +246,11 @@ export const SettingsManager = () => {
                 appleLoaderTextSize: data.appleLoaderTextSize !== undefined && data.appleLoaderTextSize !== null ? Number(data.appleLoaderTextSize) : 28,
                 appleLoaderTextBold: data.appleLoaderTextBold !== undefined ? Boolean(data.appleLoaderTextBold) : true,
                 appleLoaderTextOffset: data.appleLoaderTextOffset !== undefined && data.appleLoaderTextOffset !== null ? Number(data.appleLoaderTextOffset) : 16,
-                headerLogoSize: data.headerLogoSize !== undefined && data.headerLogoSize !== null ? Number(data.headerLogoSize) : 80
+                headerLogoSize: data.headerLogoSize !== undefined && data.headerLogoSize !== null ? Number(data.headerLogoSize) : 80,
+                customCursorEnabled: data.customCursorEnabled !== undefined ? Boolean(data.customCursorEnabled) : true,
+                customCursorStyle: (data.customCursorStyle || 'sprout') as any,
+                customCursorColor: data.customCursorColor || '#16a34a',
+                customCursorActiveInAdmin: Boolean(data.customCursorActiveInAdmin)
             });
         }
     };
@@ -747,6 +756,7 @@ export const SettingsManager = () => {
 
     const tabs = [
         { id: 'general', label: 'Generale', icon: <Globe size={18} /> },
+        { id: 'cursor', label: 'Cursore Animato', icon: <MousePointer size={18} /> },
         { id: 'loader', label: 'Animazione Mela', icon: <Sparkles size={18} /> },
         { id: 'navigation', label: 'Menu Navigazione', icon: <Compass size={18} /> },
         { id: 'backgrounds', label: 'Sfondi Pagine', icon: <ImageIcon size={18} /> },
@@ -789,6 +799,311 @@ export const SettingsManager = () => {
 
             {/* Tab Content */}
             <div className="mt-8">
+                {activeTab === 'cursor' && (
+                    <div className="space-y-8 animate-fadeIn">
+                        {/* Live Cursor Preview in Admin for this tab */}
+                        <ThemedCursor 
+                            previewStyle={formData.customCursorStyle} 
+                            previewColor={formData.customCursorColor} 
+                            isInteractivePreview={true} 
+                        />
+
+                        {/* Header Box */}
+                        <div className="bg-gradient-to-br from-emerald-900 via-nature-900 to-stone-900 p-6 md:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+                            <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+                                <MousePointer size={220} />
+                            </div>
+                            <div className="relative z-10 max-w-2xl">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 mb-3">
+                                    <Sparkles size={12} className="text-emerald-400" />
+                                    <span>Brand Experience & UI</span>
+                                </span>
+                                <h3 className="text-2xl md:text-3xl font-black mb-2">Cursore Personalizzato a Tema</h3>
+                                <p className="text-emerald-100/80 text-sm leading-relaxed">
+                                    Rendi unica e memorabile la navigazione del tuo negozio. Scegli tra diverse animazioni a tema natura, prova il cursore dal vivo nel box di test interattivo qui sotto e personalizza i colori.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* General Switch */}
+                        <div className="bg-white p-6 md:p-7 rounded-3xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h4 className="font-black text-gray-900 text-base">Abilita Cursore Animato sul Negozio</h4>
+                                <p className="text-xs text-gray-500 mt-0.5">Se disattivato, il sito utilizzerà il puntatore standard del sistema operativo.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.customCursorEnabled}
+                                    onChange={e => setFormData(prev => ({ ...prev, customCursorEnabled: e.target.checked }))}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div>
+                            </label>
+                        </div>
+
+                        {/* Style Selector Cards */}
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="font-black text-gray-900 text-lg">Seleziona lo Stile del Cursore</h4>
+                                <p className="text-xs text-gray-500">Clicca su uno stile per provarlo immediatamente e impostarlo sul sito.</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {/* Option 1: Sprout */}
+                                <div
+                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'sprout' }))}
+                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                                        formData.customCursorStyle === 'sprout'
+                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
+                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
+                                    }`}
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
+                                                🌱
+                                            </div>
+                                            {formData.customCursorStyle === 'sprout' && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
+                                                    Attivo
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Germoglio & Rugiada</h5>
+                                        <p className="text-xs text-gray-600 leading-relaxed">
+                                            Puntatore di precisione con anello magnetico che si espande morbidamente sui pulsanti facendo sbocciare una fogliolina.
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-emerald-700">
+                                        Consigliato • Sofisticato
+                                    </div>
+                                </div>
+
+                                {/* Option 2: Leaf Trail */}
+                                <div
+                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'leaf-trail' }))}
+                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                                        formData.customCursorStyle === 'leaf-trail'
+                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
+                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
+                                    }`}
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
+                                                🍃
+                                            </div>
+                                            {formData.customCursorStyle === 'leaf-trail' && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
+                                                    Attivo
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Scia Botanica</h5>
+                                        <p className="text-xs text-gray-600 leading-relaxed">
+                                            Freccia sostituita da una fogliolina organica che rilascia una scia fluttuante di goccioline di rugiada e polline dorato.
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-emerald-700">
+                                        Creativo • Dinamico
+                                    </div>
+                                </div>
+
+                                {/* Option 3: Smart Pill */}
+                                <div
+                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'smart-pill' }))}
+                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                                        formData.customCursorStyle === 'smart-pill'
+                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
+                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
+                                    }`}
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
+                                                🎯
+                                            </div>
+                                            {formData.customCursorStyle === 'smart-pill' && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
+                                                    Attivo
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Smart Context Pill</h5>
+                                        <p className="text-xs text-gray-600 leading-relaxed">
+                                            Mostra etichette intelligenti fluttuanti accanto al cursore a seconda di cosa stai guardando (prodotti, carrello, foto).
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-emerald-700">
+                                        E-Commerce • Interattivo
+                                    </div>
+                                </div>
+
+                                {/* Option 4: System */}
+                                <div
+                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'system' }))}
+                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                                        formData.customCursorStyle === 'system'
+                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
+                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
+                                    }`}
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-gray-100 text-gray-700 flex items-center justify-center font-black">
+                                                🖱️
+                                            </div>
+                                            {formData.customCursorStyle === 'system' && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gray-800 text-white">
+                                                    Attivo
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Puntatore di Sistema</h5>
+                                        <p className="text-xs text-gray-600 leading-relaxed">
+                                            La freccia di default classica del sistema operativo senza alcun effetto o grafica aggiuntiva.
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-gray-500">
+                                        Standard • Neutro
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Color Customization */}
+                        {formData.customCursorStyle !== 'system' && (
+                            <div className="bg-white p-6 md:p-7 rounded-3xl border border-gray-200/80 shadow-xs space-y-4">
+                                <div>
+                                    <h4 className="font-black text-gray-900 text-base">Colore Principale del Cursore</h4>
+                                    <p className="text-xs text-gray-500">Scegli una tonalità naturale che si abbina alla grafica del tuo negozio.</p>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {[
+                                        { name: 'Smeraldo Intenso', hex: '#16a34a' },
+                                        { name: 'Verde Bosco', hex: '#15803d' },
+                                        { name: 'Menta Fresca', hex: '#10b981' },
+                                        { name: 'Arancio Frutto', hex: '#f97316' },
+                                        { name: 'Rosso Mela', hex: '#dc2626' },
+                                        { name: 'Dorato Raccolto', hex: '#eab308' }
+                                    ].map(color => (
+                                        <button
+                                            key={color.hex}
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, customCursorColor: color.hex }))}
+                                            className={`px-3.5 py-2 rounded-2xl border text-xs font-bold flex items-center gap-2.5 transition-all cursor-pointer ${
+                                                formData.customCursorColor === color.hex
+                                                    ? 'border-gray-900 bg-gray-900 text-white shadow-sm'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <span className="w-3.5 h-3.5 rounded-full shadow-xs shrink-0" style={{ backgroundColor: color.hex }}></span>
+                                            <span>{color.name}</span>
+                                        </button>
+                                    ))}
+
+                                    <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+                                        <span className="text-xs font-bold text-gray-500">HEX:</span>
+                                        <input
+                                            type="color"
+                                            value={formData.customCursorColor}
+                                            onChange={e => setFormData(prev => ({ ...prev, customCursorColor: e.target.value }))}
+                                            className="w-8 h-8 rounded-lg cursor-pointer border border-gray-200"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={formData.customCursorColor}
+                                            onChange={e => setFormData(prev => ({ ...prev, customCursorColor: e.target.value }))}
+                                            className="w-24 px-2 py-1 text-xs font-mono font-bold uppercase rounded-lg border border-gray-200"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Admin Panel Toggle */}
+                        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs flex items-center justify-between">
+                            <div>
+                                <h5 className="font-bold text-gray-900 text-sm">Attiva il cursore personalizzato anche nell'Admin</h5>
+                                <p className="text-xs text-gray-500">Consigliato disattivato per mantenere massima precisione durante l'inserimento di prodotti e ordini.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.customCursorActiveInAdmin}
+                                    onChange={e => setFormData(prev => ({ ...prev, customCursorActiveInAdmin: e.target.checked }))}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            </label>
+                        </div>
+
+                        {/* LIVE INTERACTIVE PLAYGROUND BOX */}
+                        <div className="bg-gradient-to-br from-stone-50 via-emerald-50/30 to-amber-50/20 p-6 md:p-8 rounded-3xl border-2 border-dashed border-emerald-300 shadow-inner relative overflow-hidden">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                                    <h4 className="font-black text-gray-900 text-lg">Banco di Prova Interattivo dal Vivo</h4>
+                                </div>
+                                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+                                    Muovi il mouse qui dentro!
+                                </span>
+                            </div>
+
+                            <p className="text-xs text-gray-600 mb-6">
+                                Passa il cursore sui diversi pulsanti ed elementi per vedere come reagisce all'hover e al click in tempo reale.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <button
+                                    type="button"
+                                    data-cursor="product"
+                                    className="p-5 rounded-2xl bg-white border border-stone-200/90 shadow-sm hover:shadow-md transition-all text-left group cursor-pointer"
+                                >
+                                    <span className="text-2xl mb-2 block group-hover:scale-110 transition-transform">🍎</span>
+                                    <h5 className="font-extrabold text-sm text-gray-900">Card Prodotto Fresco</h5>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">Testa l'effetto magnetico e la pillola reparto.</p>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    data-cursor="cart"
+                                    className="p-5 rounded-2xl bg-white border border-stone-200/90 shadow-sm hover:shadow-md transition-all text-left group cursor-pointer"
+                                >
+                                    <span className="text-2xl mb-2 block group-hover:scale-110 transition-transform">🛒</span>
+                                    <h5 className="font-extrabold text-sm text-gray-900">Aggiungi al Carrello</h5>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">Testa l'effetto carrello ed espansione.</p>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    data-cursor="contact"
+                                    className="p-5 rounded-2xl bg-white border border-stone-200/90 shadow-sm hover:shadow-md transition-all text-left group cursor-pointer"
+                                >
+                                    <span className="text-2xl mb-2 block group-hover:scale-110 transition-transform">💬</span>
+                                    <h5 className="font-extrabold text-sm text-gray-900">Contatto WhatsApp</h5>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">Testa l'icona messaggio dinamica.</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Save Button for Cursor Tab */}
+                        <div className="flex items-center justify-end pt-4 border-t border-gray-200">
+                            <button
+                                type="button"
+                                onClick={handleSettingsSubmit}
+                                disabled={isSaving}
+                                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-8 rounded-2xl text-sm shadow-lg hover:shadow-xl hover:scale-102 transition-all cursor-pointer disabled:opacity-50"
+                            >
+                                <Save size={18} />
+                                <span>{isSaving ? 'Salvataggio in corso...' : 'Salva Impostazioni Cursore'}</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'general' && (
                     <form onSubmit={handleSettingsSubmit} className="space-y-8 animate-in fade-in duration-300">
                         {/* Identità */}

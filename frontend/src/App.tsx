@@ -43,6 +43,7 @@ import { CouponManager } from './pages/admin/CouponManager';
 import { NewsletterConfirm } from './pages/NewsletterConfirm';
 import { useAnalyticsTracker } from './hooks/useAnalyticsTracker';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
+import { ThemedCursor } from './components/ui/ThemedCursor';
 
 // Scroll to top & track site analytics on route change
 const RouteTracker = () => {
@@ -156,6 +157,7 @@ function App() {
                     </Route>
                 </Route>
             </Routes>
+            <ThemedCursor />
             <LoadingOverlay />
             <Toaster />
         </Router>

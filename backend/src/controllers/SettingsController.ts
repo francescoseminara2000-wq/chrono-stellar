@@ -43,7 +43,11 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderTextSize INT DEFAULT 28`,
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderTextBold TINYINT(1) DEFAULT 1`,
             `ALTER TABLE StoreSettings ADD COLUMN appleLoaderTextOffset INT DEFAULT 16`,
-            `ALTER TABLE StoreSettings ADD COLUMN headerLogoSize INT DEFAULT 80`
+            `ALTER TABLE StoreSettings ADD COLUMN headerLogoSize INT DEFAULT 80`,
+            `ALTER TABLE StoreSettings ADD COLUMN customCursorEnabled TINYINT(1) DEFAULT 1`,
+            `ALTER TABLE StoreSettings ADD COLUMN customCursorStyle VARCHAR(50) DEFAULT 'sprout'`,
+            `ALTER TABLE StoreSettings ADD COLUMN customCursorColor VARCHAR(50) DEFAULT '#16a34a'`,
+            `ALTER TABLE StoreSettings ADD COLUMN customCursorActiveInAdmin TINYINT(1) DEFAULT 0`
         ];
 
         for (const statement of sqlStatements) {
@@ -279,6 +283,18 @@ export class SettingsController {
             }
             if (req.body.headerLogoSize !== undefined) {
                 updateData.headerLogoSize = Number(req.body.headerLogoSize);
+            }
+            if (req.body.customCursorEnabled !== undefined) {
+                updateData.customCursorEnabled = Boolean(req.body.customCursorEnabled);
+            }
+            if (req.body.customCursorStyle !== undefined) {
+                updateData.customCursorStyle = String(req.body.customCursorStyle);
+            }
+            if (req.body.customCursorColor !== undefined) {
+                updateData.customCursorColor = String(req.body.customCursorColor);
+            }
+            if (req.body.customCursorActiveInAdmin !== undefined) {
+                updateData.customCursorActiveInAdmin = Boolean(req.body.customCursorActiveInAdmin);
             }
 
             const updatedSettings = await prisma.storeSettings.update({

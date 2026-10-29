@@ -61,6 +61,10 @@ export interface StoreSettings {
     appleLoaderTextBold?: boolean;
     appleLoaderTextOffset?: number;
     headerLogoSize?: number;
+    customCursorEnabled?: boolean;
+    customCursorStyle?: 'sprout' | 'leaf-trail' | 'smart-pill' | 'system';
+    customCursorColor?: string;
+    customCursorActiveInAdmin?: boolean;
 }
 
 interface AppState {

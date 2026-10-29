@@ -190,6 +190,10 @@ model StoreSettings {
   appleLoaderTextBold         Boolean? @default(true)
   appleLoaderTextOffset       Int?     @default(16)
   headerLogoSize              Int?     @default(80)
+  customCursorEnabled         Boolean? @default(true)
+  customCursorStyle           String?  @default("sprout")
+  customCursorColor           String?  @default("#16a34a")
+  customCursorActiveInAdmin   Boolean? @default(false)
 }
 
 model Transaction {
