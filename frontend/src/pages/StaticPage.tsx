@@ -57,14 +57,25 @@ export const StaticPage = () => {
         );
     }
 
+    const isFirstBlockHero = (() => {
+        try {
+            const blocks = JSON.parse(page?.content);
+            return Array.isArray(blocks) && blocks.length > 0 && blocks[0].type === 'hero';
+        } catch {
+            return false;
+        }
+    })();
+
     return (
-        <div className="bg-gray-50 min-h-screen pb-16 flex flex-col pt-8">
-            <div className="container mx-auto px-4 max-w-7xl mb-8">
-                <Link to="/" className="inline-flex items-center gap-2 text-nature-600 hover:text-nature-800 transition-colors font-medium bg-white/70 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200">
-                    <ArrowLeft size={18} />
-                    Torna alla Home
-                </Link>
-            </div>
+        <div className="bg-white min-h-screen pb-16 flex flex-col">
+            {!isFirstBlockHero && (
+                <div className="container mx-auto px-4 max-w-7xl pt-6 pb-2">
+                    <Link to="/" className="inline-flex items-center gap-2 text-nature-700 hover:text-nature-900 transition-colors font-medium bg-nature-50/70 hover:bg-nature-100/70 px-4 py-2 rounded-full border border-nature-200/60 text-sm">
+                        <ArrowLeft size={16} />
+                        <span>Torna alla Home</span>
+                    </Link>
+                </div>
+            )}
 
             {/* BlockRenderer handles its own sections/containers */}
             <BlockRenderer content={page.content} />
