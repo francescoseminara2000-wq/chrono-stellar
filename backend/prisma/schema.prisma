@@ -193,6 +193,7 @@ model StoreSettings {
   customCursorEnabled         Boolean? @default(true)
   customCursorStyle           String?  @default("sprout")
   customCursorColor           String?  @default("#16a34a")
+  customCursorClickEffect     String?  @default("botanical")
   customCursorActiveInAdmin   Boolean? @default(false)
 }
 

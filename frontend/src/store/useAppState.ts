@@ -65,6 +65,7 @@ export interface StoreSettings {
     customCursorStyle?: 'sprout' | 'leaf-trail' | 'smart-pill' | 'system';
     customCursorColor?: string;
     customCursorActiveInAdmin?: boolean;
+    customCursorClickEffect?: 'botanical' | 'fruits' | 'ripple' | 'sparkles' | 'hearts' | 'fireworks' | 'none';
 }
 
 interface AppState {

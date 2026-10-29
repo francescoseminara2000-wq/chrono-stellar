@@ -47,7 +47,8 @@ export class SettingsController {
             `ALTER TABLE StoreSettings ADD COLUMN customCursorEnabled TINYINT(1) DEFAULT 1`,
             `ALTER TABLE StoreSettings ADD COLUMN customCursorStyle VARCHAR(50) DEFAULT 'sprout'`,
             `ALTER TABLE StoreSettings ADD COLUMN customCursorColor VARCHAR(50) DEFAULT '#16a34a'`,
-            `ALTER TABLE StoreSettings ADD COLUMN customCursorActiveInAdmin TINYINT(1) DEFAULT 0`
+            `ALTER TABLE StoreSettings ADD COLUMN customCursorActiveInAdmin TINYINT(1) DEFAULT 0`,
+            `ALTER TABLE StoreSettings ADD COLUMN customCursorClickEffect VARCHAR(50) DEFAULT 'botanical'`
         ];
 
         for (const statement of sqlStatements) {
@@ -295,6 +296,9 @@ export class SettingsController {
             }
             if (req.body.customCursorActiveInAdmin !== undefined) {
                 updateData.customCursorActiveInAdmin = Boolean(req.body.customCursorActiveInAdmin);
+            }
+            if (req.body.customCursorClickEffect !== undefined) {
+                updateData.customCursorClickEffect = String(req.body.customCursorClickEffect);
             }
 
             const updatedSettings = await prisma.storeSettings.update({

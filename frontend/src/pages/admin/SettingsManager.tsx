@@ -115,6 +115,7 @@ export const SettingsManager = () => {
         headerLogoSize: 80,
         customCursorEnabled: true,
         customCursorStyle: 'sprout' as 'sprout' | 'leaf-trail' | 'smart-pill' | 'system',
+        customCursorClickEffect: 'botanical' as 'botanical' | 'fruits' | 'ripple' | 'sparkles' | 'hearts' | 'fireworks' | 'none',
         customCursorColor: '#16a34a',
         customCursorActiveInAdmin: false
     });
@@ -249,6 +250,7 @@ export const SettingsManager = () => {
                 headerLogoSize: data.headerLogoSize !== undefined && data.headerLogoSize !== null ? Number(data.headerLogoSize) : 80,
                 customCursorEnabled: data.customCursorEnabled !== undefined ? Boolean(data.customCursorEnabled) : true,
                 customCursorStyle: (data.customCursorStyle || 'sprout') as any,
+                customCursorClickEffect: (data.customCursorClickEffect || 'botanical') as any,
                 customCursorColor: data.customCursorColor || '#16a34a',
                 customCursorActiveInAdmin: Boolean(data.customCursorActiveInAdmin)
             });
@@ -805,6 +807,7 @@ export const SettingsManager = () => {
                         <ThemedCursor 
                             previewStyle={formData.customCursorStyle} 
                             previewColor={formData.customCursorColor} 
+                            previewClickEffect={formData.customCursorClickEffect}
                             isInteractivePreview={true} 
                         />
 
@@ -1019,6 +1022,95 @@ export const SettingsManager = () => {
                                             className="w-24 px-2 py-1 text-xs font-mono font-bold uppercase rounded-lg border border-gray-200"
                                         />
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Click Effect Customization */}
+                        {formData.customCursorStyle !== 'system' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <h4 className="font-black text-gray-900 text-lg">Effetto Interattivo al Click</h4>
+                                    <p className="text-xs text-gray-500">Scegli la micro-animazione che si sprigiona ogni volta che il cliente clicca in qualsiasi punto del negozio.</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                                    {[
+                                        {
+                                            id: 'botanical',
+                                            name: 'Sboccio Botanico',
+                                            icon: '🌿',
+                                            tag: 'Consigliato',
+                                            desc: 'Doppia onda liquida con gocce di rugiada e foglioline organiche rotanti.'
+                                        },
+                                        {
+                                            id: 'fruits',
+                                            name: 'Raccolto Pop',
+                                            icon: '🍓',
+                                            tag: 'Divertente',
+                                            desc: "Zampillo a fontana di micro-frutti e ortaggi biologici che salgono verso l'alto."
+                                        },
+                                        {
+                                            id: 'ripple',
+                                            name: 'Hydro-Ripple',
+                                            icon: '🌊',
+                                            tag: 'Luxury',
+                                            desc: "Onde concentriche d'acqua con alone riflettente e goccia luminosa."
+                                        },
+                                        {
+                                            id: 'sparkles',
+                                            name: 'Scintille Dorate',
+                                            icon: '✨',
+                                            tag: 'Luminoso',
+                                            desc: 'Esplosione stellare radiale di scintille scintillanti color oro e smeraldo.'
+                                        },
+                                        {
+                                            id: 'hearts',
+                                            name: 'Cuori Bio',
+                                            icon: '💚',
+                                            tag: 'Naturale',
+                                            desc: 'Cuoricini ecologici e germogli che fluttuano dolcemente con oscillazione.'
+                                        },
+                                        {
+                                            id: 'fireworks',
+                                            name: 'Festa del Raccolto',
+                                            icon: '🎆',
+                                            tag: 'Vivace',
+                                            desc: 'Coriandoli festosi nei colori freschi della terra e dei mercati ortofrutticoli.'
+                                        },
+                                        {
+                                            id: 'none',
+                                            name: 'Nessun Effetto',
+                                            icon: '🔘',
+                                            tag: 'Minimale',
+                                            desc: 'Sola pulsazione elastica del cursore senza particelle visibili.'
+                                        }
+                                    ].map(eff => (
+                                        <div
+                                            key={eff.id}
+                                            onClick={() => setFormData(prev => ({ ...prev, customCursorClickEffect: eff.id as any }))}
+                                            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                                                formData.customCursorClickEffect === eff.id
+                                                    ? 'border-emerald-600 bg-emerald-50/60 shadow-sm ring-2 ring-emerald-500/20'
+                                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-2xl">{eff.icon}</span>
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                                        formData.customCursorClickEffect === eff.id
+                                                            ? 'bg-emerald-600 text-white'
+                                                            : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                        {eff.tag}
+                                                    </span>
+                                                </div>
+                                                <h5 className="font-extrabold text-sm text-gray-900 mb-1">{eff.name}</h5>
+                                                <p className="text-[11px] text-gray-500 leading-relaxed">{eff.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
