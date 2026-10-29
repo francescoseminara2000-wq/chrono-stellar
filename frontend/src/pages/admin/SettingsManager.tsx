@@ -9,7 +9,6 @@ import {
     Bold, MoveVertical, Smartphone, Monitor, RotateCcw
 } from 'lucide-react';
 import { AppleLoader } from '../../components/ui/AppleLoader';
-import { ThemedCursor } from '../../components/ui/ThemedCursor';
 import { useToastStore } from '../../store/useToastStore';
 import { LocationPicker } from '../../components/LocationPicker';
 import { sanitizeImageUrl } from '../../utils/imageUrl';
@@ -171,6 +170,24 @@ export const SettingsManager = () => {
             fetchAllData();
         }
     }, [token]);
+
+    // Real-time synchronization of cursor preview in admin settings
+    useEffect(() => {
+        if (activeTab === 'cursor') {
+            useAppState.getState().setCursorPreview({
+                style: formData.customCursorStyle,
+                color: formData.customCursorColor,
+                clickEffect: formData.customCursorClickEffect,
+                spriteUrl: formData.customCursorSpriteUrl,
+                activeInAdmin: true
+            });
+        } else {
+            useAppState.getState().setCursorPreview(null);
+        }
+        return () => {
+            useAppState.getState().setCursorPreview(null);
+        };
+    }, [activeTab, formData.customCursorStyle, formData.customCursorColor, formData.customCursorClickEffect, formData.customCursorSpriteUrl]);
 
     const fetchAllData = async () => {
         setIsLoading(true);
@@ -805,13 +822,6 @@ export const SettingsManager = () => {
             <div className="mt-8">
                 {activeTab === 'cursor' && (
                     <div className="space-y-8 animate-fadeIn">
-                        {/* Live Cursor Preview in Admin for this tab */}
-                        <ThemedCursor 
-                            previewStyle={formData.customCursorStyle} 
-                            previewColor={formData.customCursorColor} 
-                            previewClickEffect={formData.customCursorClickEffect}
-                            isInteractivePreview={true} 
-                        />
 
                         {/* Header Box */}
                         <div className="bg-gradient-to-br from-emerald-900 via-nature-900 to-stone-900 p-6 md:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">

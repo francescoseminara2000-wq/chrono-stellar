@@ -69,10 +69,20 @@ export interface StoreSettings {
     customCursorSpriteUrl?: string | null;
 }
 
+export interface CursorPreviewState {
+    style?: 'nature-arrow' | 'sprout' | 'leaf-trail' | 'smart-pill' | 'apple-harvest' | 'water-droplet' | 'artisan-stamp' | 'bee-flutter' | 'minimal-lens' | 'system';
+    color?: string;
+    clickEffect?: 'botanical' | 'fruits' | 'ripple' | 'sparkles' | 'hearts' | 'fireworks' | 'none';
+    spriteUrl?: string | null;
+    activeInAdmin?: boolean;
+}
+
 interface AppState {
     settings: StoreSettings | null;
     isLoading: boolean;
     error: string | null;
+    cursorPreview: CursorPreviewState | null;
+    setCursorPreview: (preview: CursorPreviewState | null) => void;
     fetchSettings: () => Promise<void>;
 }
 
@@ -80,6 +90,8 @@ export const useAppState = create<AppState>((set) => ({
     settings: null,
     isLoading: true,
     error: null,
+    cursorPreview: null,
+    setCursorPreview: (preview) => set({ cursorPreview: preview }),
     fetchSettings: async () => {
         set({ isLoading: true, error: null });
         try {
