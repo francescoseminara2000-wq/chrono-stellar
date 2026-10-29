@@ -33,10 +33,28 @@ interface ClickBurst {
     particles: ClickParticle[];
 }
 
-export type ClickEffectType = 'botanical' | 'fruits' | 'ripple' | 'sparkles' | 'hearts' | 'fireworks' | 'none';
+export type CursorStyleType =
+    | 'sprout'
+    | 'leaf-trail'
+    | 'smart-pill'
+    | 'apple-harvest'
+    | 'water-droplet'
+    | 'artisan-stamp'
+    | 'bee-flutter'
+    | 'minimal-lens'
+    | 'system';
+
+export type ClickEffectType =
+    | 'botanical'
+    | 'fruits'
+    | 'ripple'
+    | 'sparkles'
+    | 'hearts'
+    | 'fireworks'
+    | 'none';
 
 interface ThemedCursorProps {
-    previewStyle?: 'sprout' | 'leaf-trail' | 'smart-pill' | 'system';
+    previewStyle?: CursorStyleType;
     previewColor?: string;
     previewClickEffect?: ClickEffectType;
     isInteractivePreview?: boolean;
@@ -63,15 +81,16 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
     const [hoverType, setHoverType] = useState<string>('default');
     const [isMouseDown, setIsMouseDown] = useState(false);
     const [isTextInput, setIsTextInput] = useState(false);
+    const [mouseVelocity, setMouseVelocity] = useState(0);
     const [trailParticles, setTrailParticles] = useState<TrailParticle[]>([]);
     const [clickBursts, setClickBursts] = useState<ClickBurst[]>([]);
 
-    const lastPosRef = useRef({ x: 0, y: 0 });
+    const lastPosRef = useRef({ x: 0, y: 0, time: Date.now() });
     const particleIdRef = useRef(0);
     const burstIdRef = useRef(0);
 
     // Active configurations
-    const activeStyle = previewStyle || settings?.customCursorStyle || 'sprout';
+    const activeStyle = (previewStyle || settings?.customCursorStyle || 'sprout') as CursorStyleType;
     const activeColor = previewColor || settings?.customCursorColor || '#16a34a';
     const activeClickEffect = (previewClickEffect || settings?.customCursorClickEffect || 'botanical') as ClickEffectType;
     const isEnabled = isInteractivePreview ? true : (settings?.customCursorEnabled !== false);
@@ -82,7 +101,7 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
     const mouseX = useMotionValue(-100);
     const mouseY = useMotionValue(-100);
 
-    // Springs for smooth organic following
+    // Springs for different movement characteristics
     const dotX = useSpring(mouseX, { damping: 45, stiffness: 600, mass: 0.1 });
     const dotY = useSpring(mouseY, { damping: 45, stiffness: 600, mass: 0.1 });
 
@@ -91,6 +110,9 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
 
     const badgeX = useSpring(mouseX, { damping: 22, stiffness: 180, mass: 0.5 });
     const badgeY = useSpring(mouseY, { damping: 22, stiffness: 180, mass: 0.5 });
+
+    const beeX = useSpring(mouseX, { damping: 18, stiffness: 140, mass: 0.6 });
+    const beeY = useSpring(mouseY, { damping: 18, stiffness: 140, mass: 0.6 });
 
     // Touch screen detection
     useEffect(() => {
@@ -113,7 +135,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
         const particles: ClickParticle[] = [];
 
         if (activeClickEffect === 'botanical') {
-            // 7 radial particles: leaves and dew drops
             for (let i = 0; i < 7; i++) {
                 const angle = (i / 7) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
                 const distance = 35 + Math.random() * 35;
@@ -128,7 +149,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                 });
             }
         } else if (activeClickEffect === 'fruits') {
-            // 5 farm emojis bursting upwards like a fountain
             const shuffled = [...FRUITS_POOL].sort(() => 0.5 - Math.random());
             for (let i = 0; i < 5; i++) {
                 const angle = -Math.PI / 2 + (Math.random() * 1.4 - 0.7);
@@ -143,7 +163,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                 });
             }
         } else if (activeClickEffect === 'sparkles') {
-            // 8 glittering starlight sparkles in all directions
             for (let i = 0; i < 8; i++) {
                 const angle = (i / 8) * Math.PI * 2;
                 const distance = 30 + Math.random() * 40;
@@ -157,7 +176,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                 });
             }
         } else if (activeClickEffect === 'hearts') {
-            // 4 organic hearts floating upwards with wobble
             for (let i = 0; i < 4; i++) {
                 particles.push({
                     id: i,
@@ -169,7 +187,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                 });
             }
         } else if (activeClickEffect === 'fireworks') {
-            // 12 festive harvest confetti
             for (let i = 0; i < 12; i++) {
                 const angle = (i / 12) * Math.PI * 2 + (Math.random() * 0.3);
                 const distance = 40 + Math.random() * 50;
@@ -196,7 +213,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
 
         setClickBursts(prev => [...prev.slice(-6), newBurst]);
 
-        // Auto remove burst after animation finishes
         setTimeout(() => {
             setClickBursts(prev => prev.filter(b => b.id !== burstId));
         }, 750);
@@ -213,11 +229,17 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
 
             if (!isVisible) setIsVisible(true);
 
+            // Compute mouse velocity for water jelly or bee flutter
+            const now = Date.now();
+            const dt = Math.max(1, now - lastPosRef.current.time);
+            const dist = Math.hypot(e.clientX - lastPosRef.current.x, e.clientY - lastPosRef.current.y);
+            const vel = Math.min(1.6, dist / dt);
+            setMouseVelocity(vel);
+
             // Trail for leaf-trail style
             if (activeStyle === 'leaf-trail') {
-                const dist = Math.hypot(e.clientX - lastPosRef.current.x, e.clientY - lastPosRef.current.y);
                 if (dist > 18) {
-                    lastPosRef.current = { x: e.clientX, y: e.clientY };
+                    lastPosRef.current = { x: e.clientX, y: e.clientY, time: now };
                     const types: ('dew' | 'pollen' | 'leaf')[] = ['dew', 'pollen', 'leaf'];
                     const chosenType = types[Math.floor(Math.random() * types.length)];
                     const newParticle: TrailParticle = {
@@ -232,6 +254,8 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
 
                     setTrailParticles(prev => [...prev.slice(-18), newParticle]);
                 }
+            } else {
+                lastPosRef.current = { x: e.clientX, y: e.clientY, time: now };
             }
 
             // Inspect element under cursor
@@ -323,10 +347,8 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
             <AnimatePresence>
                 {clickBursts.map(burst => (
                     <React.Fragment key={burst.id}>
-                        {/* Ripples for 'botanical' and 'ripple' */}
                         {(burst.effect === 'botanical' || burst.effect === 'ripple') && (
                             <>
-                                {/* Primary Ripple Ring */}
                                 <motion.div
                                     initial={{ scale: 0.2, opacity: 0.9 }}
                                     animate={{ scale: burst.effect === 'ripple' ? 3.2 : 2.4, opacity: 0 }}
@@ -339,7 +361,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                     }}
                                     className="fixed w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
                                 />
-                                {/* Secondary Soft Ambient Halo */}
                                 <motion.div
                                     initial={{ scale: 0.1, opacity: 0.5 }}
                                     animate={{ scale: burst.effect === 'ripple' ? 4.5 : 3.0, opacity: 0 }}
@@ -355,7 +376,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                             </>
                         )}
 
-                        {/* Particle Sprites */}
                         {burst.particles.map(p => (
                             <motion.div
                                 key={p.id}
@@ -409,7 +429,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                     {/* STYLE 1: SPROUT (Magnetic Sprout & Dew) */}
                     {activeStyle === 'sprout' && (
                         <>
-                            {/* Outer Magnetic Ring */}
                             <motion.div
                                 style={{
                                     x: ringX,
@@ -438,7 +457,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                 )}
                             </motion.div>
 
-                            {/* Center Dot */}
                             <motion.div
                                 style={{
                                     x: dotX,
@@ -460,7 +478,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                     {/* STYLE 2: LEAF-TRAIL (Botanical Leaf with Dew & Pollen Trail) */}
                     {activeStyle === 'leaf-trail' && (
                         <>
-                            {/* Trailing Particles Pool */}
                             <AnimatePresence>
                                 {trailParticles.map(p => (
                                     <motion.div
@@ -481,11 +498,7 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                         ) : p.type === 'pollen' ? (
                                             <div
                                                 className="rounded-full shadow-xs"
-                                                style={{
-                                                    width: p.size,
-                                                    height: p.size,
-                                                    backgroundColor: '#fbbf24'
-                                                }}
+                                                style={{ width: p.size, height: p.size, backgroundColor: '#fbbf24' }}
                                             />
                                         ) : (
                                             <div
@@ -497,7 +510,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                 ))}
                             </AnimatePresence>
 
-                            {/* Main Botanical Leaf Pointer */}
                             <motion.div
                                 style={{
                                     x: dotX,
@@ -524,7 +536,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                     {/* STYLE 3: SMART-PILL (Smart Context Cursor) */}
                     {activeStyle === 'smart-pill' && (
                         <>
-                            {/* Center Dot */}
                             <motion.div
                                 style={{
                                     x: dotX,
@@ -541,7 +552,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                 className="w-2.5 h-2.5 rounded-full fixed shadow-sm"
                             />
 
-                            {/* Trailing Ring (when not hovering) */}
                             {!isHovering && (
                                 <motion.div
                                     style={{
@@ -559,7 +569,6 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                 />
                             )}
 
-                            {/* Dynamic Context Pill Badge */}
                             <AnimatePresence>
                                 {isHovering && (
                                     <motion.div
@@ -580,6 +589,276 @@ export const ThemedCursor: React.FC<ThemedCursorProps> = ({
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+                        </>
+                    )}
+
+                    {/* STYLE 4: APPLE-HARVEST (Mela Bio del Raccolto) */}
+                    {activeStyle === 'apple-harvest' && (
+                        <motion.div
+                            style={{
+                                x: dotX,
+                                y: dotY,
+                                translateX: '-30%',
+                                translateY: '-20%'
+                            }}
+                            animate={{
+                                scale: isMouseDown ? 0.8 : isHovering ? 1.3 : 1,
+                                rotate: isHovering ? 18 : 0,
+                                opacity: isVisible ? 1 : 0
+                            }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 280 }}
+                            className="fixed flex items-center justify-center filter drop-shadow-md"
+                        >
+                            <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+                                {/* Twig / Picciolo */}
+                                <path d="M18 10C18 6 21 3 24 2" stroke="#78350f" strokeWidth="2.5" strokeLinecap="round" />
+                                {/* Green Leaf on top */}
+                                <path d="M18 8C19 4 23 4 25 5C25 7 22 9 18 8Z" fill={activeColor} stroke="#ffffff" strokeWidth="0.8" />
+                                {/* Red Apple Body */}
+                                <path
+                                    d="M18 11C15 9 8 9 8 18C8 26 14 30 18 30C22 30 28 26 28 18C28 9 21 9 18 11Z"
+                                    fill="url(#appleGrad)"
+                                    stroke="#ffffff"
+                                    strokeWidth="1.2"
+                                />
+                                <defs>
+                                    <linearGradient id="appleGrad" x1="8" y1="9" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#ef4444" />
+                                        <stop offset="0.6" stopColor="#dc2626" />
+                                        <stop offset="1" stopColor="#991b1b" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+
+                            {/* Floating mini basket on hover */}
+                            {isHovering && (
+                                <motion.div
+                                    initial={{ scale: 0, y: 6 }}
+                                    animate={{ scale: 1, y: -16 }}
+                                    className="absolute -right-3 -top-2 text-sm select-none"
+                                >
+                                    🧺
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* STYLE 5: WATER-DROPLET (Goccia Salva-Freschezza Jelly) */}
+                    {activeStyle === 'water-droplet' && (
+                        <>
+                            {/* Water Aura Ripple */}
+                            <motion.div
+                                style={{
+                                    x: ringX,
+                                    y: ringY,
+                                    translateX: '-50%',
+                                    translateY: '-50%'
+                                }}
+                                animate={{
+                                    scale: isHovering ? 1.7 : 1,
+                                    opacity: isVisible ? (isHovering ? 0.4 : 0.2) : 0
+                                }}
+                                transition={{ duration: 0.25 }}
+                                className="w-12 h-12 rounded-full border border-cyan-400 bg-cyan-400/20 fixed blur-[1px]"
+                            />
+
+                            {/* Jelly Morphing Water Droplet */}
+                            <motion.div
+                                style={{
+                                    x: dotX,
+                                    y: dotY,
+                                    translateX: '-50%',
+                                    translateY: '-40%'
+                                }}
+                                animate={{
+                                    scaleX: 1 - mouseVelocity * 0.12,
+                                    scaleY: 1 + mouseVelocity * 0.2,
+                                    scale: isMouseDown ? 0.7 : isHovering ? 1.35 : 1,
+                                    opacity: isVisible ? 1 : 0
+                                }}
+                                transition={{ type: 'spring', damping: 14, stiffness: 220 }}
+                                className="fixed filter drop-shadow-md"
+                            >
+                                <svg width="26" height="32" viewBox="0 0 24 30" fill="none">
+                                    <path
+                                        d="M12 2C12 2 3 13 3 19C3 24 7 28 12 28C17 28 21 24 21 19C21 13 12 2 12 2Z"
+                                        fill="url(#waterGrad)"
+                                        stroke="#ffffff"
+                                        strokeWidth="1.2"
+                                    />
+                                    {/* Glass reflection highlight */}
+                                    <ellipse cx="8" cy="18" rx="2.5" ry="4" transform="rotate(-25 8 18)" fill="#ffffff" opacity="0.65" />
+                                    <defs>
+                                        <linearGradient id="waterGrad" x1="12" y1="2" x2="12" y2="28" gradientUnits="userSpaceOnUse">
+                                            <stop stopColor="#67e8f9" />
+                                            <stop offset="0.7" stopColor="#06b6d4" />
+                                            <stop offset="1" stopColor="#0891b2" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </motion.div>
+                        </>
+                    )}
+
+                    {/* STYLE 6: ARTISAN-STAMP (Sigillo di Bottega & Marchio di Qualità) */}
+                    {activeStyle === 'artisan-stamp' && (
+                        <>
+                            {/* Rotating Vintage Seal Ring */}
+                            <motion.div
+                                style={{
+                                    x: ringX,
+                                    y: ringY,
+                                    translateX: '-50%',
+                                    translateY: '-50%',
+                                    borderColor: activeColor
+                                }}
+                                animate={{
+                                    rotate: isHovering ? 180 : 360,
+                                    scale: isMouseDown ? 0.8 : isHovering ? 1.4 : 1,
+                                    opacity: isVisible ? 0.85 : 0
+                                }}
+                                transition={{
+                                    rotate: { repeat: Infinity, duration: isHovering ? 3 : 12, ease: 'linear' },
+                                    scale: { duration: 0.2 }
+                                }}
+                                className="w-12 h-12 rounded-full border-2 border-dashed fixed flex items-center justify-center"
+                            >
+                                <div
+                                    className="w-10 h-10 rounded-full border border-dotted opacity-60"
+                                    style={{ borderColor: activeColor }}
+                                />
+                            </motion.div>
+
+                            {/* Center Quality Monogram */}
+                            <motion.div
+                                style={{
+                                    x: dotX,
+                                    y: dotY,
+                                    translateX: '-50%',
+                                    translateY: '-50%',
+                                    backgroundColor: activeColor
+                                }}
+                                animate={{
+                                    scale: isMouseDown ? 0.7 : 1,
+                                    opacity: isVisible ? 1 : 0
+                                }}
+                                className="w-4 h-4 rounded-full fixed shadow-sm flex items-center justify-center text-[8px] font-black text-white"
+                            >
+                                ✦
+                            </motion.div>
+                        </>
+                    )}
+
+                    {/* STYLE 7: BEE-FLUTTER (Ape Impollinatrice dei Campi) */}
+                    {activeStyle === 'bee-flutter' && (
+                        <motion.div
+                            style={{
+                                x: beeX,
+                                y: beeY,
+                                translateX: '-40%',
+                                translateY: '-40%'
+                            }}
+                            animate={{
+                                scale: isMouseDown ? 0.8 : isHovering ? 1.4 : 1,
+                                rotate: isHovering ? -10 : 8,
+                                opacity: isVisible ? 1 : 0
+                            }}
+                            transition={{ type: 'spring', damping: 16, stiffness: 200 }}
+                            className="fixed flex items-center justify-center select-none filter drop-shadow-md"
+                        >
+                            {/* Flapping Wings & Bee Body SVG */}
+                            <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+                                {/* Wing Left */}
+                                <motion.ellipse
+                                    cx="13"
+                                    cy="11"
+                                    rx="6"
+                                    ry="3.5"
+                                    transform="rotate(-35 13 11)"
+                                    fill="#e0f2fe"
+                                    stroke="#38bdf8"
+                                    strokeWidth="1"
+                                    opacity="0.8"
+                                    animate={{ scaleY: [1, 0.4, 1] }}
+                                    transition={{ repeat: Infinity, duration: 0.14 }}
+                                />
+                                {/* Wing Right */}
+                                <motion.ellipse
+                                    cx="23"
+                                    cy="11"
+                                    rx="6"
+                                    ry="3.5"
+                                    transform="rotate(35 23 11)"
+                                    fill="#e0f2fe"
+                                    stroke="#38bdf8"
+                                    strokeWidth="1"
+                                    opacity="0.8"
+                                    animate={{ scaleY: [1, 0.4, 1] }}
+                                    transition={{ repeat: Infinity, duration: 0.14 }}
+                                />
+                                {/* Striped Bee Body */}
+                                <ellipse cx="18" cy="20" rx="7" ry="9" fill="#facc15" stroke="#78350f" strokeWidth="1.2" />
+                                {/* Dark Stripes */}
+                                <line x1="12" y1="18" x2="24" y2="18" stroke="#1c1917" strokeWidth="2" strokeLinecap="round" />
+                                <line x1="13" y1="22" x2="23" y2="22" stroke="#1c1917" strokeWidth="2" strokeLinecap="round" />
+                                {/* Stinger */}
+                                <polygon points="18,29 16.5,32 19.5,32" fill="#1c1917" />
+                                {/* Eyes */}
+                                <circle cx="15.5" cy="14" r="1.5" fill="#1c1917" />
+                                <circle cx="20.5" cy="14" r="1.5" fill="#1c1917" />
+                            </svg>
+
+                            {/* Sprout Flower on hover */}
+                            {isHovering && (
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute -right-3 -bottom-1 text-sm select-none"
+                                >
+                                    🌸
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* STYLE 8: MINIMAL-LENS (Lente di Ingrandimento Botanica) */}
+                    {activeStyle === 'minimal-lens' && (
+                        <>
+                            <motion.div
+                                style={{
+                                    x: ringX,
+                                    y: ringY,
+                                    translateX: '-50%',
+                                    translateY: '-50%',
+                                    borderColor: activeColor
+                                }}
+                                animate={{
+                                    scale: isMouseDown ? 0.75 : isHovering ? 1.7 : 1,
+                                    opacity: isVisible ? (isHovering ? 0.95 : 0.7) : 0,
+                                    backgroundColor: isHovering ? `${activeColor}12` : 'rgba(255,255,255,0.06)'
+                                }}
+                                transition={{ duration: 0.18 }}
+                                className="w-11 h-11 rounded-full border-2 fixed flex items-center justify-center backdrop-blur-[1px] shadow-sm"
+                            >
+                                {/* Lens Crosshairs */}
+                                <div className="absolute inset-x-0 h-[1px] bg-emerald-500/30" />
+                                <div className="absolute inset-y-0 w-[1px] bg-emerald-500/30" />
+                            </motion.div>
+
+                            <motion.div
+                                style={{
+                                    x: dotX,
+                                    y: dotY,
+                                    translateX: '-50%',
+                                    translateY: '-50%',
+                                    backgroundColor: activeColor
+                                }}
+                                animate={{
+                                    scale: isMouseDown ? 0.6 : 1,
+                                    opacity: isVisible ? 1 : 0
+                                }}
+                                className="w-2 h-2 rounded-full fixed shadow-xs"
+                            />
                         </>
                     )}
                 </>

@@ -852,126 +852,99 @@ export const SettingsManager = () => {
                                 <p className="text-xs text-gray-500">Clicca su uno stile per provarlo immediatamente e impostarlo sul sito.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {/* Option 1: Sprout */}
-                                <div
-                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'sprout' }))}
-                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                                        formData.customCursorStyle === 'sprout'
-                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
-                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
-                                    }`}
-                                >
-                                    <div>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
-                                                🌱
-                                            </div>
-                                            {formData.customCursorStyle === 'sprout' && (
-                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
-                                                    Attivo
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {[
+                                    {
+                                        id: 'sprout',
+                                        icon: '🌱',
+                                        name: 'Germoglio & Rugiada',
+                                        tag: 'Consigliato',
+                                        desc: 'Puntatore di precisione con anello magnetico che si espande sui pulsanti facendo sbocciare una fogliolina.'
+                                    },
+                                    {
+                                        id: 'leaf-trail',
+                                        icon: '🍃',
+                                        tag: 'Botanico',
+                                        name: 'Scia Botanica',
+                                        desc: 'Freccia sostituita da una fogliolina organica che rilascia una scia fluttuante di polline dorato e gocce di rugiada.'
+                                    },
+                                    {
+                                        id: 'smart-pill',
+                                        icon: '🎯',
+                                        tag: 'Interattivo',
+                                        name: 'Smart Context Pill',
+                                        desc: 'Riconosce cosa stai puntando e mostra etichette fluttuanti dinamiche (Scopri Reparto, Nel Carrello, Dettagli).'
+                                    },
+                                    {
+                                        id: 'apple-harvest',
+                                        icon: '🍎',
+                                        tag: 'Freschezza',
+                                        name: 'Mela Bio del Raccolto',
+                                        desc: 'Melina biologica illustrata che si inclina dolcemente; sull\'hover compare un cestino di vimini da riempire.'
+                                    },
+                                    {
+                                        id: 'water-droplet',
+                                        icon: '💧',
+                                        tag: 'Liquido',
+                                        name: 'Goccia Salva-Freschezza',
+                                        desc: 'Goccia d\'acqua con fisica elastica jelly che si allunga con la velocità del mouse e crea un riflesso liquido.'
+                                    },
+                                    {
+                                        id: 'artisan-stamp',
+                                        icon: '🏷️',
+                                        tag: 'Artigiano',
+                                        name: 'Sigillo di Bottega',
+                                        desc: 'Marchio circolare con bordo tratteggiato rotante e monogramma di qualità che accelera sull\'hover.'
+                                    },
+                                    {
+                                        id: 'bee-flutter',
+                                        icon: '🐝',
+                                        tag: 'Natura',
+                                        name: 'Ape Impollinatrice',
+                                        desc: 'Minuscola ape con ali che sbattono ad alta velocità; quando passi su un prodotto si posa come su un fiore.'
+                                    },
+                                    {
+                                        id: 'minimal-lens',
+                                        icon: '🔍',
+                                        tag: 'Dettaglio',
+                                        name: 'Lente Ingrandimento',
+                                        desc: 'Lente minimale con cerchio in trasparenza e mirino botanico, ottima per ispezionare da vicino i prodotti.'
+                                    },
+                                    {
+                                        id: 'system',
+                                        icon: '🖱️',
+                                        tag: 'Standard',
+                                        name: 'Puntatore di Sistema',
+                                        desc: 'La classica freccia predefinita del sistema operativo senza alcun effetto speciale o animazione.'
+                                    }
+                                ].map(st => (
+                                    <div
+                                        key={st.id}
+                                        onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: st.id as any }))}
+                                        className={`p-4.5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                                            formData.customCursorStyle === st.id
+                                                ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
+                                                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="w-10 h-10 rounded-2xl bg-emerald-100/70 text-emerald-800 flex items-center justify-center text-xl shadow-2xs">
+                                                    {st.icon}
+                                                </div>
+                                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                                    formData.customCursorStyle === st.id
+                                                        ? 'bg-emerald-600 text-white'
+                                                        : 'bg-gray-100 text-gray-600'
+                                                }`}>
+                                                    {formData.customCursorStyle === st.id ? 'Attivo' : st.tag}
                                                 </span>
-                                            )}
-                                        </div>
-                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Germoglio & Rugiada</h5>
-                                        <p className="text-xs text-gray-600 leading-relaxed">
-                                            Puntatore di precisione con anello magnetico che si espande morbidamente sui pulsanti facendo sbocciare una fogliolina.
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-emerald-700">
-                                        Consigliato • Sofisticato
-                                    </div>
-                                </div>
-
-                                {/* Option 2: Leaf Trail */}
-                                <div
-                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'leaf-trail' }))}
-                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                                        formData.customCursorStyle === 'leaf-trail'
-                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
-                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
-                                    }`}
-                                >
-                                    <div>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
-                                                🍃
                                             </div>
-                                            {formData.customCursorStyle === 'leaf-trail' && (
-                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
-                                                    Attivo
-                                                </span>
-                                            )}
+                                            <h5 className="font-extrabold text-base text-gray-900 mb-1">{st.name}</h5>
+                                            <p className="text-xs text-gray-600 leading-relaxed">{st.desc}</p>
                                         </div>
-                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Scia Botanica</h5>
-                                        <p className="text-xs text-gray-600 leading-relaxed">
-                                            Freccia sostituita da una fogliolina organica che rilascia una scia fluttuante di goccioline di rugiada e polline dorato.
-                                        </p>
                                     </div>
-                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-emerald-700">
-                                        Creativo • Dinamico
-                                    </div>
-                                </div>
-
-                                {/* Option 3: Smart Pill */}
-                                <div
-                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'smart-pill' }))}
-                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                                        formData.customCursorStyle === 'smart-pill'
-                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
-                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
-                                    }`}
-                                >
-                                    <div>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
-                                                🎯
-                                            </div>
-                                            {formData.customCursorStyle === 'smart-pill' && (
-                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
-                                                    Attivo
-                                                </span>
-                                            )}
-                                        </div>
-                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Smart Context Pill</h5>
-                                        <p className="text-xs text-gray-600 leading-relaxed">
-                                            Mostra etichette intelligenti fluttuanti accanto al cursore a seconda di cosa stai guardando (prodotti, carrello, foto).
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-emerald-700">
-                                        E-Commerce • Interattivo
-                                    </div>
-                                </div>
-
-                                {/* Option 4: System */}
-                                <div
-                                    onClick={() => setFormData(prev => ({ ...prev, customCursorStyle: 'system' }))}
-                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                                        formData.customCursorStyle === 'system'
-                                            ? 'border-emerald-600 bg-emerald-50/50 shadow-md ring-4 ring-emerald-500/10'
-                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
-                                    }`}
-                                >
-                                    <div>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="w-10 h-10 rounded-2xl bg-gray-100 text-gray-700 flex items-center justify-center font-black">
-                                                🖱️
-                                            </div>
-                                            {formData.customCursorStyle === 'system' && (
-                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gray-800 text-white">
-                                                    Attivo
-                                                </span>
-                                            )}
-                                        </div>
-                                        <h5 className="font-extrabold text-base text-gray-900 mb-1">Puntatore di Sistema</h5>
-                                        <p className="text-xs text-gray-600 leading-relaxed">
-                                            La freccia di default classica del sistema operativo senza alcun effetto o grafica aggiuntiva.
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-gray-500">
-                                        Standard • Neutro
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
 
