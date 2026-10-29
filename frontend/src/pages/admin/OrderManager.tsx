@@ -60,11 +60,18 @@ export const OrderManager = () => {
         tempUnitPrice: number | string;
     }>({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' });
 
+    const selectedOrderIdRef = useRef<number | null>(null);
+
     useEffect(() => {
         if (selectedOrder) {
-            setEditDate(selectedOrder.scheduledDate || '');
-            setEditTime(selectedOrder.scheduledTime || '');
-            setEditNotes(selectedOrder.adminNotes || '');
+            const isDifferentOrder = selectedOrderIdRef.current !== selectedOrder.id;
+            selectedOrderIdRef.current = selectedOrder.id;
+
+            if (isDifferentOrder) {
+                setEditDate(selectedOrder.scheduledDate || '');
+                setEditTime(selectedOrder.scheduledTime || '');
+                setEditNotes(selectedOrder.adminNotes || '');
+            }
 
             const initialFulfillment: Record<number, number> = {};
             const initialPrices: Record<number, number> = {};
@@ -86,10 +93,17 @@ export const OrderManager = () => {
                 initialPrices[item.id] = (item.priceAtPurchase || item.product.priceCents) / 100;
             });
 
-            setFulfillmentData(initialFulfillment);
-            setFulfillmentPriceData(initialPrices);
-            setWeighedItemIds(initialWeighedIds);
+            if (isDifferentOrder) {
+                setFulfillmentData(initialFulfillment);
+                setFulfillmentPriceData(initialPrices);
+                setWeighedItemIds(initialWeighedIds);
+            } else {
+                setWeighedItemIds(prev => Array.from(new Set([...prev, ...initialWeighedIds])));
+                setFulfillmentData(prev => ({ ...initialFulfillment, ...prev }));
+                setFulfillmentPriceData(prev => ({ ...initialPrices, ...prev }));
+            }
         } else {
+            selectedOrderIdRef.current = null;
             setEditDate('');
             setEditTime('');
             setEditNotes('');
@@ -451,18 +465,52 @@ export const OrderManager = () => {
         });
     };
 
-    const handleSaveSingleItemWeighing = () => {
+    const handleSaveSingleItemWeighing = async () => {
         if (!weighingItemModal.item || !selectedOrder) return;
         const itemId = weighingItemModal.item.id;
         const weightNum = parseFloat(String(weighingItemModal.tempWeight)) || 0;
         const priceNum = parseFloat(String(weighingItemModal.tempUnitPrice)) || 0;
+        const priceCents = Math.round(priceNum * 100);
 
         setFulfillmentData(prev => ({ ...prev, [itemId]: weightNum }));
         setFulfillmentPriceData(prev => ({ ...prev, [itemId]: priceNum }));
         setWeighedItemIds(prev => Array.from(new Set([...prev, itemId])));
 
+        const updatedItems = selectedOrder.items.map((it: any) =>
+            it.id === itemId
+                ? { ...it, quantityFulfilled: weightNum, priceAtPurchase: priceCents }
+                : it
+        );
+        const updatedOrder = { ...selectedOrder, items: updatedItems };
+        setSelectedOrder(updatedOrder);
+        setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+
         addToast(`Peso registrato per ${weighingItemModal.item.product.name}!`, 'info');
         setWeighingItemModal({ isOpen: false, item: null, tempWeight: '', tempUnitPrice: '' });
+
+        try {
+            const res = await fetch(`${API_URL}/api/admin/orders/${selectedOrder.id}/items/${itemId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    quantityFulfilled: weightNum,
+                    priceAtPurchase: priceCents
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.order) {
+                    setSelectedOrder(data.order);
+                    setOrders(prev => prev.map(o => o.id === data.order.id ? data.order : o));
+                }
+            }
+        } catch (err) {
+            console.error('Error saving item weight:', err);
+        }
     };
 
     const handleFulfill = async () => {
@@ -2568,14 +2616,14 @@ export const OrderManager = () => {
                 };
 
                 return (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-[99] animate-in fade-in duration-200">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-[99] animate-in fade-in duration-200">
                         <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl border border-gray-100 space-y-4 max-h-[92vh] overflow-y-auto custom-scrollbar">
                             {/* Modal Header */}
                             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-2xl overflow-hidden shrink-0 shadow-2xs">
+                                    <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-2xl overflow-hidden shrink-0 shadow-sm relative">
                                         {item.product.imageUrl ? (
-                                            <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                                            <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover rounded-2xl block" />
                                         ) : (
                                             '🍏'
                                         )}
@@ -2633,7 +2681,7 @@ export const OrderManager = () => {
                                     <button
                                         type="button"
                                         onClick={() => adjustWeight(item.product.unitType === 'PZ' ? -1 : -0.05)}
-                                        className="w-13 h-13 rounded-2xl bg-white hover:bg-gray-100 active:scale-90 text-gray-800 flex items-center justify-center shrink-0 border border-gray-200 shadow-2xs transition-all cursor-pointer select-none"
+                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white hover:bg-gray-100 active:scale-90 text-gray-800 flex items-center justify-center shrink-0 border border-gray-200 shadow-sm transition-all cursor-pointer select-none"
                                         title="Diminuisci peso"
                                     >
                                         <Minus size={22} className="stroke-[2.5]" />
@@ -2659,7 +2707,7 @@ export const OrderManager = () => {
                                     <button
                                         type="button"
                                         onClick={() => adjustWeight(item.product.unitType === 'PZ' ? 1 : 0.05)}
-                                        className="w-13 h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-90 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/30 transition-all cursor-pointer select-none"
+                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-90 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/30 transition-all cursor-pointer select-none"
                                         title="Aumenta peso"
                                     >
                                         <Plus size={22} className="stroke-[2.5]" />

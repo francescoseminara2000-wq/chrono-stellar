@@ -48,6 +48,59 @@ async function notifyClientOfStatusUpdate(order: any, status: string) {
 }
 
 export class AdminController {
+    async updateItemWeight(req: Request, res: Response) {
+        try {
+            const { id, itemId } = req.params;
+            const { quantityFulfilled, priceAtPurchase } = req.body;
+
+            const order = await prisma.order.findUnique({
+                where: { id: Number(id) },
+                include: { items: { include: { product: true } } }
+            });
+
+            if (!order) {
+                return res.status(404).json({ error: `Ordine #${id} non trovato` });
+            }
+
+            const item = order.items.find(i => i.id === Number(itemId));
+            if (!item) {
+                return res.status(404).json({ error: `Articolo #${itemId} non trovato nell'ordine` });
+            }
+
+            const qty = (quantityFulfilled !== undefined && quantityFulfilled !== null && quantityFulfilled !== '')
+                ? Number(quantityFulfilled)
+                : null;
+            const price = (priceAtPurchase !== undefined && priceAtPurchase !== null && !isNaN(Number(priceAtPurchase)))
+                ? Math.round(Number(priceAtPurchase))
+                : item.priceAtPurchase;
+
+            await prisma.orderItem.update({
+                where: { id: Number(itemId) },
+                data: {
+                    quantityFulfilled: qty,
+                    priceAtPurchase: price
+                }
+            });
+
+            const freshOrder = await prisma.order.findUnique({
+                where: { id: Number(id) },
+                include: {
+                    user: true,
+                    items: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
+            });
+
+            res.json({ success: true, order: freshOrder });
+        } catch (error: any) {
+            console.error('[AdminController] updateItemWeight error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
     async fulfill(req: Request, res: Response) {
         try {
             const { id } = req.params;

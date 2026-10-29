@@ -85,6 +85,7 @@ app.delete('/api/admin/orders/bulk', authenticateToken, requireAdmin, (req, res)
 app.delete('/api/admin/orders/:id', authenticateToken, requireAdmin, (req, res) => orderController.delete(req, res));
 app.get('/api/admin/stats', authenticateToken, requireAdmin, (req, res) => statsController.getStats(req, res));
 app.patch('/api/admin/orders/:id/fulfill', authenticateToken, requireAdmin, (req, res) => adminController.fulfill(req, res));
+app.patch('/api/admin/orders/:id/items/:itemId', authenticateToken, requireAdmin, (req, res) => adminController.updateItemWeight(req, res));
 app.post('/api/admin/orders/:id/resend-approval', authenticateToken, requireAdmin, (req, res) => adminController.resendApproval(req, res));
 app.patch('/api/admin/orders/:id/status', authenticateToken, requireAdmin, (req, res) => adminController.updateStatus(req, res));
 app.post('/api/admin/orders/:id/notify-whatsapp', authenticateToken, requireAdmin, (req, res) => adminController.notifyWhatsApp(req, res));
