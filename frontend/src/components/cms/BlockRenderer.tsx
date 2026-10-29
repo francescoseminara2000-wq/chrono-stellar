@@ -1005,24 +1005,34 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                         return (
                             <AnimatedSection key={block.id} className={`${paddingClass} ${style.bgClass} ${style.borderClass} relative overflow-hidden`}>
                                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                                    <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 md:mb-10 gap-4">
-                                        <div>
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-100/80 text-emerald-800 mb-2">
-                                                <Sparkles size={11} className="text-emerald-600" />
+                                    {/* Section Header */}
+                                    <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 md:mb-12 gap-5">
+                                        <div className="max-w-2xl">
+                                            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black tracking-wider uppercase bg-emerald-500/10 text-emerald-800 border border-emerald-500/20 mb-3 shadow-2xs">
+                                                <Sparkles size={13} className="text-emerald-600 animate-pulse" />
                                                 <span>I Nostri Reparti</span>
-                                            </span>
-                                            <h2 className={`font-script text-3xl sm:text-4xl md:text-5xl drop-shadow-xs ${style.isDark ? 'text-white' : 'text-nature-900'}`}>
+                                            </div>
+                                            <h2 className={`font-script text-4xl sm:text-5xl md:text-6xl drop-shadow-xs leading-[1.1] ${style.isDark ? 'text-white' : 'text-nature-950'}`}>
                                                 {block.data.title || 'Esplora le Nostre Categorie'}
                                             </h2>
-                                            <div className="w-20 h-1 bg-gradient-to-r from-fruit-400 to-yellow-400 rounded-full mt-2"></div>
+                                            <p className={`text-sm sm:text-base mt-2.5 font-medium ${style.isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                                                {block.data.subtitle || 'Dalla terra alla tavola: seleziona il tuo reparto preferito e scopri le eccellenze di stagione.'}
+                                            </p>
                                         </div>
-                                        <Link to="/shop" className="group inline-flex items-center gap-2 font-bold text-sm text-fruit-600 hover:text-fruit-700 transition-colors">
-                                            <span>Vedi tutto il catalogo</span>
-                                            <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+
+                                        <Link 
+                                            to="/shop" 
+                                            className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full font-bold text-xs sm:text-sm bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-200/90 shadow-xs hover:shadow-md transition-all hover:scale-102 shrink-0 self-start sm:self-end"
+                                        >
+                                            <span>Tutto il Catalogo</span>
+                                            <div className="w-6 h-6 rounded-full bg-emerald-100 group-hover:bg-emerald-600 group-hover:text-white text-emerald-800 flex items-center justify-center transition-colors">
+                                                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                                            </div>
                                         </Link>
                                     </div>
                                     
-                                    <div className={`grid ${gridColsClass} gap-4 sm:gap-6`}>
+                                    {/* Cards Grid */}
+                                    <div className={`grid ${gridColsClass} gap-5 sm:gap-7`}>
                                         {categoriesList.map((cat: any, i: number) => {
                                             const resolvedImg = (cat.imageUrl && cat.imageUrl.trim() !== '')
                                                 ? sanitizeImageUrl(cat.imageUrl)
@@ -1032,15 +1042,15 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                                                 <Link 
                                                     to={cat.link || '/shop'} 
                                                     key={i} 
-                                                    style={{ minHeight: '320px', height: '320px' }}
-                                                    className="group relative w-full h-[320px] min-h-[320px] rounded-3xl overflow-hidden flex flex-col justify-end shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-1.5 border border-stone-200/80 bg-stone-900"
+                                                    style={{ minHeight: '360px', height: '360px' }}
+                                                    className="group relative w-full h-[360px] min-h-[360px] rounded-[32px] overflow-hidden flex flex-col justify-between shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-stone-200/70 bg-stone-100"
                                                 >
-                                                    {/* Background Image Container */}
-                                                    <div className="absolute inset-0 bg-stone-800 pointer-events-none">
+                                                    {/* Background Crisp Image */}
+                                                    <div className="absolute inset-0 bg-stone-200 pointer-events-none overflow-hidden">
                                                         <img 
                                                             src={resolvedImg} 
                                                             alt={cat.title || 'Reparto'} 
-                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90"
+                                                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                                                             loading="lazy"
                                                             onError={(e: any) => {
                                                                 e.currentTarget.onerror = null;
@@ -1049,20 +1059,38 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ content }) => {
                                                         />
                                                     </div>
                                                     
-                                                    {/* Dark Vignette / Contrast Gradient */}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none transition-opacity duration-300"></div>
-                                                    
-                                                    {/* Card Labels & Actions */}
-                                                    <div className="relative z-10 p-5 sm:p-6 w-full">
-                                                        <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-xs text-white mb-2">
-                                                            Reparto #{i + 1}
+                                                    {/* Gentle Ambient Scrim */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none transition-opacity duration-300"></div>
+
+                                                    {/* Top Badge: Quality / Category Tag */}
+                                                    <div className="relative z-10 p-4 sm:p-5 flex items-start justify-between">
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-black/40 backdrop-blur-md text-white border border-white/20 shadow-xs">
+                                                            <Leaf size={11} className="text-emerald-400" />
+                                                            <span>Fresco Quotidiano</span>
                                                         </span>
-                                                        <h3 className="font-bold text-lg sm:text-xl text-white mb-1 drop-shadow-md">
-                                                            {cat.title || 'Reparto Fresco'}
-                                                        </h3>
-                                                        <div className="flex items-center gap-1.5 text-fruit-300 text-xs font-semibold">
-                                                            <span>Scopri prodotti</span>
-                                                            <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                                                    </div>
+                                                    
+                                                    {/* Bottom Floating Glass Card */}
+                                                    <div className="relative z-10 p-3 sm:p-4 w-full">
+                                                        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg border border-white/60 transition-all duration-300 group-hover:bg-white group-hover:shadow-xl">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <div className="min-w-0 flex-1">
+                                                                    <span className="text-[10px] font-black tracking-wider uppercase text-emerald-700 block mb-0.5">
+                                                                        Reparto Selezionato
+                                                                    </span>
+                                                                    <h3 className="font-extrabold text-xl sm:text-2xl text-stone-900 truncate group-hover:text-emerald-700 transition-colors">
+                                                                        {cat.title || 'Reparto Fresco'}
+                                                                    </h3>
+                                                                    <div className="flex items-center gap-1 text-xs text-stone-500 font-semibold mt-1">
+                                                                        <span>Sfoglia prodotti</span>
+                                                                        <ArrowRight size={12} className="text-stone-400 group-hover:translate-x-1 group-hover:text-emerald-600 transition-all" />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="w-11 h-11 rounded-full bg-nature-950 group-hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:rotate-[-45deg]">
+                                                                    <ArrowRight size={18} />
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </Link>
